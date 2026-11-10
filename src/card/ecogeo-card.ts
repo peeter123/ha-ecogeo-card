@@ -1,10 +1,17 @@
-// The ecoGEO schematic card (skeleton): a LitElement that renders an empty SVG in the viewBox of design D5.
-// The drawing, the role table and the configuration arrive in later task groups; for now any config is accepted.
-import { html, LitElement, type TemplateResult } from 'lit';
+// The ecoGEO schematic card: a LitElement that validates and resolves its config, reads the roles, derives the mode
+// and shows the footer indications (mode, alarm, offline, sample values) under an empty SVG in the viewBox of design
+// D5. The drawing arrives in group 4.
+import { css, html, LitElement, nothing, type PropertyValues, type TemplateResult } from 'lit';
+import { deriveMode, isAlarm, isOffline, type Mode } from '../calc/mode';
+import { readRoles, type Readings } from '../calc/readings';
+import { configErrors } from '../config/options';
+import { resolveConfig, type ResolvedConfig } from '../config/resolve';
+import { SAMPLE_STATES } from '../config/sample';
 import type { CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
-import type { HassLike } from '../lib/hass';
-import { SCHEMATIC_LABEL } from '../strings';
+import { stateOf, type HassLike } from '../lib/hass';
+import { shouldRender } from '../lib/render';
+import { INDICATIONS, MODE_LABELS, SCHEMATIC_LABEL } from '../strings';
 
 export const CARD_TAG = 'ecogeo-card';
 
@@ -21,6 +28,15 @@ export interface GridOptions {
 }
 
 export class EcogeoCard extends LitElement {
+  static override styles = css`
+    .sample {
+      color: var(--secondary-text-color);
+    }
+    .alarm {
+      color: var(--error-color);
+    }
+  `;
+
   static override properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -28,9 +44,16 @@ export class EcogeoCard extends LitElement {
 
   declare hass?: HassLike;
   declare config?: CardConfig;
+  private resolved?: ResolvedConfig;
+  private entityIds: string[] = [];
+  private renderedHass?: HassLike;
 
-  /** Called by Home Assistant with the card's config. Any config is accepted for now. */
+  /** Called by Home Assistant with the card's config. Throws for an invalid config: HA shows its error card. */
   setConfig(config: CardConfig): void {
+    const errors = configErrors(config);
+    if (errors.length > 0) throw new Error(errors.join('; '));
+    this.resolved = resolveConfig(config);
+    this.entityIds = [...new Set(Object.values(this.resolved.entities).filter((id) => id !== undefined))];
     this.config = config;
   }
 
@@ -44,7 +67,31 @@ export class EcogeoCard extends LitElement {
     return { columns: 'full', rows: 'auto', min_rows: 8 };
   }
 
+  protected override shouldUpdate(changed: PropertyValues): boolean {
+    return shouldRender(changed, this.hass, this.renderedHass, this.entityIds);
+  }
+
+  /** The readings of every role: the sample states in sample mode, `hass.states` otherwise. */
+  private readings(resolved: ResolvedConfig): { readings: Readings; offline: boolean } {
+    const states = resolved.sample ? SAMPLE_STATES : (this.hass?.states ?? {});
+    return {
+      readings: readRoles(states, resolved.entities),
+      offline: isOffline(stateOf(states, resolved.entities['unit.connection'])),
+    };
+  }
+
   protected override render(): TemplateResult {
+    this.renderedHass = this.hass;
+    const resolved = this.resolved;
+    let mode: Mode | undefined;
+    let alarm = false;
+    let offline = false;
+    if (resolved !== undefined) {
+      const read = this.readings(resolved);
+      mode = deriveMode(read.readings, resolved.features);
+      alarm = isAlarm(read.readings['unit.alarm']);
+      offline = read.offline;
+    }
     return html`<ha-card>
       <svg
         viewBox="0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}"
@@ -52,6 +99,12 @@ export class EcogeoCard extends LitElement {
         role="img"
         aria-label=${SCHEMATIC_LABEL}
       ></svg>
+      <div class="footer">
+        ${mode === undefined ? nothing : html`<span class="mode">${MODE_LABELS[mode]}</span>`}
+        ${alarm ? html`<span class="alarm">${INDICATIONS.alarm}</span>` : nothing}
+        ${offline ? html`<span class="offline">${INDICATIONS.offline}</span>` : nothing}
+        ${resolved?.sample === true ? html`<span class="sample">${INDICATIONS.sampleValues}</span>` : nothing}
+      </div>
     </ha-card>`;
   }
 }

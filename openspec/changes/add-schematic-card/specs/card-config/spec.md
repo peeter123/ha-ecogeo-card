@@ -9,7 +9,8 @@ invalid or empty configuration is handled.
 The card SHALL register as `custom:ecogeo-card` and accept the options `model` (`B` or `C`, default `B`),
 `variant` (1-4, default 4), `source` (`air`, `ground` or `hybrid`, default `ground`), `dhw` (`external`,
 `internal` or `none`), `prefix` (an entity object-id prefix), `features`, `entities` and `colors` (temperature colour
-stops). Unknown top-level options SHALL be rejected.
+stops). Unknown top-level options SHALL be rejected, except the keys Home Assistant itself adds to a card config
+(`view_layout`, `layout_options`, `grid_options`, `visibility`), which SHALL be accepted and ignored.
 
 #### Scenario: Minimal valid config
 - **WHEN** the config is `type: custom:ecogeo-card` with `prefix: ecoforest_ecogeo`

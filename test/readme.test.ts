@@ -1,0 +1,51 @@
+import { describe, expect, test } from 'vitest';
+import { FEATURE_KEYS, variantFeatures, VARIANTS } from '../src/config/variants';
+import { TOP_LEVEL_OPTIONS } from '../src/config/options';
+import { ROLES } from '../src/config/roles';
+import { MODE_LABELS } from '../src/strings';
+import { README, rowCells, section, tableNames } from './readme';
+
+// Options Home Assistant adds to every card, and `type`: not documented as options of this card.
+const NOT_OPTIONS = new Set(['type', 'view_layout', 'layout_options', 'grid_options', 'visibility']);
+
+describe('README configuration reference', () => {
+  test('the README has the configuration section', () => {
+    expect(README).toContain('\n## Configuration\n');
+  });
+
+  test('every option of the code is in the options table, and the table has no other', () => {
+    const documented = tableNames(section('### Options'));
+    const expected = TOP_LEVEL_OPTIONS.filter((option) => !NOT_OPTIONS.has(option));
+    expect([...documented].sort()).toEqual([...expected].sort());
+  });
+
+  test('every feature is in the features table with the preset of each variant', () => {
+    const text = section('### Features');
+    expect([...tableNames(text)].sort()).toEqual([...FEATURE_KEYS].sort());
+    for (const key of FEATURE_KEYS) {
+      const cells = rowCells(text, key);
+      VARIANTS.forEach((variant, index) => {
+        expect(cells[2 + index], `${key} variant ${String(variant)}`).toBe(
+          `\`${String(variantFeatures(variant)[key])}\``,
+        );
+      });
+    }
+  });
+
+  test('every role is in the roles table with its default entity, unit and item', () => {
+    const text = section('### Roles');
+    expect([...tableNames(text)].sort()).toEqual(ROLES.map((role) => role.path).sort());
+    for (const role of ROLES) {
+      const cells = rowCells(text, role.path);
+      expect(cells[1], role.path).toBe(`\`${role.domain}.<prefix>_${role.suffix}\``);
+      expect(cells[3], role.path).toBe(role.item);
+      if ('unit' in role) expect(cells[2], role.path).toContain(role.unit);
+      if ('decimals' in role) expect(cells[2], role.path).toContain(`${String(role.decimals)} dec.`);
+    }
+  });
+
+  test('every mode label is named in the operating mode paragraph', () => {
+    const text = section('### Operating mode').replace(/\s+/g, ' ');
+    for (const label of Object.values(MODE_LABELS)) expect(text, label).toContain(label);
+  });
+});

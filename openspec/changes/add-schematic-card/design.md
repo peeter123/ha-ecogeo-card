@@ -124,7 +124,11 @@ noted). Display units are the card's own, not the entity's.
 - **Config shape:** `entities` is nested by role path, as in hrv:
   `entities: { dhw: { temperature: sensor.boiler_top } }`. It is read with hrv's `valueAt`/`entityAt`.
 - **Resolution order:** an explicit `entities` override, then `<domain>.<prefix>_<suffix>` when `prefix` is set,
-  then nothing.
+  then nothing. A blank or null `prefix` or entity counts as not set.
+- **HA keys:** `view_layout`, `layout_options`, `grid_options` and `visibility` are accepted and ignored; any
+  other unknown top-level key is an error.
+- **Text roles:** the firmware writes `Unavailable` and `Unknown` into its text sensors when a register has no
+  state. Readings treat `unavailable` and `unknown` case-insensitively as no value for every role.
 - **Sample mode:** with no prefix and no overrides, the card is in sample mode (hrv `card-preview` pattern;
   sample values in `src/config/sample.ts` from the live snapshot).
 
@@ -178,6 +182,13 @@ noted). Display units are the card's own, not the entity's.
 - **Defrost:** active circuits are `brine`, `production_dg1` and `exchanger_10` (when 10/27/28 are drawn), and
   valves 27/28 are set to `exchanger`. `refrigerant` is idle and valve 26 stays towards ports 1/2. Register 5239
   (defrosting by DHW, heating or pool) is a setting the firmware does not expose.
+- **Where the spec was silent:**
+  - with `dhw: none` the `dhw` mode keeps its label and valve 26 follows the mode, but `production_dhw`,
+    `dhw_coil` and `htr` are never active
+  - valves 27/28 go to `exchanger` only when 10/27/28 are drawn
+  - `exchanger_10` does not depend on the brine pump
+- **Offline:** shown only when the connection entity exists in `hass` and reads `off`, `unavailable` or
+  `unknown`.
 - Rendering reads only these outputs.
 - **Cooling operation mode:** the firmware's `cooling_operation_mode` text sensor (`None`, `Source`,
   `Direct Cooling`, `Cooling via Buffer`) is a setting, not a live state (it reads `Source` in winter). It is not

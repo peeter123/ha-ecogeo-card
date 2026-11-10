@@ -91,7 +91,8 @@ the mode SHALL be `standby` unless it is `off` or `defrost`.
 ### Requirement: Offline indication
 The card SHALL show an offline indication when the bridge connection entity (`unit.connection`) reads `off`,
 `unavailable` or `unknown`. The connection SHALL NOT change the mode. Without a connection entity, the card
-SHALL show no offline indication.
+SHALL show no offline indication. A configured connection entity that Home Assistant does not know counts as no
+connection entity.
 
 #### Scenario: Bridge offline
 - **WHEN** the connection entity reads `off` and every other heat pump entity is `unavailable`
@@ -134,6 +135,10 @@ Each mode SHALL define which circuits are active:
 - `active_cooling`: the reversed refrigerant, brine and production to ports 1/2 (HTR: see below).
 - `passive_cooling` and `defrost`: brine, production to ports 1/2, and both through exchanger 10.
 - `off` and `standby`: none.
+
+With `dhw: none` the `dhw` mode is still derived and labelled, valve 26 still follows the mode, but no circuit to
+ports 5/6, no DHW coil and no HTR circuit is active. Valves 27/28 route through exchanger 10 only when that part
+is drawn (`true` or `unused`). The exchanger 10 circuit does not depend on the brine pump.
 
 #### Scenario: Heating circuits
 - **WHEN** the mode is `heating`

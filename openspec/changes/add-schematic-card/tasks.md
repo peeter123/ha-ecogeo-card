@@ -40,13 +40,13 @@ something visible also ends with emulator screenshots, which an agent inspects a
 
 ## 2. Configuration, readings and operating mode
 
-- [ ] 2.1 Record the variant table of design D3 in `docs/ecogeo-card.md`, citing the manual (section 3.1, page
+- [x] 2.1 Record the variant table of design D3 in `docs/ecogeo-card.md`, citing the manual (section 3.1, page
   34). The presets were read from the figures during planning:
   - B1 has no cooling parts; B2 has passive cooling; B3 has active cooling; B4 has both
   - HTR and 44/45 appear in all four figures
   - B2's stray "14" label has no valve symbol
   Verify: table in the doc, every variant cited, the B2 label noted.
-- [ ] 2.2 Implement `src/config/options.ts`, `roles.ts`, `variants.ts` and `resolve.ts` per design D2/D3 and the
+- [x] 2.2 Implement `src/config/options.ts`, `roles.ts`, `variants.ts` and `resolve.ts` per design D2/D3 and the
   card-config spec:
   - option validation with the error messages the spec requires
   - the dhw default and mismatch rule
@@ -58,18 +58,18 @@ something visible also ends with emulator screenshots, which an agent inspects a
     units
   Unit-test every card-config scenario.
   Verify: `npm test`.
-- [ ] 2.3 Implement `src/config/sample.ts` (sample states for every role, from the heating snapshot in
+- [x] 2.3 Implement `src/config/sample.ts` (sample states for every role, from the heating snapshot in
   `private/installation.md` as rounded numbers) and the "Sample values" note in the card. It follows hrv's
   `src/lib/sample.ts` (pattern only) and names it in a header comment.
   Unit-test the empty-config and no-mixing scenarios.
   Verify: `npm test`.
-- [ ] 2.4 Implement `src/calc/readings.ts`:
+- [x] 2.4 Implement `src/calc/readings.ts`:
   - role to numeric value, with unit conversion
   - unavailable, unknown, non-numeric and sentinel values become no value
   - text and binary inputs
   Unit-test it.
   Verify: `npm test`.
-- [ ] 2.5 Implement `src/calc/mode.ts` and `src/calc/circuits.ts` per design D4. Unit-test every operating-mode
+- [x] 2.5 Implement `src/calc/mode.ts` and `src/calc/circuits.ts` per design D4. Unit-test every operating-mode
   scenario, including:
   - Emergency, unavailable compressor, passive cooling unused
   - defrost (and Balance is not defrost), defrost with exchanger 10 `unused` and `false`
@@ -77,11 +77,11 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - the offline indication from `unit.connection`
   - the active-circuits table per mode
   Verify: `npm test`.
-- [ ] 2.6 Wire the resolved config, readings and mode into the card. The card shows the mode label, the alarm
+- [x] 2.6 Wire the resolved config, readings and mode into the card. The card shows the mode label, the alarm
   and offline indications, and the configuration errors through HA's error card (`setConfig` throws).
   Unit-test that an invalid config throws with the option name.
   Verify: `npm run check`.
-- [ ] 2.7 Update the README (configuration reference: options, feature states, role paths with firmware suffixes,
+- [x] 2.7 Update the README (configuration reference: options, feature states, role paths with firmware suffixes,
   sample mode) and `docs/ecogeo-card.md` (mode derivation table with its inputs, the variant table).
   Verify: every option and role in the code appears in the README (a unit test like hrv's `test/readme.ts`).
 
@@ -131,6 +131,7 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - components and segments in the neutral colour (colouring is group 6)
   - valve positions from `circuits.ts`
   - feature visibility: `false` removes the part, `unused` draws it muted
+  - the card-picker entry in `src/index.ts` set to `preview: true` (sample mode now draws the schematic)
   Unit-test the schematic-drawing scenarios that can be checked in the DOM: port order, no DHW, without
   passive cooling, unused HTR, model C ports, defrost label, no img or background-image.
   Verify: `npm test`.

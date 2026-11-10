@@ -4,7 +4,7 @@
 import { describe, expect, test } from 'vitest';
 import * as strings from '../src/strings';
 import { NBSP, NO_VALUE } from '../src/strings';
-import { nb } from './nbsp';
+import { nb, unitPattern } from './nbsp';
 
 // Every source file except strings.ts, as text.
 const sources = import.meta.glob<string>(['../src/**/*.ts', '!../src/strings.ts'], {
@@ -90,7 +90,7 @@ describe('texts', () => {
   });
 
   test('a no-break space joins every number to its unit, in every text', () => {
-    const units = new RegExp(`(\\d|${MARK}|n/a)(\\s)(W|kW|K|bar|rpm|%|°C)(?!\\p{L})`, 'gu');
+    const units = new RegExp(`(\\d|${MARK}|n/a)(\\s)(${unitPattern})(?!\\p{L})`, 'gu');
     const joins = filledTexts().flatMap((text) => [...text.matchAll(units)].map((match) => match[2]));
     expect(joins.every((space) => space === '\u00a0')).toBe(true);
   });

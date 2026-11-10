@@ -30,3 +30,44 @@ export const CARD_PICKER = {
 
 /** The accessible name of the schematic drawing. */
 export const SCHEMATIC_LABEL = 'ecoGEO heat pump schematic';
+
+/** The card's own display units (design D2): joined to a number by NBSP. A difference is shown in K. */
+export const UNITS = {
+  celsius: '°C',
+  kelvin: 'K',
+  bar: 'bar',
+  percent: '%',
+  rpm: 'rpm',
+  watt: 'W',
+} as const;
+
+/** The label of each derived operating mode (design D4). */
+export const MODE_LABELS = {
+  off: 'Off',
+  defrost: 'Defrost',
+  dhw: 'DHW',
+  active_cooling: 'Active cooling',
+  heating: 'Heating',
+  passive_cooling: 'Passive cooling',
+  standby: 'Standby',
+} as const;
+
+/** The indications beside the mode, and the note while the card shows sample values. */
+export const INDICATIONS = {
+  alarm: 'Alarm',
+  offline: 'Offline',
+  sampleValues: 'Sample values',
+} as const;
+
+/** Configuration errors setConfig throws; each names the option, so Home Assistant's error card shows which. */
+export const CONFIG_ERRORS = {
+  unknownOption: (option: string): string => `Unknown option ${option}`,
+  unknownFeature: (feature: string, known: readonly string[]): string =>
+    `Unknown feature ${feature}: expected one of ${known.join(', ')}`,
+  unknownRole: (role: string): string => `Unknown entity role ${role}`,
+  notEntityId: (role: string): string => `Invalid entity for ${role}: expected an entity id such as sensor.name`,
+  featureState: (feature: string): string => `Invalid option features.${feature}: expected true, false or unused`,
+  integer: (min: string, max: string): string => `a whole number from ${min} to ${max}`,
+  prefix: 'a prefix of lowercase letters, digits and underscores',
+  dhwMismatch: (dhw: string, model: string): string => `Invalid option dhw: ${dhw} does not fit model ${model}`,
+} as const;
