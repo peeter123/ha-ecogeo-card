@@ -19,9 +19,12 @@ The emulator SHALL offer these scenarios, each a complete set of states:
 - standby
 - heating
 - DHW
-- active cooling
+- active cooling (all heat to the outer loop)
+- active cooling with HTR recovery
 - passive cooling
+- defrost
 - alarm while heating
+- bridge offline
 - sensors unavailable
 Choosing a scenario SHALL update the card at once.
 
@@ -29,9 +32,23 @@ Choosing a scenario SHALL update the card at once.
 - **WHEN** the developer picks the DHW scenario
 - **THEN** the card shows mode "DHW", valve 26 towards connections 5/6, and an active DHW loop
 
+#### Scenario: HTR scenario
+- **WHEN** the developer picks the active cooling with HTR recovery scenario
+- **THEN** the card shows mode "Active cooling", valve 14 reversed, valve 26 towards connections 1/2, and an
+  active HTR circuit and DHW loop
+
+#### Scenario: Defrost scenario
+- **WHEN** the developer picks the defrost scenario
+- **THEN** the card shows mode "Defrost", valves 27/28 towards exchanger 10, a muted refrigerant circuit and an
+  active outer loop
+
 #### Scenario: Unavailable scenario
 - **WHEN** the developer picks the unavailable scenario
 - **THEN** the card shows muted dashes for the unavailable values and no error
+
+#### Scenario: Offline scenario
+- **WHEN** the developer picks the bridge offline scenario
+- **THEN** the card shows the offline indication and mode "Standby"
 
 ### Requirement: Configuration controls
 The emulator SHALL let the developer switch:
@@ -45,11 +62,11 @@ The card SHALL re-render with the new configuration.
 
 #### Scenario: Switch source
 - **WHEN** the developer switches the source from air to ground
-- **THEN** the air unit right of the cabinet is replaced by a ground loop
+- **THEN** the air unit left of the cabinet is replaced by a ground loop
 
 ### Requirement: Live value sliders
-The emulator SHALL offer sliders for the main temperatures, pump and compressor speeds and the fan speed. Moving
-a slider SHALL update the card's colours, labels and animation speed live.
+The emulator SHALL offer sliders for the main temperatures, pump and compressor speeds, the fan speed and the
+condensation capacity. Moving a slider SHALL update the card's colours, labels and animation speed live.
 
 #### Scenario: Warmer production
 - **WHEN** the developer moves the production outlet slider from 25 °C to 55 °C

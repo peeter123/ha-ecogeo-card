@@ -17,10 +17,10 @@ something visible also ends with emulator screenshots, which an agent inspects a
   comment naming its source file:
   - `define`
   - `availability` (add the sentinel: a value at or below -999 counts as unavailable, with a test)
-  - `units` (temperature and power only)
+  - `units` (temperature and power only, plus the difference rule of design D8, with a test)
   - `hass`
   - `render`
-  - `config`
+  - `config` (`valueAt`, `asEntityId`, `entityAt`; drop the humidity and stream helpers)
   - `options`
   - `format`
   Also copy `src/strings.ts` (NBSP pattern), `test/nbsp.ts` and the strings test.
@@ -38,19 +38,18 @@ something visible also ends with emulator screenshots, which an agent inspects a
 
 ## 2. Configuration, readings and operating mode
 
-- [ ] 2.1 Determine the B1-B3 variant presets from the manual figures (section 3.1, page 34). The manual's local
-  path is in `private/installation.md`. Render the page, for example with
-  `uvx --from pymupdf python -c ...`, into `build/` and inspect it.
-  Record per variant which of items 14, 10/27/28, 9/17/22/25 and 44/45 are drawn, in
-  `docs/ecogeo-card.md` with the citation.
-  If a figure is ambiguous, stop and report a decision point.
-  Verify: table in the doc, every variant cited.
+- [ ] 2.1 Record the variant table of design D3 in `docs/ecogeo-card.md`, citing the manual (section 3.1, page
+  34). The presets were read from the figures during planning:
+  - B1 has no cooling parts; B2 has passive cooling; B3 has active cooling; B4 has both
+  - HTR and 44/45 appear in all four figures
+  - B2's stray "14" label has no valve symbol
+  Verify: table in the doc, every variant cited, the B2 label noted.
 - [ ] 2.2 Implement `src/config/options.ts`, `roles.ts`, `variants.ts` and `resolve.ts` per design D2/D3 and the
   card-config spec:
   - option validation with the error messages the spec requires
   - the dhw default and mismatch rule
   - feature merge
-  - entity resolution (override, then prefix, then none)
+  - entity resolution from nested `entities` (override, then prefix, then none)
   - sample-mode detection
   Unit-test every card-config scenario.
   Verify: `npm test`.
@@ -65,8 +64,12 @@ something visible also ends with emulator screenshots, which an agent inspects a
   Unit-test it.
   Verify: `npm test`.
 - [ ] 2.5 Implement `src/calc/mode.ts` and `src/calc/circuits.ts` per design D4. Unit-test every operating-mode
-  scenario, including Emergency, unavailable compressor, bridge offline, passive cooling unused, and the
-  active-circuits table per mode.
+  scenario, including:
+  - Emergency, unavailable compressor, passive cooling unused
+  - defrost (and Balance is not defrost), defrost with exchanger 10 `unused` and `false`
+  - the HTR recovery rule and the brine pump rule
+  - the offline indication from `unit.connection`
+  - the active-circuits table per mode
   Verify: `npm test`.
 - [ ] 2.6 Wire the resolved config, readings and mode into the card. The card shows the mode label, the alarm
   and offline indications, and the configuration errors through HA's error card (`setConfig` throws).
@@ -78,14 +81,14 @@ something visible also ends with emulator screenshots, which an agent inspects a
 
 ## 3. Dev emulator
 
-- [ ] 3.1 Add `dev/scenarios.ts` with the eight scenarios from the dev-emulator spec. Each is a full state map by
+- [ ] 3.1 Add `dev/scenarios.ts` with the eleven scenarios from the dev-emulator spec. Each is a full state map by
   role path, resolved through the demo prefix `demo_ecogeo`. Unit-test that each scenario derives the mode its
   name says.
   Verify: `npm test`.
 - [ ] 3.2 Add the emulator controls:
   - selects for model, variant, source, dhw, each feature and the theme
-  - sliders for production out/in, brine out/in, DHW temperature, discharge, suction, both pumps, compressor %
-    and fan speed
+  - sliders for production out/in, brine out/in, DHW temperature, discharge, suction, both pumps, compressor %,
+    fan speed and condensation capacity
   - all state mirrored in the URL query string per design D9
   Verify: agent check that changing a control re-renders the card and updates the URL, and that loading a URL
   restores the state.
@@ -107,7 +110,9 @@ something visible also ends with emulator screenshots, which an agent inspects a
 - [ ] 4.1 Implement `src/diagram/geometry.ts` per design D5 for the cabinet:
   - ports 1-6 on the top edge
   - every component listed in the schematic-drawing spec, with item number and feature
-  - every internal segment, with circuit, temperature role, speed role and direction
+  - every internal segment, with circuit, temperature role, speed role and direction, including the discharge
+    line through HTR exchanger 9 and the HTR water lines to the 5/6 lines
+  - the DG1 stubs of ports 1/2 ending below the pipe run (design D5)
   - model C variant: no 5/6, internal tank slot
   Add the integrity tests from D5.
   Verify: `npm test`.
@@ -121,7 +126,7 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - valve positions from `circuits.ts`
   - feature visibility: `false` removes the part, `unused` draws it muted
   Unit-test the schematic-drawing scenarios that can be checked in the DOM: port order, no DHW, without
-  passive cooling, unused HTR, model C ports, no img or background-image.
+  passive cooling, unused HTR, model C ports, defrost label, no img or background-image.
   Verify: `npm test`.
 - [ ] 4.4 Emulator verification: run `npm run capture`. A subagent inspects the B4 heating capture against the
   manual's B4 figure (topology, item positions, probe placement), plus the captures with features off and
@@ -134,23 +139,22 @@ something visible also ends with emulator screenshots, which an agent inspects a
 ## 5. Outer-loop source and DHW storage
 
 - [ ] 5.1 Implement `src/diagram/source.ts` per the outer-loop-source spec:
-  - pipes from ports 3/4 up and to the right zone
+  - pipes from ports 3/4 up into the run and to the left zone, above the DG1 stubs
   - air unit (housing, coil, fan rotating with speed, stopped at 0 or unknown)
   - ground loop
   - hybrid, with both on one brine loop and their labels
   Unit-test the source scenarios in the DOM.
   Verify: `npm test`.
 - [ ] 5.2 Implement `src/diagram/dhw.ts` per the dhw-storage spec:
-  - external tank with coil left of the cabinet, pipes from 5/6 over the run above the cabinet with hops where
-    they cross other pipes
+  - external tank with coil right of the cabinet, pipes from 5/6 up into the run and to the right zone
   - internal tank for model C (50, 51, 54, stubs 47/48/49, 52, 53)
   - none
   Unit-test the dhw scenarios in the DOM.
   Verify: `npm test`.
 - [ ] 5.3 Emulator verification: run `npm run capture`. A subagent inspects the air, ground and hybrid captures,
-  external, internal and none, and model C. It checks that the pipes leave from the top connections and that the
-  crossings are readable.
-  Verify: verdict. Clutter at the crossings is a decision point (design risk 5), not an ad-hoc reroute.
+  external, internal and none, and model C. It checks that the pipes leave from the top connections and that no
+  pipes cross.
+  Verify: verdict with no crossings (findings go back to 5.1-5.2).
 - [ ] 5.4 Update `docs/ecogeo-card.md` (source and DHW sections) and the README (source and dhw options with an
   example per value).
   Verify: sections exist.
@@ -163,21 +167,23 @@ something visible also ends with emulator screenshots, which an agent inspects a
 - [ ] 6.2 Implement `src/diagram/pipes.ts`:
   - each segment coloured by its temperature role
   - muted when its circuit is inactive, its feature is `unused` or its probe is missing
-  - the dash overlay animated in its direction, at a speed from its speed role
-  - refrigerant reversed in active cooling
+  - the dash overlay animated in its direction, at a speed from its speed role, and at a fixed speed on the
+    HTR water segments
+  - refrigerant reversed in active cooling, and muted in defrost
+  - exchanger 10 active in defrost even when `unused`
   - reduced motion respected
   - the tank body coloured by the DHW temperature
   Unit-test the segment, muted, animation and reduced-motion scenarios.
   Verify: `npm test`.
-- [ ] 6.3 Implement `src/diagram/labels.ts`:
-  - HTML value labels at the positions in the live-values spec
-  - formatting through `hass.formatEntityState` when it exists, otherwise one decimal
-  - NBSP between a number and its unit
+- [ ] 6.3 Implement `src/calc/display.ts` and `src/diagram/labels.ts`:
+  - `display.ts` formats per design D6: `formatNumber` with HA's locale, the decimals from the entity's display
+    precision or the role table, the role's own unit joined by NBSP; never `hass.formatEntityState`
+  - HTML value labels at the positions in the live-values spec, and the footer
   - a muted dash for missing values
   - tap opens more-info
-  Wire `shouldUpdate` to the resolved entity ids.
-  Unit-test the live-values scenarios: compressor label, part not drawn, locale, Fahrenheit, sentinel, tap,
-  unrelated entity.
+  Wire `shouldUpdate` to the resolved entity ids and the entity registry.
+  Unit-test the live-values scenarios: compressor label, superheat, part not drawn, footer, locale, percent keeps
+  its space, display precision, Fahrenheit, Fahrenheit superheat, sentinel, tap, unrelated entity.
   Verify: `npm run check`.
 - [ ] 6.4 Emulator verification: run `npm run capture`. A subagent inspects every scenario. It checks colours
   against the scale, that active and muted circuits match the mode, that labels do not overlap at the default
@@ -204,7 +210,7 @@ something visible also ends with emulator screenshots, which an agent inspects a
   appended view.
 - [ ] 7.4 Live verification: a subagent takes a dashboard screenshot of the new view, reads the mapped entities'
   states, and checks that the drawn mode, valve 26 position, active circuits and the key labels (production
-  out/in, brine out/in, compressor rpm, DHW temperature) match. Check the HA logs for errors mentioning
+  out/in, brine out/in, compressor rpm, DHW temperature) match, and that no offline indication shows. Check the HA logs for errors mentioning
   `ecogeo-card`.
   Verify: verdict with no mismatches, and no log errors.
 - [ ] 7.5 Add a topic-index line for the card to the workspace AGENTS.md (source repo, read-only, the doc to read).
@@ -216,6 +222,7 @@ something visible also ends with emulator screenshots, which an agent inspects a
 
 - Before archive: one fresh Opus review of the whole change (constitution), then `/opsx:archive add-schematic-card`.
 - Follow-ups named in the proposal: `add-card-editor`, `add-hacs-release`, `add-browser-tests`,
-  `add-extra-circuits`. Firmware: expose registers 5024, 5143, 59, 126 in esphome-ecoforest-ecogeo.
-- Check DHW mode on the live card during the next DHW run, and confirm the passive cooling `unused` choice with the
-  user.
+  `add-extra-circuits`. Firmware: expose registers 5024, 5143, 59, 126, 5239 and coil 210 in
+  esphome-ecoforest-ecogeo.
+- Check on the live card during the next run of each: DHW mode, defrost (mode, valves 27/28, outer loop warmed)
+  and, in summer, active cooling with HTR recovery.

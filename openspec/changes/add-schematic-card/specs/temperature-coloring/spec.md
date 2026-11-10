@@ -27,7 +27,7 @@ end. The scale SHALL NOT depend on the other temperatures shown.
 - **THEN** the segments use those stops, and an invalid stop list is a configuration error
 
 ### Requirement: Water segment temperatures
-Each production and brine pipe segment SHALL take the temperature of the probe that defines it:
+Each water pipe segment SHALL take the temperature of the probe that defines it:
 - production outlet 33 on the supply from the condenser to connection 1 (or 5 in DHW mode)
 - production return 34 on the return from connection 2 (or 6) to the condenser
 - brine inlet 32 from connection 4 to the evaporator
@@ -37,9 +37,22 @@ Each production and brine pipe segment SHALL take the temperature of the probe t
 - **WHEN** the mode is `heating`, the production outlet reads 25.2 °C and the return reads 22.0 °C
 - **THEN** the supply to connection 1 has the 25.2 °C colour and the return from connection 2 the 22.0 °C colour
 
+### Requirement: Exchanger 10 and HTR segment temperatures
+The production and brine segments through exchanger 10 SHALL take their own side's outlet and inlet probes, in
+the same way as the other water segments. The HTR water segments (exchanger 9, pump 17 and their lines to the DHW
+pipes) SHALL take the DHW temperature.
+
+#### Scenario: Defrost segments
+- **WHEN** the mode is `defrost` and the brine inlet reads 8.0 °C
+- **THEN** the brine segment from exchanger 10 towards connection 4 has the 8.0 °C colour
+
+#### Scenario: HTR segments
+- **WHEN** the HTR circuit is active and the DHW temperature is 48 °C
+- **THEN** the HTR water segments have the 48 °C colour
+
 ### Requirement: Refrigerant segment temperatures
 Each refrigerant segment SHALL take the temperature of its point in the cycle:
-- discharge probe 30 from the compressor to the condenser
+- discharge probe 30 from the compressor through HTR exchanger 9 and valve 14 to the condenser
 - condensation temperature from the condenser to the expansion valve
 - evaporation temperature from the expansion valve to the evaporator
 - suction probe 29 from the evaporator to the compressor
@@ -47,11 +60,12 @@ In active cooling, the segments SHALL follow the reversed flow.
 
 #### Scenario: Discharge line
 - **WHEN** the compressor discharge reads 52.5 °C in heating mode
-- **THEN** the segment from compressor 11 to condenser 8 has the 52.5 °C colour
+- **THEN** the segments from compressor 11 through exchanger 9 to condenser 8 have the 52.5 °C colour
 
 #### Scenario: Reversed cycle
 - **WHEN** the mode is `active_cooling`
-- **THEN** the discharge colour is on the segment from compressor 11 to evaporator 7, which works as the condenser
+- **THEN** the discharge colour is on the segments from compressor 11 through exchanger 9 to evaporator 7, which
+  works as the condenser
 
 #### Scenario: Missing probe
 - **WHEN** a segment's probe is unavailable or reads the sentinel -999.9
@@ -59,23 +73,35 @@ In active cooling, the segments SHALL follow the reversed flow.
 
 ### Requirement: Inactive circuits muted
 Segments of circuits that are not active (see operating-mode) SHALL be drawn in the muted theme colour, without
-animation. So SHALL every part whose feature is `unused`.
+animation. So SHALL every part whose feature is `unused`, except exchanger 10 with valves 27/28 during
+`defrost`.
 
 #### Scenario: DHW loop while heating
 - **WHEN** the mode is `heating`
 - **THEN** the DHW pipes to connections 5 and 6 are muted and still
 
+#### Scenario: Refrigerant during defrost
+- **WHEN** the mode is `defrost`
+- **THEN** the refrigerant segments are muted and still
+
 ### Requirement: Flow animation
 Active segments SHALL show a dash animation in the direction of flow. Its speed SHALL follow:
-- the production pump % on production segments
-- the brine pump % on brine segments
+- the production pump % on production segments, including those through exchanger 10
+- the brine pump % on brine segments, including those through exchanger 10
 - the compressor % on refrigerant segments
-At 0 %, or with an unknown speed, the segment SHALL be still. The animation SHALL stop when the user prefers
-reduced motion.
+- a fixed medium speed on HTR water segments, since pump 17 reports no speed
+At 0 %, or with an unknown speed, a segment with a speed role SHALL be still.
 
 #### Scenario: Faster pump
 - **WHEN** the brine pump goes from 50 % to 100 %
 - **THEN** the brine segments animate faster
+
+#### Scenario: HTR without a speed
+- **WHEN** the HTR circuit is active
+- **THEN** its water segments animate at the fixed speed
+
+### Requirement: Reduced motion
+The card SHALL show no animation when the user prefers reduced motion. Colours SHALL stay the same.
 
 #### Scenario: Reduced motion
 - **WHEN** the browser reports prefers-reduced-motion

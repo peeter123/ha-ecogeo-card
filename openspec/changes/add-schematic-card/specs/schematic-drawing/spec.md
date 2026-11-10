@@ -31,6 +31,11 @@ Each connection SHALL show its item number.
 - **WHEN** the config sets `dhw: none`
 - **THEN** connections 5 and 6 and valve 26 are not drawn, and ports 1/2 connect directly to the production circuit
 
+#### Scenario: No crossings
+- **WHEN** the card renders model B with `dhw: external` and any source
+- **THEN** the DG1 stubs of connections 1/2 end below the pipe run above the cabinet, the 3/4 pipes run left to
+  the source, the 5/6 pipes run right to the tank, and no two pipes cross
+
 ### Requirement: Refrigerant components after the manual figure
 The cabinet SHALL contain the refrigerant circuit in the topology of the manual's B4 figure, each component with
 its item number:
@@ -46,13 +51,18 @@ its item number:
 The cabinet SHALL contain the hydraulic circuits in the topology of the manual's B4 figure, each component with
 its item number:
 - **Production:** pump 15, DHW valve 26, probes 33/34, transducer 38, outlet resistor 44 with safety thermostat 45.
-- **Brine:** pump 16, probes 31/32, transducer 37, passive cooling exchanger 10 with valves 27/28.
+- **Brine:** pump 16, probes 31/32, transducer 37, exchanger 10 with valves 27/28.
 - **HTR:** exchanger 9, pump 17, valves 22/25.
 - **Safety and service:** vessels 18/19, safety valves 20/21, drain valves 23/24.
 
 #### Scenario: Hydraulic items
 - **WHEN** the card renders variant 4 with every feature `true`
 - **THEN** items 9, 10, 15-28, 31-34, 37, 38, 44 and 45 are drawn with their item numbers
+
+#### Scenario: HTR placement
+- **WHEN** the card renders variant 4 with HTR `true`
+- **THEN** exchanger 9 sits on the compressor discharge line between compressor 11 and valve 14, and its water
+  lines with pump 17 and valves 22/25 join the DHW lines of connections 5/6
 
 #### Scenario: Probe placement
 - **WHEN** the card renders
@@ -87,6 +97,10 @@ indication when the alarm is on.
 #### Scenario: Mode label
 - **WHEN** the mode is `passive_cooling`
 - **THEN** the card shows the text "Passive cooling"
+
+#### Scenario: Defrost label
+- **WHEN** the mode is `defrost`
+- **THEN** the card shows the text "Defrost"
 
 ### Requirement: Theme aware
 The drawing SHALL use Home Assistant theme variables for its outlines, text and muted colours, and SHALL be

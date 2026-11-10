@@ -36,22 +36,40 @@ on model B, or `dhw: external` on model C, SHALL be a configuration error.
 - **THEN** the card shows a configuration error that names `dhw`
 
 ### Requirement: Variant presets
-Each variant SHALL set a default state for the optional parts `active_cooling` (item 14), `passive_cooling` (items
-10, 27, 28), `htr` (items 9, 17, 22, 25) and `backup_heater` (items 44, 45). The presets SHALL follow the B1-B4
-figures of the service manual. Variant 4 SHALL enable all four parts.
+Each variant SHALL set a default state for the cooling parts, following the B1-B4 figures of the service manual:
+- `active_cooling` (item 14)
+- `passive_cooling` (items 10, 27, 28)
+
+Variant 1 SHALL disable both parts, variant 2 SHALL enable passive cooling only, variant 3 SHALL enable active
+cooling only, and variant 4 SHALL enable both. The parts `htr` (items 9, 17, 22, 25) and `backup_heater` (items
+44, 45) appear in every figure. They SHALL default to `true` for every variant.
 
 #### Scenario: Variant 4
 - **WHEN** the config sets `variant: 4` and no `features`
 - **THEN** active cooling, passive cooling, HTR and backup heater are all enabled
 
-#### Scenario: Variant without passive cooling
-- **WHEN** the config sets a variant whose manual figure has no items 10, 27 and 28
-- **THEN** passive cooling is disabled and items 10, 27 and 28 are not drawn
+#### Scenario: Variant 1
+- **WHEN** the config sets `variant: 1` and no `features`
+- **THEN** active and passive cooling are disabled, items 10, 14, 27 and 28 are not drawn, and HTR and the backup
+  heater are enabled
+
+#### Scenario: Variant 2
+- **WHEN** the config sets `variant: 2` and no `features`
+- **THEN** passive cooling is enabled and active cooling is disabled
+
+#### Scenario: Variant 3
+- **WHEN** the config sets `variant: 3` and no `features`
+- **THEN** active cooling is enabled and passive cooling is disabled
 
 ### Requirement: Feature states override the preset
-Each key under `features` SHALL take `true` (present and in use), `false` (not present, not drawn) or `unused`
-(present, drawn muted, never active). A key set in `features` SHALL override the variant preset for that part
-only.
+Each key under `features` SHALL take one of three states:
+- `true`: present and in use.
+- `false`: not present, not drawn.
+- `unused`: present and drawn muted. The card SHALL never derive the part's own function, and SHALL never draw
+  the part active, except that exchanger 10 with valves 27 and 28 SHALL still be active during a defrost (see
+  operating-mode).
+
+A key set in `features` SHALL override the variant preset for that part only.
 
 #### Scenario: Unused part
 - **WHEN** the config sets `features: { passive_cooling: unused }`
@@ -79,17 +97,22 @@ role: `<domain>.<prefix>_<suffix>`, with the domain and suffix of the firmware n
 - **THEN** that role shows no value, and the card renders without a configuration error
 
 ### Requirement: Per-role entity overrides
-`entities` SHALL map a role path (for example `production.outlet_temperature`) to an entity id. An override SHALL
-win over the prefix default. An unknown role path, or a value that is not an entity id, SHALL be a configuration
-error.
+`entities` SHALL map role paths to entity ids as nested objects, one level per path segment. For example, the
+role `production.outlet_temperature` is set as `entities: { production: { outlet_temperature: <entity id> } }`.
+An override SHALL win over the prefix default. An unknown role path, or a value that is not an entity id, SHALL
+be a configuration error.
 
 #### Scenario: Override one role
-- **WHEN** the config sets a prefix and `entities: { dhw.temperature: sensor.boiler_top }`
+- **WHEN** the config sets a prefix and `entities: { dhw: { temperature: sensor.boiler_top } }`
 - **THEN** the DHW tank shows the state of `sensor.boiler_top`, and every other role keeps its prefix default
 
 #### Scenario: Unknown role
-- **WHEN** the config sets `entities: { production.flow: sensor.x }`
+- **WHEN** the config sets `entities: { production: { flow: sensor.x } }`
 - **THEN** the card shows a configuration error that names `production.flow`
+
+#### Scenario: Not an entity id
+- **WHEN** the config sets `entities: { dhw: { temperature: 52 } }`
+- **THEN** the card shows a configuration error that names `dhw.temperature`
 
 ### Requirement: Sample values for an empty config
 A config with neither `prefix` nor any `entities` SHALL render with built-in sample values for every role, show a
