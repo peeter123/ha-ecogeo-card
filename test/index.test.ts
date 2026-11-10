@@ -7,6 +7,10 @@ describe('the bundle entry', () => {
     expect(window.customCards?.some((entry) => entry.type === 'ecogeo-card')).toBe(true);
   });
 
+  test('the picker entry shows a live preview of the schematic', () => {
+    expect(CARD_ENTRY.preview).toBe(true);
+  });
+
   test('adds the picker entry once, next to other cards', () => {
     const target: { customCards?: CustomCardEntry[] } = {
       customCards: [{ type: 'x', name: 'x', description: '', preview: false }],

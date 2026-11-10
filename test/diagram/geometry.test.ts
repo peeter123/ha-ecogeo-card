@@ -1,0 +1,322 @@
+import { describe, expect, test } from 'vitest';
+import type { CircuitId, Circuits } from '../../src/calc/circuits';
+import { DHW_STORAGES, type DhwStorage } from '../../src/config/options';
+import type { RolePath } from '../../src/config/roles';
+import { FEATURE_KEYS, type FeatureKey, type FeatureState, type Features } from '../../src/config/variants';
+import {
+  CABINET,
+  COMPONENTS,
+  CROSSINGS,
+  HOP,
+  MAX_CROSSINGS,
+  SEGMENTS,
+  crossingPoints,
+  drawnComponents,
+  drawnSegments,
+  gapsIn,
+  isSegmentActive,
+  onPolyline,
+  overlap,
+  partState,
+  pathData,
+  portsOf,
+  viewBox,
+  type DrawContext,
+  type Point,
+} from '../../src/diagram/geometry';
+
+const STATES: readonly FeatureState[] = [true, false, 'unused'];
+
+/** Every combination of the four features and the three DHW storages. */
+function contexts(): DrawContext[] {
+  const result: DrawContext[] = [];
+  const build = (index: number, features: Partial<Record<FeatureKey, FeatureState>>): void => {
+    const key = FEATURE_KEYS[index];
+    if (key === undefined) {
+      for (const dhw of DHW_STORAGES) result.push({ dhw, features: features as Features });
+      return;
+    }
+    for (const state of STATES) build(index + 1, { ...features, [key]: state });
+  };
+  build(0, {});
+  return result;
+}
+
+const ALL = contexts();
+const full = (dhw: DhwStorage = 'external'): DrawContext => ({
+  dhw,
+  features: { active_cooling: true, passive_cooling: true, htr: true, backup_heater: true },
+});
+const label = (context: DrawContext): string => `${context.dhw} ${JSON.stringify(context.features)}`;
+const items = (context: DrawContext): number[] => drawnComponents(context).map((entry) => entry.part.item);
+const ids = (context: DrawContext): string[] => drawnSegments(context).map((entry) => entry.part.id);
+const circuits = (valves2728: Circuits['valves2728'], active: readonly CircuitId[]): Circuits => ({
+  valve26: 'production',
+  valve14: 'normal',
+  valves2728,
+  active: new Set(active),
+});
+const segmentPoints = (id: string): readonly Point[] => SEGMENTS.find((segment) => segment.id === id)?.points ?? [];
+
+describe('geometry data', () => {
+  test('the viewBox and the cabinet fit the zones of design D5', () => {
+    expect(viewBox).toEqual({ width: 1000, height: 620 });
+    expect(CABINET.x).toBe(240);
+    expect(CABINET.x + CABINET.width).toBe(760);
+    expect(CABINET.y).toBe(130);
+  });
+
+  test('ports 1 to 6 sit on the top edge in the manual order', () => {
+    const ports = COMPONENTS.filter((component) => component.kind === 'port');
+    expect(ports.map((port) => port.item)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(ports.every((port) => port.y === CABINET.y)).toBe(true);
+    const xs = ports.map((port) => port.x);
+    expect(xs).toEqual([...xs].sort((a, b) => a - b));
+  });
+
+  test('every component has an item number from 1 to 54', () => {
+    for (const component of COMPONENTS) {
+      expect(Number.isInteger(component.item) && component.item >= 1 && component.item <= 54).toBe(true);
+    }
+  });
+
+  test('every segment has at least two points and a circuit, and ids are unique', () => {
+    for (const segment of SEGMENTS) {
+      expect(segment.points.length, segment.id).toBeGreaterThanOrEqual(2);
+      expect(segment.circuit.length, segment.id).toBeGreaterThan(0);
+    }
+    expect(new Set(SEGMENTS.map((segment) => segment.id)).size).toBe(SEGMENTS.length);
+  });
+
+  test('the DG1 stubs of ports 1 and 2 end below the pipe run', () => {
+    for (const id of ['p1_stub', 'p2_stub']) {
+      const ys = segmentPoints(id).map((point) => point[1]);
+      expect(ys.length).toBeGreaterThan(0);
+      expect(Math.min(...ys)).toBeGreaterThan(110);
+      expect(Math.max(...ys)).toBeLessThanOrEqual(CABINET.y);
+    }
+  });
+
+  test('the production trunk serves DG1 and DHW, and the discharge line runs 11 to 9 to 14', () => {
+    const trunk = SEGMENTS.find((segment) => segment.id === 'trunk');
+    expect(trunk?.circuit).toEqual(['production_dg1', 'production_dhw']);
+    const port = (item: number): Point[] => {
+      const component = COMPONENTS.find((candidate) => candidate.item === item);
+      return component === undefined ? [] : portsOf(component);
+    };
+    const discharge = segmentPoints('ref_discharge');
+    expect(port(11)).toContainEqual(discharge[0]);
+    expect(port(9)).toContainEqual(discharge.at(-1));
+    expect(port(9)).toContainEqual(segmentPoints('ref_9_14')[0]);
+    expect(port(14)).toContainEqual(segmentPoints('ref_9_14').at(-1));
+  });
+
+  test('isSegmentActive: a multi-circuit segment is active when any circuit is', () => {
+    const trunk = { circuit: ['production_dg1', 'production_dhw'] } as const;
+    expect(isSegmentActive(trunk, circuits('closed', ['production_dhw']))).toBe(true);
+    expect(isSegmentActive(trunk, circuits('closed', ['brine']))).toBe(false);
+  });
+
+  test('isSegmentActive: the legs behind a closed arm of valves 27/28 are active only while the valves are closed', () => {
+    for (const id of ['prod_27_in', 'br_feed7', 'brine_7_28']) {
+      const segment = SEGMENTS.find((candidate) => candidate.id === id);
+      if (segment === undefined) throw new Error(id);
+      const active = segment.circuit;
+      expect(isSegmentActive(segment, circuits('closed', active)), id).toBe(true);
+      expect(isSegmentActive(segment, circuits('exchanger', active)), id).toBe(false);
+    }
+  });
+
+  test('every crossing lies strictly inside the cabinet and at least a hop from the corners of the pipe it breaks', () => {
+    for (const { at, under } of CROSSINGS) {
+      expect(at[0] > CABINET.x && at[0] < CABINET.x + CABINET.width, under).toBe(true);
+      expect(at[1] > CABINET.y && at[1] < CABINET.y + CABINET.height, under).toBe(true);
+      const points = segmentPoints(under);
+      points.slice(1).forEach((end, index) => {
+        const start = points[index];
+        if (start === undefined) return;
+        const onPiece =
+          (start[0] === end[0] &&
+            at[0] === start[0] &&
+            at[1] > Math.min(start[1], end[1]) &&
+            at[1] < Math.max(start[1], end[1])) ||
+          (start[1] === end[1] &&
+            at[1] === start[1] &&
+            at[0] > Math.min(start[0], end[0]) &&
+            at[0] < Math.max(start[0], end[0]));
+        if (!onPiece) return;
+        const toStart = Math.abs(at[0] - start[0]) + Math.abs(at[1] - start[1]);
+        const toEnd = Math.abs(at[0] - end[0]) + Math.abs(at[1] - end[1]);
+        expect(Math.min(toStart, toEnd), under).toBeGreaterThanOrEqual(HOP);
+      });
+    }
+  });
+
+  test('gapsIn: no gap when the pipe on top is not drawn', () => {
+    const idsOf = (context: DrawContext): Set<string> => new Set(ids(context));
+    expect(gapsIn('p2_in', idsOf(full('external')))).toContainEqual([312, 172]);
+    expect(gapsIn('p2_in', idsOf(full('none')))).toEqual([]);
+    expect(pathData(segmentPoints('p2_in'), gapsIn('p2_in', idsOf(full('none'))))).toBe('M312 130 L312 198');
+  });
+});
+
+describe('integrity in every configuration', () => {
+  test.each(ALL.map((context) => [label(context), context] as const))('%s', (_name, context) => {
+    const components = drawnComponents(context).map((entry) => entry.part);
+    const segments = drawnSegments(context).map((entry) => entry.part);
+    const ports = components.flatMap((component) => portsOf(component));
+
+    // every segment endpoint touches a component port or another segment (or leaves through the top edge)
+    for (const segment of segments) {
+      for (const end of [segment.points[0], segment.points[segment.points.length - 1]]) {
+        if (end === undefined) throw new Error('no point');
+        const atPort = ports.some((port) => port[0] === end[0] && port[1] === end[1]);
+        const onOther = segments.some((other) => other !== segment && onPolyline(end, other.points));
+        const stub = (segment.id === 'p1_stub' || segment.id === 'p2_stub') && end[1] < CABINET.y;
+        expect(atPort || onOther || stub, `${segment.id} at ${end.join(',')}`).toBe(true);
+      }
+    }
+
+    // every port of a drawn component is touched by a drawn segment
+    for (const component of components) {
+      for (const port of portsOf(component)) {
+        const touched = segments.some((segment) => onPolyline(port, segment.points));
+        expect(touched, `item ${String(component.item)} port ${port.join(',')}`).toBe(true);
+      }
+    }
+
+    // each probe's stem touches a pipe of its own temperature role
+    const probeRoles: [number, RolePath][] = [
+      [33, 'production.outlet_temperature'],
+      [34, 'production.return_temperature'],
+      [31, 'brine.outlet_temperature'],
+      [32, 'brine.inlet_temperature'],
+      [30, 'compressor.discharge_temperature'],
+      [29, 'compressor.suction_temperature'],
+    ];
+    for (const [item, role] of probeRoles) {
+      const probe = components.find((component) => component.item === item);
+      const stem = probe === undefined ? undefined : portsOf(probe)[0];
+      if (stem === undefined) throw new Error(`probe ${String(item)}`);
+      expect(
+        segments.some((segment) => segment.temperatureRole === role && onPolyline(stem, segment.points)),
+        `probe ${String(item)}`,
+      ).toBe(true);
+    }
+
+    // HTR water joins the DHW lines: pump 17's feed on the return, the riser on the supply
+    const htrIn = segments.find((segment) => segment.id === 'htr_in');
+    const riser = segments.find((segment) => segment.id === 'htr_riser');
+    expect(htrIn === undefined, 'htr_in').toBe(riser === undefined);
+    if (htrIn !== undefined && riser !== undefined) {
+      const start = htrIn.points[0];
+      const end = riser.points[riser.points.length - 1];
+      if (start === undefined || end === undefined) throw new Error('no point');
+      expect(segments.some((s) => s.id.startsWith('dhw_ret_') && onPolyline(start, s.points))).toBe(true);
+      expect(segments.some((s) => s.id.startsWith('dhw_sup_') && onPolyline(end, s.points))).toBe(true);
+    }
+
+    // no segments cross unless the crossing is declared, and none run along each other
+    const declared = new Set(
+      CROSSINGS.map((crossing) => `${crossing.over}|${crossing.under}|${crossing.at.join(',')}`),
+    );
+    segments.forEach((first, index) => {
+      for (const second of segments.slice(index + 1)) {
+        for (const at of crossingPoints(first.points, second.points)) {
+          const found =
+            declared.has(`${first.id}|${second.id}|${at.join(',')}`) ||
+            declared.has(`${second.id}|${first.id}|${at.join(',')}`);
+          expect(found, `${first.id} x ${second.id} at ${at.join(',')}`).toBe(true);
+        }
+        expect(overlap(first.points, second.points), `${first.id} along ${second.id}`).toBe(false);
+      }
+    });
+  });
+
+  test('every declared crossing is a real crossing', () => {
+    for (const crossing of CROSSINGS) {
+      const found = crossingPoints(segmentPoints(crossing.over), segmentPoints(crossing.under));
+      expect(found, `${crossing.over} / ${crossing.under}`).toContainEqual(crossing.at);
+    }
+  });
+
+  test('the crossings inside the cabinet stay at or below the manual figure (design D5)', () => {
+    expect(MAX_CROSSINGS).toBe(15);
+    expect(CROSSINGS.length).toBeLessThanOrEqual(MAX_CROSSINGS);
+  });
+});
+
+describe('feature states', () => {
+  const without = (key: FeatureKey): DrawContext => ({
+    ...full(),
+    features: { ...full().features, [key]: false },
+  });
+  const removed = (key: FeatureKey): number[] =>
+    items(full())
+      .filter((item) => !items(without(key)).includes(item))
+      .sort((a, b) => a - b);
+
+  test('a false feature removes its parts entirely', () => {
+    expect(removed('active_cooling')).toEqual([14]);
+    expect(removed('passive_cooling')).toEqual([10, 27, 28]);
+    expect(removed('htr')).toEqual([9, 17, 22, 25]);
+    expect(removed('backup_heater')).toEqual([44, 45]);
+  });
+
+  test('the pipes of a removed part go too, and a bypass takes their place', () => {
+    expect(ids(without('passive_cooling'))).not.toContain('prod_10_in');
+    expect(ids(without('passive_cooling'))).toContain('prod_bypass27');
+    expect(ids(without('passive_cooling'))).toContain('brine_bypass28');
+    expect(ids(without('htr'))).toContain('ref_discharge_direct');
+    expect(ids(without('htr'))).not.toContain('htr_riser');
+    expect(ids(without('active_cooling'))).toContain('ref_direct_suction');
+    expect(ids(without('backup_heater'))).toContain('prod_bypass44');
+  });
+
+  test('an unused feature is drawn muted, its through pipes stay normal', () => {
+    const context: DrawContext = { ...full(), features: { ...full().features, htr: 'unused' } };
+    expect(partState({ feature: 'htr' }, context)).toBe('muted');
+    expect(partState({ through: 'htr' }, context)).toBe('normal');
+    expect(items(context)).toEqual(expect.arrayContaining([9, 17, 22, 25]));
+  });
+
+  test('without DHW storage there are no ports 5/6, no valve 26 and no HTR', () => {
+    for (const item of [5, 6, 26, 9, 17, 22, 25]) expect(items(full('none'))).not.toContain(item);
+    expect(ids(full('none'))).toContain('p1_direct');
+    expect(ids(full('none'))).not.toContain('p1_up');
+  });
+
+  test('the internal tank of model C has no ports 5/6 and a coil slot', () => {
+    expect(items(full('internal'))).not.toContain(5);
+    expect(items(full('internal'))).not.toContain(6);
+    expect(items(full('internal'))).toContain(26);
+    expect(items(full('internal'))).toContain(51);
+  });
+});
+
+describe('pathData', () => {
+  test('a polyline without gaps', () => {
+    const points: Point[] = [
+      [0, 0],
+      [10, 0],
+      [10, 10],
+    ];
+    expect(pathData(points)).toBe('M0 0 L10 0 L10 10');
+  });
+
+  test('a gap near the end of a piece is clamped to the piece', () => {
+    const points: Point[] = [
+      [0, 0],
+      [20, 0],
+    ];
+    expect(pathData(points, [[17, 0]])).toBe('M0 0 L12 0 M20 0 L20 0');
+  });
+
+  test('a gap on each side of a crossing', () => {
+    const points: Point[] = [
+      [0, 0],
+      [20, 0],
+    ];
+    expect(pathData(points, [[10, 0]])).toBe('M0 0 L5 0 M15 0 L20 0');
+  });
+});

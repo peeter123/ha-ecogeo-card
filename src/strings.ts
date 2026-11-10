@@ -71,3 +71,10 @@ export const CONFIG_ERRORS = {
   prefix: 'a prefix of lowercase letters, digits and underscores',
   dhwMismatch: (dhw: string, model: string): string => `Invalid option dhw: ${dhw} does not fit model ${model}`,
 } as const;
+
+/** The labels of the circuits at the cabinet's top connections (manual items 1/2, 3/4 and 5/6). */
+export const CIRCUIT_LABELS = {
+  dg1: 'DG1',
+  outerLoop: 'Outer loop',
+  dhw: 'DHW',
+} as const;

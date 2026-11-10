@@ -1,12 +1,15 @@
 // The ecoGEO schematic card: a LitElement that validates and resolves its config, reads the roles, derives the mode
-// and shows the footer indications (mode, alarm, offline, sample values) under an empty SVG in the viewBox of design
-// D5. The drawing arrives in group 4.
+// draws the cabinet (diagram/cabinet.ts) in the SVG viewBox of design D5 and shows the footer indications (mode,
+// alarm, offline, sample values). Pipe colours and live value labels arrive in groups 5 and 6.
 import { css, html, LitElement, nothing, type PropertyValues, type TemplateResult } from 'lit';
+import { circuitsFor, type Circuits } from '../calc/circuits';
 import { deriveMode, isAlarm, isOffline, type Mode } from '../calc/mode';
 import { readRoles, type Readings } from '../calc/readings';
 import { configErrors } from '../config/options';
 import { resolveConfig, type ResolvedConfig } from '../config/resolve';
 import { SAMPLE_STATES } from '../config/sample';
+import { cabinetStyles, renderCabinet } from '../diagram/cabinet';
+import { viewBox } from '../diagram/geometry';
 import type { CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { stateOf, type HassLike } from '../lib/hass';
@@ -16,8 +19,8 @@ import { INDICATIONS, MODE_LABELS, SCHEMATIC_LABEL } from '../strings';
 export const CARD_TAG = 'ecogeo-card';
 
 /** The drawing's coordinate system (design D5). */
-export const VIEWBOX_WIDTH = 1000;
-export const VIEWBOX_HEIGHT = 620;
+export const VIEWBOX_WIDTH = viewBox.width;
+export const VIEWBOX_HEIGHT = viewBox.height;
 
 /** Home Assistant's grid options for a card (design D6). */
 export interface GridOptions {
@@ -28,14 +31,23 @@ export interface GridOptions {
 }
 
 export class EcogeoCard extends LitElement {
-  static override styles = css`
-    .sample {
-      color: var(--secondary-text-color);
-    }
-    .alarm {
-      color: var(--error-color);
-    }
-  `;
+  static override styles = [
+    cabinetStyles,
+    css`
+      .footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        padding: 0 16px 12px;
+      }
+      .sample {
+        color: var(--secondary-text-color);
+      }
+      .alarm {
+        color: var(--error-color);
+      }
+    `,
+  ];
 
   static override properties = {
     hass: { attribute: false },
@@ -84,11 +96,13 @@ export class EcogeoCard extends LitElement {
     this.renderedHass = this.hass;
     const resolved = this.resolved;
     let mode: Mode | undefined;
+    let circuits: Circuits | undefined;
     let alarm = false;
     let offline = false;
     if (resolved !== undefined) {
       const read = this.readings(resolved);
       mode = deriveMode(read.readings, resolved.features);
+      circuits = circuitsFor(mode, resolved.features, resolved.dhw, read.readings);
       alarm = isAlarm(read.readings['unit.alarm']);
       offline = read.offline;
     }
@@ -98,7 +112,9 @@ export class EcogeoCard extends LitElement {
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label=${SCHEMATIC_LABEL}
-      ></svg>
+      >
+        ${resolved === undefined || circuits === undefined ? nothing : renderCabinet(resolved, circuits)}
+      </svg>
       <div class="footer">
         ${mode === undefined ? nothing : html`<span class="mode">${MODE_LABELS[mode]}</span>`}
         ${alarm ? html`<span class="alarm">${INDICATIONS.alarm}</span>` : nothing}

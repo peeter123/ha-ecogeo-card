@@ -19,7 +19,7 @@ declare global {
   }
 }
 
-export const CARD_ENTRY: CustomCardEntry = { type: CARD_TAG, ...CARD_PICKER, preview: false };
+export const CARD_ENTRY: CustomCardEntry = { type: CARD_TAG, ...CARD_PICKER, preview: true };
 
 /** Adds the card to the card picker once, whatever else the list holds. */
 export function registerCardPicker(target: { customCards?: CustomCardEntry[] } = window): void {

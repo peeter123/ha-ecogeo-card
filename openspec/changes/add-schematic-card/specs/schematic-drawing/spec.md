@@ -34,7 +34,13 @@ Each connection SHALL show its item number.
 #### Scenario: No crossings
 - **WHEN** the card renders model B with `dhw: external` and any source
 - **THEN** the DG1 stubs of connections 1/2 end below the pipe run above the cabinet, the 3/4 pipes run left to
-  the source, the 5/6 pipes run right to the tank, and no two pipes cross
+  the source, the 5/6 pipes run right to the tank, and no two pipes outside the cabinet cross
+
+#### Scenario: Hops inside the cabinet
+- **WHEN** the card renders model B with `dhw: external`
+- **THEN** every crossing of pipes inside the cabinet (such as the DHW supply and return lines over the lines of
+  connections 2, 3 and 4) is drawn as a hop, there are no more crossings than in the manual figure, and no pipe
+  outside the cabinet crosses another
 
 ### Requirement: Refrigerant components after the manual figure
 The cabinet SHALL contain the refrigerant circuit in the topology of the manual's B4 figure, each component with
@@ -71,8 +77,9 @@ its item number:
 
 ### Requirement: Optional parts follow their feature state
 A part whose feature is `false` SHALL NOT be drawn, and its pipes SHALL be closed off as in a variant without
-that part. A part whose feature is `unused` SHALL be drawn in the muted style and never active. A part whose
-feature is `true` SHALL be drawn normally.
+that part. A part whose feature is `unused` SHALL be drawn in the muted style and never active, except exchanger
+10 with valves 27/28 in `defrost`, which are drawn active (see operating-mode). A part whose feature is `true`
+SHALL be drawn normally.
 
 #### Scenario: Without passive cooling
 - **WHEN** passive cooling is `false`

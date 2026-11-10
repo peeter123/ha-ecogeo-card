@@ -113,20 +113,21 @@ something visible also ends with emulator screenshots, which an agent inspects a
 
 ## 4. Cabinet drawing
 
-- [ ] 4.1 Implement `src/diagram/geometry.ts` per design D5 for the cabinet:
+- [x] 4.1 Implement `src/diagram/geometry.ts` per design D5 for the cabinet:
   - ports 1-6 on the top edge
   - every component listed in the schematic-drawing spec, with item number and feature
   - every internal segment, with circuit, temperature role, speed role and direction, including the discharge
     line through HTR exchanger 9 and the HTR water lines to the 5/6 lines
   - the DG1 stubs of ports 1/2 ending below the pipe run (design D5)
+  - the declared internal crossings (hops) and multi-circuit segments of design D5
   - model C variant: no 5/6, internal tank slot
   Add the integrity tests from D5.
   Verify: `npm test`.
-- [ ] 4.2 Implement `src/diagram/symbols.ts`: pump, 3-way valve with a position, probe T, transducer P,
+- [x] 4.2 Implement `src/diagram/symbols.ts`: pump, 3-way valve with a position, probe T, transducer P,
   mini-pressure switch, plate exchanger, compressor, expansion vessel, safety valve, drain valve, resistor,
   filter dryer, expansion valve and service outlet. All use theme colours and `currentColor`.
   Verify: unit test that each symbol renders an svg group.
-- [ ] 4.3 Implement `src/diagram/cabinet.ts`:
+- [x] 4.3 Implement `src/diagram/cabinet.ts`:
   - the cabinet outline, ports with item numbers, and circuit labels DG1, outer loop and DHW
   - components and segments in the neutral colour (colouring is group 6)
   - valve positions from `circuits.ts`
@@ -135,18 +136,19 @@ something visible also ends with emulator screenshots, which an agent inspects a
   Unit-test the schematic-drawing scenarios that can be checked in the DOM: port order, no DHW, without
   passive cooling, unused HTR, model C ports, defrost label, no img or background-image.
   Verify: `npm test`.
-- [ ] 4.4 Emulator verification: run `npm run capture`. A subagent inspects the B4 heating capture against the
+- [x] 4.4 Emulator verification: run `npm run capture`. A subagent inspects the B4 heating capture against the
   manual's B4 figure (topology, item positions, probe placement), plus the captures with features off and
   unused, and dark theme. It returns a verdict.
   Verify: verdict with no topology errors (findings go back to 4.1-4.3).
-- [ ] 4.5 Update `docs/ecogeo-card.md` with the drawing section: which items are drawn, the item-to-symbol table,
+- [x] 4.5 Update `docs/ecogeo-card.md` with the drawing section: which items are drawn, the item-to-symbol table,
   feature behaviour, and how the B4 topology was re-laid out.
   Verify: the section exists.
 
 ## 5. Outer-loop source and DHW storage
 
 - [ ] 5.1 Implement `src/diagram/source.ts` per the outer-loop-source spec:
-  - pipes from ports 3/4 up into the run and to the left zone, above the DG1 stubs
+  - pipes from ports 3/4 up into the run and to the left zone, above the DG1 stubs and the circuit labels
+    (their glyphs reach about y 104, so the pipes stay above y 100 or the labels move)
   - air unit (housing, coil, fan rotating with speed, stopped at 0 or unknown)
   - ground loop
   - hybrid, with both on one brine loop and their labels
@@ -160,7 +162,7 @@ something visible also ends with emulator screenshots, which an agent inspects a
   Verify: `npm test`.
 - [ ] 5.3 Emulator verification: run `npm run capture`. A subagent inspects the air, ground and hybrid captures,
   external, internal and none, and model C. It checks that the pipes leave from the top connections and that no
-  pipes cross.
+  pipes outside the cabinet cross.
   Verify: verdict with no crossings (findings go back to 5.1-5.2).
 - [ ] 5.4 Update `docs/ecogeo-card.md` (source and DHW sections) and the README (source and dhw options with an
   example per value).
@@ -177,7 +179,8 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - the dash overlay animated in its direction, at a speed from its speed role, and at a fixed speed on the
     HTR water segments
   - refrigerant reversed in active cooling, and muted in defrost
-  - exchanger 10 active in defrost even when `unused`
+  - exchanger 10, valves 27/28 and their pipes active in defrost even when `unused` (symbols un-muted too)
+  - the mode-dependent roles of design D7 (`prod_10_out` and the 27-to-8 legs, HTR water on the DHW lines)
   - reduced motion respected
   - the tank body coloured by the DHW temperature
   Unit-test the segment, muted, animation and reduced-motion scenarios.

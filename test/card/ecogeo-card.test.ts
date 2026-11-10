@@ -24,12 +24,12 @@ const hassWith = (...entries: readonly (readonly [string, string, string?])[]): 
 });
 
 describe('ecogeo-card frame', () => {
-  test('the element registers and renders an svg with the viewBox of design D5', async () => {
+  test('the element registers and renders an svg with the viewBox of design D5 and the cabinet', async () => {
     const card = await mount();
     const svg = card.shadowRoot?.querySelector('svg');
     expect(svg).not.toBeNull();
     expect(svg?.getAttribute('viewBox')).toBe('0 0 1000 620');
-    expect(svg?.children).toHaveLength(0);
+    expect(svg?.querySelector('g.cabinet')).not.toBeNull();
     card.remove();
   });
 

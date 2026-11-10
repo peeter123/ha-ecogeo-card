@@ -150,6 +150,8 @@ noted). Display units are the card's own, not the entity's.
   merged with the overrides.
   - `unused` draws the part muted and stops the card from deriving the part's own function. For example,
     passive cooling is never derived when `passive_cooling` is `unused`.
+  - With `dhw: none`, HTR (9, 17, 22, 25) counts as `false`: its water lines have no DHW lines to join, so the
+    group is not drawn and the discharge line runs from 11 straight to 14.
   - Exchanger 10 with valves 27/28 also serves defrost. In defrost they are active whenever they are drawn
     (`true` or `unused`).
 - **Source default:** the default `source` is `ground` (the ecoGEO's design default). The live installation
@@ -204,10 +206,31 @@ noted). Display units are the card's own, not the entity's.
 - **Top ports:** x positions in manual order 1, 2 | 3, 4 | 5, 6.
   - Ports 1/2 end in short DG1 stubs that stay below the pipe run (y > 110), with their label.
   - The 3/4 pipes rise into the run and go left to the source zone, passing above the 1/2 stubs.
-  - The 5/6 pipes rise and go right to the DHW zone. No pipes cross, so no hops are drawn.
+  - The 5/6 pipes rise and go right to the DHW zone. No pipes outside the cabinet cross.
+- **Crossings inside the cabinet** (decided 2026-11-10 when group 4 traced the B4 figure): the line 1 -> 26 -> 5
+  separates port 2 from port 6, yet the DHW return from 6 joins port 2's line, so at least one internal crossing
+  is forced. As in the manual, the DHW supply and return lines cross the lines of ports 2, 3 and 4 with hops.
+  - Each crossing is declared in `geometry.ts` as data, `{ over, under, at }`, and drawn as a hop: a small gap
+    in the `under` segment.
+  - Keep the number of crossings at or below the figure's: 15 (14 hops plus the return line passing behind
+    resistor 44). This layout needs 14. Every crossing lies inside the cabinet.
 - **Components** are `{ item, kind, x, y, rotation, feature? }`.
 - **Segments** are `{ id, circuit, points: [x, y][], temperatureRole, speedRole?, direction: 1 | -1,
   feature? }`.
+  - `circuit` may list several circuits. Such a segment is active when any of them is. This covers the
+    production trunk shared by DG1 and DHW (from the 2/6 junction through valve 27, pump 15, condenser 8,
+    resistor 44 and probe 33 to valve 26). Its return part takes the role `production.return_temperature`
+    (probe 34 on "the return from connection 2 (or 6)").
+  - `onlyWhen: { valves2728: 'closed' | 'exchanger' }` marks a segment that carries water only in that valve
+    position (the legs behind a closed arm of 27/28: `prod_27_in`, `br_feed7`, `brine_7_28`).
+    `isSegmentActive(segment, circuits)` takes the whole `circuitsFor` output and reads it.
+  - Further segment fields: `reversible` (the refrigerant legs that flip direction in active cooling; the flip is
+    applied at render time), `stub` (dead-end taps, coloured but never animated), `through` (a pipe through a
+    part: hidden when the part is `false`, never muted), `bypass` (drawn only when the part is `false`) and
+    `dhw` (`any`, `external`, `internal` or `none`). Components also carry `tag` (item-number offset), `size`
+    and `dhw`.
+  - The effective feature state (with HTR `false` under `dhw: none`) comes from one exported helper, used by
+    the drawing and by the labels.
   - In active cooling the refrigerant segments flip `direction`. The swapped roles of 7 and 8 are expressed by
     `temperatureRole` lookups in `circuits.ts`, not by separate geometry.
   - The discharge line runs 11 -> 9 -> 14. HTR water segments run between exchanger 9, pump 17, valves 22/25
@@ -217,7 +240,9 @@ noted). Display units are the card's own, not the entity's.
   - every component of a drawn feature has an item number
   - no segment has fewer than two points
   - each `feature` part disappears entirely when the feature is `false`
-  - no two segments of different circuits cross
+  - no two segments of different circuits cross unless the crossing is declared, and every declared crossing
+    is a real crossing
+  - no segment outside the cabinet crosses another (checked again when group 5 adds source and DHW pipes)
 
 ### D6. Rendering
 - **Scaling and labels:** one `<svg viewBox>` scaled to the card width with
@@ -252,6 +277,14 @@ noted). Display units are the card's own, not the entity's.
   `diagram/streams.ts`. Values are clamped at the end stops.
 - Stops are configurable through the `colors` option: an ascending list of 2-8 `{ temperature, color }`.
 - The tank body and the HTR water segments use the same scale with the DHW temperature.
+- **Mode-dependent roles** (looked up at render time, like the 7/8 swap; no geometry change):
+  - `prod_10_out` takes the production outlet temperature (probe 33 is the first probe after exchanger 10).
+    In `passive_cooling` and `defrost` the production legs from valve 27 to condenser 8 take it too, because
+    the condenser does not change the water temperature with the compressor stopped.
+  - When `htr` is active and `production_dhw` is not, the DHW lines between valve 26 / port 2 and the tank
+    (`dhw_sup_*`, `dhw_ret_*` outside the 26 arm) carry HTR water: they take the DHW temperature and the fixed
+    HTR speed.
+  - In `defrost`, exchanger 10, valves 27/28 and their pipes are drawn active even when `unused`.
 
 ### D8. Helpers copied from hrv-ventilation
 Each is copied with its unit test and adjusted only where noted:

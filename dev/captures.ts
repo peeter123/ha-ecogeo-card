@@ -42,6 +42,7 @@ export const CAPTURES: readonly CaptureStep[] = [
   step('theme-dark-heating', 'scenario=heating&theme=dark'),
   step('theme-dark-dhw', 'scenario=dhw&theme=dark'),
   step('theme-dark-defrost', 'scenario=defrost&theme=dark'),
+  step('theme-dark-features-unused', 'scenario=active_cooling_htr&theme=dark&passive_cooling=unused&htr=unused'),
 ];
 
 /** The scenario in which a feature is active, so that muting or removing it shows. */

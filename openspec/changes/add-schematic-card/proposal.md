@@ -20,7 +20,8 @@ It also gives later work, such as diagnostics or extra registers, a place to sho
     3/4. Its pipes pass over the short DG1 stubs of ports 1/2.
   - **DHW storage (right of the cabinet):** an external tank joined to ports 5/6 (model B). Model C draws the tank
     inside the cabinet instead (manual-figure items 47-54). It can also be left out.
-  - With the source on the left and the tank on the right, no pipes cross.
+  - With the source on the left and the tank on the right, no pipes outside the cabinet cross. Inside it, the DHW
+    lines cross the lines of ports 2-4 with hops, as in the manual figure.
 - The card shows each live value beside its component: probes 29-34, pressures 35-38, pumps 15/16 in %, the
   compressor (rpm, %, W), the expansion valve and superheat, condensation and evaporation, DHW temperature and
   setpoint, the air unit's fan speed and outlet temperature, outside temperature and COP (firmware-entity).
