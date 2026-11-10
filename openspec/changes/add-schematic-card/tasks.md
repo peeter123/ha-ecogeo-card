@@ -87,18 +87,18 @@ something visible also ends with emulator screenshots, which an agent inspects a
 
 ## 3. Dev emulator
 
-- [ ] 3.1 Add `dev/scenarios.ts` with the eleven scenarios from the dev-emulator spec. Each is a full state map by
+- [x] 3.1 Add `dev/scenarios.ts` with the eleven scenarios from the dev-emulator spec. Each is a full state map by
   role path, resolved through the demo prefix `demo_ecogeo`. Unit-test that each scenario derives the mode its
   name says.
   Verify: `npm test`.
-- [ ] 3.2 Add the emulator controls:
+- [x] 3.2 Add the emulator controls:
   - selects for model, variant, source, dhw, each feature and the theme
   - sliders for production out/in, brine out/in, DHW temperature, discharge, suction, both pumps, compressor %,
     fan speed and condensation capacity
   - all state mirrored in the URL query string per design D9
   Verify: agent check that changing a control re-renders the card and updates the URL, and that loading a URL
   restores the state.
-- [ ] 3.3 Add `scripts/capture.mjs` (Playwright as a dev dependency for capture only). It walks a fixed URL list
+- [x] 3.3 Add `scripts/capture.mjs` (Playwright as a dev dependency for capture only). It walks a fixed URL list
   covering:
   - every scenario with the default config
   - each source
@@ -108,7 +108,7 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - dark theme
   It writes PNGs to `build/captures/`. Add the `capture` npm script.
   Verify: `npm run capture` writes one PNG per URL.
-- [ ] 3.4 Document the emulator (start, controls, URL parameters, capture) in the README.
+- [x] 3.4 Document the emulator (start, controls, URL parameters, capture) in the README.
   Verify: the README section exists.
 
 ## 4. Cabinet drawing
@@ -186,7 +186,8 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - `display.ts` formats per design D6: `formatNumber` with HA's locale, the decimals from the entity's display
     precision or the role table, the role's own unit joined by NBSP; never `hass.formatEntityState`
   - HTML value labels at the positions in the live-values spec, and the footer
-  - a muted dash for missing values
+  - a muted dash for missing values in labels and the footer (`NO_VALUE` in `src/strings.ts` is still hrv's
+    `n/a`: change it to a dash, with its strings and format tests, or add a separate dash constant)
   - tap opens more-info
   Wire `shouldUpdate` to the resolved entity ids and the entity registry.
   Unit-test the live-values scenarios: compressor label, superheat, part not drawn, footer, locale, percent keeps

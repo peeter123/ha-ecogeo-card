@@ -129,11 +129,48 @@ Requires Node 22.13 or newer, 24, or 26 and newer.
 
 ```sh
 npm install
-npm run dev       # the preview page with a mock hass, served by Vite
+npm run dev       # the emulator: the card with a mock hass, served by Vite
+npm run capture   # one PNG per emulator URL in build/captures/
 npm test          # unit tests (Vitest, happy-dom)
 npm run check     # typecheck, lint, format check and tests
 npm run build     # bundle into build/ecogeo-card.js (git-ignored)
 npm run release   # check, build, verify that the bundle registers the card, copy it to dist/ecogeo-card.js
 ```
+
+### Emulator
+
+`npm run dev` opens the emulator (`dev/index.html`): the card on a mock `hass`, with no Home Assistant, no network and
+no installation data. The mock entities use the demo prefix `demo_ecogeo`.
+
+- **Scenario:** off, standby, heating, DHW, active cooling (all heat to the outer loop), active cooling with HTR
+  recovery, passive cooling, defrost, alarm while heating, bridge offline and sensors unavailable. Each is a complete
+  set of states (`dev/scenarios.ts`).
+- **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default,
+  external, internal or none), each feature (the variant's preset, `true`, `false` or `unused`) and the light or dark
+  theme. A combination the card rejects, such as model B with internal DHW, shows the config error under the card.
+- **Live values:** sliders for production out and in, brine out and in, DHW temperature, discharge, suction, both
+  pumps, the compressor percentage (it moves the speed too), the fan speed and the condensation capacity. Picking a
+  scenario resets them. Slider values are not part of the URL state.
+- **Cycle:** the cycle box steps through the capture list below, one step every 3 seconds.
+
+All state is in the URL query string, so every combination is addressable. Parameters left out take their default.
+
+| Parameter                                                      | Values                                                                       | Default    |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---------- |
+| `scenario`                                                     | `off`, `standby`, `heating`, `dhw`, `active_cooling`, `active_cooling_htr`, `passive_cooling`, `defrost`, `alarm_heating`, `offline`, `unavailable` | `heating`  |
+| `model`                                                        | `B`, `C`                                                                     | `B`        |
+| `variant`                                                      | `1` to `4`                                                                   | `4`        |
+| `source`                                                       | `air`, `ground`, `hybrid`                                                    | `ground`   |
+| `dhw`                                                          | `external`, `internal`, `none`                                               | by model   |
+| `active_cooling`, `passive_cooling`, `htr`, `backup_heater`    | `true`, `false`, `unused`                                                    | by variant |
+| `theme`                                                        | `light`, `dark`                                                              | `light`    |
+| `cycle`                                                        | seconds per step; the cycle runs when it is set                              | off        |
+
+For example `dev/index.html?scenario=passive_cooling&source=ground`.
+
+`npm run capture` starts its own Vite server, opens every URL of the fixed list in `dev/captures.ts` in headless
+Chromium (Playwright, a dev dependency for this script only) and writes one PNG per URL to `build/captures/`. The list
+covers every scenario, each source, each DHW value, model C, each feature `false` and `unused`, the other variants and
+the dark theme. The first run needs the browser: `npx playwright install chromium`.
 
 `dist/ecogeo-card.js` is the committed, deployable bundle. `npm run format` rewrites files with Prettier.

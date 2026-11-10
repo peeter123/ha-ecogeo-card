@@ -1,5 +1,5 @@
-// Adapted from hrv-ventilation dev/mock-hass.ts. A mock `hass` for the preview page: no entities yet (the
-// scenarios arrive with the emulator task group). A state object is replaced only when its value changes, as Home
+// Adapted from hrv-ventilation dev/mock-hass.ts. A mock `hass` for the preview page: the states come from the
+// scenarios (dev/scenarios.ts). A state object is replaced only when its value changes, as Home
 // Assistant does, so the card's re-render rule is exercised too.
 import type { HassEntityState, HassLike } from '../src/lib/hass';
 

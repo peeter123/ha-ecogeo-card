@@ -16,6 +16,7 @@
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "capture": "node scripts/capture.mjs",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
   },
   "dependencies": {
@@ -31,6 +32,7 @@
     "eslint-plugin-wc": "^3.1.0",
     "globals": "^17.13.0",
     "happy-dom": "^21.0.1",
+    "playwright": "^1.65.0",
     "prettier": "^3.9.10",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.2",

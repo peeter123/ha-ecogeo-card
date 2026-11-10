@@ -3,32 +3,62 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ecoGEO card preview</title>
+    <title>ecoGEO card emulator</title>
     <style>
       body {
         margin: 0;
         font-family: Roboto, 'Segoe UI', system-ui, sans-serif;
         font-size: 14px;
-        background: #e8e8e8;
+        background: var(--primary-background-color);
+        color: var(--primary-text-color);
       }
-      .theme {
+      .controls {
         display: flex;
         flex-wrap: wrap;
-        align-items: flex-start;
-        gap: 16px;
-        padding: 16px;
-        background: var(--primary-background-color);
+        gap: 8px 16px;
+        padding: 10px 16px;
+        background: #fff;
+        color: #212121;
+        border-bottom: 1px solid #ccc;
       }
-      .theme h2 {
-        flex-basis: 100%;
+      .controls fieldset {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 6px;
         margin: 0;
-        font-size: 14px;
-        color: var(--secondary-text-color);
+        padding: 4px 8px;
+      }
+      .controls label {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .controls output {
+        display: inline-block;
+        min-width: 5em;
+      }
+      #cards {
+        padding: 16px;
       }
       .slot {
-        flex: none;
+        width: 1000px;
       }
-      .light {
+      .error {
+        margin: 8px 0 0;
+        padding: 8px 12px;
+        border-left: 4px solid #db4437;
+        background: var(--card-background-color);
+        color: var(--primary-text-color);
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+      .error[hidden] {
+        display: none;
+      }
+      body.light {
         --primary-background-color: #fafafa;
         --card-background-color: #ffffff;
         --primary-text-color: #212121;
@@ -38,7 +68,7 @@
         --secondary-background-color: #e5e5e5;
         color-scheme: light;
       }
-      .dark {
+      body.dark {
         --primary-background-color: #111111;
         --card-background-color: #1c1c1c;
         --primary-text-color: #e1e1e1;
@@ -51,7 +81,8 @@
     </style>
     <script type="module" src="./preview.ts"></script>
   </head>
-  <body>
+  <body class="light">
+    <form id="controls" class="controls" onsubmit="return false;"></form>
     <main id="cards"></main>
   </body>
 </html>
