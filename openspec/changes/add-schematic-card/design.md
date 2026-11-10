@@ -227,7 +227,7 @@ noted). Display units are the card's own, not the entity's.
   - Further segment fields: `reversible` (the refrigerant legs that flip direction in active cooling; the flip is
     applied at render time), `stub` (dead-end taps, coloured but never animated), `through` (a pipe through a
     part: hidden when the part is `false`, never muted), `bypass` (drawn only when the part is `false`) and
-    `dhw` (`any`, `external`, `internal` or `none`). Components also carry `tag` (item-number offset), `size`
+    `dhw` (`any`, `external`, `internal` or `none`) and `source` (the sources a part is drawn for). Components also carry `tag` (item-number offset), `size`
     and `dhw`.
   - The effective feature state (with HTR `false` under `dhw: none`) comes from one exported helper, used by
     the drawing and by the labels.
@@ -266,6 +266,9 @@ noted). Display units are the card's own, not the entity's.
   - The decimals come from the entity's `display_precision` in `hass.entities` when set, and from the role
     table otherwise.
   - The display unit comes from the role table and is joined with `NBSP`.
+- **Label room:** model C's tank values (temperature, setpoint, start delta-T, demand) go in the empty DHW zone
+  right of the cabinet (about x 800-990, y 140-230), since the squat internal tank has no room. The ground
+  loop's brine values sit right of the collector (x 160-205).
 - **Footer:** the mode, on/off, season, outside temperature, COP, and the condensation and evaporation
   capacity, plus the alarm and offline indications.
 - **Grid:** `getGridOptions()` returns `{ columns: 'full', rows: 'auto', min_rows: 8 }` (`'full'` spans the
@@ -282,9 +285,15 @@ noted). Display units are the card's own, not the entity's.
     In `passive_cooling` and `defrost` the production legs from valve 27 to condenser 8 take it too, because
     the condenser does not change the water temperature with the compressor stopped.
   - When `htr` is active and `production_dhw` is not, the DHW lines between valve 26 / port 2 and the tank
-    (`dhw_sup_*`, `dhw_ret_*` outside the 26 arm) carry HTR water: they take the DHW temperature and the fixed
-    HTR speed.
+    (`dhw_sup_*`, `dhw_ret_*` outside the 26 arm, and `dhw_ext_*`) carry HTR water: they take the DHW
+    temperature and the fixed HTR speed.
+  - Model C coil 51 is a symbol, not a segment: it takes the `dhw_coil` state (production outlet colour when
+    active, muted otherwise) without animation.
   - In `defrost`, exchanger 10, valves 27/28 and their pipes are drawn active even when `unused`.
+  - The model C tap-water stubs 47/48/49 are coloured by the DHW temperature whenever the internal tank is
+    drawn, and never animated.
+- **Hybrid source:** the air unit and the ground loop are drawn in series on one brine loop (air unit first),
+  because parallel branches would force a crossing in the source zone.
 
 ### D8. Helpers copied from hrv-ventilation
 Each is copied with its unit test and adjusted only where noted:

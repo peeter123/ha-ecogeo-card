@@ -57,4 +57,5 @@ With `dhw: none`, the card SHALL draw no tank, no DHW pipes, no connections 5 an
 
 #### Scenario: Heating only
 - **WHEN** the config sets `dhw: none`
-- **THEN** nothing related to DHW is drawn or shown
+- **THEN** nothing related to DHW is drawn or shown, except the mode label "DHW" when the unit reports DHW
+  mode (see operating-mode)

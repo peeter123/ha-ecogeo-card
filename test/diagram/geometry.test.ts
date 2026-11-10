@@ -1,13 +1,17 @@
 import { describe, expect, test } from 'vitest';
 import type { CircuitId, Circuits } from '../../src/calc/circuits';
-import { DHW_STORAGES, type DhwStorage } from '../../src/config/options';
+import { DHW_STORAGES, SOURCES, type DhwStorage, type Source } from '../../src/config/options';
 import type { RolePath } from '../../src/config/roles';
 import { FEATURE_KEYS, type FeatureKey, type FeatureState, type Features } from '../../src/config/variants';
 import {
   CABINET,
   COMPONENTS,
+  AIR_UNIT,
   CROSSINGS,
+  EXTERNAL_TANK,
   HOP,
+  HTR_WATER_SEGMENT_IDS,
+  INTERNAL_TANK,
   MAX_CROSSINGS,
   SEGMENTS,
   crossingPoints,
@@ -15,6 +19,7 @@ import {
   drawnSegments,
   gapsIn,
   isSegmentActive,
+  onInternalTank,
   onPolyline,
   overlap,
   partState,
@@ -27,13 +32,15 @@ import {
 
 const STATES: readonly FeatureState[] = [true, false, 'unused'];
 
-/** Every combination of the four features and the three DHW storages. */
+/** Every combination of the four features, the three DHW storages and the three sources. */
 function contexts(): DrawContext[] {
   const result: DrawContext[] = [];
   const build = (index: number, features: Partial<Record<FeatureKey, FeatureState>>): void => {
     const key = FEATURE_KEYS[index];
     if (key === undefined) {
-      for (const dhw of DHW_STORAGES) result.push({ dhw, features: features as Features });
+      for (const dhw of DHW_STORAGES) {
+        for (const source of SOURCES) result.push({ dhw, source, features: features as Features });
+      }
       return;
     }
     for (const state of STATES) build(index + 1, { ...features, [key]: state });
@@ -43,11 +50,12 @@ function contexts(): DrawContext[] {
 }
 
 const ALL = contexts();
-const full = (dhw: DhwStorage = 'external'): DrawContext => ({
+const full = (dhw: DhwStorage = 'external', source: Source = 'ground'): DrawContext => ({
   dhw,
+  source,
   features: { active_cooling: true, passive_cooling: true, htr: true, backup_heater: true },
 });
-const label = (context: DrawContext): string => `${context.dhw} ${JSON.stringify(context.features)}`;
+const label = (context: DrawContext): string => `${context.dhw} ${context.source} ${JSON.stringify(context.features)}`;
 const items = (context: DrawContext): number[] => drawnComponents(context).map((entry) => entry.part.item);
 const ids = (context: DrawContext): string[] => drawnSegments(context).map((entry) => entry.part.id);
 const circuits = (valves2728: Circuits['valves2728'], active: readonly CircuitId[]): Circuits => ({
@@ -58,6 +66,16 @@ const circuits = (valves2728: Circuits['valves2728'], active: readonly CircuitId
 });
 const segmentPoints = (id: string): readonly Point[] => SEGMENTS.find((segment) => segment.id === id)?.points ?? [];
 
+/** Whether a polyline passes through the inside of a rectangle. */
+const enters = (points: readonly Point[], rect: { x: number; y: number; width: number; height: number }): boolean =>
+  points.slice(1).some((end, index) => {
+    const start = points[index];
+    if (start === undefined) return false;
+    const [x0, x1] = [Math.min(start[0], end[0]), Math.max(start[0], end[0])];
+    const [y0, y1] = [Math.min(start[1], end[1]), Math.max(start[1], end[1])];
+    return x1 > rect.x && x0 < rect.x + rect.width && y1 > rect.y && y0 < rect.y + rect.height;
+  });
+
 describe('geometry data', () => {
   test('the viewBox and the cabinet fit the zones of design D5', () => {
     expect(viewBox).toEqual({ width: 1000, height: 620 });
@@ -67,7 +85,7 @@ describe('geometry data', () => {
   });
 
   test('ports 1 to 6 sit on the top edge in the manual order', () => {
-    const ports = COMPONENTS.filter((component) => component.kind === 'port');
+    const ports = COMPONENTS.filter((component) => component.kind === 'port' && component.item <= 6);
     expect(ports.map((port) => port.item)).toEqual([1, 2, 3, 4, 5, 6]);
     expect(ports.every((port) => port.y === CABINET.y)).toBe(true);
     const xs = ports.map((port) => port.x);
@@ -172,15 +190,18 @@ describe('integrity in every configuration', () => {
         if (end === undefined) throw new Error('no point');
         const atPort = ports.some((port) => port[0] === end[0] && port[1] === end[1]);
         const onOther = segments.some((other) => other !== segment && onPolyline(end, other.points));
-        const stub = (segment.id === 'p1_stub' || segment.id === 'p2_stub') && end[1] < CABINET.y;
+        // a stub may end free above the top edge (DG1, the taps of model C) or on the integrated tank
+        const stub = segment.stub === true && (end[1] < CABINET.y || onInternalTank(end));
         expect(atPort || onOther || stub, `${segment.id} at ${end.join(',')}`).toBe(true);
       }
     }
 
-    // every port of a drawn component is touched by a drawn segment
+    // every port of a drawn component is touched by a drawn segment (the drain valve 53 and probe 54 touch the tank)
     for (const component of components) {
       for (const port of portsOf(component)) {
-        const touched = segments.some((segment) => onPolyline(port, segment.points));
+        const touched =
+          segments.some((segment) => onPolyline(port, segment.points)) ||
+          ([53, 54].includes(component.item) && onInternalTank(port));
         expect(touched, `item ${String(component.item)} port ${port.join(',')}`).toBe(true);
       }
     }
@@ -216,7 +237,47 @@ describe('integrity in every configuration', () => {
       expect(segments.some((s) => s.id.startsWith('dhw_sup_') && onPolyline(end, s.points))).toBe(true);
     }
 
-    // no segments cross unless the crossing is declared, and none run along each other
+    // the source and DHW parts appear only for their config values
+    const idsDrawn = new Set(segments.map((segment) => segment.id));
+    const has = (prefix: string): boolean => [...idsDrawn].some((id) => id.startsWith(prefix));
+    expect(has('src_air_'), 'air').toBe(context.source !== 'ground');
+    expect(has('src_gnd_'), 'ground').toBe(context.source === 'ground');
+    expect(has('src_hyb_'), 'hybrid').toBe(context.source === 'hybrid');
+    expect(idsDrawn.has('src_out') && idsDrawn.has('src_in')).toBe(true);
+    expect(has('dhw_ext_'), 'external').toBe(context.dhw === 'external');
+    expect(has('tap_'), 'taps').toBe(context.dhw === 'internal');
+    const drawnItems = components.map((component) => component.item);
+    for (const item of [47, 48, 49, 50, 51, 52, 53, 54]) {
+      expect(drawnItems.includes(item), `item ${String(item)}`).toBe(context.dhw === 'internal');
+    }
+
+    // the source and external DHW pipes stay above y 100 outside the cabinet (the circuit labels' glyphs reach about
+    // y 104)
+    for (const segment of segments.filter((s) => s.id.startsWith('src_') || s.id.startsWith('dhw_ext_'))) {
+      for (const point of segment.points) {
+        if (point[1] < CABINET.y) expect(point[1], segment.id).toBeLessThanOrEqual(100);
+      }
+    }
+
+    // only the coil lines enter the integrated tank (the taps end on its top wall), only the external coil pipes the external tank
+    // and only the air coil pipes the air unit's housing
+    const entering = (rect: { x: number; y: number; width: number; height: number }): string[] =>
+      segments.filter((segment) => enters(segment.points, rect)).map((segment) => segment.id);
+    // (a tank that is not drawn is not checked)
+    if (context.dhw === 'internal') expect(entering(INTERNAL_TANK).sort()).toEqual(['dhw_ret_b', 'dhw_sup_b']);
+    if (context.dhw === 'external') {
+      expect(entering(EXTERNAL_TANK).sort()).toEqual(['dhw_ext_coil', 'dhw_ext_in', 'dhw_ext_out']);
+    }
+    if (context.source !== 'ground') {
+      expect(entering(AIR_UNIT).sort()).toEqual(
+        context.source === 'air'
+          ? ['src_air_coil', 'src_air_exit', 'src_air_feed']
+          : ['src_air_coil', 'src_air_feed', 'src_hyb_link'],
+      );
+    }
+
+    // no segments cross unless the crossing is declared (and every crossing lies inside the cabinet), and none run
+    // along each other
     const declared = new Set(
       CROSSINGS.map((crossing) => `${crossing.over}|${crossing.under}|${crossing.at.join(',')}`),
     );
@@ -227,6 +288,10 @@ describe('integrity in every configuration', () => {
             declared.has(`${first.id}|${second.id}|${at.join(',')}`) ||
             declared.has(`${second.id}|${first.id}|${at.join(',')}`);
           expect(found, `${first.id} x ${second.id} at ${at.join(',')}`).toBe(true);
+          expect(
+            at[0] > CABINET.x && at[0] < CABINET.x + CABINET.width && at[1] > CABINET.y,
+            `${first.id} x ${second.id} outside the cabinet`,
+          ).toBe(true);
         }
         expect(overlap(first.points, second.points), `${first.id} along ${second.id}`).toBe(false);
       }
@@ -286,11 +351,89 @@ describe('feature states', () => {
     expect(ids(full('none'))).not.toContain('p1_up');
   });
 
-  test('the internal tank of model C has no ports 5/6 and a coil slot', () => {
+  test('the internal tank of model C has no ports 5/6 and items 47 to 54', () => {
     expect(items(full('internal'))).not.toContain(5);
     expect(items(full('internal'))).not.toContain(6);
     expect(items(full('internal'))).toContain(26);
-    expect(items(full('internal'))).toContain(51);
+    for (const item of [47, 48, 49, 50, 51, 52, 53, 54]) expect(items(full('internal'))).toContain(item);
+  });
+
+  test('the segments that carry HTR water are the DHW lines outside the arm of valve 26 and the external tank pipes', () => {
+    expect([...HTR_WATER_SEGMENT_IDS].sort()).toEqual([
+      'dhw_ext_coil',
+      'dhw_ext_in',
+      'dhw_ext_out',
+      'dhw_ret_b',
+      'dhw_ret_c',
+      'dhw_sup_b',
+      'dhw_sup_c',
+    ]);
+    // every DHW line is in the list or is the arm of valve 26 (the production_dhw circuit), or an internal tap
+    const dhwLines = SEGMENTS.filter((segment) => /^(dhw_sup_|dhw_ret_|dhw_ext_)/.test(segment.id));
+    for (const segment of dhwLines) {
+      expect(HTR_WATER_SEGMENT_IDS.includes(segment.id), segment.id).toBe(!segment.circuit.includes('production_dhw'));
+    }
+  });
+
+  test('coil 51 and tank 50 sit on the integrated tank and the ends of the DHW lines', () => {
+    const coil = COMPONENTS.find((component) => component.item === 51);
+    const tank = COMPONENTS.find((component) => component.item === 50);
+    if (coil === undefined || tank === undefined) throw new Error('no tank');
+    expect(portsOf(coil)).toEqual([segmentPoints('dhw_sup_b').at(-1), segmentPoints('dhw_ret_b')[0]]);
+    expect([tank.x, tank.y]).toEqual([
+      INTERNAL_TANK.x + INTERNAL_TANK.width / 2,
+      INTERNAL_TANK.y + INTERNAL_TANK.height / 2,
+    ]);
+    for (const port of portsOf(coil)) {
+      expect(port[0]).toBeGreaterThan(INTERNAL_TANK.x);
+      expect(port[1]).toBeGreaterThan(INTERNAL_TANK.y);
+      expect(port[1]).toBeLessThan(INTERNAL_TANK.y + INTERNAL_TANK.height);
+    }
+  });
+
+  test('the new pipes belong to their circuit and take their pump as speed role', () => {
+    for (const segment of SEGMENTS.filter((s) => s.id.startsWith('src_'))) {
+      expect(segment.circuit, segment.id).toEqual(['brine']);
+      expect(segment.speedRole, segment.id).toBe('brine.pump');
+    }
+    for (const segment of SEGMENTS.filter((s) => s.id.startsWith('dhw_ext_'))) {
+      expect(segment.circuit, segment.id).toEqual(['dhw_coil']);
+      expect(segment.speedRole, segment.id).toBe('production.pump');
+      expect(segment.dhw, segment.id).toBe('external');
+    }
+    for (const segment of SEGMENTS.filter((s) => s.id.startsWith('tap_'))) {
+      expect(segment.stub, segment.id).toBe(true);
+      expect(segment.temperatureRole, segment.id).toBe('dhw.temperature');
+    }
+  });
+
+  test('the integrated tank sits under the top edge and above the probe row', () => {
+    expect(INTERNAL_TANK.y).toBeGreaterThan(CABINET.y);
+    expect(INTERNAL_TANK.y + INTERNAL_TANK.height).toBeLessThan(CABINET.y + 80);
+  });
+
+  test('the source pipes leave from ports 3 and 4 and the DHW pipes from ports 5 and 6', () => {
+    const start = (id: string): Point | undefined => segmentPoints(id)[0];
+    const end = (id: string): Point | undefined => segmentPoints(id).at(-1);
+    expect(start('src_out')).toEqual([630, 130]);
+    expect(end('src_in')).toEqual([690, 130]);
+    expect(start('dhw_ext_in')).toEqual([722, 130]);
+    expect(end('dhw_ext_out')).toEqual([748, 130]);
+  });
+
+  test('the source parts follow the source option', () => {
+    const idsFor = (source: Source): string[] => ids(full('external', source)).filter((id) => id.startsWith('src_'));
+    expect(idsFor('air')).toEqual(['src_out', 'src_in', 'src_air_feed', 'src_air_coil', 'src_air_exit']);
+    expect(idsFor('ground')).toEqual(['src_out', 'src_in', 'src_gnd_feed', 'src_gnd_loop', 'src_gnd_exit']);
+    expect(idsFor('hybrid')).toEqual([
+      'src_out',
+      'src_in',
+      'src_air_feed',
+      'src_air_coil',
+      'src_hyb_link',
+      'src_hyb_loop',
+      'src_hyb_exit',
+    ]);
   });
 });
 

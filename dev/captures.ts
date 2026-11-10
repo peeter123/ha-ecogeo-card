@@ -22,7 +22,8 @@ export const CAPTURES: readonly CaptureStep[] = [
   ]),
   // each dhw value (internal only exists on model C)
   step('dhw-external', 'scenario=dhw&dhw=external'),
-  step('dhw-none', 'scenario=dhw&dhw=none'),
+  step('dhw-none', 'scenario=heating&dhw=none'),
+  step('dhw-none-dhw-mode', 'scenario=dhw&dhw=none'),
   step('dhw-internal-modelC', 'scenario=dhw&model=C&dhw=internal'),
   // model C
   step('model-C-dhw-none', 'scenario=heating&model=C&dhw=none'),
@@ -42,6 +43,7 @@ export const CAPTURES: readonly CaptureStep[] = [
   step('theme-dark-heating', 'scenario=heating&theme=dark'),
   step('theme-dark-dhw', 'scenario=dhw&theme=dark'),
   step('theme-dark-defrost', 'scenario=defrost&theme=dark'),
+  step('theme-dark-hybrid', 'scenario=heating&theme=dark&source=hybrid'),
   step('theme-dark-features-unused', 'scenario=active_cooling_htr&theme=dark&passive_cooling=unused&htr=unused'),
 ];
 

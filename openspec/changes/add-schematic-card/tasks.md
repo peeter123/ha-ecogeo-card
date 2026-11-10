@@ -146,7 +146,7 @@ something visible also ends with emulator screenshots, which an agent inspects a
 
 ## 5. Outer-loop source and DHW storage
 
-- [ ] 5.1 Implement `src/diagram/source.ts` per the outer-loop-source spec:
+- [x] 5.1 Implement `src/diagram/source.ts` per the outer-loop-source spec:
   - pipes from ports 3/4 up into the run and to the left zone, above the DG1 stubs and the circuit labels
     (their glyphs reach about y 104, so the pipes stay above y 100 or the labels move)
   - air unit (housing, coil, fan rotating with speed, stopped at 0 or unknown)
@@ -154,17 +154,17 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - hybrid, with both on one brine loop and their labels
   Unit-test the source scenarios in the DOM.
   Verify: `npm test`.
-- [ ] 5.2 Implement `src/diagram/dhw.ts` per the dhw-storage spec:
+- [x] 5.2 Implement `src/diagram/dhw.ts` per the dhw-storage spec:
   - external tank with coil right of the cabinet, pipes from 5/6 up into the run and to the right zone
   - internal tank for model C (50, 51, 54, stubs 47/48/49, 52, 53)
   - none
   Unit-test the dhw scenarios in the DOM.
   Verify: `npm test`.
-- [ ] 5.3 Emulator verification: run `npm run capture`. A subagent inspects the air, ground and hybrid captures,
+- [x] 5.3 Emulator verification: run `npm run capture`. A subagent inspects the air, ground and hybrid captures,
   external, internal and none, and model C. It checks that the pipes leave from the top connections and that no
   pipes outside the cabinet cross.
   Verify: verdict with no crossings (findings go back to 5.1-5.2).
-- [ ] 5.4 Update `docs/ecogeo-card.md` (source and DHW sections) and the README (source and dhw options with an
+- [x] 5.4 Update `docs/ecogeo-card.md` (source and DHW sections) and the README (source and dhw options with an
   example per value).
   Verify: sections exist.
 
@@ -183,7 +183,8 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - the mode-dependent roles of design D7 (`prod_10_out` and the 27-to-8 legs, HTR water on the DHW lines)
   - reduced motion respected
   - the tank body coloured by the DHW temperature
-  Unit-test the segment, muted, animation and reduced-motion scenarios.
+  Unit-test the segment, muted, animation and reduced-motion scenarios, including the source and DHW active
+  and muted states deferred from group 5 (standby, heating, DHW, defrost, HTR recovery on `dhw_ext_*`, coil 51).
   Verify: `npm test`.
 - [ ] 6.3 Implement `src/calc/display.ts` and `src/diagram/labels.ts`:
   - `display.ts` formats per design D6: `formatNumber` with HA's locale, the decimals from the entity's display
@@ -194,7 +195,10 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - tap opens more-info
   Wire `shouldUpdate` to the resolved entity ids and the entity registry.
   Unit-test the live-values scenarios: compressor label, superheat, part not drawn, footer, locale, percent keeps
-  its space, display precision, Fahrenheit, Fahrenheit superheat, sentinel, tap, unrelated entity.
+  its space, display precision, Fahrenheit, Fahrenheit superheat, sentinel, tap, unrelated entity. Also the
+  source and DHW value scenarios deferred from group 5: the fan speed label, the tank values (temperature,
+  setpoint, start delta-T, "Demand"), DHW temperature unavailable (muted body, no number), the hybrid's per-unit
+  labels, and model C's tank values in the DHW zone (design D6).
   Verify: `npm run check`.
 - [ ] 6.4 Emulator verification: run `npm run capture`. A subagent inspects every scenario. It checks colours
   against the scale, that active and muted circuits match the mode, that labels do not overlap at the default

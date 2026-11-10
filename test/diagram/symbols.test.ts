@@ -22,7 +22,8 @@ const KINDS: readonly ComponentKind[] = [
   'filter_dryer',
   'expansion_valve',
   'service_outlet',
-  'coil_slot',
+  'tank',
+  'coil',
 ];
 
 function mount(kind: ComponentKind, rotation: 0 | 90 | 180 | 270 = 0): SVGElement {
@@ -40,7 +41,7 @@ describe('symbols', () => {
     expect(group.classList.contains(kind)).toBe(true);
   });
 
-  test.each(KINDS.filter((kind) => kind !== 'coil_slot'))('%s draws something that follows the text colour', (kind) => {
+  test.each(KINDS)('%s draws something that follows the text colour', (kind) => {
     const group = mount(kind);
     expect(group.children.length).toBeGreaterThan(0);
     expect(group.getAttribute('stroke')).toBe('currentColor');

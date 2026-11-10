@@ -117,12 +117,12 @@ describe('cabinet drawing', () => {
     card.remove();
   });
 
-  test('model C: connections 1 to 4 only, and the tank slot inside the cabinet', async () => {
+  test('model C: connections 1 to 4 and the tank connections 47 to 49, and the tank inside the cabinet', async () => {
     const card = await mount({ model: 'C' });
     expect(
       [...root(card).querySelectorAll('[data-kind="port"]')].map((port) => Number(port.getAttribute('data-item'))),
-    ).toEqual([1, 2, 3, 4]);
-    expect(root(card).querySelector('.tank-slot')).not.toBeNull();
+    ).toEqual([1, 2, 3, 4, 47, 48, 49]);
+    expect(group(card, 50)).not.toBeNull();
     expect(items(card)).toContain(26);
     card.remove();
   });

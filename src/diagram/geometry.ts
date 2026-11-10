@@ -1,6 +1,8 @@
-// The cabinet's geometry as data (design D5): the viewBox, the ports on the top edge, every component and every
-// internal pipe segment, laid out after the manual's B4 figure (manual-figure, section 3.1, page 34). The topology
-// and the item numbers are the figure's; the coordinates are re-laid out for legibility. No Lit here: this file is
+// The drawing's geometry as data (design D5): the viewBox, the ports on the top edge, every component and every pipe
+// segment, laid out after the manual's B4 figure (manual-figure, section 3.1, page 34) and, for model C, figure C
+// (items 47-54, the integrated tank). The topology and the item numbers are the figures'; the coordinates are re-laid
+// out for legibility. Besides the cabinet's own pipes the segments include the pipes of the outer-loop source (left
+// zone) and of the external DHW tank (right zone), and the stubs of connections 47-49. No Lit here: this file is
 // data plus small pure helpers that the renderer and the integrity tests share.
 //
 // Layout in viewBox units (1000 x 620): source zone x 0-210, cabinet x 240-760, DHW zone x 790-1000, the pipe run
@@ -11,7 +13,7 @@
 //
 // Pipe points run in the direction of the flow in heating (`direction` 1) so that the renderer can animate them.
 import type { CircuitId, Circuits } from '../calc/circuits';
-import type { DhwStorage } from '../config/options';
+import type { DhwStorage, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
 
@@ -26,8 +28,37 @@ export const ZONES = {
   run: { y0: 0, y1: 110 },
 } as const;
 
-/** Where the integrated tank of model C goes (group 5 draws tank 50, coil 51 and probe 54 in it). */
-export const INTERNAL_TANK_SLOT = { x: 420, y: 138, width: 180, height: 66 } as const;
+/**
+ * The integrated tank of model C (item 50), inside the cabinet under the top edge: coil 51 (its ports are where the DHW
+ * lines of valve 26 end), probe 54 and drain valve 53 sit on or in it. The figure's tank is tall; this one is squat so
+ * that it fits above the probe row.
+ */
+export const INTERNAL_TANK = { x: 408, y: 138, width: 182, height: 66 } as const;
+
+/** The external tank right of the cabinet (not a manual item: the "DHW inter-accumulator" of ports 5/6). */
+export const EXTERNAL_TANK = { x: 806, y: 150, width: 178, height: 180 } as const;
+
+/** The air unit's housing and the fan in it, left of the cabinet (not manual items). */
+export const AIR_UNIT = {
+  x: 40,
+  y: 120,
+  width: 150,
+  height: 180,
+  fanX: 115,
+  fanY: 250,
+  fanRadius: 36,
+  /** The coil's fins: the first x, the step, how many, and where they start and end. */
+  fins: { x: 76, step: 12, count: 7, y0: 144, y1: 192 },
+  /** Where the caption sits. */
+  captionX: 95,
+  captionY: 112,
+} as const;
+
+/** The ground line (the surface) of the ground loop: lower in the hybrid, under the air unit. */
+export const GROUND_LINE_Y = { ground: 160, hybrid: 350 } as const;
+
+/** Where the ground loop's caption sits (below the collector). */
+export const GROUND_CAPTION = { x: 105, y: { ground: 320, hybrid: 510 } } as const;
 
 export type Point = readonly [x: number, y: number];
 export type Rotation = 0 | 90 | 180 | 270;
@@ -51,19 +82,22 @@ export type ComponentKind =
   | 'filter_dryer'
   | 'expansion_valve'
   | 'service_outlet'
-  | 'coil_slot';
+  | 'tank'
+  | 'coil';
 
 /**
  * When a part is drawn. `feature`: unless that feature is `false`, muted when `unused`. `through` (segments only): a
  * pipe that passes through the part: drawn unless the feature is `false`, never muted by it. `bypass` (segments
  * only): the pipe that replaces the part, drawn only when the feature is `false`. `dhw`: only for that DHW storage
- * (`any` means external or internal). HTR also needs DHW storage: with `dhw: none` it counts as `false`.
+ * (`any` means external or internal). `source`: only for those outer-loop sources. HTR also needs DHW storage: with
+ * `dhw: none` it counts as `false`.
  */
 export interface Visibility {
   feature?: FeatureKey;
   through?: FeatureKey;
   bypass?: FeatureKey;
   dhw?: 'any' | 'external' | 'internal' | 'none';
+  source?: readonly Source[];
 }
 
 /** Where an item number is written, relative to the component: dx, dy and the text anchor. */
@@ -127,6 +161,10 @@ export const COMPONENTS: readonly Component[] = [
   c(4, 'port', 690, 130, 0, [-7, -8, 'end']),
   c(5, 'port', 722, 130, 0, [-7, -8, 'end'], { dhw: 'external' }),
   c(6, 'port', 748, 130, 0, [-7, -8, 'end'], { dhw: 'external' }),
+  // model C: tap water inlet, DHW outlet and recirculation of the integrated tank, on the top edge
+  c(47, 'port', 440, 130, 0, [-7, -8, 'end'], { dhw: 'internal' }),
+  c(48, 'port', 490, 130, 0, [-7, -8, 'end'], { dhw: 'internal' }),
+  c(49, 'port', 540, 130, 0, [-7, -8, 'end'], { dhw: 'internal' }),
   // refrigerant circuit
   c(7, 'exchanger', 572, 382, 0, [-26, 6, 'end'], { size: 34 }),
   c(8, 'exchanger', 432, 382, 0, [-26, 6, 'end'], { size: 34 }),
@@ -167,8 +205,23 @@ export const COMPONENTS: readonly Component[] = [
   c(38, 'transducer_p', 352, 520, 270, [0, -14, 'middle']),
   c(44, 'resistor', 270, 320, 90, [12, 6, 'start'], { feature: 'backup_heater' }),
   c(45, 'thermostat', 286, 282, 90, [0, -12, 'middle'], { feature: 'backup_heater' }),
-  // the coil of model C's integrated tank (item 51): its two ports are where the DHW lines end
-  c(51, 'coil_slot', 420, 185, 0, [0, 0, 'middle'], { dhw: 'internal' }),
+  // model C's integrated tank (50) with its coil (51, ports where the DHW lines of valve 26 end), manual trap (52) on
+  // the supply line, drain valve (53) and DHW probe (54), the last two on the tank wall
+  c(
+    50,
+    'tank',
+    INTERNAL_TANK.x + INTERNAL_TANK.width / 2,
+    INTERNAL_TANK.y + INTERNAL_TANK.height / 2,
+    0,
+    [-80, -17, 'start'],
+    {
+      dhw: 'internal',
+    },
+  ),
+  c(51, 'coil', 495, 185, 0, [0, -25, 'middle'], { dhw: 'internal' }),
+  c(52, 'service_outlet', 395, 162, 0, [-8, 4, 'end'], { dhw: 'internal' }),
+  c(53, 'drain_valve', 599, 196, 270, [0, -12, 'middle'], { dhw: 'internal' }),
+  c(54, 'probe_t', 574, 171, 270, [0, -14, 'middle'], { dhw: 'internal' }),
 ];
 
 /** Points from text: "x,y x,y ...". */
@@ -200,6 +253,22 @@ const COND = 'refrigerant.condensation_temperature';
 const EVAP = 'refrigerant.evaporation_temperature';
 const CP = 'compressor.percentage';
 const DHWT = 'dhw.temperature';
+const AIRO = 'source.air_unit_outlet_temperature';
+
+/**
+ * The segments that carry HTR water when HTR is active and the DHW circuit is not (design D7): the DHW lines
+ * between valve 26 / port 2 and the tank, outside the arm of valve 26 (which is `dhw_sup_a` and `dhw_ret_a`, excluded here), and the external
+ * tank's pipes. Group 6 colours them with the DHW temperature and animates them at the fixed HTR speed.
+ */
+export const HTR_WATER_SEGMENT_IDS: readonly string[] = [
+  'dhw_sup_b',
+  'dhw_sup_c',
+  'dhw_ret_b',
+  'dhw_ret_c',
+  'dhw_ext_in',
+  'dhw_ext_coil',
+  'dhw_ext_out',
+];
 
 /** Pipe segments. The production trunk (return from ports 2/6 through 27, 15, 8, 44, 33 and 26) serves DG1 and DHW. */
 export const SEGMENTS: readonly Segment[] = [
@@ -247,6 +316,45 @@ export const SEGMENTS: readonly Segment[] = [
   seg('htr_to_9', ['htr'], '340,265 340,296 361,296', DHWT, { feature: 'htr', dhw: 'any' }),
   seg('htr_drain', ['htr'], '340,296 340,309', DHWT, { feature: 'htr', dhw: 'any', stub: true }),
   seg('htr_riser', ['htr'], '361,250 361,172', DHWT, { feature: 'htr', dhw: 'any' }),
+  // DHW storage. External (ports 5/6, a tank with a coil right of the cabinet, the pipes rise into the run and go
+  // right: 5 higher than 6, so that they do not cross).
+  seg('dhw_ext_in', ['dhw_coil'], '722,130 722,50 940,50 940,190', OUT, { dhw: 'external', speedRole: PP }),
+  seg('dhw_ext_coil', ['dhw_coil'], '940,190 840,190 840,235 940,235 940,280 840,280', OUT, {
+    dhw: 'external',
+    speedRole: PP,
+  }),
+  seg('dhw_ext_out', ['dhw_coil'], '840,280 820,280 820,85 748,85 748,130', RET, {
+    dhw: 'external',
+    speedRole: PP,
+  }),
+  // Internal (model C, items 47-49 on the top edge): short stubs into the tank
+  seg('tap_47', ['dhw_coil'], '440,118 440,138', DHWT, { dhw: 'internal', stub: true }),
+  seg('tap_48', ['dhw_coil'], '490,138 490,118', DHWT, { dhw: 'internal', stub: true }),
+  seg('tap_49', ['dhw_coil'], '540,118 540,138', DHWT, { dhw: 'internal', stub: true }),
+  // Outer-loop source (left zone). Port 3 (brine out) rises to y 85 and runs left, port 4 (brine in) comes back at
+  // y 50: both stay above the DG1 stubs (y > 110) and the circuit labels, and port 4's pipe is the higher one so that
+  // the two do not cross. Air unit: feed, coil rows, exit. Ground loop: feed, collector rows, exit.
+  seg('src_out', ['brine'], '630,130 630,85 150,85', BOUT, { speedRole: BP }),
+  seg('src_in', ['brine'], '20,50 690,50 690,130', BIN, { speedRole: BP }),
+  seg('src_air_feed', ['brine'], '150,85 150,150', BOUT, { source: ['air', 'hybrid'], speedRole: BP }),
+  seg('src_air_coil', ['brine'], '150,150 70,150 70,168 150,168 150,186 70,186', BOUT, {
+    source: ['air', 'hybrid'],
+    speedRole: BP,
+  }),
+  seg('src_air_exit', ['brine'], '70,186 20,186 20,50', AIRO, { source: ['air'], speedRole: BP }),
+  seg('src_gnd_feed', ['brine'], '150,85 150,210', BOUT, { source: ['ground'], speedRole: BP }),
+  seg('src_gnd_loop', ['brine'], '150,210 60,210 60,250 150,250 150,290 20,290', BOUT, {
+    source: ['ground'],
+    speedRole: BP,
+  }),
+  seg('src_gnd_exit', ['brine'], '20,290 20,50', BIN, { source: ['ground'], speedRole: BP }),
+  // hybrid: the air unit's exit runs down to the ground loop, whose exit returns up to port 4
+  seg('src_hyb_link', ['brine'], '70,186 29,186 29,390', AIRO, { source: ['hybrid'], speedRole: BP }),
+  seg('src_hyb_loop', ['brine'], '29,390 150,390 150,420 60,420 60,450 150,450 150,480 20,480', AIRO, {
+    source: ['hybrid'],
+    speedRole: BP,
+  }),
+  seg('src_hyb_exit', ['brine'], '20,480 20,50', BIN, { source: ['hybrid'], speedRole: BP }),
   // refrigerant: discharge 11 -> 9 -> 14 -> 8 (heating), expansion 8 -> 13 -> 12 -> 7, suction 7 -> 14 -> 11
   seg('ref_discharge', ['refrigerant'], '496,250 385,250', DISCH, { through: 'htr', speedRole: CP }),
   seg('ref_9_14', ['refrigerant'], '385,296 416,296', DISCH, { through: 'htr', speedRole: CP }),
@@ -336,12 +444,13 @@ export interface CircuitLabel extends Pick<Visibility, 'dhw'> {
 export const CIRCUIT_LABELS: readonly CircuitLabel[] = [
   { key: 'dg1', x: 291, y: 112 },
   { key: 'outerLoop', x: 660, y: 112 },
-  { key: 'dhw', x: 735, y: 112, dhw: 'external' },
+  { key: 'dhw', x: 776, y: 112, dhw: 'external' },
 ];
 
 /** What decides which parts are drawn: the DHW storage and the feature states. */
 export interface DrawContext {
   dhw: DhwStorage;
+  source: Source;
   features: Features;
 }
 
@@ -356,6 +465,7 @@ const dhwFits = (rule: NonNullable<Visibility['dhw']>, dhw: DhwStorage): boolean
 
 /** Whether a part is drawn normally, drawn muted (feature `unused`) or not drawn (see Visibility). */
 export function partState(part: Visibility, context: DrawContext): PartState {
+  if (part.source !== undefined && !part.source.includes(context.source)) return 'hidden';
   if (part.dhw !== undefined && !dhwFits(part.dhw, context.dhw)) return 'hidden';
   if (part.bypass !== undefined && effectiveFeature(context, part.bypass) !== false) return 'hidden';
   if (part.through !== undefined && effectiveFeature(context, part.through) === false) return 'hidden';
@@ -459,10 +569,12 @@ function localPorts(component: Component): readonly Point[] {
         [-28, 0],
         [28, 0],
       ];
-    case 'coil_slot':
+    case 'tank':
+      return [];
+    case 'coil':
       return [
-        [0, -13],
-        [0, 13],
+        [-75, -13],
+        [-75, 13],
       ];
   }
 }
@@ -588,6 +700,14 @@ export function pathData(points: readonly Point[], gaps: readonly Point[] = []):
 const onPiece = (point: Point, a: Point, b: Point): boolean =>
   (a[0] === b[0] && point[0] === a[0] && between(point[1], a[1], b[1])) ||
   (a[1] === b[1] && point[1] === a[1] && between(point[0], a[0], b[0]));
+
+/** Whether a point lies on the outline of the integrated tank (where its drain valve and probe connect). */
+export const onInternalTank = ([x, y]: Point): boolean => {
+  const { x: x0, y: y0, width, height } = INTERNAL_TANK;
+  const inX = x >= x0 && x <= x0 + width;
+  const inY = y >= y0 && y <= y0 + height;
+  return (inY && (x === x0 || x === x0 + width)) || (inX && (y === y0 || y === y0 + height));
+};
 
 /** The crossing points that are drawn as a gap in this segment, given the segments that are drawn. */
 export function gapsIn(segmentId: string, drawnIds: ReadonlySet<string>): Point[] {

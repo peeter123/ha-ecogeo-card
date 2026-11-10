@@ -126,7 +126,10 @@ DHW storage (see below).
 | 39, 40 | mini-pressure switch | Suction and discharge switches |
 | 41 | service outlet | Service outlets (two) |
 | *44*, *45* | resistor, thermostat | *Outlet resistor and safety thermostat* |
-| 51 | coil slot | Model C only, a placeholder until the DHW storage section is built: the two ports where the DHW lines enter the integrated tank; no item number is drawn yet |
+| *47, 48, 49* | port | *Model C only: tap water inlet, DHW outlet and recirculation, on the top edge (see Source and DHW)* |
+| *50, 51* | tank, coil | *Model C only: the integrated DHW storage tank and its coil* |
+| *52, 53* | service outlet, drain valve | *Model C only: the manual trap on the coil's supply line and the tank drain valve* |
+| *54* | probe T | *Model C only: the DHW temperature probe on the tank wall* |
 
 Probes 33 and 34 sit on the production outlet and return lines, 31 and 32 on the brine outlet and inlet lines, 30 on
 the compressor discharge and 29 on the suction line, as in the figure.
@@ -144,8 +147,8 @@ the compressor discharge and 29 on the suction line, as in the figure.
   passes through it (for example the discharge line through exchanger 9) stays normal.
 - Without DHW storage (`dhw: none`) connections 5/6, valve 26 and the whole HTR group (9, 17, 22, 25) are not drawn,
   because HTR only makes sense with a DHW storage; ports 1/2 connect straight to the production circuit.
-- Model C draws no connections 5/6. The DHW lines of valve 26 end at a slot for the integrated tank, at the end of those
-  lines (x 420 to 600, y 138 to 204), above the probe row (the figure's tall tank does not fit the card's viewBox).
+- Model C draws no connections 5/6. The DHW lines of valve 26 run into the integrated tank (items 47 to 54), drawn
+  under the top edge (see Source and DHW).
 
 ### How the B4 figure is laid out
 
@@ -178,7 +181,46 @@ the compressor discharge and 29 on the suction line, as in the figure.
 
 ## Source and DHW
 
-To be written.
+The outer-loop source and the DHW storage are drawn outside the cabinet, in the zones left (x 0 to 210) and right
+(x 790 to 1000) of it. Their pipes are segments in `src/diagram/geometry.ts`, like the cabinet's, so they will take
+the same colour and animation (planned, with the colours section). The air unit, the ground loop and the external tank have no item number in the manual;
+the manual's figures stop at the connections.
+
+### Outer-loop source (`source`)
+
+Connection 3 (brine outlet) and 4 (brine inlet) rise from the top edge into the pipe run above the cabinet, above the
+DG1 stubs and the circuit labels. Port 4's pipe is the higher one (y 50, port 3's runs at y 85), so the two never
+cross on their way left. They belong to the brine circuit: they are to be active with it, defrost included.
+
+- **Air:** a housing with a finned coil of three rows and a fan. The brine enters the coil at the top and leaves
+  on the left. The fan rotates while `source.fan_speed` is above 0 % (a full turn takes 120 s divided by the speed
+  in %, between 0.5 and 6 s) and stands still at 0 % or without a value. It does not depend on the mode, so it
+  also turns in standby when its own speed says so. With `prefers-reduced-motion` the fan stands still.
+- **Ground:** a ground line with a collector loop of three rows below it, joined to the brine pipes.
+- **Hybrid:** both on one brine loop, in series. The brine runs through the air unit first and then down to the
+  ground loop, which sits under the air unit; the loop's exit returns up along the left edge to port 4. Series
+  keeps the drawing free of crossings in the narrow zone, which two branches in parallel would not.
+
+### DHW storage (`dhw`)
+
+- **External (model B):** ports 5 (outlet) and 6 (inlet), the manual's "DHW inter-accumulator", rise into the run and
+  go right to a tank with a coil. Port 5's pipe is the higher one (y 50 against y 85) so they do not cross. The
+  coil is three rows inside the tank body.
+- **Internal (model C):** the integrated tank is drawn inside the cabinet, under the top edge, after figure C: tank
+  50 with coil 51, probe 54 and the connections 47 (tap water inlet), 48 (DHW outlet) and 49 (recirculation) on the
+  top edge, the manual trap 52 on the coil's supply line, and the drain valve 53 on the tank wall. The figure's tank
+  is tall and fills the cabinet; this one is squat so that the probe row and the rest of the cabinet stay as in the
+  B figures. It differs from the figure in these ways: 47 and 49 are short stubs that end at the tank's top rather
+  than dip tubes (the coil fills the tank's height, so a tube would cross it), the trap sits on the supply line
+  instead of the coil's high point, and probe 54 and drain valve 53 touch the wall.
+- **None:** no tank, no DHW pipes, no connections 5/6, no valve 26 and no HTR group. The mode label "DHW" can still show when the unit reports DHW mode.
+
+The tank body is planned to take the DHW temperature colour through the custom property `--dhw-tank-color`, which
+nothing sets yet.
+
+The fan speed, outside temperature, air unit outlet temperature, the ground loop's brine temperatures and the tank
+values are planned as live labels (see Live values); the space for them is kept free beside the source and the
+tanks.
 
 ## Colours
 

@@ -11,9 +11,10 @@ for the explanation of what the card shows and where each part comes from.
 ## Status
 
 Work in progress. The card validates its configuration, resolves its entities (or shows built-in sample values),
-reads them and derives the operating mode, which it shows as a label with the alarm and offline indications. The
-schematic itself is still an empty frame; the drawing, the colours and the installation instructions arrive with the
-next task groups of the planned change (`openspec/changes/add-schematic-card/`).
+reads them and derives the operating mode, which it shows as a label with the alarm and offline indications. It draws
+the cabinet after the manual's B and C figures, with the outer-loop source and the DHW storage. The colours, the live
+values and the installation instructions come next, in the later task groups of the planned change
+(`openspec/changes/add-schematic-card/`).
 
 ## Configuration
 
@@ -50,6 +51,48 @@ fault.
 | `features` | group | from the variant | Feature states that override the variant (see Features). |
 | `entities` | group | from the prefix | Entity id per role, nested by role path (see Roles). |
 | `colors` | list | built-in scale | Temperature colour stops (arrives with the colour task group). |
+
+### Source and DHW
+
+`source` chooses what is drawn left of the cabinet on ports 3/4, and `dhw` the storage joined to ports 5/6 (or the
+tank inside the cabinet on model C):
+
+```yaml
+# an air unit with a fan that rotates with its speed
+type: custom:ecogeo-card
+prefix: demo_ecogeo
+source: air
+dhw: external
+```
+
+```yaml
+# a ground loop, and no DHW storage: no tank, no ports 5/6, no valve 26, no HTR
+type: custom:ecogeo-card
+prefix: demo_ecogeo
+source: ground
+dhw: none
+```
+
+```yaml
+# air unit and ground loop on one brine loop, with the integrated tank of model C
+type: custom:ecogeo-card
+prefix: demo_ecogeo
+model: C
+source: hybrid
+dhw: internal
+```
+
+| `source` | Drawn |
+|---|---|
+| `air` | An air unit with a coil and a fan. |
+| `ground` | A ground loop with a collector. |
+| `hybrid` | Both, in series on one brine loop. |
+
+| `dhw` | Drawn |
+|---|---|
+| `external` | A tank with a coil right of the cabinet, joined to ports 5/6 (model B). |
+| `internal` | The integrated tank 50 with coil 51 inside the cabinet (model C). |
+| `none` | Nothing DHW related. |
 
 ### Features
 

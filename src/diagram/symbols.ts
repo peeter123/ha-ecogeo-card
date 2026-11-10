@@ -3,7 +3,7 @@
 // theme's text colour, or the muted colour) through CSS. The shapes follow the manual's symbols (section 3.1) in a
 // simplified form. The letters of probes and switches stay upright whatever the rotation.
 import { svg, type SVGTemplateResult } from 'lit';
-import type { ComponentKind, Rotation } from './geometry';
+import { INTERNAL_TANK, type ComponentKind, type Rotation } from './geometry';
 
 /** The ports of a three-way valve in its own frame: left, right and down (valve 26 is turned to put them up, down and right). */
 export type ValvePort = 'l' | 'r' | 'd';
@@ -21,6 +21,16 @@ export interface SymbolOptions {
 /** The letter of a probe or switch, upright whatever the symbol's rotation. */
 const letter = (text: string, rotation: Rotation): SVGTemplateResult =>
   svg`<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(${-rotation})">${text}</text>`;
+
+/** A zigzag run of the coil from x0 to x1 (either way) around the line y: the wire of a heating coil. */
+function zigzag(x0: number, x1: number, y: number): string {
+  const steps = 15;
+  const points = Array.from({ length: steps - 1 }, (_, index) => {
+    const k = index + 1;
+    return `L${String(x0 + ((x1 - x0) * k) / steps)} ${String(y + (k % 2 === 1 ? -3 : 3))}`;
+  });
+  return `M${String(x0)} ${String(y)} ${points.join(' ')} L${String(x1)} ${String(y)}`;
+}
 
 const stem = (length: number, from: number): SVGTemplateResult => svg`<path d="M0 ${from} V${length}" />`;
 
@@ -75,8 +85,12 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
       return svg`<rect x="-3" y="-3" width="6" height="6" />${stem(10, 3)}`;
     case 'port':
       return svg`<rect x="-5" y="-6" width="10" height="6" />`;
-    case 'coil_slot':
-      return svg``;
+    case 'tank':
+      // the integrated tank (50): its body takes the DHW temperature colour through --dhw-tank-color (group 6)
+      return svg`<rect class="tank-body" data-dhw-tank="internal" x=${-INTERNAL_TANK.width / 2} y=${-INTERNAL_TANK.height / 2} width=${INTERNAL_TANK.width} height=${INTERNAL_TANK.height} rx="14" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />`;
+    case 'coil':
+      // the coil (51): a zigzag out along the top run, a turn at the end and a zigzag back; ports at its left end
+      return svg`<path d="${zigzag(-75, 60, -13)} M60 -13 V13 ${zigzag(60, -75, 13).replace('M60 13 ', '')}" />`;
   }
 }
 

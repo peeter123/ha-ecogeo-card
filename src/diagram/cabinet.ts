@@ -1,6 +1,7 @@
-// The cabinet (design D5, D6; schematic-drawing spec): the outline, the six connections on the top edge with their
-// item numbers and circuit labels, every internal component as a symbol with its item number, and every pipe segment
-// in the neutral colour. Colour and animation by temperature and flow come in group 6. Valve positions come from
+// The cabinet (design D5, D6; schematic-drawing spec): the outline, the connections on the top edge (1-6, and 47-49
+// on model C) with their item numbers and circuit labels, every internal component as a symbol with its item number
+// (model C's tank 50-54 included), and every pipe segment of the drawing, the source's and the external DHW tank's
+// pipes outside the cabinet too, in the neutral colour. Colour and animation by temperature and flow come in group 6. Valve positions come from
 // circuits.ts; a feature that is `false` removes its parts (geometry.ts), `unused` draws them muted.
 import { css, svg, type SVGTemplateResult } from 'lit';
 import type { Circuits } from '../calc/circuits';
@@ -8,7 +9,6 @@ import { CIRCUIT_LABELS } from '../strings';
 import {
   CABINET,
   CIRCUIT_LABELS as LABEL_POSITIONS,
-  INTERNAL_TANK_SLOT,
   drawnComponents,
   drawnSegments,
   gapsIn,
@@ -24,11 +24,6 @@ export const cabinetStyles = css`
     fill: none;
     stroke: var(--primary-text-color);
     stroke-width: 2;
-  }
-  .tank-slot {
-    fill: none;
-    stroke: var(--divider-color);
-    stroke-dasharray: 4 4;
   }
   .pipe {
     fill: none;
@@ -51,7 +46,7 @@ export const cabinetStyles = css`
   }
   .circuit-label {
     fill: var(--primary-text-color);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
   }
 `;
@@ -64,7 +59,6 @@ function openPorts(item: number, circuits: Circuits): readonly ValvePort[] {
 
 function component(entry: { part: Component; state: 'normal' | 'muted' }, circuits: Circuits): SVGTemplateResult {
   const { part } = entry;
-  if (part.kind === 'coil_slot') return svg``;
   const [dx, dy, anchor] = part.tag;
   return svg`<g class="symbol-group ${entry.state}" data-item=${part.item} data-kind=${part.kind}>
     <g transform="translate(${part.x} ${part.y})">${symbol(part.kind, {
@@ -81,10 +75,8 @@ function component(entry: { part: Component; state: 'normal' | 'muted' }, circui
 export function renderCabinet(context: DrawContext, circuits: Circuits): SVGTemplateResult {
   const segments = drawnSegments(context);
   const ids = new Set(segments.map((entry) => entry.part.id));
-  const slot = INTERNAL_TANK_SLOT;
   return svg`<g class="cabinet">
     <rect class="outline" x=${CABINET.x} y=${CABINET.y} width=${CABINET.width} height=${CABINET.height} rx="6" />
-    ${context.dhw === 'internal' ? svg`<rect class="tank-slot" x=${slot.x} y=${slot.y} width=${slot.width} height=${slot.height} rx="8" />` : svg``}
     ${LABEL_POSITIONS.filter((label) => partState(label, context) !== 'hidden').map(
       (label) =>
         svg`<text class="circuit-label" x=${label.x} y=${label.y} text-anchor="middle">${CIRCUIT_LABELS[label.key]}</text>`,

@@ -1,7 +1,8 @@
 // The ecoGEO schematic card: a LitElement that validates and resolves its config, reads the roles, derives the mode
-// draws the cabinet (diagram/cabinet.ts) in the SVG viewBox of design D5 and shows the footer indications (mode,
-// alarm, offline, sample values). Pipe colours and live value labels arrive in groups 5 and 6.
-import { css, html, LitElement, nothing, type PropertyValues, type TemplateResult } from 'lit';
+// draws the cabinet (diagram/cabinet.ts), the outer-loop source (source.ts) and the external DHW tank (dhw.ts) in the
+// SVG viewBox of design D5 and shows the footer indications (mode, alarm, offline, sample values). Pipe colours and
+// live value labels arrive in group 6.
+import { css, html, LitElement, nothing, svg, type PropertyValues, type TemplateResult } from 'lit';
 import { circuitsFor, type Circuits } from '../calc/circuits';
 import { deriveMode, isAlarm, isOffline, type Mode } from '../calc/mode';
 import { readRoles, type Readings } from '../calc/readings';
@@ -9,7 +10,9 @@ import { configErrors } from '../config/options';
 import { resolveConfig, type ResolvedConfig } from '../config/resolve';
 import { SAMPLE_STATES } from '../config/sample';
 import { cabinetStyles, renderCabinet } from '../diagram/cabinet';
+import { dhwStyles, renderDhw } from '../diagram/dhw';
 import { viewBox } from '../diagram/geometry';
+import { renderSource, sourceStyles } from '../diagram/source';
 import type { CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { stateOf, type HassLike } from '../lib/hass';
@@ -33,6 +36,8 @@ export interface GridOptions {
 export class EcogeoCard extends LitElement {
   static override styles = [
     cabinetStyles,
+    sourceStyles,
+    dhwStyles,
     css`
       .footer {
         display: flex;
@@ -97,12 +102,14 @@ export class EcogeoCard extends LitElement {
     const resolved = this.resolved;
     let mode: Mode | undefined;
     let circuits: Circuits | undefined;
+    let readings: Readings | undefined;
     let alarm = false;
     let offline = false;
     if (resolved !== undefined) {
       const read = this.readings(resolved);
       mode = deriveMode(read.readings, resolved.features);
       circuits = circuitsFor(mode, resolved.features, resolved.dhw, read.readings);
+      readings = read.readings;
       alarm = isAlarm(read.readings['unit.alarm']);
       offline = read.offline;
     }
@@ -113,7 +120,11 @@ export class EcogeoCard extends LitElement {
         role="img"
         aria-label=${SCHEMATIC_LABEL}
       >
-        ${resolved === undefined || circuits === undefined ? nothing : renderCabinet(resolved, circuits)}
+        ${
+          resolved === undefined || circuits === undefined || readings === undefined
+            ? nothing
+            : svg`${renderSource(resolved, readings)}${renderDhw(resolved)}${renderCabinet(resolved, circuits)}`
+        }
       </svg>
       <div class="footer">
         ${mode === undefined ? nothing : html`<span class="mode">${MODE_LABELS[mode]}</span>`}

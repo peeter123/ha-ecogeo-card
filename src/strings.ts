@@ -78,3 +78,14 @@ export const CIRCUIT_LABELS = {
   outerLoop: 'Outer loop',
   dhw: 'DHW',
 } as const;
+
+/** The captions of the outer-loop source parts (not manual items). */
+export const SOURCE_LABELS = {
+  air: 'Air unit',
+  ground: 'Ground loop',
+} as const;
+
+/** The caption of the external DHW tank (not a manual item: ports 5/6 are the "DHW inter-accumulator"). */
+export const DHW_LABELS = {
+  externalTank: 'DHW tank',
+} as const;
