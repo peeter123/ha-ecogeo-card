@@ -232,8 +232,8 @@ noted). Display units are the card's own, not the entity's.
   - The display unit comes from the role table and is joined with `NBSP`.
 - **Footer:** the mode, on/off, season, outside temperature, COP, and the condensation and evaporation
   capacity, plus the alarm and offline indications.
-- **Grid:** `getGridOptions()` returns full width (12 columns) and a minimum of 8 rows; `getCardSize()`
-  returns 10.
+- **Grid:** `getGridOptions()` returns `{ columns: 'full', rows: 'auto', min_rows: 8 }` (`'full'` spans the
+  whole section, also when the section spans several columns); `getCardSize()` returns 10.
 
 ### D7. Colour scale
 - `colors.ts` uses stops `[{t:-10,c:'#1e88e5'},{t:20,c:'#43a047'},{t:45,c:'#fb8c00'},{t:70,c:'#e53935'}]` by

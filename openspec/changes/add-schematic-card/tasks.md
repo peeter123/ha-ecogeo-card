@@ -3,16 +3,18 @@
 Each group is implemented by one Sonnet subagent, reviewed by Opus and committed alone (see
 `openspec/config.yaml`). From group 1 on, every group ends with `npm run check` green. Every group that changes
 something visible also ends with emulator screenshots, which an agent inspects and turns into a written verdict.
+`dist/ecogeo-card.js` is committed with group 1 and refreshed by task 7.1; groups 2-6 do not run
+`npm run release` and leave `dist/` unchanged.
 
 ## 1. Scaffold and copied helpers
 
-- [ ] 1.1 Create `package.json` (name `ecogeo-card`, scripts dev/build/release/test/typecheck/lint/format/
+- [x] 1.1 Create `package.json` (name `ecogeo-card`, scripts dev/build/release/test/typecheck/lint/format/
   format:check/check as in hrv-ventilation, minus the browser and `check:ids` scripts), `vite.config.ts` (lib build
   into `build/`, `ecogeo-card.js`, `codeSplitting: false`, unit test project only), `tsconfig.json`,
   `tsconfig.node.json` and `eslint.config.js` copied from hrv-ventilation, and `scripts/check-release.mjs`
   (copies `build/ecogeo-card.js` to `dist/` after checking that `custom:ecogeo-card` registers). Run
   `npm install`. Verify: `npm run typecheck` exits 0.
-- [ ] 1.2 Copy these helpers from the hrv-ventilation repo's `src/lib/` (local path in `private/installation.md`)
+- [x] 1.2 Copy these helpers from the hrv-ventilation repo's `src/lib/` (local path in `private/installation.md`)
   with their unit tests, each with a header
   comment naming its source file:
   - `define`
@@ -25,14 +27,14 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - `format`
   Also copy `src/strings.ts` (NBSP pattern), `test/nbsp.ts` and the strings test.
   Verify: `npm test` passes.
-- [ ] 1.3 Add `src/index.ts` and a skeleton `src/card/ecogeo-card.ts`. The skeleton is a LitElement registered with
+- [x] 1.3 Add `src/index.ts` and a skeleton `src/card/ecogeo-card.ts`. The skeleton is a LitElement registered with
   `defineOnce`, plus a `window.customCards` entry. It accepts any config for now and renders an empty `<svg>`
   with the viewBox from design D5. Add a unit test that the element registers and renders an svg.
   Verify: `npm run check` exits 0 and `npm run release` writes `dist/ecogeo-card.js`.
-- [ ] 1.4 Add a minimal `dev/` page (`index.html`, `preview.ts`, `mock-hass.ts`, `ha-stubs.ts` after hrv) that
+- [x] 1.4 Add a minimal `dev/` page (`index.html`, `preview.ts`, `mock-hass.ts`, `ha-stubs.ts` after hrv) that
   mounts the card with an empty mock `hass`.
   Verify: `npm run dev` serves the page without console errors (agent check).
-- [ ] 1.5 Replace the README stub with the project's purpose, development commands and status, and create
+- [x] 1.5 Replace the README stub with the project's purpose, development commands and status, and create
   `docs/ecogeo-card.md` with a skeleton (purpose, sources of truth, sections to fill).
   Verify: both files exist and contain no installation-specific ids.
 
@@ -51,10 +53,14 @@ something visible also ends with emulator screenshots, which an agent inspects a
   - feature merge
   - entity resolution from nested `entities` (override, then prefix, then none)
   - sample-mode detection
+  - the placeholder `RolePath = string` in `src/lib/config.ts` replaced by the role-path type from `roles.ts`
+    (design D8), and the unit list in `test/nbsp.ts` and the strings test extended to the role table's display
+    units
   Unit-test every card-config scenario.
   Verify: `npm test`.
 - [ ] 2.3 Implement `src/config/sample.ts` (sample states for every role, from the heating snapshot in
-  `private/installation.md` as rounded numbers) and the "Sample values" note in the card.
+  `private/installation.md` as rounded numbers) and the "Sample values" note in the card. It follows hrv's
+  `src/lib/sample.ts` (pattern only) and names it in a header comment.
   Unit-test the empty-config and no-mixing scenarios.
   Verify: `npm test`.
 - [ ] 2.4 Implement `src/calc/readings.ts`:
