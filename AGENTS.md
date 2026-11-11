@@ -17,8 +17,8 @@ its rules are binding. Read it, and the active change in `openspec/changes/`, be
 - `docs/ecogeo-card.md`: the public explanation. `README.md`: features, install and configuration.
 - `private/` (git-ignored): `installation.md` with everything specific to the live installation.
 
-`src/`, `test/`, `dev/`, `package.json` and the build config are created by the first change
-(`add-schematic-card`, group 1); until then only the planning files exist.
+The first change, `add-schematic-card`, is archived in `openspec/changes/archive/2026-11-11-add-schematic-card/`;
+its capabilities are the accepted specs in `openspec/specs/`. Follow-ups are named in its proposal.
 
 ## Rules in short
 
