@@ -97,6 +97,19 @@ describe('mode, alarm and offline indications', () => {
     card.remove();
   });
 
+  test('mode label: passive cooling, the compressor stopped in summer with the production pump running', async () => {
+    const hass = hassWith(
+      [`sensor.${P}_compressor_rpm`, '0', 'RPM'],
+      [`binary_sensor.${P}_summer`, 'on'],
+      [`binary_sensor.${P}_winter`, 'off'],
+      [`sensor.${P}_heatpump_on_off`, 'ON'],
+      [`sensor.${P}_production_pump`, '60', '%'],
+    );
+    const card = await mount({ type: 'custom:ecogeo-card', prefix: P }, hass);
+    expect(text(card, '.mode')).toBe('Passive cooling');
+    card.remove();
+  });
+
   test('alarm indication in addition to the mode', async () => {
     const hass = hassWith(...heating, [`binary_sensor.${P}_alarm`, 'on']);
     const card = await mount({ type: 'custom:ecogeo-card', prefix: P }, hass);

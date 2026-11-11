@@ -1,11 +1,11 @@
 // The outer-loop source (design D5, D6; outer-loop-source spec): the air unit, the ground loop or both on one brine
 // loop, drawn in the zone left of the cabinet (viewBox x 0-210). This file draws what is not a pipe: the air unit's
 // housing, fins and fan, the ground line and the captions. The pipes (ports 3/4 up into the run, left to the zone, the
-// coil rows and the collector rows) are segments in geometry.ts, so group 6 colours and animates them like every other
+// coil rows and the collector rows) are segments in geometry.ts, so pipes.ts colours and animates them like every other
 // pipe. None of these parts is a manual item: the manual's figures stop at connections 3 (brine outlet) and 4 (brine
 // inlet).
 //
-// Room for the live values (group 6): the air unit's fan speed, outside temperature and air unit outlet temperature
+// The live values (labels.ts): the air unit's fan speed, outside temperature and air unit outlet temperature
 // go under the housing (y 305-345); the ground loop's outlet and inlet temperatures go where its pipes meet it, at
 // the right of the collector (x 160-205).
 import { css, svg, type SVGTemplateResult } from 'lit';

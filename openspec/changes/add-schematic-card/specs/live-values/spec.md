@@ -30,8 +30,16 @@ SHALL NOT be shown.
 - **THEN** "25.2 °C" is shown at probe 33 and "99.9 %" at pump 15
 
 #### Scenario: Part not drawn
-- **WHEN** passive cooling is `false`
-- **THEN** no label for items 10, 27 or 28 is shown
+- **WHEN** the config sets `dhw: none`, or `source: ground`
+- **THEN** no tank labels are shown, or no fan speed label is shown
+
+### Requirement: Heating demand
+The card SHALL show the DG1 demand beside connections 1/2, as the tank shows its own demand: the caption "Demand"
+when the demand entity is on, and nothing when it is off or unavailable.
+
+#### Scenario: DG1 demand
+- **WHEN** the DG1 demand entity is on
+- **THEN** "Demand" is shown at connections 1/2, and it is gone when the entity turns off
 
 ### Requirement: Footer
 The card SHALL show a footer with:
@@ -83,8 +91,8 @@ converted back with the same absolute formula, because Home Assistant converted 
 - **THEN** the label reads "6.2 K"
 
 ### Requirement: Missing and sentinel values
-An `unavailable` or `unknown` state, a non-numeric state, or the firmware sentinel -999.9 SHALL show as a muted
-dash instead of a number. It SHALL NOT raise an error.
+An `unavailable` or `unknown` state, a non-numeric state, or the firmware sentinel -999.9 (any value at or below
+-999) SHALL show as a muted dash instead of a number. It SHALL NOT raise an error.
 
 #### Scenario: Sentinel
 - **WHEN** a temperature entity reads -999.900024414062
@@ -100,8 +108,8 @@ Assistant's own controls, not the card's.
 - **THEN** the more-info dialog of the brine inlet entity opens
 
 ### Requirement: Efficient updates
-The card SHALL re-render only when the state of one of its resolved entities changes, or when the theme, locale,
-the entity registry or configuration changes.
+The card SHALL re-render only when the state of one of its resolved entities changes, or when the theme, locale or
+language, the registry entries of its entities, or the configuration changes.
 
 #### Scenario: Unrelated entity
 - **WHEN** a light elsewhere in Home Assistant changes state

@@ -6,7 +6,7 @@
   tooling: Vite library build into `build/`, release copy into `dist/`, TypeScript strict, Vitest unit project in
   happy-dom, ESLint (typescript-eslint strict + lit + wc), Prettier, and the quality hook
   `scripts/check-on-edit.mjs`, which is already copied.
-- **Live source:** the esphome-ecoforest-ecogeo firmware (firmware-entity) on an ESP32 board. Its fast poll
+- **Live source:** the esphome-ecoforest-ecogeo firmware (firmware-entity) on its ESP bridge. Its fast poll
   is 5 s, so `hass` updates at most every few seconds per entity. The firmware reports -999.9 for absent probes
   (seen on the cooling buffer sensors).
 - **Firmware facts that shape the mode logic** (firmware-entity, checked in its `packages/`):
@@ -66,11 +66,12 @@ src/calc/circuits.ts         mode + features + readings -> valve positions and a
 src/calc/readings.ts         hass + resolved roles -> numeric readings (unit conversion, sentinel, unavailable)
 src/calc/display.ts          reading + role -> label text (number, NBSP, unit) (pure)
 src/diagram/geometry.ts      coordinates and segment definitions as data (no Lit)
-src/diagram/symbols.ts       SVG symbols: pump, 3-way valve, probe T, transducer P, switch, exchanger, compressor,
-                             vessel, safety valve, drain valve, resistor, fan, tank, coil
+src/diagram/symbols.ts       SVG symbols: pump, 3-way valve, valve, inversion valve, probe T, transducer P,
+                             switch, exchanger, compressor, vessel, safety valve, drain valve, resistor,
+                             thermostat, filter dryer, expansion valve, service outlet, port, coil
 src/diagram/cabinet.ts       cabinet + ports + internal components (svg template)
-src/diagram/source.ts        air unit / ground loop / hybrid left of the cabinet
-src/diagram/dhw.ts           external tank right / internal tank (model C) / none
+src/diagram/source.ts        air unit (with its fan) / ground loop / hybrid left of the cabinet
+src/diagram/dhw.ts           external tank right / internal tank (model C) / none (tank bodies drawn here)
 src/diagram/pipes.ts         segment rendering: colour, muted, dash animation
 src/diagram/labels.ts        value labels (HTML overlay, positioned in viewBox units)
 src/diagram/colors.ts        temperature scale (stops -> color)
@@ -269,6 +270,8 @@ noted). Display units are the card's own, not the entity's.
   - Missing values show `NO_VALUE`, an en dash, in a muted colour.
   - The decimals come from the entity's `display_precision` in `hass.entities` when set and the entity's unit
     is the role's display unit, and from the role table otherwise (a converted value uses the role default).
+  - The DG1 demand (`heating.demand`) shows as the caption "Demand" at connections 1/2 while on, like the tank's
+    demand (decided 2026-11-11 in the pre-archive review; the role was resolved but not shown).
   - The hybrid's ground loop shows only its exit value (brine inlet); its entry would repeat the air unit's
     outlet, which is labelled at the air unit.
   - The display unit comes from the role table and is joined with `NBSP`.
@@ -316,7 +319,8 @@ Each is copied with its unit test and adjusted only where noted:
   for differences (superheat, start delta-T): HA converts these as if they were absolute temperatures, so a
   state in °F is converted back with the same absolute formula and shown in K.
 - `lib/hass.ts`: the `hass` types, `stateOf` and more-info. Its `formatState` is not used for labels (D6).
-- `lib/render.ts`: `shouldRender` and `configuredEntityIds`, fed by the resolved role map, not the raw config.
+- `lib/render.ts`: `shouldRender`, fed by the entity ids of the resolved role map, not the raw config. hrv's
+  `configuredEntityIds` is dropped (the card takes the ids from `resolved.entities`).
 - `lib/config.ts`: `valueAt`, `asEntityId` and `entityAt`, with the role type replaced by this card's role
   table. The hrv humidity and stream helpers are dropped.
 - `lib/options.ts`: `optionValue` and `invalidOptions`.
@@ -331,7 +335,8 @@ The browser test project and its Playwright dependencies are not copied (out of 
 
 ### D9. Emulator
 - **Files:** `dev/index.html`, `dev/preview.ts`, `dev/mock-hass.ts`, `dev/ha-stubs.ts` (after hrv), plus
-  `dev/scenarios.ts`.
+  `dev/scenarios.ts`, `dev/url-state.ts` (query string) and `dev/captures.ts` (the capture URL list read by
+  `scripts/capture.mjs`).
 - **`scenarios.ts`:** the scenarios of the dev-emulator spec as full state maps keyed by role path. They are
   resolved to entity ids through a fixed demo prefix `demo_ecogeo`, so no installation id appears. The heating
   scenario is seeded from the live snapshot in `private/installation.md`, copied as rounded numbers, not ids.

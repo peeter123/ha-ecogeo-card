@@ -86,7 +86,7 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
     case 'port':
       return svg`<rect x="-5" y="-6" width="10" height="6" />`;
     case 'tank':
-      // the integrated tank (50): its body takes the DHW temperature colour through --dhw-tank-color (group 6)
+      // the integrated tank (50): its body takes the DHW temperature colour through --dhw-tank-color
       return svg`<rect class="tank-body" data-dhw-tank="internal" x=${-INTERNAL_TANK.width / 2} y=${-INTERNAL_TANK.height / 2} width=${INTERNAL_TANK.width} height=${INTERNAL_TANK.height} rx="14" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />`;
     case 'coil':
       // the coil (51): a zigzag out along the top run, a turn at the end and a zigzag back; ports at its left end

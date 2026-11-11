@@ -37,8 +37,9 @@ it, joined to the brine pipes. It SHALL show the brine outlet and inlet temperat
 - **THEN** a ground loop is drawn left of the cabinet, and no air unit or fan speed is shown
 
 ### Requirement: Hybrid source
-With `source: hybrid`, the card SHALL draw both the air unit and the ground loop in one brine loop, each showing
-its own values.
+With `source: hybrid`, the card SHALL draw both the air unit and the ground loop in one brine loop (air unit
+first), each showing its own values: the air unit its fan speed and outlet temperature, the ground loop only its
+exit (the brine inlet), since its entry would repeat the air unit's outlet.
 
 #### Scenario: Hybrid
 - **WHEN** the config sets `source: hybrid`

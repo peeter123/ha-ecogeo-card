@@ -32,6 +32,15 @@ Each water pipe segment SHALL take the temperature of the probe that defines it:
 - production return 34 on the return from connection 2 (or 6) to the condenser
 - brine inlet 32 from connection 4 to the evaporator
 - brine outlet 31 from the evaporator to connection 3
+- the air unit outlet temperature on the air unit's exit and, in a hybrid, on the link and the ground loop; the
+  ground loop's exit takes the brine inlet
+
+Some segments take another role depending on the mode:
+- In `passive_cooling` and `defrost`, while valves 27/28 route through exchanger 10, the production legs from
+  exchanger 10 and valve 27 to condenser 8 take the production outlet, since the stopped compressor leaves the
+  water temperature unchanged.
+- During HTR recovery (HTR active, no DHW production), the DHW lines outside the arm of valve 26 and the external
+  tank pipes carry HTR water and take the DHW temperature.
 
 #### Scenario: Heating segments
 - **WHEN** the mode is `heating`, the production outlet reads 25.2 °C and the return reads 22.0 °C
@@ -44,7 +53,7 @@ pipes) SHALL take the DHW temperature.
 
 #### Scenario: Defrost segments
 - **WHEN** the mode is `defrost` and the brine inlet reads 8.0 °C
-- **THEN** the brine segment from exchanger 10 towards connection 4 has the 8.0 °C colour
+- **THEN** the brine segment from connection 4's line into exchanger 10 has the 8.0 °C colour
 
 #### Scenario: HTR segments
 - **WHEN** the HTR circuit is active and the DHW temperature is 48 °C
@@ -74,7 +83,8 @@ In active cooling, the segments SHALL follow the reversed flow.
 ### Requirement: Inactive circuits muted
 Segments of circuits that are not active (see operating-mode) SHALL be drawn in the muted theme colour, without
 animation. So SHALL every part whose feature is `unused`, except exchanger 10 with valves 27/28 during
-`defrost`.
+`defrost`. Model C's tap-water stubs 47/48/49 are coloured by the DHW temperature in every mode and never
+animated. A segment muted only because its probe is missing keeps its animation while its circuit is active.
 
 #### Scenario: DHW loop while heating
 - **WHEN** the mode is `heating`

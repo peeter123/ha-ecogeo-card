@@ -14,7 +14,7 @@ import { css, html, nothing, type TemplateResult } from 'lit';
 import { formatReading, type DisplayContext } from '../calc/display';
 import type { Readings } from '../calc/readings';
 import type { RolePath } from '../config/roles';
-import { DHW_LABELS, FOOTER_LABELS, NO_VALUE, ON_OFF_LABELS, VALUE_CAPTIONS } from '../strings';
+import { DHW_LABELS, FOOTER_LABELS, HEATING_LABELS, NO_VALUE, ON_OFF_LABELS, VALUE_CAPTIONS } from '../strings';
 import { partState, viewBox, type DrawContext, type Visibility } from './geometry';
 
 export const labelStyles = css`
@@ -79,7 +79,7 @@ export const labelStyles = css`
 
 type Align = 'start' | 'middle' | 'end';
 
-export interface LabelSpec extends Pick<Visibility, 'feature' | 'dhw' | 'source'> {
+export interface LabelSpec extends Pick<Visibility, 'dhw' | 'source'> {
   /** A unique id, also the `data-label` of the element. */
   id: string;
   role: RolePath;
@@ -115,6 +115,7 @@ export const LABEL_SPECS: readonly LabelSpec[] = [
   spec('production_pressure', 'production.pressure', 360, 537, 'end', { item: 38 }),
   spec('production_pump', 'production.pump', 396, 380, 'end', { item: 15 }),
   spec('dg1_setpoint', 'heating.setpoint', 291, 96, 'middle', { item: 1 }),
+  spec('dg1_demand', 'heating.demand', 320, 123, 'start', { item: 1, demand: true }),
   // brine: probes 31 and 32, pressure 37, pump 16
   spec('brine_out', 'brine.outlet_temperature', 633, 247, 'start', { item: 31 }),
   spec('brine_in', 'brine.inlet_temperature', 697, 247, 'start', { item: 32 }),
@@ -217,7 +218,8 @@ export function labelsFor(
     };
     const value: unknown = readings[label.role];
     if (label.demand === true) {
-      return value === true ? [{ ...common, text: DHW_LABELS.demand, missing: false }] : [];
+      const text = label.role === 'heating.demand' ? HEATING_LABELS.demand : DHW_LABELS.demand;
+      return value === true ? [{ ...common, text, missing: false }] : [];
     }
     const text = formatReading(label.role, typeof value === 'number' ? value : undefined, entityId, display);
     return [{ ...common, text: text ?? NO_VALUE, missing: text === undefined }];

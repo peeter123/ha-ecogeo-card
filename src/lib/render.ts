@@ -1,26 +1,7 @@
-// Copied from hrv-ventilation src/lib/render.ts
+// Copied from hrv-ventilation src/lib/render.ts; its `configuredEntityIds` is dropped (the card takes the ids from the resolved entities).
 // The re-render rule (design D6, D8): the card renders again when its config or its own state changed, or when the part of `hass` it shows changed since its last render. Other `hass`
 // updates, which arrive for every state change in the installation, are skipped.
-import type { CardConfig } from './config';
-import { asEntityId } from './config';
 import type { HassLike } from './hass';
-
-/** Every entity ID in a config, found by walking its nested objects. Computed once per config by the card. */
-export function configuredEntityIds(config: CardConfig): string[] {
-  const ids = new Set<string>();
-  const walk = (node: CardConfig): void => {
-    for (const value of Object.values(node)) {
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        walk(value as CardConfig);
-      } else {
-        const id = asEntityId(value);
-        if (id !== undefined) ids.add(id);
-      }
-    }
-  };
-  walk(config);
-  return [...ids];
-}
 
 /** Two field values are the same when equal, or arrays with equal items (an entry's `labels` is rebuilt too). */
 function sameValue(a: unknown, b: unknown): boolean {

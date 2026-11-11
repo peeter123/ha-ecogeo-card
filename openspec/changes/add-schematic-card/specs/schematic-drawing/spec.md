@@ -30,6 +30,8 @@ Each connection SHALL show its item number.
 #### Scenario: No DHW
 - **WHEN** the config sets `dhw: none`
 - **THEN** connections 5 and 6 and valve 26 are not drawn, and ports 1/2 connect directly to the production circuit
+- **AND** the HTR group (9, 17, 22, 25) is not drawn, and the discharge line runs from compressor 11 straight to
+  valve 14
 
 #### Scenario: No crossings
 - **WHEN** the card renders model B with `dhw: external` and any source
@@ -60,6 +62,9 @@ its item number:
 - **Brine:** pump 16, probes 31/32, transducer 37, exchanger 10 with valves 27/28.
 - **HTR:** exchanger 9, pump 17, valves 22/25.
 - **Safety and service:** vessels 18/19, safety valves 20/21, drain valves 23/24.
+
+Items 42 and 43 (cooling outlet and inlet of the inverter) and 46 (electrical panel) are not drawn: they carry no
+production, brine or refrigerant flow and have no live value.
 
 #### Scenario: Hydraulic items
 - **WHEN** the card renders variant 4 with every feature `true`

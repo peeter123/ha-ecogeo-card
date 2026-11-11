@@ -94,6 +94,9 @@ export const DHW_LABELS = {
   demand: 'Demand',
 } as const;
 
+/** Shown at connections 1/2 only while the DG1 demand is on. */
+export const HEATING_LABELS = { demand: 'Demand' } as const;
+
 /** The small captions in front of a value label where its position alone would not say what it is. */
 export const VALUE_CAPTIONS = {
   setpoint: 'Setpoint',

@@ -1,7 +1,7 @@
 # ecoGEO card
 
 This page explains the ecoGEO schematic card: what it shows, where each fact comes from and how the pieces fit
-together. It is a skeleton; sections marked "to be written" are filled in as the card is built.
+together.
 
 ## Purpose
 
@@ -131,6 +131,9 @@ DHW storage (see below).
 | *52, 53* | service outlet, drain valve | *Model C only: the manual trap on the coil's supply line and the tank drain valve* |
 | *54* | probe T | *Model C only: the DHW temperature probe on the tank wall* |
 
+Items 42 and 43 (cooling outlet and inlet of the inverter) and 46 (electrical panel) are not drawn: they carry no
+production, brine or refrigerant flow and have no live value.
+
 Probes 33 and 34 sit on the production outlet and return lines, 31 and 32 on the brine outlet and inlet lines, 30 on
 the compressor discharge and 29 on the suction line, as in the figure.
 
@@ -146,7 +149,7 @@ the compressor discharge and 29 on the suction line, as in the figure.
 - `unused`: the part is drawn muted and is never active, except that exchanger 10 with valves 27/28 is drawn active in a defrost. Pipes that only serve it are muted; a pipe that merely
   passes through it (for example the discharge line through exchanger 9) stays normal.
 - Without DHW storage (`dhw: none`) connections 5/6, valve 26 and the whole HTR group (9, 17, 22, 25) are not drawn,
-  because HTR only makes sense with a DHW storage; ports 1/2 connect straight to the production circuit.
+  because HTR only makes sense with a DHW storage; ports 1/2 connect straight to the production circuit, and the discharge line runs from compressor 11 straight to valve 14.
 - Model C draws no connections 5/6. The DHW lines of valve 26 run into the integrated tank (items 47 to 54), drawn
   under the top edge (see Source and DHW).
 
@@ -182,7 +185,7 @@ the compressor discharge and 29 on the suction line, as in the figure.
 ## Source and DHW
 
 The outer-loop source and the DHW storage are drawn outside the cabinet, in the zones left (x 0 to 210) and right
-(x 790 to 1000) of it. Their pipes are segments in `src/diagram/geometry.ts`, like the cabinet's, so they will take
+(x 790 to 1000) of it. Their pipes are segments in `src/diagram/geometry.ts`, like the cabinet's, so they take
 the same colour and animation (see Colours). The air unit, the ground loop and the external tank have no item number in the manual;
 the manual's figures stop at the connections.
 
@@ -307,7 +310,7 @@ that moves the fluid: 1.2 s at 100 %, proportionally slower below, never faster 
 | Refrigerant | `compressor.percentage` |
 | HTR water (pump 17 reports no speed) | a fixed 3 s |
 
-At 0 % or without a value the pipe is still. Dead-end taps (vessels, drain valves, safety valves, probes) are coloured
+At 0 % or without a value the pipe is still. Dead-end taps (vessels, drain valves, safety valves) are coloured
 but never animated. With `prefers-reduced-motion: reduce` nothing is animated, the pipes and the fan alike; the colours
 stay the same.
 
@@ -324,7 +327,7 @@ writes no entity.
 | Value | Where |
 |---|---|
 | Production outlet (33) and return (34), pressure (38), pump 15 | left of probe 33, under probe 34, under pressure probe 38, above pump 15 |
-| DG1 setpoint | above the DG1 label at connections 1/2 |
+| DG1 setpoint, and "Demand" while the DG1 demand is on | above the DG1 label at connections 1/2, and right of port 2 |
 | Brine outlet (31) and inlet (32), pressure (37), pump 16 | under the probes, under probe 37, left of the pump |
 | Discharge (30) and suction (29) temperatures, pressures 36 and 35 | below the discharge and suction lines of the probe row |
 | Compressor 11: rpm, %, W | a stack inside the refrigerant loop |

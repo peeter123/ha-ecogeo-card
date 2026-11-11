@@ -1,7 +1,7 @@
 // Copied from hrv-ventilation test/lib/render.test.ts
 import { describe, expect, test } from 'vitest';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
-import { configuredEntityIds, hassChanged, shouldRender } from '../../src/lib/render';
+import { hassChanged, shouldRender } from '../../src/lib/render';
 
 const state = (entity_id: string, value: string, unit?: string): HassEntityState => ({
   entity_id,
@@ -21,34 +21,6 @@ const base: HassLike = {
   themes: { darkMode: false },
 };
 const IDS = ['sensor.supply_temperature'];
-
-describe('configuredEntityIds', () => {
-  test('collects the entity IDs of nested roles, once each, and ignores other values', () => {
-    const config = {
-      type: 'custom:ecogeo-card',
-      outdoor: { temperature: 'sensor.outdoor_temperature', humidity: 'sensor.outdoor_humidity' },
-      extract: { temperature: ' sensor.extract_temperature ' },
-      fans: { supply_flow: 'sensor.supply_flow' },
-      bypass: { position: 'sensor.outdoor_temperature' },
-      colors: { warm: '#c62828' },
-      smoothing: 10,
-      air_density: '1.2',
-      layout: 'auto',
-      'status.power': 'sensor.power',
-    };
-    expect(configuredEntityIds(config).sort()).toEqual([
-      'sensor.extract_temperature',
-      'sensor.outdoor_humidity',
-      'sensor.outdoor_temperature',
-      'sensor.power',
-      'sensor.supply_flow',
-    ]);
-  });
-
-  test('an empty config has no entities', () => {
-    expect(configuredEntityIds({ type: 'custom:ecogeo-card' })).toEqual([]);
-  });
-});
 
 describe('hassChanged', () => {
   test('card-bundle "Unrelated entity changes": another entity changing does not re-render', () => {

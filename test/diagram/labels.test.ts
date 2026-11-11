@@ -9,7 +9,15 @@ import { mergeFeatures } from '../../src/config/variants';
 import { LABEL_SPECS, footerItems, labelsFor, positionOf } from '../../src/diagram/labels';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
-import { DHW_LABELS, FOOTER_LABELS, INDICATIONS, NBSP, NO_VALUE, VALUE_CAPTIONS } from '../../src/strings';
+import {
+  DHW_LABELS,
+  FOOTER_LABELS,
+  HEATING_LABELS,
+  INDICATIONS,
+  NBSP,
+  NO_VALUE,
+  VALUE_CAPTIONS,
+} from '../../src/strings';
 
 const P = 'demo_ecogeo';
 const nb = (text: string): string => text.replaceAll(' ', NBSP);
@@ -124,27 +132,15 @@ describe('hydraulic labels', () => {
     card.remove();
   });
 
-  test('part not drawn: no label for items 10, 27 or 28 when passive cooling is false', async () => {
-    const card = await mount({ features: { passive_cooling: false } }, hassOf());
-    const items = [...root(card).querySelectorAll('[data-label-item]')].map((element) =>
-      element.getAttribute('data-label-item'),
-    );
-    for (const item of ['10', '27', '28']) expect(items).not.toContain(item);
-    // no spec that carries the feature or one of those items is rendered, and none is hidden by something else
-    const shown = new Set(labelIds(card));
-    const tied = LABEL_SPECS.filter(
-      (spec) => spec.feature === 'passive_cooling' || [10, 27, 28].includes(spec.item ?? 0),
-    );
-    for (const spec of tied) expect(shown.has(spec.id), spec.id).toBe(false);
-    // the label table is not empty of drawn labels: the same card shows the others
-    expect(shown.has('compressor_speed')).toBe(true);
-    card.remove();
-  });
-
-  test('a label of a part that is not drawn is not shown: no DHW storage, no tank labels', async () => {
-    const card = await mount({ dhw: 'none' }, hassOf());
-    expect(labelIds(card).filter((id) => id.startsWith('tank_'))).toEqual([]);
-    card.remove();
+  test('part not drawn: no tank labels without DHW storage, no fan speed label with a ground source', async () => {
+    const noDhw = await mount({ dhw: 'none' }, hassOf());
+    expect(labelIds(noDhw).filter((id) => id.startsWith('tank_'))).toEqual([]);
+    expect(labelIds(noDhw)).toContain('compressor_speed');
+    noDhw.remove();
+    const ground = await mount({ source: 'ground' }, hassOf());
+    expect(labelIds(ground)).not.toContain('fan_speed');
+    expect(labelIds(ground)).toContain('compressor_speed');
+    ground.remove();
   });
 });
 
@@ -445,6 +441,19 @@ describe('DHW tank labels', () => {
     const on = await mount({}, hassOf({ 'dhw.demand': 'on' }));
     expect(valueOf(on, 'tank_external_demand')).toBe(DHW_LABELS.demand);
     on.remove();
+  });
+
+  test('"Demand" at connections 1/2 shows only while the DG1 demand is on', async () => {
+    const on = await mount({}, hassOf({ 'heating.demand': 'on' }));
+    expect(valueOf(on, 'dg1_demand')).toBe(HEATING_LABELS.demand);
+    expect(label(on, 'dg1_demand')?.getAttribute('data-label-item')).toBe('1');
+    on.remove();
+    const off = await mount({}, hassOf({ 'heating.demand': 'off' }));
+    expect(label(off, 'dg1_demand')).toBeNull();
+    off.remove();
+    const unavailable = await mount({}, hassOf({ 'heating.demand': 'unavailable' }));
+    expect(label(unavailable, 'dg1_demand')).toBeNull();
+    unavailable.remove();
   });
 
   test('DHW temperature unavailable: the tank body is muted and the label shows no number', async () => {

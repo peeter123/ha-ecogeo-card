@@ -21,12 +21,6 @@ export const viewBox = { width: 1000, height: 620 } as const;
 
 /** The cabinet's outline and the zones around it. */
 export const CABINET = { x: 240, y: 130, width: 520, height: 475 } as const;
-export const ZONES = {
-  source: { x0: 0, x1: 210 },
-  cabinet: { x0: 240, x1: 760 },
-  dhw: { x0: 790, x1: 1000 },
-  run: { y0: 0, y1: 110 },
-} as const;
 
 /**
  * The integrated tank of model C (item 50), inside the cabinet under the top edge: coil 51 (its ports are where the DHW
@@ -121,7 +115,7 @@ export interface Segment extends Visibility {
   /** The circuits the pipe belongs to; it is active when any of them is. */
   circuit: readonly CircuitId[];
   points: readonly Point[];
-  /** The role of the probe that colours the pipe (group 6); in active cooling circuits.ts swaps the roles of 7/8. */
+  /** The role of the probe that colours the pipe; in active cooling `roleFor` in pipes.ts swaps the roles of 7/8. */
   temperatureRole: RolePath;
   /** The pump or compressor that sets the flow speed; none: a fixed speed when active (HTR) or no animation (stub). */
   speedRole?: RolePath;
@@ -258,7 +252,7 @@ const AIRO = 'source.air_unit_outlet_temperature';
 /**
  * The segments that carry HTR water when HTR is active and the DHW circuit is not (design D7): the DHW lines
  * between valve 26 / port 2 and the tank, outside the arm of valve 26 (which is `dhw_sup_a` and `dhw_ret_a`, excluded here), and the external
- * tank's pipes. Group 6 colours them with the DHW temperature and animates them at the fixed HTR speed.
+ * tank's pipes. pipes.ts colours them with the DHW temperature and animates them at the fixed HTR speed.
  */
 export const HTR_WATER_SEGMENT_IDS: readonly string[] = [
   'dhw_sup_b',

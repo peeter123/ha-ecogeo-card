@@ -35,6 +35,9 @@ Planned follow-up changes: `add-card-editor`, `add-hacs-release`, `add-browser-t
 Copy `dist/ecogeo-card.js` to the Home Assistant `www` folder, register it as a `module` dashboard resource and add
 the card to a view. The steps are in the Installation section of [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
+The card is designed for a full-width or panel view. On a narrow card the labels grow relative to the drawing (their
+font size is `max(8px, 0.95cqw)`) and may collide.
+
 ## Configuration
 
 ```yaml

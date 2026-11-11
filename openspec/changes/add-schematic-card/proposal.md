@@ -14,7 +14,7 @@ It also gives later work, such as diagnostics or extra registers, a place to sho
 - New Lovelace card `custom:ecogeo-card`, bundled into one self-contained `dist/ecogeo-card.js`. The build,
   lint, test and release tooling is set up after `hrv-ventilation`, and the shared helpers are copied from it.
 - The card draws, as inline SVG with no background image:
-  - **Cabinet (centre):** the B4 figure's topology (manual-figure items 1-46), with the six top connections in
+  - **Cabinet (centre):** the B4 figure's topology (manual-figure items 1-45; 42, 43 and 46 are the inverter cooling ports and the electrical panel, not drawn), with the six top connections in
     the manual's order: 1/2 production (DG1), 3/4 brine (outer loop), 5/6 DHW.
   - **Outer-loop source (left of the cabinet):** an air unit, a ground loop, or both (hybrid), joined to ports
     3/4. Its pipes pass over the short DG1 stubs of ports 1/2.
