@@ -302,7 +302,7 @@ describe('flow animation', () => {
   });
 });
 
-describe('mode-dependent roles (design D7)', () => {
+describe('mode-dependent roles (add-schematic-card D7)', () => {
   const viewOf = (mode: Mode): Pick<PipeView, 'mode' | 'circuits'> => scenario({ mode }, HEATING).view;
   const seg = (id: string) => {
     const found = SEGMENTS.find((segment) => segment.id === id);

@@ -5,7 +5,7 @@
 /** A card config as it comes from YAML or the editor: nested objects with entity IDs as strings. */
 export type CardConfig = Readonly<Record<string, unknown>>;
 
-/** Every entity role of the card, as a config path (the role table, design D8). */
+/** Every entity role of the card, as a config path (the role table, add-schematic-card D2). */
 export type { RolePath } from '../config/roles';
 
 // The shape of a Home Assistant entity ID: a domain starting with a letter, a dot, an object ID (lowercase letters,

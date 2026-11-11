@@ -1,4 +1,4 @@
-// The fixed capture list (design D9): the emulator URLs that `npm run capture` walks and that the cycle mode steps
+// The fixed capture list (add-schematic-card D9): the emulator URLs that `npm run capture` walks and that the cycle mode steps
 // through. Each entry is a name (the PNG file name) and a query string; parameters left out take the defaults of
 // url-state.ts (scenario heating, model B, variant 4, source ground, dhw and features by preset, detail simplified, light theme).
 import { SCENARIO_NAMES } from './scenarios';

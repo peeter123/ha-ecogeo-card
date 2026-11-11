@@ -191,7 +191,7 @@ the compressor discharge and 29 on the suction line, as in the figure.
   the return line from port 6 runs back across to join port 2's line. Exchanger 9 taps the supply, pump 17 the return.
 - **Refrigerant:** compressor 11 is in the middle, drawn as the standard compressor symbol: a circle with two straight
   lines that start on it at the suction side and converge towards the discharge side, so the wide side faces the
-  suction pipe (right) and the narrow side the discharge pipe (left). The discharge runs left through 36, 40 and 30 into HTR exchanger 9 and on to inversion valve 14, which feeds condenser 8 (heating) or evaporator 7 (active
+  suction pipe (right) and the narrow side the discharge pipe (left). The discharge runs left through 36, 40 (drawn only with `detail: full`) and 30 into HTR exchanger 9 and on to inversion valve 14, which feeds condenser 8 (heating) or evaporator 7 (active
   cooling). The expansion leg 8, 41, 13, 12, 7 runs along the lower row; the suction returns through 29, 35 and 39
   with service outlet 41.
 - **Valve 14's ports:** the three ports on its right are ordered suction (top), evaporator 7 (middle), condenser 8

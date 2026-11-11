@@ -1,10 +1,11 @@
-// The SVG symbols of the drawing (design D6): one function per kind of component, each returning a group centred on
+// The SVG symbols of the drawing (add-schematic-card D6): one function per kind of component, each returning a group centred on
 // the origin and turned by the component's rotation. Strokes use `currentColor`, so the caller sets the colour (the
 // theme's text colour, or the muted colour) through CSS. The shapes follow the manual's symbols (section 3.1) in a
 // simplified form. The letters of probes and switches stay upright whatever the rotation.
 import { nothing, svg, type SVGTemplateResult } from 'lit';
 import {
   COIL_51,
+  COIL_LOCAL_PORTS,
   HELIX_BACK_OPACITY,
   INTERNAL_TANK,
   helixDrawOrder,
@@ -29,8 +30,8 @@ export interface SymbolOptions {
   fills?: { left: string; right: string };
 }
 
-/** The opacity of an exchanger's side fill: low enough that the plate lines and ports stay readable (design D4). */
-export const EXCHANGER_FILL_OPACITY = 0.55;
+/** The opacity of an exchanger's side fill: low enough that the plate lines and ports stay readable (refine-schematic-drawing D4). */
+const EXCHANGER_FILL_OPACITY = 0.55;
 
 /** The rounded half of an exchanger body, inside its outline (x from -20 to 0 for the left half, 0 to 20 for the right). */
 function exchangerHalf(half: 'left' | 'right', span: number, paint: string): SVGTemplateResult {
@@ -54,7 +55,7 @@ const letter = (text: string, rotation: Rotation): SVGTemplateResult =>
 export const COIL_51_SHAPE: HelixShape = { kind: 'helix', cx: 2, top: -60, bottom: 60, rx: 11, turns: 7.5 };
 
 /**
- * Coil 51 (model C): the helix of design D5, lying on its side (axis along x, turned 90 degrees), smaller than the external one. Both
+ * Coil 51 (model C): the helix of refine-schematic-drawing D5, lying on its side (axis along x, turned 90 degrees), smaller than the external one. Both
  * ends sit at its left: the supply starts the helix, the return drops 4 units below the loops and runs straight back to the second port.
  * The two port stubs run back to just inside tank 50's wall (2 units), so the pipes from the ports (which end at the
  * ports, 12 units inside the wall) change tone only at the wall.
@@ -62,11 +63,16 @@ export const COIL_51_SHAPE: HelixShape = { kind: 'helix', cx: 2, top: -60, botto
 function helixCoil(): SVGTemplateResult {
   const stub = INTERNAL_TANK.x + 2 - COIL_51.x;
   const halves = helixHalves(COIL_51_SHAPE);
-  return svg`<g transform="matrix(0 -1 1 0 0 0)">${helixDrawOrder(halves).map((half) => svg`<path data-half=${half.front ? 'front' : 'back'} stroke-linecap=${half.front ? 'round' : 'butt'} d=${half.d} opacity=${half.front ? nothing : HELIX_BACK_OPACITY} />`)}</g><path stroke-width="3" d="M${stub} -13 H-60 M60 9 V13 H${stub}" />`;
+  // the stubs end on coil 51's ports; the loop drop (shape x = cx - rx becomes y = rx - cx) and the helix ends (shape y)
+  const { cx, rx, top, bottom } = COIL_51_SHAPE;
+  const supplyY = COIL_LOCAL_PORTS[0][1];
+  const returnY = COIL_LOCAL_PORTS[1][1];
+  const loopY = rx - cx;
+  return svg`<g transform="matrix(0 -1 1 0 0 0)">${helixDrawOrder(halves).map((half) => svg`<path data-half=${half.front ? 'front' : 'back'} stroke-linecap=${half.front ? 'round' : 'butt'} d=${half.d} opacity=${half.front ? nothing : HELIX_BACK_OPACITY} />`)}</g><path stroke-width="3" d="M${stub} ${supplyY} H${top} M${bottom} ${loopY} V${returnY} H${stub}" />`;
 }
 
 /** Compressor lines in the symbol's frame: from the circle (r 14) at 50 degrees either side of the suction axis (+x) to the narrow discharge end. */
-export const COMPRESSOR_LINES = 'M9 -10.7 L-13 -3 M9 10.7 L-13 3';
+const COMPRESSOR_LINES = 'M9 -10.7 L-13 -3 M9 10.7 L-13 3';
 
 const stem = (length: number, from: number): SVGTemplateResult => svg`<path d="M0 ${from} V${length}" />`;
 

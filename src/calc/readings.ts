@@ -1,4 +1,4 @@
-// Readings (design D1, D4, D8): the states of the resolved roles as typed values. A number is converted to the
+// Readings (add-schematic-card D1, D4, D8): the states of the resolved roles as typed values. A number is converted to the
 // role's unit (°F to °C, kW to W, a difference back to K); an unavailable or unknown state, a non-numeric state and
 // the firmware sentinel are no value (undefined). Text roles give the trimmed state, binary roles true for `on` and
 // false for `off`. Pure.

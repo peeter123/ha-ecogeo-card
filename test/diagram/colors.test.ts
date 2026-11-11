@@ -25,7 +25,7 @@ describe('temperature scale (temperature-coloring spec)', () => {
       return sector * 60;
     };
     const hues = DEFAULT_STOPS.map((stop) => hue(stop.color));
-    // about 214, 206, 199, 40, 24 and 352 degrees (design D3)
+    // about 214, 206, 199, 40, 24 and 352 degrees (refine-schematic-drawing D3)
     expect(hues.map(Math.round)).toEqual([214, 206, 199, 40, 24, 352]);
     for (const value of hues) expect(value < 75 || value > 165, String(value)).toBe(true);
     expect(resolveConfig({}).colors).toBe(DEFAULT_STOPS);

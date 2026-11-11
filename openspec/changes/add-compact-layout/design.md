@@ -31,8 +31,9 @@ entity-based gating stays intact for state updates. Unknown width (0 or before t
 ### D2. Two label tiers
 Each label spec in `labels.ts` gets `tier: 'key' | 'detail'`. Key: `production.outlet_temperature`,
 `production.return_temperature`, `brine.outlet_temperature`, `brine.inlet_temperature`, `compressor.speed`,
-`dhw.temperature`, and the source's outlet (`source.air_unit_outlet_temperature` at the air unit, the ground
-loop's outlet label at a ground loop). Everything else is `detail`, including the "Demand" captions. Compact renders
+`dhw.temperature`, and the source's Out port label (since refine-schematic-drawing D14: `air_unit_out` with
+`source: air`, `ground_out` with `source: ground`, `hybrid_ground_out` in the hybrid, which shows no air unit Out).
+Everything else is `detail`, including the "Demand" captions. Compact renders
 key labels only. Footer items get the same tier: mode, COP, outside temperature, alarm and offline are key.
 
 ### D3. Detail forced to simplified in compact

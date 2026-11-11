@@ -1,4 +1,4 @@
-// The temperature colour scale (design D3, temperature-coloring spec): absolute stops, interpolated with CSS
+// The temperature colour scale (refine-schematic-drawing D3, temperature-coloring spec): absolute stops, interpolated with CSS
 // `color-mix(in srgb, ...)` and clamped at the end stops. The interpolation is copied from hrv-ventilation
 // src/diagram/streams.ts (`mixColor`: percentage rounded to one decimal, the end colours returned as they are at 0 and
 // 100 %, the rest as a color-mix of the warm into the cold colour). Deviation: hrv mixes between two colours on a
@@ -16,7 +16,7 @@ export interface ColorStop {
 
 /**
  * Blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at 30 °C, orange at 50 °C and red at 70 °C; no green
- * (design D3). The pale blue keeps the srgb mix between light blue and amber from turning grey-green.
+ * (refine-schematic-drawing D3). The pale blue keeps the srgb mix between light blue and amber from turning grey-green.
  */
 export const DEFAULT_STOPS: readonly ColorStop[] = [
   { temperature: -10, color: '#1e5aa8' },
@@ -34,7 +34,7 @@ export const MAX_STOPS = 8;
 export const MUTED_COLOR = 'var(--disabled-text-color)';
 
 /**
- * The colour of a muted helix (design D8), set as `--ecogeo-coil-muted` on the drawing: a darker neutral grey in the
+ * The colour of a muted helix (refine-schematic-drawing D8), set as `--ecogeo-coil-muted` on the drawing: a darker neutral grey in the
  * light theme, where the normal muted grey fades on the tinted tank body; the normal muted colour in the dark theme.
  */
 export const COIL_MUTED_LIGHT = '#8a8a8a';

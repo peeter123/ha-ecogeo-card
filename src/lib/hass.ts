@@ -1,5 +1,5 @@
 // Copied from hrv-ventilation src/lib/hass.ts: the types and stateOf; formatState and the fan helper are dropped
-// (labels use the card's own formatting, design D6), and the more-info event helper is added.
+// (labels use the card's own formatting, add-schematic-card D6), and the more-info event helper is added.
 // The parts of Home Assistant's `hass` object the card uses. HA's frontend types are not published as a package,
 // so the card declares what it reads. Fields are added here as the card starts to use them.
 

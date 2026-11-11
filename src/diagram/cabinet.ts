@@ -1,4 +1,4 @@
-// The cabinet (design D5, D6; schematic-drawing spec): the outline, the connections on the top edge (1-6, and 47-49
+// The cabinet (add-schematic-card D5, D6; schematic-drawing spec): the outline, the connections on the top edge (1-6, and 47-49
 // on model C) with their item numbers and circuit labels, every internal component as a symbol with its item number
 // (model C's tank 50-54 included), and every pipe segment of the drawing, the source's and the external DHW tank's
 // pipes outside the cabinet too, coloured by temperature and animated by flow
@@ -7,7 +7,7 @@ import { css, nothing, svg, type SVGTemplateResult } from 'lit';
 import type { ExchangerFill } from '../config/options';
 import { CIRCUIT_LABELS, componentLabel } from '../strings';
 import { COIL_MUTED_VAR, MUTED_COLOR } from './colors';
-import { COMPONENT_ROLES, tapBindings, tapTarget, type Taps } from './component-info';
+import { COMPONENT_ROLES, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
 import {
   CABINET,
   CIRCUIT_LABELS as LABEL_POSITIONS,
@@ -46,11 +46,11 @@ export const cabinetStyles = css`
   .pipe.muted {
     stroke: var(--disabled-text-color);
   }
-  /* A muted helix (external coil, coil 51) takes its own grey (design D8; set by the card, light theme only). */
+  /* A muted helix (external coil, coil 51) takes its own grey (refine-schematic-drawing D8; set by the card, light theme only). */
   .helix .pipe.muted {
     stroke: var(--ecogeo-coil-muted, var(--disabled-text-color));
   }
-  /* The part of an idle coil pipe inside the tank, in the coil's grey (clipped to the tank body, design D8). */
+  /* The part of an idle coil pipe inside the tank, in the coil's grey (clipped to the tank body, refine-schematic-drawing D8). */
   .pipe-inside {
     fill: none;
     stroke: var(--ecogeo-coil-muted, var(--disabled-text-color));
@@ -91,9 +91,7 @@ export const cabinetStyles = css`
     cursor: pointer;
   }
   .symbol-group[role='button']:focus-visible {
-    outline: 2px solid var(--primary-color, currentColor);
-    outline-offset: 2px;
-    filter: drop-shadow(0 0 2px var(--primary-color, currentColor));
+    ${focusRingStyles}
   }
   .item {
     fill: var(--secondary-text-color);
@@ -143,7 +141,7 @@ function component(
 }
 
 /**
- * A helical coil (design D5): one path per half-turn, the front halves with the base stroke and the back halves faint,
+ * A helical coil (refine-schematic-drawing D5): one path per half-turn, the front halves with the base stroke and the back halves faint,
  * and, while it flows, the dash overlay on the front halves only, in the direction of the segment.
  */
 function helix(segment: Segment, shape: HelixShape, state: PipeState): SVGTemplateResult {
@@ -197,7 +195,7 @@ interface SideGradient {
 }
 
 /**
- * The colours of one exchanger side (design D4): from the state of the segment that enters it to the one that leaves
+ * The colours of one exchanger side (refine-schematic-drawing D4): from the state of the segment that enters it to the one that leaves
  * it. A reversed side (active cooling, refrigerant legs of 7 and 8) swaps start and end. Candidates that are not drawn
  * are skipped; a side is muted when none of its drawn segments is coloured. Every drawn side has exactly one drawn candidate at each end
  * (a geometry test checks it).
@@ -234,7 +232,7 @@ const gradientDef = (gradient: SideGradient): SVGTemplateResult =>
       <stop offset="1" style="stop-color: ${gradient.end}" />
     </linearGradient>`;
 
-/** Coil 51's colour: its temperature colour, or the coil's muted grey (light theme: darker) while idle (design D8). */
+/** Coil 51's colour: its temperature colour, or the coil's muted grey (light theme: darker) while idle (refine-schematic-drawing D8). */
 function coilStyleColor(view: PipeView): string {
   const color = coilColor(view);
   return color === MUTED_COLOR ? COIL_MUTED_VAR : color;

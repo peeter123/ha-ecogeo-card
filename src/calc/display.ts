@@ -1,4 +1,4 @@
-// How a reading is shown (design D6, live-values spec): the card formats every number itself, never through
+// How a reading is shown (add-schematic-card D6, live-values spec): the card formats every number itself, never through
 // hass.formatEntityState, so the no-break space and the card's own units stay. The number goes through the copied
 // `formatNumber` with Home Assistant's locale and no thousands separator ("2803 rpm"); the decimals are the entity's `display_precision` from the entity
 // registry when it has one, else the role table's default; the role's own unit (K for a temperature difference, no unit

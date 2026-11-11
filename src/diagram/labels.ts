@@ -1,4 +1,4 @@
-// Value labels and the footer values (design D6, live-values spec). The labels are HTML overlaid on the SVG at
+// Value labels and the footer values (add-schematic-card D6, live-values spec). The labels are HTML overlaid on the SVG at
 // percentage positions computed from viewBox coordinates (the pattern of hrv-ventilation src/diagram/labels.ts: HTML
 // text over the drawing, so it stays crisp and selectable and taps work). Deviation from hrv: the labels are a fixed table of
 // positions after the drawing's components (this card has no layout switch), not a model derived from the config,
@@ -8,7 +8,7 @@
 // `middle` centres it; y is the vertical centre. They sit where the drawing leaves room (checked on the emulator
 // captures): the probe row's values below the discharge line, the compressor's stack inside the refrigerant loop,
 // the source's values under the air unit and beside its ports and the ground loop's legs, the tank's values under the external tank or,
-// for model C, inside tank 50 above its coil (design D8b). A label of a part that is not drawn is not shown (same rules as
+// for model C, inside tank 50 above its coil (refine-schematic-drawing D8b). A label of a part that is not drawn is not shown (same rules as
 // geometry.ts `partState`); a drawn label with no value shows a muted dash and keeps its place.
 import { css, html, nothing, type TemplateResult } from 'lit';
 import { formatReading, type DisplayContext } from '../calc/display';
@@ -127,7 +127,7 @@ const EXT_TANK_X = EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2;
 const EXT_TANK_Y = EXTERNAL_TANK.y + EXTERNAL_TANK.height + 22;
 
 /** Model C's tank values: the row's centre line, 12 units under the tank's top (the strip above coil 51 is ~34 tall). */
-export const INTERNAL_ROW_Y = INTERNAL_TANK.y + 12;
+const INTERNAL_ROW_Y = INTERNAL_TANK.y + 12;
 const INTERNAL_CENTRE_X = INTERNAL_TANK.x + INTERNAL_TANK.width / 2;
 
 /** The air unit's fan and outside labels: the first 12 units under the housing, the second 13 below it. */
@@ -166,7 +166,7 @@ export const LABEL_SPECS: readonly LabelSpec[] = [
   spec('condensation_temperature', 'refrigerant.condensation_temperature', 432, 437, 'middle', { item: 8 }),
   spec('evaporation_temperature', 'refrigerant.evaporation_temperature', 572, 437, 'middle', { item: 7 }),
   // air unit (also in the hybrid): the fan and the outside air under the housing, the brine In and Out beside the two
-  // ports on the housing's right (design D14). The label of the top port hangs under its pipe, that of the bottom port
+  // ports on the housing's right (refine-schematic-drawing D14). The label of the top port hangs under its pipe, that of the bottom port
   // sits on its pipe, so the two stay between the pipes and clear of the production labels at the cabinet. Air: In at the
   // bottom port, Out at the top one. Hybrid (entered at the top): only In, at the top port; the air unit's Out and the ground loop's In would be the same value on the link pipe, which carries no label.
   spec('fan_speed', 'source.fan_speed', AIR_UNIT.fanX, AIR_LABELS_Y, 'middle', {
@@ -189,7 +189,7 @@ export const LABEL_SPECS: readonly LabelSpec[] = [
     source: ['hybrid'],
     caption: VALUE_CAPTIONS.portIn,
   }),
-  // ground loop (design D14): In (the brine entering it) right of the down leg and Out (the brine leaving it) left of
+  // ground loop (refine-schematic-drawing D14): In (the brine entering it) right of the down leg and Out (the brine leaving it) left of
   // the up leg, both just under the ground line; in the hybrid only Out
   spec(
     'ground_in',

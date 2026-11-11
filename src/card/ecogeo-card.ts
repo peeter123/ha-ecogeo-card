@@ -1,6 +1,6 @@
 // The ecoGEO schematic card: a LitElement that validates and resolves its config, reads the roles, derives the mode
 // and the circuits, draws the cabinet (diagram/cabinet.ts) with coloured, flowing pipes (pipes.ts), the outer-loop
-// source (source.ts) and the external DHW tank (dhw.ts) in the SVG viewBox of design D5, overlays the value labels
+// source (source.ts) and the external DHW tank (dhw.ts) in the SVG viewBox of add-schematic-card D5, overlays the value labels
 // (labels.ts) and shows the footer: mode, values, alarm, offline and sample indications. Tapping a value fires
 // `hass-more-info`; the card calls no service.
 import { css, html, LitElement, nothing, svg, type PropertyValues, type TemplateResult } from 'lit';
@@ -27,11 +27,11 @@ import { INDICATIONS, MODE_LABELS, SCHEMATIC_LABEL } from '../strings';
 
 export const CARD_TAG = 'ecogeo-card';
 
-/** The drawing's coordinate system (design D5). */
+/** The drawing's coordinate system (add-schematic-card D5). */
 export const VIEWBOX_WIDTH = viewBox.width;
 export const VIEWBOX_HEIGHT = viewBox.height;
 
-/** Home Assistant's grid options for a card (design D6). */
+/** Home Assistant's grid options for a card (add-schematic-card D6). */
 export interface GridOptions {
   columns: number | 'full';
   rows?: number | 'auto';
@@ -89,12 +89,12 @@ export class EcogeoCard extends LitElement {
     this.config = config;
   }
 
-  /** Height in units of 50 px for the masonry layout (design D6). */
+  /** Height in units of 50 px for the masonry layout (add-schematic-card D6). */
   getCardSize(): number {
     return 10;
   }
 
-  /** Full width on the sections grid, at least 8 rows tall (design D6). */
+  /** Full width on the sections grid, at least 8 rows tall (add-schematic-card D6). */
   getGridOptions(): GridOptions {
     return { columns: 'full', rows: 'auto', min_rows: 8 };
   }

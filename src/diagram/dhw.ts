@@ -1,4 +1,4 @@
-// The DHW storage (design D5, D7; dhw-storage spec): an external tank with a coil right of the cabinet (model B,
+// The DHW storage (add-schematic-card D5, D7; dhw-storage spec): an external tank with a coil right of the cabinet (model B,
 // connections 5 "DHW inter-accumulator outlet" and 6 "inlet"), the integrated tank of model C, or none.
 //
 // - External: this file draws the tank body and its caption. The pipes from ports 5/6 (up into the run and right to
@@ -8,14 +8,14 @@
 //   connections 47/48/49 are components in geometry.ts, drawn by the cabinet with the symbols of symbols.ts.
 // - None: nothing is drawn (no tank, no pipes, no ports 5/6, no valve 26).
 //
-// The tank body hook (design D7: the body takes the DHW temperature on the card's colour scale): both
+// The tank body hook (add-schematic-card D7: the body takes the DHW temperature on the card's colour scale): both
 // tank bodies are a `.tank-body` shape (a path for the external cylinder, a rect for tank 50) with a `data-dhw-tank` attribute, filled from the custom property
 // `--dhw-tank-color` (no fill while it is not set). A muted body (DHW temperature unavailable) gets the muted colour
 // through the same property. The values (temperature, setpoint, start delta-T, demand) go under the external tank
-// (centred on it, below its bottom edge: EXTERNAL_TANK) for the external one, and inside tank 50, one row above coil 51 (design D8b), for the internal one (labels.ts).
+// (centred on it, below its bottom edge: EXTERNAL_TANK) for the external one, and inside tank 50, one row above coil 51 (refine-schematic-drawing D8b), for the internal one (labels.ts).
 import { css, svg, type SVGTemplateResult } from 'lit';
 import { DHW_LABELS } from '../strings';
-import { EXTERNAL_TANK_ROLE, tapBindings, tapTarget, type Taps } from './component-info';
+import { EXTERNAL_TANK_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
 import { EXTERNAL_TANK, externalTankBody, type DrawContext } from './geometry';
 
 export const dhwStyles = css`
@@ -33,9 +33,7 @@ export const dhwStyles = css`
     cursor: pointer;
   }
   .dhw-storage[role='button']:focus-visible {
-    outline: 2px solid var(--primary-color, currentColor);
-    outline-offset: 2px;
-    filter: drop-shadow(0 0 2px var(--primary-color, currentColor));
+    ${focusRingStyles}
   }
   .tank-caption {
     fill: var(--secondary-text-color);

@@ -1,4 +1,4 @@
-// The emulator's scenarios (design D9, dev-emulator spec): eleven complete state maps by role path, resolved to
+// The emulator's scenarios (add-schematic-card D9, dev-emulator spec): eleven complete state maps by role path, resolved to
 // entity ids through the fixed demo prefix `demo_ecogeo`, so no installation id appears. The heating scenario is the
 // card's sample (src/config/sample.ts: rounded numbers from a live heating snapshot); every other scenario is that
 // map with the values that differ, so each one still gives every role a state.

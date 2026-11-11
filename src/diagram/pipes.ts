@@ -1,4 +1,4 @@
-// Pipe rendering state (design D6, D7; temperature-coloring spec): for each drawn segment the colour, whether it is
+// Pipe rendering state (add-schematic-card D6, D7; temperature-coloring spec): for each drawn segment the colour, whether it is
 // muted, whether its dash overlay runs, how fast and in which direction. Every function is pure; its inputs are the
 // mode, the circuits (active circuits and valve positions), the readings and the colour stops.
 // - Colour: the segment's temperature role (see `roleFor` for the mode-dependent ones) on the colour scale. Muted when
@@ -38,7 +38,7 @@ export const TAP_WATER_SEGMENT_IDS: readonly string[] = ['tap_47', 'tap_48', 'ta
 /**
  * The production legs from valve 27 to condenser 8: the pipe from valve 27 through pump 15 to the condenser, with the
  * taps on pump 15's suction and the drain after it (the same water). In passive cooling and defrost the compressor is
- * stopped, so the condenser does not change the water temperature and the legs take the outlet temperature (D7).
+ * stopped, so the condenser does not change the water temperature and the legs take the outlet temperature (add-schematic-card D7).
  */
 export const PRODUCTION_LEGS_27_TO_8: readonly string[] = [
   'prod_27_15',
@@ -62,7 +62,7 @@ const SWAPPED: Readonly<Partial<Record<RolePath, RolePath>>> = {
   'refrigerant.evaporation_temperature': 'refrigerant.condensation_temperature',
 };
 
-/** True when the segment carries HTR water on the DHW lines: HTR is active and the production DHW circuit is not (D7). */
+/** True when the segment carries HTR water on the DHW lines: HTR is active and the production DHW circuit is not (add-schematic-card D7). */
 export const carriesHtrWater = (segment: Pick<Segment, 'id'>, circuits: Circuits): boolean =>
   HTR_WATER_SEGMENT_IDS.includes(segment.id) && htrWaterActive(circuits);
 
@@ -71,7 +71,7 @@ export const htrWaterActive = (circuits: Circuits): boolean =>
   circuits.active.has('htr') && !circuits.active.has('production_dhw');
 
 /**
- * The temperature role that colours a segment, from its geometry role and the mode (design D7).
+ * The temperature role that colours a segment, from its geometry role and the mode (add-schematic-card D7).
  * - HTR water on the DHW lines takes the DHW temperature.
  * - In active cooling the `reversible` refrigerant legs swap 7 and 8: discharge and suction, condensation and
  *   evaporation.

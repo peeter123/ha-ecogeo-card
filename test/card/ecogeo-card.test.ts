@@ -24,7 +24,7 @@ const hassWith = (...entries: readonly (readonly [string, string, string?])[]): 
 });
 
 describe('ecogeo-card frame', () => {
-  test('the element registers and renders an svg with the viewBox of design D5 and the cabinet', async () => {
+  test('the element registers and renders an svg with the viewBox of add-schematic-card D5 and the cabinet', async () => {
     const card = await mount();
     const svg = card.shadowRoot?.querySelector('svg');
     expect(svg).not.toBeNull();
@@ -33,7 +33,7 @@ describe('ecogeo-card frame', () => {
     card.remove();
   });
 
-  test('size hints (design D6)', async () => {
+  test('size hints (add-schematic-card D6)', async () => {
     const card = await mount();
     expect(card.getCardSize()).toBe(10);
     expect(card.getGridOptions()).toEqual({ columns: 'full', rows: 'auto', min_rows: 8 });

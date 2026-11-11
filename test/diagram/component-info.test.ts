@@ -1,5 +1,5 @@
 // The component-info spec: the name and item number of every drawn component as tooltip and accessible name, and
-// the more-info tap of a component with an entity of its own (design D2).
+// the more-info tap of a component with an entity of its own (refine-schematic-drawing D2).
 import { describe, expect, test, vi } from 'vitest';
 import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
@@ -115,7 +115,7 @@ describe('component-to-role table', () => {
     card.remove();
   });
 
-  test('the hand-chosen entries of design D2', () => {
+  test('the hand-chosen entries of refine-schematic-drawing D2', () => {
     expect(COMPONENT_ROLES[11]).toBe('compressor.speed');
     expect(COMPONENT_ROLES[12]).toBe('refrigerant.expansion_valve');
     expect(COMPONENT_ROLES[8]).toBe('refrigerant.condensation_temperature');

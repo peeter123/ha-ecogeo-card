@@ -18,7 +18,9 @@ its rules are binding. Read it, and the active change in `openspec/changes/`, be
 - `private/` (git-ignored): `installation.md` with everything specific to the live installation.
 
 The first change, `add-schematic-card`, is archived in `openspec/changes/archive/2026-11-11-add-schematic-card/`;
-its capabilities are the accepted specs in `openspec/specs/`. Follow-ups are named in its proposal.
+its capabilities are the accepted specs in `openspec/specs/`. Follow-ups are named in its proposal. The second,
+`refine-schematic-drawing` (detail level, component info, palette, exchanger fills, tank and source drawing), is
+archived in `openspec/changes/archive/2026-11-11-refine-schematic-drawing/`.
 
 ## Rules in short
 

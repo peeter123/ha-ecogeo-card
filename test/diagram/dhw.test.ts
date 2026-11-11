@@ -87,7 +87,7 @@ describe('DHW storage', () => {
     expect(d('dhw_ext_in').endsWith('L940 192')).toBe(true);
     expect(front[0]?.getAttribute('d')?.startsWith('M940 192')).toBe(true);
     expect(front.at(-1)?.getAttribute('d')?.endsWith('840 276')).toBe(true);
-    // clean joints (design D8a): every back half is drawn before every front half; backs have butt caps, fronts round
+    // clean joints (refine-schematic-drawing D8a): every back half is drawn before every front half; backs have butt caps, fronts round
     const lastBack = halves.map((half) => half.getAttribute('data-half')).lastIndexOf('back');
     const firstFront = halves.map((half) => half.getAttribute('data-half')).indexOf('front');
     expect(lastBack).toBeLessThan(firstFront);
@@ -228,7 +228,7 @@ describe('DHW storage', () => {
     const solid = paths.filter((path) => path.getAttribute('data-half') === 'front');
     expect(solid).toHaveLength(8);
     expect(faint).toHaveLength(7);
-    // clean joints (design D8a): backs first with butt caps, fronts on top with round caps
+    // clean joints (refine-schematic-drawing D8a): backs first with butt caps, fronts on top with round caps
     const order = paths.map((path) => path.getAttribute('data-half'));
     expect(order.lastIndexOf('back')).toBeLessThan(order.indexOf('front'));
     for (const path of faint) expect(path.getAttribute('stroke-linecap')).toBe('butt');

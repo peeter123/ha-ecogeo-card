@@ -1,4 +1,4 @@
-// The drawing's geometry as data (design D5): the viewBox, the ports on the top edge, every component and every pipe
+// The drawing's geometry as data (add-schematic-card D5): the viewBox, the ports on the top edge, every component and every pipe
 // segment, laid out after the manual's B4 figure (manual-figure, section 3.1, page 34) and, for model C, figure C
 // (items 47-54, the integrated tank). The topology and the item numbers are the figures'; the coordinates are re-laid
 // out for legibility. Besides the cabinet's own pipes the segments include the pipes of the outer-loop source (left
@@ -32,6 +32,12 @@ export const INTERNAL_TANK = { x: 408, y: 138, width: 182, height: 66 } as const
 /** Coil 51's centre (model C), inside tank 50; its port stubs reach back to the tank wall (symbols.ts). */
 export const COIL_51 = { x: 495, y: 185 } as const;
 
+/** Coil 51's ports in its local frame: supply first, return second. The symbol's port stubs end on their y values. */
+export const COIL_LOCAL_PORTS: readonly [readonly [number, number], readonly [number, number]] = [
+  [-75, -13],
+  [-75, 13],
+];
+
 /** The external tank right of the cabinet (not a manual item: the "DHW inter-accumulator" of ports 5/6). */
 export const EXTERNAL_TANK = { x: 806, y: CABINET.y, width: 168, height: 180, dome: 14 } as const;
 
@@ -52,8 +58,8 @@ export function externalTankBody(): string {
 
 /**
  * The air unit's housing and the fan in it, left of the cabinet (not manual items). The housing's top is the
- * cabinet's top line (design D11); everything else is placed from it. Both brine pipes leave through the housing's
- * right wall, the side facing the cabinet (design D13).
+ * cabinet's top line (refine-schematic-drawing D11); everything else is placed from it. Both brine pipes leave through the housing's
+ * right wall, the side facing the cabinet (refine-schematic-drawing D13).
  */
 export const AIR_UNIT = {
   x: 26,
@@ -88,11 +94,14 @@ export const AIR_PORT_Y = {
 } as const;
 
 /**
- * The ground loop (design D12): a single vertical U. One leg goes down from the ground line (at `downX`), a half circle
+ * The ground loop (refine-schematic-drawing D12): a single vertical U. One leg goes down from the ground line (at `downX`), a half circle
  * forms the bottom and one leg comes back up (at `upX`), `depth` below the line at its lowest. The legs' spacing is the
  * bottom's diameter.
  */
 export const GROUND_LOOP = { downX: 166, upX: 106, depth: 140 } as const;
+
+/** The ground line's horizontal extent in the source zone (the hatching ticks sit 6 units inside each end). */
+export const GROUND_LINE_X = { start: 8, end: 220 } as const;
 
 /** The ground line (the surface) of the ground loop: on the cabinet's top line, or in the hybrid under the air unit. */
 export const GROUND_LINE_Y = { ground: CABINET.y, hybrid: AIR_UNIT.y + AIR_UNIT.height + 70 } as const;
@@ -133,7 +142,7 @@ export type ComponentKind =
  * pipe that passes through the part: drawn unless the feature is `false`, never muted by it. `bypass` (segments
  * only): the pipe that replaces the part, drawn only when the feature is `false`. `dhw`: only for that DHW storage
  * (`any` means external or internal). `source`: only for those outer-loop sources. HTR also needs DHW storage: with
- * `dhw: none` it counts as `false`. `detail: 'full'` (design D1): a service or safety part, or a stub pipe that only
+ * `dhw: none` it counts as `false`. `detail: 'full'` (refine-schematic-drawing D1): a service or safety part, or a stub pipe that only
  * leads to one, drawn only at the `full` level of detail.
  */
 export interface Visibility {
@@ -149,7 +158,7 @@ export interface Visibility {
 export type Tag = readonly [dx: number, dy: number, anchor?: 'start' | 'middle' | 'end'];
 
 /**
- * One side of a plate exchanger (design D4): the half of the symbol it fills, the segments that enter and leave it
+ * One side of a plate exchanger (refine-schematic-drawing D4): the half of the symbol it fills, the segments that enter and leave it
  * in normal flow (candidates: the first one that is drawn counts, as a bypass replaces a through pipe) and the end
  * the entering one is attached to. A `reversible` side runs the other way in active cooling.
  */
@@ -177,7 +186,7 @@ export interface Component extends Pick<Visibility, 'feature' | 'dhw' | 'detail'
 }
 
 /**
- * A helical coil seen from the side (design D5), drawn between two end points that sit on the pipes: it starts at
+ * A helical coil seen from the side (refine-schematic-drawing D5), drawn between two end points that sit on the pipes: it starts at
  * (cx + rx, top) and winds down `turns` turns (a half-turn counts as 0.5) to (cx - rx, bottom) when the number of
  * half-turns is odd. The pieces of its path are made by `helixHalves`.
  */
@@ -379,7 +388,7 @@ const AIR_COIL_BEND = AIR_UNIT.passes.step / 2;
 const LOOP_BEND = (GROUND_LOOP.downX - GROUND_LOOP.upX) / 2;
 
 /**
- * The air coil's points (design D13): a serpentine of the passes of `AIR_UNIT.passes`. It starts at the right of the
+ * The air coil's points (refine-schematic-drawing D13): a serpentine of the passes of `AIR_UNIT.passes`. It starts at the right of the
  * top pass and, the number of passes being even, ends at the right of the bottom pass. `reverse` gives the other
  * direction: the air source is entered at the bottom, so that its exit on the top pass rises left of the feed.
  */
@@ -399,7 +408,7 @@ function coilPath(reverse: boolean): string {
 }
 
 /**
- * One half of the ground loop's U from the ground line at `lineY` (design D12): `down` is the leg down and the bottom's
+ * One half of the ground loop's U from the ground line at `lineY` (refine-schematic-drawing D12): `down` is the leg down and the bottom's
  * first quarter circle, `up` the second quarter circle and the leg up. They meet in the middle of the bottom.
  */
 function loopHalf(lineY: number, half: 'down' | 'up'): string {
@@ -438,7 +447,7 @@ const DHWT = 'dhw.temperature';
 const AIRO = 'source.air_unit_outlet_temperature';
 
 /**
- * The segments that carry HTR water when HTR is active and the DHW circuit is not (design D7): the DHW lines
+ * The segments that carry HTR water when HTR is active and the DHW circuit is not (add-schematic-card D7): the DHW lines
  * between valve 26 / port 2 and the tank, outside the arm of valve 26 (which is `dhw_sup_a` and `dhw_ret_a`, excluded here), and the external
  * tank's pipes. pipes.ts colours them with the DHW temperature and animates them at the fixed HTR speed.
  */
@@ -534,9 +543,9 @@ export const SEGMENTS: readonly Segment[] = [
   seg('tap_49', ['dhw_coil'], '540,118 540,138', DHWT, { dhw: 'internal', stub: true }),
   // Outer-loop source (left zone). Port 3 (brine out) rises to y 85 and runs left to x 226, port 4 (brine in) comes back
   // at y 50 from x 206: both stay above the DG1 stubs (y > 110) and the circuit labels, and port 4's pipe is the higher
-  // one so that the two do not cross. Air unit (design D13): the feed comes down the column x 226 to the bottom pass,
+  // one so that the two do not cross. Air unit (refine-schematic-drawing D13): the feed comes down the column x 226 to the bottom pass,
   // the exit leaves the top pass and rises at x 206 (left of the feed's column, so no pipe crosses another); both
-  // leave the housing's right wall. Ground loop (design D12): feed, one leg down with the bottom's first quarter
+  // leave the housing's right wall. Ground loop (refine-schematic-drawing D12): feed, one leg down with the bottom's first quarter
   // circle, the other quarter circle and the leg up, exit. Hybrid: the air unit is entered at its top pass, so that
   // the link to the ground loop can leave from the bottom pass without crossing the feed; the ground loop's exit
   // returns up along the housing's left side.
@@ -720,10 +729,10 @@ export const SEGMENTS: readonly Segment[] = [
   seg('brine_drain', ['brine'], '630,416 630,563', BOUT, { stub: true, detail: 'full' }),
 ];
 
-/** The most crossings inside the cabinet (design D5): the manual's figure has 15 (14 hops and the return line behind resistor 44). */
+/** The most crossings inside the cabinet (add-schematic-card D5): the manual's figure has 15 (14 hops and the return line behind resistor 44). */
 export const MAX_CROSSINGS = 15;
 
-/** The crossings inside the cabinet (design D5): this layout needs 14. */
+/** The crossings inside the cabinet (add-schematic-card D5): this layout needs 14. */
 export const CROSSINGS: readonly Crossing[] = [
   { over: 'dhw_sup_a', under: 'p2_in', at: [312, 172] },
   { over: 'dhw_sup_c', under: 'ln3', at: [630, 172] },
@@ -881,10 +890,7 @@ function localPorts(component: Component): readonly Point[] {
     case 'tank':
       return [];
     case 'coil':
-      return [
-        [-75, -13],
-        [-75, 13],
-      ];
+      return COIL_LOCAL_PORTS;
   }
 }
 
@@ -915,7 +921,7 @@ export interface HelixHalf {
   d: string;
 }
 
-/** The opacity of the back halves of a helical coil (design D5). */
+/** The opacity of the back halves of a helical coil (refine-schematic-drawing D5). */
 export const HELIX_BACK_OPACITY = 0.35;
 
 /** The cubic Bezier of one half-turn: start, two control points and end. */

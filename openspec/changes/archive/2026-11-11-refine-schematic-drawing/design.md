@@ -19,7 +19,8 @@ from each component's `tag` offset. See proposal.md for the motivation.
 **Non-Goals:**
 - No change to roles, operating-mode logic or segment roles (except the ground loop's up leg, which carries the
   brine inlet temperature since D12). No change to label positions, except the labels that
-  follow the moved tank and sources and the new source port labels of D14 (follow-up fixes, groups 5-6).
+  follow the moved tank and sources, the new source port labels of D14 and model C's row inside tank 50 (D8b)
+  (follow-up fixes, groups 5-6).
 - No change to the scale behaviour beyond the default stops (no adaptive scale).
 - Narrow-card behaviour (`add-compact-layout`).
 
@@ -60,7 +61,7 @@ keeps the manual citation visible on demand.
   `inlet_temperature`, 33/34 -> `production.outlet_temperature`/`return_temperature`, 35/36 ->
   `compressor.suction_pressure`/`discharge_pressure`, 37 -> `brine.pressure`, 38 -> `production.pressure`, 26 ->
   `dhw.demand`, the air unit's fan -> `source.fan_speed`, the tanks (external, and 50/54 on model C) ->
-  `dhw.temperature`. Items without a role (9, 10, 13, 14, 17, 22, 25, 27, 28, 44, 45 and the parts of D1) get no
+  `dhw.temperature`. Items without a role (9, 10, 13, 14, 17, 22, 25, 27, 28, 44, 45, coil 51 and the parts of D1) get no
   entry. Connections (1-6, 47-49) get no entry either: the DG1 setpoint label near port 1 shows a setpoint of the
   circuit, not a value of the connection, and stays tappable on its own.
 - A component with an entry gets `role="button"`, `tabindex="0"`, pointer cursor, and fires `hass-more-info`
@@ -91,7 +92,7 @@ warm).
 - At render time the side takes the two segments' states from `pipes.ts`: their colours, mode-dependent roles and
   reversal. A reversed side (active cooling on the refrigerant legs) swaps start and end. A side is muted when
   both its segments are muted (or not drawn).
-- Rendering: two rectangles inside the exchanger outline, under the plate lines and ports, each filled with an SVG
+- Rendering: two fills (rounded half-body paths) inside the exchanger outline, under the plate lines and ports, each filled with an SVG
   `linearGradient` (vertical, from the entering end to the leaving end) at `fill-opacity` 0.55, so the plate lines
   stay readable. Gradient ids carry a per-card-instance prefix, so two cards on one page do not share ids.
 - Exchanger 9's refrigerant side has one temperature (the discharge) at both ends; its water side takes the HTR
@@ -103,7 +104,7 @@ Alternative considered: one fill per exchanger (average). Rejected: the two medi
 - The coil stays the segment `dhw_ext_coil` (circuit, role, direction, colour, animation are unchanged); it gets
   `shape: { kind: 'helix', cx, top, bottom, rx, turns }`. Its `points` keep the two end points only, so the
   endpoint integrity test still applies.
-- `pipes.ts`/`dhw.ts` render a helix segment as one path per half-turn: front halves (lower ellipse arcs) with
+- `cabinet.ts` (`helix()`) renders a helix segment as one path per half-turn: front halves (lower ellipse arcs) with
   the base stroke, back halves at opacity 0.35. The flow overlay runs on the front halves only, in the segment's
   direction.
 - The tank becomes a rounded cylinder: straight walls with elliptical domed caps; its body fill keeps
@@ -118,7 +119,7 @@ Alternative considered: one fill per exchanger (average). Rejected: the two medi
 
 ### D6. Air unit
 - Housing with a slatted front. Coil block: a frame with 12 or more thin vertical fins (from `AIR_UNIT.fins`).
-  The brine serpentine `src_air_coil` keeps its three passes (four since D13), with rounded U-bends (arc joints), drawn over the
+  The brine serpentine (`src_air_coil`, and `src_hyb_coil` in the hybrid since D13) keeps its three passes (four since D13), with rounded U-bends (arc joints), drawn over the
   fins.
 - The fan: a ring, a hub and five swept blades, the existing rotor animation and `fanDuration` unchanged.
 
@@ -213,7 +214,8 @@ same side: the right side, facing the cabinet. Both pipes leave the housing thro
 the brine lines; they are routed without crossing any pipe. A declared hop is allowed only where no crossing-free
 route exists, and is then listed in `CROSSINGS`. In the hybrid the link to the ground loop leaves from that same
 outlet port. Fins, slats and fan stay as D6, the coil block may grow to fit the four passes.
-As built: the housing is x 26-150 (narrower, taller), the coil block 104 x 90 with passes at y 164-218. With
+As built: the housing is x 26-150 (narrower, taller), the coil block 104 x 74 (y 146-220) with four passes at y 160-205 (raised after review to clear
+the probe 33 label). With
 `source: air` the brine enters the bottom pass and leaves the top one (the exit rises left of the feed column); in
 the hybrid it enters the top pass and the link leaves the bottom one towards the ground loop. That needs
 per-source segments (`src_air_*`, `src_hyb_*`) instead of shared ones; the roles they carry are those the pipes

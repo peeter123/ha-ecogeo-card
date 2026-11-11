@@ -1,4 +1,4 @@
-// The variant presets (design D3): which cooling parts each of the manual's figures B1-B4 draws
+// The variant presets (add-schematic-card D3): which cooling parts each of the manual's figures B1-B4 draws
 // (manual-figure, section 3.1, page 34). HTR (9, 17, 22, 25) and the backup heater (44, 45) are in all four figures.
 
 /** A feature state: present and in use, not present, or present but never used (drawn muted). */

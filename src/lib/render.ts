@@ -1,5 +1,5 @@
 // Copied from hrv-ventilation src/lib/render.ts; its `configuredEntityIds` is dropped (the card takes the ids from the resolved entities).
-// The re-render rule (design D6, D8): the card renders again when its config or its own state changed, or when the part of `hass` it shows changed since its last render. Other `hass`
+// The re-render rule (add-schematic-card D6, D8): the card renders again when its config or its own state changed, or when the part of `hass` it shows changed since its last render. Other `hass`
 // updates, which arrive for every state change in the installation, are skipped.
 import type { HassLike } from './hass';
 

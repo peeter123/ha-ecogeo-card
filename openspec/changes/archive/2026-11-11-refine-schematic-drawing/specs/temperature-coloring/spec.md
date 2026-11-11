@@ -30,6 +30,27 @@ take the colour of the nearest end. The scale SHALL NOT depend on the other temp
 - **THEN** no default stop colour has a hue between 75° and 165°, and no colour of the default scale sampled in
   1 K steps from -10 °C to 70 °C has a hue between 75° and 165° at a saturation above 20 %
 
+### Requirement: Water segment temperatures
+Each water pipe segment SHALL take the temperature of the probe that defines it:
+- production outlet 33 on the supply from the condenser to connection 1 (or 5 in DHW mode)
+- production return 34 on the return from connection 2 (or 6) to the condenser
+- brine inlet 32 from connection 4 to the evaporator
+- brine outlet 31 from the evaporator to connection 3
+- the air unit outlet temperature on the air unit's exit and, in a hybrid, on the link and the ground loop's down
+  leg; the ground loop's down leg (ground source) takes the brine outlet; its up leg and the return to connection
+  4 take the brine inlet
+
+Some segments take another role depending on the mode:
+- In `passive_cooling` and `defrost`, while valves 27/28 route through exchanger 10, the production legs from
+  exchanger 10 and valve 27 to condenser 8 take the production outlet, since the stopped compressor leaves the
+  water temperature unchanged.
+- During HTR recovery (HTR active, no DHW production), the DHW lines outside the arm of valve 26 and the external
+  tank pipes carry HTR water and take the DHW temperature.
+
+#### Scenario: Heating segments
+- **WHEN** the mode is `heating`, the production outlet reads 25.2 °C and the return reads 22.0 °C
+- **THEN** the supply to connection 1 has the 25.2 °C colour and the return from connection 2 the 22.0 °C colour
+
 ## ADDED Requirements
 
 ### Requirement: Exchanger sides coloured

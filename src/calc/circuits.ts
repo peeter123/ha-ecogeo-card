@@ -1,4 +1,4 @@
-// Valve positions and active circuits (design D4, operating-mode spec): pure functions of the derived mode, the
+// Valve positions and active circuits (add-schematic-card D4, operating-mode spec): pure functions of the derived mode, the
 // feature states, the DHW storage and the readings. Rendering reads only these outputs.
 import type { DhwStorage } from '../config/options';
 import type { Features } from '../config/variants';

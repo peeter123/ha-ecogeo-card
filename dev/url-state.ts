@@ -1,4 +1,4 @@
-// The emulator's state and its URL query string (design D9): scenario, model, variant, source, dhw, every feature,
+// The emulator's state and its URL query string (add-schematic-card D9): scenario, model, variant, source, dhw, every feature,
 // detail, fill, theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
 // hrv-ventilation dev/preview.ts (state in the query string); the parameters are this card's own.
 import {

@@ -31,7 +31,7 @@ export const CARD_PICKER = {
 /** The accessible name of the schematic drawing. */
 export const SCHEMATIC_LABEL = 'ecoGEO heat pump schematic';
 
-/** The card's own display units (design D2): joined to a number by NBSP. A difference is shown in K. */
+/** The card's own display units (add-schematic-card D2): joined to a number by NBSP. A difference is shown in K. */
 export const UNITS = {
   celsius: '°C',
   kelvin: 'K',
@@ -41,7 +41,7 @@ export const UNITS = {
   watt: 'W',
 } as const;
 
-/** The label of each derived operating mode (design D4). */
+/** The label of each derived operating mode (add-schematic-card D4). */
 export const MODE_LABELS = {
   off: 'Off',
   defrost: 'Defrost',
@@ -101,7 +101,7 @@ export const HEATING_LABELS = { demand: 'Demand' } as const;
 export const VALUE_CAPTIONS = {
   setpoint: 'Setpoint',
   startDelta: 'Start ΔT',
-  /** Short captions of the row inside model C's tank 50 (design D8b); the external tank keeps the full ones. */
+  /** Short captions of the row inside model C's tank 50 (refine-schematic-drawing D8b); the external tank keeps the full ones. */
   setpointShort: 'Set',
   startDeltaShort: 'ΔT',
   fan: 'Fan',

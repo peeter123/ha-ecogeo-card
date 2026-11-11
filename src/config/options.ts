@@ -1,4 +1,4 @@
-// The card's options and their validation (design D1, D2, D3; card-config spec). setConfig rejects a config with
+// The card's options and their validation (add-schematic-card D1, D2, D3; card-config spec). setConfig rejects a config with
 // an unknown option, an invalid value, an unknown feature or role, or a dhw that does not fit the model, instead of
 // falling back to a default silently. The option checking is the copied lib/options.ts; the checks it cannot
 // express (a whole-number variant, tri-state features, nested entity roles) are here.
@@ -22,7 +22,7 @@ export const MODEL_OPTION: ChoiceOption = { kind: 'choice', path: 'model', defau
 export const SOURCE_OPTION: ChoiceOption = { kind: 'choice', path: 'source', default: 'ground', choices: SOURCES };
 // The default of dhw depends on the model (defaultDhw); this default is not used.
 export const DHW_OPTION: ChoiceOption = { kind: 'choice', path: 'dhw', default: 'external', choices: DHW_STORAGES };
-/** The level of detail of the drawing (design D1): without the service and safety parts and the item numbers, or all. */
+/** The level of detail of the drawing (refine-schematic-drawing D1): without the service and safety parts and the item numbers, or all. */
 export const DETAIL_OPTION: ChoiceOption = {
   kind: 'choice',
   path: 'detail',
@@ -31,7 +31,7 @@ export const DETAIL_OPTION: ChoiceOption = {
 };
 export const EXCHANGER_FILLS = ['gradient', 'none'] as const;
 export type ExchangerFill = (typeof EXCHANGER_FILLS)[number];
-/** How the plate exchangers 7-10 are filled (design D4): a gradient per side from the pipes' colours, or not at all. */
+/** How the plate exchangers 7-10 are filled (refine-schematic-drawing D4): a gradient per side from the pipes' colours, or not at all. */
 export const EXCHANGER_FILL_OPTION: ChoiceOption = {
   kind: 'choice',
   path: 'exchanger_fill',

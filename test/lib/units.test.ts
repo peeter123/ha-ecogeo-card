@@ -49,7 +49,7 @@ describe('toCalcUnit', () => {
   });
 });
 
-describe('differences (design D8)', () => {
+describe('differences (add-schematic-card D8)', () => {
   test('a difference in K or °C is unchanged', () => {
     expect(toCalcUnit('difference', 5, 'K')).toBe(5);
     expect(toCalcUnit('difference', 5, '°C')).toBe(5);

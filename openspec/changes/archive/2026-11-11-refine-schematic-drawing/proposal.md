@@ -35,8 +35,9 @@ layout (`add-compact-layout`) and the visual editor (`add-card-editor`) build on
 - **Follow-up fixes after the live release** (added 2026-11-11, at the user's request): a darker idle coil in the
   light theme; the external tank centred on its coil; the tank and the sources aligned to the cabinet's top line;
   the compressor drawn with the standard compressor symbol; the ground loop as a single U-loop; the air unit's
-  brine inlet and outlet on the same side; the brine In and Out temperatures at the source's own ports. Released
-  and deployed again.
+  brine inlet and outlet on the same side; the brine In and Out temperatures at the source's own ports; clean
+  joints between the front and back halves of both coils, a rounder and tighter coil 51; model C's DHW values as
+  one row inside tank 50. Released and deployed again.
 
 ## Capabilities
 
@@ -52,7 +53,7 @@ layout (`add-compact-layout`) and the visual editor (`add-card-editor`) build on
   standard compressor symbol.
 - `temperature-coloring`: the default stops change; exchanger sides take the scale.
 - `dhw-storage`: the external tank's shape and helical coil, centred and aligned to the cabinet top, with a darker
-  idle coil in the light theme; model C's coil 51 as a helix.
+  idle coil in the light theme; model C's coil 51 as a helix, and model C's DHW values inside tank 50.
 - `outer-loop-source`: the air unit's finned coil and bladed fan, its ports on one side; the ground loop as one
   U-loop; the sources aligned to the cabinet top; In and Out labels at the source's ports.
 - `card-config`: the options `detail` and `exchanger_fill`.
@@ -70,7 +71,8 @@ layout (`add-compact-layout`) and the visual editor (`add-card-editor`) build on
 ## Impact
 
 - Code: `src/diagram/geometry.ts` (a `detail` mark on parts and stubs, helix data), `symbols.ts`, `cabinet.ts`,
-  `source.ts`, `dhw.ts`, `pipes.ts`, `colors.ts`, `labels.ts` (no label moves expected), `src/config/options.ts`,
+  `source.ts`, `dhw.ts`, `colors.ts`, `labels.ts` (labels follow the moved tank and sources; new source port
+  labels; model C's row inside tank 50), `src/config/options.ts`,
   `src/strings.ts` (component names), tests, emulator captures.
 - Live installation: yes. `npm run release`, explicit deploy of `dist/ecogeo-card.js`, the dashboard resource
   bumped to the next `?v=` (resource id in `private/installation.md`). The existing view keeps its config: the new

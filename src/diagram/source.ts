@@ -1,4 +1,4 @@
-// The outer-loop source (design D5, D6, D11-D14; outer-loop-source spec): the air unit, the ground loop or both on
+// The outer-loop source (add-schematic-card D5, D6; refine-schematic-drawing D11-D14; outer-loop-source spec): the air unit, the ground loop or both on
 // one brine loop, drawn in the zone left of the cabinet (viewBox x 0-240), its top on the cabinet's top line. This
 // file draws what is not a pipe: the air unit's housing (slatted front), finned coil block and fan, the ground line
 // and the captions. The pipes (ports 3/4 up into the run, left to the zone, the serpentine and the ground loop's U)
@@ -10,8 +10,8 @@
 import { css, svg, type SVGTemplateResult } from 'lit';
 import type { Readings } from '../calc/readings';
 import { AIR_UNIT_FAN_NAME, SOURCE_LABELS } from '../strings';
-import { FAN_ROLE, tapBindings, tapTarget, type Taps } from './component-info';
-import { AIR_UNIT, GROUND_CAPTION, GROUND_LINE_Y, drawnSegments, type DrawContext } from './geometry';
+import { FAN_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
+import { AIR_UNIT, GROUND_CAPTION, GROUND_LINE_X, GROUND_LINE_Y, drawnSegments, type DrawContext } from './geometry';
 
 export const sourceStyles = css`
   .source-outline {
@@ -62,9 +62,7 @@ export const sourceStyles = css`
     cursor: pointer;
   }
   .fan-part[role='button']:focus-visible {
-    outline: 2px solid var(--primary-color, currentColor);
-    outline-offset: 2px;
-    filter: drop-shadow(0 0 2px var(--primary-color, currentColor));
+    ${focusRingStyles}
   }
   .fan-ring {
     fill: none;
@@ -96,7 +94,7 @@ export const sourceStyles = css`
 export const fanDuration = (speed: number | undefined): number | undefined =>
   speed === undefined || !(speed > 0) ? undefined : Math.min(6, Math.max(0.5, 120 / speed));
 
-/** The fan's five swept blades around the origin (design D6): each curves away from its root at the hub. */
+/** The fan's five swept blades around the origin (refine-schematic-drawing D6): each curves away from its root at the hub. */
 const BLADES = [0, 72, 144, 216, 288].map(
   (angle) =>
     svg`<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(${angle})" />`,
@@ -144,12 +142,13 @@ function pipesAcross(context: DrawContext, lineY: number): number[] {
 /** The ground line with its hatching, at `lineY`, leaving out the places where the source pipes pass. */
 function groundLine(context: DrawContext, kind: 'ground' | 'hybrid', lineY: number, muted: boolean): SVGTemplateResult {
   const skip = pipesAcross(context, lineY);
-  const ticks = Array.from({ length: 21 }, (_, index) => 14 + index * 10).filter(
-    (tick) => !skip.some((pipe) => Math.abs(pipe - tick) < 10),
-  );
+  const ticks = Array.from(
+    { length: Math.floor((GROUND_LINE_X.end - GROUND_LINE_X.start - 12) / 10) + 1 },
+    (_, index) => GROUND_LINE_X.start + 6 + index * 10,
+  ).filter((tick) => !skip.some((pipe) => Math.abs(pipe - tick) < 10));
   const captionY = GROUND_CAPTION.y[kind];
   return svg`<g class="ground-loop${muted ? ' muted' : ''}" data-source="ground">
-    <path class="source-ground" d="M8 ${lineY} H220" />
+    <path class="source-ground" d="M${GROUND_LINE_X.start} ${lineY} H${GROUND_LINE_X.end}" />
     ${ticks.map((tick) => svg`<path class="source-ground" d="M${tick} ${lineY} l-6 8" />`)}
     <text class="source-caption" x=${GROUND_CAPTION.x} y=${captionY} text-anchor="middle">${SOURCE_LABELS.ground}</text>
   </g>`;

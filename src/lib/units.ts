@@ -1,5 +1,5 @@
 // Copied from hrv-ventilation src/lib/units.ts: temperature and power only (the flow and humidity conversions are
-// dropped), plus the difference rule of design D8.
+// dropped), plus the difference rule of add-schematic-card D8.
 // Converts a numeric state into the unit the card uses, based on the entity's unit_of_measurement.
 // Units the card does not know count as no value (undefined), so a figure is never computed from a wrong unit.
 import { numericValue } from './availability';

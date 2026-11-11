@@ -12,6 +12,7 @@ import {
   AIR_UNIT_WALL_X,
   CABINET,
   COMPONENTS,
+  GROUND_LINE_X,
   GROUND_LINE_Y,
   GROUND_LOOP,
   INTERNAL_TANK,
@@ -19,6 +20,7 @@ import {
   drawnSegments,
   partState,
 } from '../../src/diagram/geometry';
+import { COIL_51_SHAPE } from '../../src/diagram/symbols';
 import { LABEL_SPECS, footerItems, labelsFor, positionOf, type LabelSpec } from '../../src/diagram/labels';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
@@ -511,7 +513,9 @@ describe('source labels', () => {
       top: number;
       bottom: number;
     }
-    // a value label with its caption: at most about 64 units wide and 13 tall at the 1000 px slot (normal size)
+    // a value label with its caption: at most about 64 units wide and 13 tall at the 1000 px slot (normal size; the
+    // `.slot` of dev/index.html is the 1000 px reference). The estimate holds for cards about 842 px or wider, where
+    // 0.95cqw is at least 8 px
     const [WIDTH, HEIGHT] = [64, 13];
     const boxOf = (spec: LabelSpec): Box => {
       const left = spec.align === 'start' ? spec.x : spec.align === 'end' ? spec.x - WIDTH : spec.x - WIDTH / 2;
@@ -546,7 +550,10 @@ describe('source labels', () => {
       }
       if (source !== 'air') {
         const lineY = GROUND_LINE_Y[source === 'hybrid' ? 'hybrid' : 'ground'];
-        solids.push(['ground line', { left: 8, right: 220, top: lineY - 2, bottom: lineY + 10 }]);
+        solids.push([
+          'ground line',
+          { left: GROUND_LINE_X.start, right: GROUND_LINE_X.end, top: lineY - 2, bottom: lineY + 10 },
+        ]);
       }
       for (const spec of mine) {
         const box = boxOf(spec);
@@ -681,8 +688,9 @@ describe('DHW tank labels', () => {
       top: number;
       bottom: number;
     }
-    // widths and heights in drawing units, measured in the emulator at the 1000 px slot (normal size), rounded up
-    // with a margin of 2 to 3 units
+    // widths and heights in drawing units, measured in the emulator at the 1000 px slot (the `.slot` of dev/index.html;
+    // normal size), rounded up with a margin of 2 to 3 units. The estimate holds for cards about 842 px or wider,
+    // where 0.95cqw is at least 8 px
     const SIZE: Record<string, [number, number]> = {
       tank_internal_temperature: [36, 13],
       tank_internal_setpoint: [43, 13],
@@ -702,8 +710,10 @@ describe('DHW tank labels', () => {
     const ids = Object.keys(SIZE);
     const coil = COMPONENTS.find((component) => component.item === 51);
     if (coil === undefined) throw new Error('no coil 51');
-    // the coil's drawn extent: its half height (turned, shape x) around its centre, plus the stroke
-    const coilTop = coil.y - 11 - 1;
+    // the coil's drawn extent: the supply port stub (stroke 3) runs along the turned helix's top edge, which is the
+    // shape's cx + rx above the centre
+    const STUB_STROKE = 3;
+    const coilTop = coil.y - (COIL_51_SHAPE.cx + COIL_51_SHAPE.rx) - STUB_STROKE / 2;
 
     test('inside tank 50, above the coil, in one row', () => {
       const tank = INTERNAL_TANK;

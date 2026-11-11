@@ -1,4 +1,4 @@
-// The role table (design D2): every value the card reads, as a config path, with the firmware entity it defaults
+// The role table (add-schematic-card D2): every value the card reads, as a config path, with the firmware entity it defaults
 // to, how it is read and how it is shown. The single source of domain, suffix, unit kind, display unit, default
 // decimals and manual item. Entity names and units are firmware-entity (esphome-ecoforest-ecogeo, packages/*.yml);
 // item numbers are manual-figure (section 3.1).

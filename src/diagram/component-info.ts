@@ -1,8 +1,8 @@
-// What the card tells about a drawn component itself (component-info spec, design D2): its name as a tooltip and
+// What the card tells about a drawn component itself (component-info spec, refine-schematic-drawing D2): its name as a tooltip and
 // accessible name (strings.ts `componentLabel`), and, for a component that has an entity of its own, the more-info
 // dialog of that entity on a tap (click, Enter or Space). The tap goes through the same callback as the value labels
 // (`fireMoreInfo` in the card); the card calls no service.
-import { nothing } from 'lit';
+import { css, nothing } from 'lit';
 import type { RolePath } from '../config/roles';
 
 /**
@@ -76,3 +76,10 @@ export function tapBindings(
     },
   };
 }
+
+/** The focus ring of a tappable part (a symbol, the external tank, the fan): shared by the three stylesheets. */
+export const focusRingStyles = css`
+  outline: 2px solid var(--primary-color, currentColor);
+  outline-offset: 2px;
+  filter: drop-shadow(0 0 2px var(--primary-color, currentColor));
+`;

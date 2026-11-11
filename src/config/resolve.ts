@@ -1,4 +1,4 @@
-// Config to ResolvedConfig (design D2, D3): the options with their defaults, the features (preset merged with the
+// Config to ResolvedConfig (add-schematic-card D2, D3): the options with their defaults, the features (preset merged with the
 // overrides), the entity id of every role and the sample flag. Pure; call after options.configErrors found no problem.
 import { stopsOf, type ColorStop } from '../diagram/colors';
 import { entityAt, type CardConfig } from '../lib/config';

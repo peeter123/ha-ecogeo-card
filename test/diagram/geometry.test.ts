@@ -97,7 +97,7 @@ const enters = (points: readonly Point[], rect: { x: number; y: number; width: n
   });
 
 describe('geometry data', () => {
-  test('the viewBox and the cabinet fit the zones of design D5', () => {
+  test('the viewBox and the cabinet fit the zones of add-schematic-card D5', () => {
     expect(viewBox).toEqual({ width: 1000, height: 620 });
     expect(CABINET.x).toBe(240);
     expect(CABINET.x + CABINET.width).toBe(760);
@@ -334,7 +334,7 @@ describe('integrity in every configuration', () => {
     }
   });
 
-  test('the crossings inside the cabinet stay at or below the manual figure (design D5)', () => {
+  test('the crossings inside the cabinet stay at or below the manual figure (add-schematic-card D5)', () => {
     expect(MAX_CROSSINGS).toBe(15);
     expect(CROSSINGS.length).toBeLessThanOrEqual(MAX_CROSSINGS);
   });
@@ -501,7 +501,7 @@ describe('pathData', () => {
   });
 });
 
-describe('helical coil and air coil (design D5, D6)', () => {
+describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
   const coil = SEGMENTS.find((segment) => segment.id === 'dhw_ext_coil');
   const shape = coil?.shape;
 
@@ -652,7 +652,7 @@ describe('helical coil and air coil (design D5, D6)', () => {
   });
 });
 
-describe('outer-loop source geometry (design D11-D13)', () => {
+describe('outer-loop source geometry (refine-schematic-drawing D11-D13)', () => {
   const first = (id: string): Point => {
     const point = segmentPoints(id)[0];
     if (point === undefined) throw new Error(id);
@@ -787,7 +787,7 @@ describe('outer-loop source geometry (design D11-D13)', () => {
   });
 });
 
-describe('exchanger sides (design D4)', () => {
+describe('exchanger sides (refine-schematic-drawing D4)', () => {
   test('exchangers 7, 8, 9 and 10 have a left and a right side whose segments end on the side ports', () => {
     const exchangers = COMPONENTS.filter((component) => component.kind === 'exchanger');
     expect(exchangers.map((component) => component.item).sort((a, b) => a - b)).toEqual([7, 8, 9, 10]);

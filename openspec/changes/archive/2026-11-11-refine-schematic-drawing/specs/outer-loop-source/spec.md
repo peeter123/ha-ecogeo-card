@@ -20,7 +20,7 @@ the cabinet's top line.
 
 ### Requirement: Air unit
 With `source: air`, the card SHALL draw an air unit: a housing with a finned coil block, through which the brine
-tube winds as a serpentine between the fins, and a fan drawn as blades inside a ring. The brine SHALL enter and
+tube winds as a serpentine across the fins, and a fan drawn as blades inside a ring. The brine SHALL enter and
 leave the coil on the same side of the unit, the side facing the cabinet. The fan SHALL rotate while its speed is
 above 0 %, faster at higher speed. The air unit SHALL show the fan speed and the outside temperature under its
 housing, and the brine temperature entering and leaving it at its two ports.

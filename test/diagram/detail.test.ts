@@ -1,4 +1,4 @@
-// The detail level (design D1; schematic-drawing "Detail level", "Refrigerant components", "Hydraulic components",
+// The detail level (refine-schematic-drawing D1; schematic-drawing "Detail level", "Refrigerant components", "Hydraulic components",
 // dhw-storage "Simplified model C"): simplified leaves out the service and safety parts and every item number.
 import { describe, expect, test } from 'vitest';
 import '../../src/index';
@@ -103,7 +103,7 @@ describe('detail level', () => {
     card.remove();
   });
 
-  test('the marked parts are exactly those of design D1', () => {
+  test('the marked parts are exactly those of refine-schematic-drawing D1', () => {
     const marked = COMPONENTS.filter((component) => component.detail === 'full').map((component) => component.item);
     expect([...new Set(marked)].sort((a, b) => a - b)).toEqual([18, 19, 20, 21, 23, 24, 39, 40, 41, 52, 53]);
     expect(marked.filter((item) => item === 41)).toHaveLength(2);

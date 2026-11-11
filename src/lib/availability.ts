@@ -1,4 +1,4 @@
-// Copied from hrv-ventilation src/lib/availability.ts, plus the -999 sentinel (design D8).
+// Copied from hrv-ventilation src/lib/availability.ts, plus the -999 sentinel (add-schematic-card D8).
 // When an entity has "no value": the rule the card applies before it shows or computes a figure.
 
 /** The part of a Home Assistant state object these functions read. */

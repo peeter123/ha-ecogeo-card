@@ -1,4 +1,4 @@
-// The derived operating mode (design D4, operating-mode spec): one mode, the first whose condition holds, in the
+// The derived operating mode (add-schematic-card D4, operating-mode spec): one mode, the first whose condition holds, in the
 // order off, defrost, dhw, active_cooling, heating, passive_cooling, standby. Pure; the inputs are named below.
 // `unit.connection` is not an input: it only sets the offline indication (offline).
 import type { Features } from '../config/variants';

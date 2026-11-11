@@ -1,7 +1,7 @@
 // Copied from hrv-ventilation src/lib/format.ts. Deviations: `formatNumber` takes a `grouping` flag (default on, as in
 // hrv) that the card turns off, so "2803 rpm" and "4712 W" read as the live-values spec writes them; and a value that is
 // not finite gives the no-value dash instead of "n/a".
-// Formats every number a label shows with the user's Home Assistant locale (design D6): the magnitude in the
+// Formats every number a label shows with the user's Home Assistant locale (add-schematic-card D6): the magnitude in the
 // locale's format, a negative value with a "−" (minus sign) in front. The unit is not added here; calc/display.ts
 // joins the role's unit to the number with NBSP.
 import type { HassLike } from './hass';
