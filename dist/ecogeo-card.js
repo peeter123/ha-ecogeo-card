@@ -67,7 +67,7 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 	hasChanged: ie
 };
 Symbol.metadata ??= Symbol("metadata"), ee.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-var _ = class extends HTMLElement {
+var oe = class extends HTMLElement {
 	static addInitializer(e) {
 		this._$Ei(), (this.l ??= []).push(e);
 	}
@@ -251,88 +251,88 @@ var _ = class extends HTMLElement {
 	updated(e) {}
 	firstUpdated(e) {}
 };
-_.elementStyles = [], _.shadowRootOptions = { mode: "open" }, _[h("elementProperties")] = /* @__PURE__ */ new Map(), _[h("finalized")] = /* @__PURE__ */ new Map(), re?.({ ReactiveElement: _ }), (ee.reactiveElementVersions ??= []).push("2.1.2");
+oe.elementStyles = [], oe.shadowRootOptions = { mode: "open" }, oe[h("elementProperties")] = /* @__PURE__ */ new Map(), oe[h("finalized")] = /* @__PURE__ */ new Map(), re?.({ ReactiveElement: oe }), (ee.reactiveElementVersions ??= []).push("2.1.2");
 // node_modules/lit-html/lit-html.js
-var oe = globalThis, se = (e) => e, ce = oe.trustedTypes, le = ce ? ce.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, ue = "$lit$", v = `lit$${Math.random().toFixed(9).slice(2)}$`, de = "?" + v, fe = `<${de}>`, y = document, b = () => y.createComment(""), pe = (e) => e === null || typeof e != "object" && typeof e != "function", me = Array.isArray, he = (e) => me(e) || typeof e?.[Symbol.iterator] == "function", ge = "[ 	\n\f\r]", x = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, _e = /-->/g, ve = />/g, S = RegExp(`>|${ge}(?:([^\\s"'>=/]+)(${ge}*=${ge}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), ye = /'/g, be = /"/g, xe = /^(?:script|style|textarea|title)$/i, Se = (e) => (t, ...n) => ({
+var se = globalThis, ce = (e) => e, le = se.trustedTypes, ue = le ? le.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, de = "$lit$", _ = `lit$${Math.random().toFixed(9).slice(2)}$`, fe = "?" + _, pe = `<${fe}>`, v = document, me = () => v.createComment(""), he = (e) => e === null || typeof e != "object" && typeof e != "function", ge = Array.isArray, _e = (e) => ge(e) || typeof e?.[Symbol.iterator] == "function", ve = "[ 	\n\f\r]", ye = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, be = /-->/g, xe = />/g, y = RegExp(`>|${ve}(?:([^\\s"'>=/]+)(${ve}*=${ve}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), Se = /'/g, Ce = /"/g, we = /^(?:script|style|textarea|title)$/i, Te = (e) => (t, ...n) => ({
 	_$litType$: e,
 	strings: t,
 	values: n
-}), C = Se(1), w = Se(2), T = Symbol.for("lit-noChange"), E = Symbol.for("lit-nothing"), Ce = /* @__PURE__ */ new WeakMap(), D = y.createTreeWalker(y, 129);
-function we(e, t) {
-	if (!me(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
-	return le === void 0 ? t : le.createHTML(t);
+}), b = Te(1), x = Te(2), S = Symbol.for("lit-noChange"), C = Symbol.for("lit-nothing"), Ee = /* @__PURE__ */ new WeakMap(), w = v.createTreeWalker(v, 129);
+function De(e, t) {
+	if (!ge(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
+	return ue === void 0 ? t : ue.createHTML(t);
 }
-var Te = (e, t) => {
-	let n = e.length - 1, r = [], i, a = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", o = x;
+var Oe = (e, t) => {
+	let n = e.length - 1, r = [], i, a = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", o = ye;
 	for (let t = 0; t < n; t++) {
 		let n = e[t], s, c, l = -1, u = 0;
-		for (; u < n.length && (o.lastIndex = u, c = o.exec(n), c !== null);) u = o.lastIndex, o === x ? c[1] === "!--" ? o = _e : c[1] === void 0 ? c[2] === void 0 ? c[3] !== void 0 && (o = S) : (xe.test(c[2]) && (i = RegExp("</" + c[2], "g")), o = S) : o = ve : o === S ? c[0] === ">" ? (o = i ?? x, l = -1) : c[1] === void 0 ? l = -2 : (l = o.lastIndex - c[2].length, s = c[1], o = c[3] === void 0 ? S : c[3] === "\"" ? be : ye) : o === be || o === ye ? o = S : o === _e || o === ve ? o = x : (o = S, i = void 0);
-		let d = o === S && e[t + 1].startsWith("/>") ? " " : "";
-		a += o === x ? n + fe : l >= 0 ? (r.push(s), n.slice(0, l) + ue + n.slice(l) + v + d) : n + v + (l === -2 ? t : d);
+		for (; u < n.length && (o.lastIndex = u, c = o.exec(n), c !== null);) u = o.lastIndex, o === ye ? c[1] === "!--" ? o = be : c[1] === void 0 ? c[2] === void 0 ? c[3] !== void 0 && (o = y) : (we.test(c[2]) && (i = RegExp("</" + c[2], "g")), o = y) : o = xe : o === y ? c[0] === ">" ? (o = i ?? ye, l = -1) : c[1] === void 0 ? l = -2 : (l = o.lastIndex - c[2].length, s = c[1], o = c[3] === void 0 ? y : c[3] === "\"" ? Ce : Se) : o === Ce || o === Se ? o = y : o === be || o === xe ? o = ye : (o = y, i = void 0);
+		let d = o === y && e[t + 1].startsWith("/>") ? " " : "";
+		a += o === ye ? n + pe : l >= 0 ? (r.push(s), n.slice(0, l) + de + n.slice(l) + _ + d) : n + _ + (l === -2 ? t : d);
 	}
-	return [we(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
-}, Ee = class e {
+	return [De(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
+}, ke = class e {
 	constructor({ strings: t, _$litType$: n }, r) {
 		let i;
 		this.parts = [];
-		let a = 0, o = 0, s = t.length - 1, c = this.parts, [l, u] = Te(t, n);
-		if (this.el = e.createElement(l, r), D.currentNode = this.el.content, n === 2 || n === 3) {
+		let a = 0, o = 0, s = t.length - 1, c = this.parts, [l, u] = Oe(t, n);
+		if (this.el = e.createElement(l, r), w.currentNode = this.el.content, n === 2 || n === 3) {
 			let e = this.el.content.firstChild;
 			e.replaceWith(...e.childNodes);
 		}
-		for (; (i = D.nextNode()) !== null && c.length < s;) {
+		for (; (i = w.nextNode()) !== null && c.length < s;) {
 			if (i.nodeType === 1) {
-				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(ue)) {
-					let t = u[o++], n = i.getAttribute(e).split(v), r = /([.?@])?(.*)/.exec(t);
+				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(de)) {
+					let t = u[o++], n = i.getAttribute(e).split(_), r = /([.?@])?(.*)/.exec(t);
 					c.push({
 						type: 1,
 						index: a,
 						name: r[2],
 						strings: n,
-						ctor: r[1] === "." ? Ae : r[1] === "?" ? je : r[1] === "@" ? Me : ke
+						ctor: r[1] === "." ? Pe : r[1] === "?" ? Fe : r[1] === "@" ? Ie : Ne
 					}), i.removeAttribute(e);
-				} else e.startsWith(v) && (c.push({
+				} else e.startsWith(_) && (c.push({
 					type: 6,
 					index: a
 				}), i.removeAttribute(e));
-				if (xe.test(i.tagName)) {
-					let e = i.textContent.split(v), t = e.length - 1;
+				if (we.test(i.tagName)) {
+					let e = i.textContent.split(_), t = e.length - 1;
 					if (t > 0) {
-						i.textContent = ce ? ce.emptyScript : "";
-						for (let n = 0; n < t; n++) i.append(e[n], b()), D.nextNode(), c.push({
+						i.textContent = le ? le.emptyScript : "";
+						for (let n = 0; n < t; n++) i.append(e[n], me()), w.nextNode(), c.push({
 							type: 2,
 							index: ++a
 						});
-						i.append(e[t], b());
+						i.append(e[t], me());
 					}
 				}
 			} else if (i.nodeType === 8) {
-				if (i.data === de) c.push({
+				if (i.data === fe) c.push({
 					type: 2,
 					index: a
 				});
 				else {
 					let e = -1;
-					for (; (e = i.data.indexOf(v, e + 1)) !== -1;) c.push({
+					for (; (e = i.data.indexOf(_, e + 1)) !== -1;) c.push({
 						type: 7,
 						index: a
-					}), e += v.length - 1;
+					}), e += _.length - 1;
 				}
 			}
 			a++;
 		}
 	}
 	static createElement(e, t) {
-		let n = y.createElement("template");
+		let n = v.createElement("template");
 		return n.innerHTML = e, n;
 	}
 };
-function O(e, t, n = e, r) {
-	if (t === T) return t;
-	let i = r === void 0 ? n._$Cl : n._$Co?.[r], a = pe(t) ? void 0 : t._$litDirective$;
-	return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, r)), r === void 0 ? n._$Cl = i : (n._$Co ??= [])[r] = i), i !== void 0 && (t = O(e, i._$AS(e, t.values), i, r)), t;
+function Ae(e, t, n = e, r) {
+	if (t === S) return t;
+	let i = r === void 0 ? n._$Cl : n._$Co?.[r], a = he(t) ? void 0 : t._$litDirective$;
+	return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, r)), r === void 0 ? n._$Cl = i : (n._$Co ??= [])[r] = i), i !== void 0 && (t = Ae(e, i._$AS(e, t.values), i, r)), t;
 }
-var De = class {
+var je = class {
 	constructor(e, t) {
 		this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = t;
 	}
@@ -343,28 +343,28 @@ var De = class {
 		return this._$AM._$AU;
 	}
 	u(e) {
-		let { el: { content: t }, parts: n } = this._$AD, r = (e?.creationScope ?? y).importNode(t, !0);
-		D.currentNode = r;
-		let i = D.nextNode(), a = 0, o = 0, s = n[0];
+		let { el: { content: t }, parts: n } = this._$AD, r = (e?.creationScope ?? v).importNode(t, !0);
+		w.currentNode = r;
+		let i = w.nextNode(), a = 0, o = 0, s = n[0];
 		for (; s !== void 0;) {
 			if (a === s.index) {
 				let t;
-				s.type === 2 ? t = new Oe(i, i.nextSibling, this, e) : s.type === 1 ? t = new s.ctor(i, s.name, s.strings, this, e) : s.type === 6 && (t = new Ne(i, this, e)), this._$AV.push(t), s = n[++o];
+				s.type === 2 ? t = new Me(i, i.nextSibling, this, e) : s.type === 1 ? t = new s.ctor(i, s.name, s.strings, this, e) : s.type === 6 && (t = new Le(i, this, e)), this._$AV.push(t), s = n[++o];
 			}
-			a !== s?.index && (i = D.nextNode(), a++);
+			a !== s?.index && (i = w.nextNode(), a++);
 		}
-		return D.currentNode = y, r;
+		return w.currentNode = v, r;
 	}
 	p(e) {
 		let t = 0;
 		for (let n of this._$AV) n !== void 0 && (n.strings === void 0 ? n._$AI(e[t]) : (n._$AI(e, n, t), t += n.strings.length - 2)), t++;
 	}
-}, Oe = class e {
+}, Me = class e {
 	get _$AU() {
 		return this._$AM?._$AU ?? this._$Cv;
 	}
 	constructor(e, t, n, r) {
-		this.type = 2, this._$AH = E, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = n, this.options = r, this._$Cv = r?.isConnected ?? !0;
+		this.type = 2, this._$AH = C, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = n, this.options = r, this._$Cv = r?.isConnected ?? !0;
 	}
 	get parentNode() {
 		let e = this._$AA.parentNode, t = this._$AM;
@@ -377,7 +377,7 @@ var De = class {
 		return this._$AB;
 	}
 	_$AI(e, t = this) {
-		e = O(this, e, t), pe(e) ? e === E || e == null || e === "" ? (this._$AH !== E && this._$AR(), this._$AH = E) : e !== this._$AH && e !== T && this._(e) : e._$litType$ === void 0 ? e.nodeType === void 0 ? he(e) ? this.k(e) : this._(e) : this.T(e) : this.$(e);
+		e = Ae(this, e, t), he(e) ? e === C || e == null || e === "" ? (this._$AH !== C && this._$AR(), this._$AH = C) : e !== this._$AH && e !== S && this._(e) : e._$litType$ === void 0 ? e.nodeType === void 0 ? _e(e) ? this.k(e) : this._(e) : this.T(e) : this.$(e);
 	}
 	O(e) {
 		return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -386,36 +386,36 @@ var De = class {
 		this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
 	}
 	_(e) {
-		this._$AH !== E && pe(this._$AH) ? this._$AA.nextSibling.data = e : this.T(y.createTextNode(e)), this._$AH = e;
+		this._$AH !== C && he(this._$AH) ? this._$AA.nextSibling.data = e : this.T(v.createTextNode(e)), this._$AH = e;
 	}
 	$(e) {
-		let { values: t, _$litType$: n } = e, r = typeof n == "number" ? this._$AC(e) : (n.el === void 0 && (n.el = Ee.createElement(we(n.h, n.h[0]), this.options)), n);
+		let { values: t, _$litType$: n } = e, r = typeof n == "number" ? this._$AC(e) : (n.el === void 0 && (n.el = ke.createElement(De(n.h, n.h[0]), this.options)), n);
 		if (this._$AH?._$AD === r) this._$AH.p(t);
 		else {
-			let e = new De(r, this), n = e.u(this.options);
+			let e = new je(r, this), n = e.u(this.options);
 			e.p(t), this.T(n), this._$AH = e;
 		}
 	}
 	_$AC(e) {
-		let t = Ce.get(e.strings);
-		return t === void 0 && Ce.set(e.strings, t = new Ee(e)), t;
+		let t = Ee.get(e.strings);
+		return t === void 0 && Ee.set(e.strings, t = new ke(e)), t;
 	}
 	k(t) {
-		me(this._$AH) || (this._$AH = [], this._$AR());
+		ge(this._$AH) || (this._$AH = [], this._$AR());
 		let n = this._$AH, r, i = 0;
-		for (let a of t) i === n.length ? n.push(r = new e(this.O(b()), this.O(b()), this, this.options)) : r = n[i], r._$AI(a), i++;
+		for (let a of t) i === n.length ? n.push(r = new e(this.O(me()), this.O(me()), this, this.options)) : r = n[i], r._$AI(a), i++;
 		i < n.length && (this._$AR(r && r._$AB.nextSibling, i), n.length = i);
 	}
 	_$AR(e = this._$AA.nextSibling, t) {
 		for (this._$AP?.(!1, !0, t); e !== this._$AB;) {
-			let t = se(e).nextSibling;
-			se(e).remove(), e = t;
+			let t = ce(e).nextSibling;
+			ce(e).remove(), e = t;
 		}
 	}
 	setConnected(e) {
 		this._$AM === void 0 && (this._$Cv = e, this._$AP?.(e));
 	}
-}, ke = class {
+}, Ne = class {
 	get tagName() {
 		return this.element.tagName;
 	}
@@ -423,47 +423,47 @@ var De = class {
 		return this._$AM._$AU;
 	}
 	constructor(e, t, n, r, i) {
-		this.type = 1, this._$AH = E, this._$AN = void 0, this.element = e, this.name = t, this._$AM = r, this.options = i, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(/* @__PURE__ */ new String()), this.strings = n) : this._$AH = E;
+		this.type = 1, this._$AH = C, this._$AN = void 0, this.element = e, this.name = t, this._$AM = r, this.options = i, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(/* @__PURE__ */ new String()), this.strings = n) : this._$AH = C;
 	}
 	_$AI(e, t = this, n, r) {
 		let i = this.strings, a = !1;
-		if (i === void 0) e = O(this, e, t, 0), a = !pe(e) || e !== this._$AH && e !== T, a && (this._$AH = e);
+		if (i === void 0) e = Ae(this, e, t, 0), a = !he(e) || e !== this._$AH && e !== S, a && (this._$AH = e);
 		else {
 			let r = e, o, s;
-			for (e = i[0], o = 0; o < i.length - 1; o++) s = O(this, r[n + o], t, o), s === T && (s = this._$AH[o]), a ||= !pe(s) || s !== this._$AH[o], s === E ? e = E : e !== E && (e += (s ?? "") + i[o + 1]), this._$AH[o] = s;
+			for (e = i[0], o = 0; o < i.length - 1; o++) s = Ae(this, r[n + o], t, o), s === S && (s = this._$AH[o]), a ||= !he(s) || s !== this._$AH[o], s === C ? e = C : e !== C && (e += (s ?? "") + i[o + 1]), this._$AH[o] = s;
 		}
 		a && !r && this.j(e);
 	}
 	j(e) {
-		e === E ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
+		e === C ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
 	}
-}, Ae = class extends ke {
+}, Pe = class extends Ne {
 	constructor() {
 		super(...arguments), this.type = 3;
 	}
 	j(e) {
-		this.element[this.name] = e === E ? void 0 : e;
+		this.element[this.name] = e === C ? void 0 : e;
 	}
-}, je = class extends ke {
+}, Fe = class extends Ne {
 	constructor() {
 		super(...arguments), this.type = 4;
 	}
 	j(e) {
-		this.element.toggleAttribute(this.name, !!e && e !== E);
+		this.element.toggleAttribute(this.name, !!e && e !== C);
 	}
-}, Me = class extends ke {
+}, Ie = class extends Ne {
 	constructor(e, t, n, r, i) {
 		super(e, t, n, r, i), this.type = 5;
 	}
 	_$AI(e, t = this) {
-		if ((e = O(this, e, t, 0) ?? E) === T) return;
-		let n = this._$AH, r = e === E && n !== E || e.capture !== n.capture || e.once !== n.once || e.passive !== n.passive, i = e !== E && (n === E || r);
+		if ((e = Ae(this, e, t, 0) ?? C) === S) return;
+		let n = this._$AH, r = e === C && n !== C || e.capture !== n.capture || e.once !== n.once || e.passive !== n.passive, i = e !== C && (n === C || r);
 		r && this.element.removeEventListener(this.name, this, n), i && this.element.addEventListener(this.name, this, e), this._$AH = e;
 	}
 	handleEvent(e) {
 		typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, e) : this._$AH.handleEvent(e);
 	}
-}, Ne = class {
+}, Le = class {
 	constructor(e, t, n) {
 		this.element = e, this.type = 6, this._$AN = void 0, this._$AM = t, this.options = n;
 	}
@@ -471,18 +471,18 @@ var De = class {
 		return this._$AM._$AU;
 	}
 	_$AI(e) {
-		O(this, e);
+		Ae(this, e);
 	}
-}, Pe = oe.litHtmlPolyfillSupport;
-Pe?.(Ee, Oe), (oe.litHtmlVersions ??= []).push("3.3.3");
-var Fe = (e, t, n) => {
+}, Re = se.litHtmlPolyfillSupport;
+Re?.(ke, Me), (se.litHtmlVersions ??= []).push("3.3.3");
+var ze = (e, t, n) => {
 	let r = n?.renderBefore ?? t, i = r._$litPart$;
 	if (i === void 0) {
 		let e = n?.renderBefore ?? null;
-		r._$litPart$ = i = new Oe(t.insertBefore(b(), e), e, void 0, n ?? {});
+		r._$litPart$ = i = new Me(t.insertBefore(me(), e), e, void 0, n ?? {});
 	}
 	return i._$AI(e), i;
-}, Ie = globalThis, Le = class extends _ {
+}, Be = globalThis, Ve = class extends oe {
 	constructor() {
 		super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
 	}
@@ -492,7 +492,7 @@ var Fe = (e, t, n) => {
 	}
 	update(e) {
 		let t = this.render();
-		this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = Fe(t, this.renderRoot, this.renderOptions);
+		this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = ze(t, this.renderRoot, this.renderOptions);
 	}
 	connectedCallback() {
 		super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -501,32 +501,32 @@ var Fe = (e, t, n) => {
 		super.disconnectedCallback(), this._$Do?.setConnected(!1);
 	}
 	render() {
-		return T;
+		return S;
 	}
 };
-Le._$litElement$ = !0, Le.finalized = !0, Ie.litElementHydrateSupport?.({ LitElement: Le });
-var Re = Ie.litElementPolyfillSupport;
-Re?.({ LitElement: Le }), (Ie.litElementVersions ??= []).push("4.2.2");
+Ve._$litElement$ = !0, Ve.finalized = !0, Be.litElementHydrateSupport?.({ LitElement: Ve });
+var He = Be.litElementPolyfillSupport;
+He?.({ LitElement: Ve }), (Be.litElementVersions ??= []).push("4.2.2");
 // src/calc/mode.ts
-var ze = [
+var Ue = [
 	"off",
 	"unavailable",
 	"unknown"
-], Be = (e, t) => e?.trim().toLowerCase() === t, Ve = (e) => e !== void 0 && e > 0;
-function He(e, t) {
-	if (Be(e["unit.on_off"], "off")) return "off";
-	if (Be(e["compressor.mode"], "defrost")) return "defrost";
+], We = (e, t) => e?.trim().toLowerCase() === t, Ge = (e) => e !== void 0 && e > 0;
+function Ke(e, t) {
+	if (We(e["unit.on_off"], "off")) return "off";
+	if (We(e["compressor.mode"], "defrost")) return "defrost";
 	let n = e["compressor.speed"];
 	if (n === void 0) return "standby";
 	let r = e["unit.summer"] === !0;
-	return Ve(n) ? e["dhw.demand"] === !0 ? "dhw" : r && t.active_cooling === !0 ? "active_cooling" : "heating" : r && Ve(e["production.pump"]) && t.passive_cooling === !0 ? "passive_cooling" : "standby";
+	return Ge(n) ? e["dhw.demand"] === !0 ? "dhw" : r && t.active_cooling === !0 ? "active_cooling" : "heating" : r && Ge(e["production.pump"]) && t.passive_cooling === !0 ? "passive_cooling" : "standby";
 }
-function Ue(e) {
-	return e !== void 0 && ze.includes(e.state.trim().toLowerCase());
+function qe(e) {
+	return e !== void 0 && Ue.includes(e.state.trim().toLowerCase());
 }
-var We = (e) => e === !0;
+var Je = (e) => e === !0;
 // src/calc/circuits.ts
-function Ge(e, t, n, r) {
+function Ye(e, t, n, r) {
 	let i = /* @__PURE__ */ new Set(), a = t.passive_cooling !== !1, o = n !== "none";
 	switch (e) {
 		case "heating":
@@ -541,7 +541,7 @@ function Ge(e, t, n, r) {
 		case "passive_cooling":
 		case "defrost": i.add("brine").add("production_dg1"), a && i.add("exchanger_10");
 	}
-	return Ve(r["brine.pump"]) || i.delete("brine"), {
+	return Ge(r["brine.pump"]) || i.delete("brine"), {
 		valve26: e === "dhw" ? "dhw" : "production",
 		valve14: e === "active_cooling" ? "reversed" : "normal",
 		valves2728: (e === "passive_cooling" || e === "defrost") && a ? "exchanger" : "closed",
@@ -549,23 +549,23 @@ function Ge(e, t, n, r) {
 	};
 }
 // src/lib/availability.ts
-var Ke = /* @__PURE__ */ new Set(["unknown", "unavailable"]), qe = -999, Je = /^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i;
-function Ye(e) {
-	if (!Je.test(e)) return;
+var Xe = /* @__PURE__ */ new Set(["unknown", "unavailable"]), Ze = -999, Qe = /^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i;
+function $e(e) {
+	if (!Qe.test(e)) return;
 	let t = Number(e);
 	return Number.isFinite(t) ? t + 0 : void 0;
 }
-function Xe(e) {
-	if (e === void 0 || Ke.has(e.state)) return !0;
-	let t = Ye(e.state);
-	return t !== void 0 && t <= qe;
+function et(e) {
+	if (e === void 0 || Xe.has(e.state)) return !0;
+	let t = $e(e.state);
+	return t !== void 0 && t <= Ze;
 }
-function Ze(e) {
-	if (!(e === void 0 || Xe(e))) return Ye(e.state);
+function tt(e) {
+	if (!(e === void 0 || et(e))) return $e(e.state);
 }
 // src/lib/hass.ts
-var Qe = (e, t) => t === void 0 ? void 0 : e[t];
-function $e(e, t) {
+var nt = (e, t) => t === void 0 ? void 0 : e[t];
+function rt(e, t) {
 	e.dispatchEvent(new CustomEvent("hass-more-info", {
 		detail: { entityId: t },
 		bubbles: !0,
@@ -573,32 +573,32 @@ function $e(e, t) {
 	}));
 }
 // src/lib/units.ts
-var et = { scale: 1 }, tt = {
+var it = { scale: 1 }, at = {
 	scale: 5 / 9,
 	offset: -32
-}, nt = {
-	temperature: /* @__PURE__ */ new Map([["°c", et], ["°f", tt]]),
+}, ot = {
+	temperature: /* @__PURE__ */ new Map([["°c", it], ["°f", at]]),
 	difference: /* @__PURE__ */ new Map([
-		["k", et],
-		["°c", et],
-		["°f", tt]
+		["k", it],
+		["°c", it],
+		["°f", at]
 	]),
-	power: /* @__PURE__ */ new Map([["w", et], ["kw", { scale: 1e3 }]])
+	power: /* @__PURE__ */ new Map([["w", it], ["kw", { scale: 1e3 }]])
 };
-function rt(e) {
+function st(e) {
 	return e.trim().replaceAll("º", "°").normalize("NFKC").toLowerCase();
 }
-function it(e, t) {
-	let n = Ze(e);
-	return n === void 0 ? void 0 : at(t, n, e?.attributes.unit_of_measurement);
+function ct(e, t) {
+	let n = tt(e);
+	return n === void 0 ? void 0 : lt(t, n, e?.attributes.unit_of_measurement);
 }
-function at(e, t, n) {
+function lt(e, t, n) {
 	if (!Number.isFinite(t) || n === void 0) return;
-	let r = nt[e].get(rt(n));
+	let r = ot[e].get(st(n));
 	return r ? (t + (r.offset ?? 0)) * r.scale : void 0;
 }
 // src/strings.ts
-var k = {
+var T = {
 	invalid: (e, t) => `Invalid option ${e}: expected ${t}`,
 	number: (e, t) => `a number from ${e} to ${t}`,
 	color: "a CSS colour such as #db4437 or rgb(219, 68, 55)",
@@ -606,17 +606,17 @@ var k = {
 	object: "a group of options",
 	choice: (e) => `one of ${e.join(", ")}`,
 	list: "a list of texts"
-}, ot = {
+}, ut = {
 	name: "ecoGEO Schematic",
 	description: "The internal schematic of an Ecoforest ecoGEO heat pump, with live values and pipes coloured by temperature."
-}, st = "ecoGEO heat pump schematic", A = {
+}, dt = "ecoGEO heat pump schematic", E = {
 	celsius: "°C",
 	kelvin: "K",
 	bar: "bar",
 	percent: "%",
 	rpm: "rpm",
 	watt: "W"
-}, ct = {
+}, ft = {
 	off: "Off",
 	defrost: "Defrost",
 	dhw: "DHW",
@@ -624,11 +624,11 @@ var k = {
 	heating: "Heating",
 	passive_cooling: "Passive cooling",
 	standby: "Standby"
-}, lt = {
+}, pt = {
 	alarm: "Alarm",
 	offline: "Offline",
 	sampleValues: "Sample values"
-}, j = {
+}, D = {
 	unknownOption: (e) => `Unknown option ${e}`,
 	unknownFeature: (e, t) => `Unknown feature ${e}: expected one of ${t.join(", ")}`,
 	unknownRole: (e) => `Unknown entity role ${e}`,
@@ -638,36 +638,37 @@ var k = {
 	prefix: "a prefix of lowercase letters, digits and underscores",
 	colors: "Invalid option colors: expected an ascending list of 2 to 8 stops, each { temperature, color } with a number and a CSS colour",
 	dhwMismatch: (e, t) => `Invalid option dhw: ${e} does not fit model ${t}`
-}, ut = {
+}, mt = {
 	dg1: "DG1",
 	outerLoop: "Outer loop",
 	dhw: "DHW"
-}, dt = {
+}, ht = {
 	air: "Air unit",
 	ground: "Ground loop"
-}, ft = {
+}, gt = {
 	externalTank: "DHW tank",
 	demand: "Demand"
-}, pt = { demand: "Demand" }, M = {
+}, _t = { demand: "Demand" }, O = {
 	setpoint: "Setpoint",
 	startDelta: "Start ΔT",
+	setpointShort: "Set",
+	startDeltaShort: "ΔT",
 	fan: "Fan",
 	outside: "Outside",
-	airOutlet: "Outlet",
-	groundIn: "In",
-	groundOut: "Out"
-}, N = {
+	portIn: "In",
+	portOut: "Out"
+}, vt = {
 	outside: "Outside",
 	cop: "COP",
 	condensation: "Condensation",
 	evaporation: "Evaporation",
 	summer: "Summer",
 	winter: "Winter"
-}, mt = {
+}, yt = {
 	on: "On",
 	off: "Off",
 	emergency: "Emergency"
-}, ht = {
+}, bt = {
 	1: "Production outlet",
 	2: "Production return",
 	3: "Brine outlet",
@@ -719,17 +720,17 @@ var k = {
 	52: "Manual trap",
 	53: "Tank drain valve",
 	54: "DHW temperature probe"
-}, gt = (e) => {
-	let t = ht[e];
+}, xt = (e) => {
+	let t = bt[e];
 	return t === void 0 ? "" : `${t} (${String(e)})`;
-}, _t = "Air unit fan", P = A.celsius, vt = [
+}, St = "Air unit fan", k = E.celsius, Ct = [
 	{
 		path: "production.outlet_temperature",
 		domain: "sensor",
 		suffix: "production_out",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "33"
 	},
@@ -739,7 +740,7 @@ var k = {
 		suffix: "production_in",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "34"
 	},
@@ -748,7 +749,7 @@ var k = {
 		domain: "sensor",
 		suffix: "pressure_production",
 		kind: "number",
-		unit: A.bar,
+		unit: E.bar,
 		decimals: 1,
 		item: "38"
 	},
@@ -757,7 +758,7 @@ var k = {
 		domain: "sensor",
 		suffix: "production_pump",
 		kind: "number",
-		unit: A.percent,
+		unit: E.percent,
 		decimals: 1,
 		item: "15"
 	},
@@ -767,7 +768,7 @@ var k = {
 		suffix: "brine_out",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "31"
 	},
@@ -777,7 +778,7 @@ var k = {
 		suffix: "brine_in",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "32"
 	},
@@ -786,7 +787,7 @@ var k = {
 		domain: "sensor",
 		suffix: "pressure_brine",
 		kind: "number",
-		unit: A.bar,
+		unit: E.bar,
 		decimals: 1,
 		item: "37"
 	},
@@ -795,7 +796,7 @@ var k = {
 		domain: "sensor",
 		suffix: "brine_pump",
 		kind: "number",
-		unit: A.percent,
+		unit: E.percent,
 		decimals: 1,
 		item: "16"
 	},
@@ -804,7 +805,7 @@ var k = {
 		domain: "sensor",
 		suffix: "compressor_rpm",
 		kind: "number",
-		unit: A.rpm,
+		unit: E.rpm,
 		decimals: 0,
 		item: "11"
 	},
@@ -813,7 +814,7 @@ var k = {
 		domain: "sensor",
 		suffix: "compressor_percentage",
 		kind: "number",
-		unit: A.percent,
+		unit: E.percent,
 		decimals: 1,
 		item: "11"
 	},
@@ -823,7 +824,7 @@ var k = {
 		suffix: "power_consumption",
 		kind: "number",
 		quantity: "power",
-		unit: A.watt,
+		unit: E.watt,
 		decimals: 0,
 		item: "11"
 	},
@@ -833,7 +834,7 @@ var k = {
 		suffix: "compressor_suction_temperature",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "29"
 	},
@@ -843,7 +844,7 @@ var k = {
 		suffix: "compressor_discharge_temperature",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "30"
 	},
@@ -852,7 +853,7 @@ var k = {
 		domain: "sensor",
 		suffix: "compressor_suction_pressure",
 		kind: "number",
-		unit: A.bar,
+		unit: E.bar,
 		decimals: 1,
 		item: "35"
 	},
@@ -861,7 +862,7 @@ var k = {
 		domain: "sensor",
 		suffix: "compressor_discharge_pressure",
 		kind: "number",
-		unit: A.bar,
+		unit: E.bar,
 		decimals: 1,
 		item: "36"
 	},
@@ -878,7 +879,7 @@ var k = {
 		suffix: "condensation_temperature",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "8"
 	},
@@ -888,7 +889,7 @@ var k = {
 		suffix: "evaporation_temperature",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "7"
 	},
@@ -898,7 +899,7 @@ var k = {
 		suffix: "superheat",
 		kind: "number",
 		quantity: "difference",
-		unit: A.kelvin,
+		unit: E.kelvin,
 		decimals: 1,
 		item: "12"
 	},
@@ -907,7 +908,7 @@ var k = {
 		domain: "sensor",
 		suffix: "expansion_valve_position",
 		kind: "number",
-		unit: A.percent,
+		unit: E.percent,
 		decimals: 0,
 		item: "12"
 	},
@@ -917,7 +918,7 @@ var k = {
 		suffix: "condensation_capacity",
 		kind: "number",
 		quantity: "power",
-		unit: A.watt,
+		unit: E.watt,
 		decimals: 0,
 		item: "8"
 	},
@@ -927,7 +928,7 @@ var k = {
 		suffix: "evaporation_capacity",
 		kind: "number",
 		quantity: "power",
-		unit: A.watt,
+		unit: E.watt,
 		decimals: 0,
 		item: "7"
 	},
@@ -944,7 +945,7 @@ var k = {
 		suffix: "heating_dg1_setpoint",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "1/2"
 	},
@@ -954,7 +955,7 @@ var k = {
 		suffix: "dhw_temperature",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "tank (54 on C)"
 	},
@@ -964,7 +965,7 @@ var k = {
 		suffix: "dhw_setpoint",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 0,
 		item: "tank"
 	},
@@ -974,7 +975,7 @@ var k = {
 		suffix: "delta_t_start_dhw",
 		kind: "number",
 		quantity: "difference",
-		unit: A.kelvin,
+		unit: E.kelvin,
 		decimals: 0,
 		item: "tank"
 	},
@@ -990,7 +991,7 @@ var k = {
 		domain: "sensor",
 		suffix: "aerothermal_fan_speed",
 		kind: "number",
-		unit: A.percent,
+		unit: E.percent,
 		decimals: 1,
 		item: "air unit"
 	},
@@ -1000,7 +1001,7 @@ var k = {
 		suffix: "brine_temperature_air_unit_outlet",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "air unit"
 	},
@@ -1010,7 +1011,7 @@ var k = {
 		suffix: "outside_temperature",
 		kind: "number",
 		quantity: "temperature",
-		unit: P,
+		unit: k,
 		decimals: 1,
 		item: "air unit / footer"
 	},
@@ -1057,29 +1058,29 @@ var k = {
 		decimals: 1,
 		item: "footer"
 	}
-], yt = new Map(vt.map((e) => [e.path, e])), bt = vt.map((e) => e.path);
-[...new Set(vt.flatMap((e) => "unit" in e ? [e.unit] : []))];
-var xt = (e, t) => `${e.domain}.${t}_${e.suffix}`;
+], wt = new Map(Ct.map((e) => [e.path, e])), Tt = Ct.map((e) => e.path);
+[...new Set(Ct.flatMap((e) => "unit" in e ? [e.unit] : []))];
+var Et = (e, t) => `${e.domain}.${t}_${e.suffix}`;
 // src/calc/readings.ts
-function St(e, t) {
-	return t.quantity === void 0 ? Ze(e) : it(e, t.quantity);
+function Dt(e, t) {
+	return t.quantity === void 0 ? tt(e) : ct(e, t.quantity);
 }
-function Ct(e, t) {
+function Ot(e, t) {
 	switch (t.kind) {
-		case "number": return St(e, t);
-		case "text": return e === void 0 || Xe(e) || ["unavailable", "unknown"].includes(e.state.trim().toLowerCase()) ? void 0 : e.state.trim();
+		case "number": return Dt(e, t);
+		case "text": return e === void 0 || et(e) || ["unavailable", "unknown"].includes(e.state.trim().toLowerCase()) ? void 0 : e.state.trim();
 		case "binary": {
 			let t = e?.state.trim().toLowerCase();
 			return t === "on" || t !== "off" && void 0;
 		}
 	}
 }
-function wt(e, t) {
-	return Object.fromEntries(vt.map((n) => [n.path, Ct(Qe(e, t[n.path]), n)]));
+function kt(e, t) {
+	return Object.fromEntries(Ct.map((n) => [n.path, Ot(nt(e, t[n.path]), n)]));
 }
 // src/lib/config.ts
-var Tt = /^[a-z][a-z0-9_]*\.[a-z0-9_]+$/;
-function F(e, t) {
+var At = /^[a-z][a-z0-9_]*\.[a-z0-9_]+$/;
+function A(e, t) {
 	let n = e;
 	for (let e of t.split(".")) {
 		if (typeof n != "object" || !n || !Object.hasOwn(n, e)) return;
@@ -1087,84 +1088,84 @@ function F(e, t) {
 	}
 	return n;
 }
-function Et(e) {
+function jt(e) {
 	if (typeof e != "string") return;
 	let t = e.trim();
-	return Tt.test(t) ? t : void 0;
+	return At.test(t) ? t : void 0;
 }
-function Dt(e, t) {
-	return Et(F(e, t));
+function Mt(e, t) {
+	return jt(A(e, t));
 }
 // src/lib/options.ts
-var Ot = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i, kt = /^(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|var)\((.*)\)$/i, At = /^[#a-zA-Z0-9(),.%\s/+-]+$/, jt = /* @__PURE__ */ new Set(/* @__PURE__ */ "aliceblue.antiquewhite.aqua.aquamarine.azure.beige.bisque.black.blanchedalmond.blue.blueviolet.brown.burlywood.cadetblue.chartreuse.chocolate.coral.cornflowerblue.cornsilk.crimson.cyan.darkblue.darkcyan.darkgoldenrod.darkgray.darkgreen.darkgrey.darkkhaki.darkmagenta.darkolivegreen.darkorange.darkorchid.darkred.darksalmon.darkseagreen.darkslateblue.darkslategray.darkslategrey.darkturquoise.darkviolet.deeppink.deepskyblue.dimgray.dimgrey.dodgerblue.firebrick.floralwhite.forestgreen.fuchsia.gainsboro.ghostwhite.gold.goldenrod.gray.green.greenyellow.grey.honeydew.hotpink.indianred.indigo.ivory.khaki.lavender.lavenderblush.lawngreen.lemonchiffon.lightblue.lightcoral.lightcyan.lightgoldenrodyellow.lightgray.lightgreen.lightgrey.lightpink.lightsalmon.lightseagreen.lightskyblue.lightslategray.lightslategrey.lightsteelblue.lightyellow.lime.limegreen.linen.magenta.maroon.mediumaquamarine.mediumblue.mediumorchid.mediumpurple.mediumseagreen.mediumslateblue.mediumspringgreen.mediumturquoise.mediumvioletred.midnightblue.mintcream.mistyrose.moccasin.navajowhite.navy.oldlace.olive.olivedrab.orange.orangered.orchid.palegoldenrod.palegreen.paleturquoise.palevioletred.papayawhip.peachpuff.peru.pink.plum.powderblue.purple.rebeccapurple.red.rosybrown.royalblue.saddlebrown.salmon.sandybrown.seagreen.seashell.sienna.silver.skyblue.slateblue.slategray.slategrey.snow.springgreen.steelblue.tan.teal.thistle.tomato.turquoise.violet.wheat.white.whitesmoke.yellow.yellowgreen.transparent.currentcolor".split("."));
-function Mt(e) {
+var Nt = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i, Pt = /^(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|var)\((.*)\)$/i, Ft = /^[#a-zA-Z0-9(),.%\s/+-]+$/, It = /* @__PURE__ */ new Set(/* @__PURE__ */ "aliceblue.antiquewhite.aqua.aquamarine.azure.beige.bisque.black.blanchedalmond.blue.blueviolet.brown.burlywood.cadetblue.chartreuse.chocolate.coral.cornflowerblue.cornsilk.crimson.cyan.darkblue.darkcyan.darkgoldenrod.darkgray.darkgreen.darkgrey.darkkhaki.darkmagenta.darkolivegreen.darkorange.darkorchid.darkred.darksalmon.darkseagreen.darkslateblue.darkslategray.darkslategrey.darkturquoise.darkviolet.deeppink.deepskyblue.dimgray.dimgrey.dodgerblue.firebrick.floralwhite.forestgreen.fuchsia.gainsboro.ghostwhite.gold.goldenrod.gray.green.greenyellow.grey.honeydew.hotpink.indianred.indigo.ivory.khaki.lavender.lavenderblush.lawngreen.lemonchiffon.lightblue.lightcoral.lightcyan.lightgoldenrodyellow.lightgray.lightgreen.lightgrey.lightpink.lightsalmon.lightseagreen.lightskyblue.lightslategray.lightslategrey.lightsteelblue.lightyellow.lime.limegreen.linen.magenta.maroon.mediumaquamarine.mediumblue.mediumorchid.mediumpurple.mediumseagreen.mediumslateblue.mediumspringgreen.mediumturquoise.mediumvioletred.midnightblue.mintcream.mistyrose.moccasin.navajowhite.navy.oldlace.olive.olivedrab.orange.orangered.orchid.palegoldenrod.palegreen.paleturquoise.palevioletred.papayawhip.peachpuff.peru.pink.plum.powderblue.purple.rebeccapurple.red.rosybrown.royalblue.saddlebrown.salmon.sandybrown.seagreen.seashell.sienna.silver.skyblue.slateblue.slategray.slategrey.snow.springgreen.steelblue.tan.teal.thistle.tomato.turquoise.violet.wheat.white.whitesmoke.yellow.yellowgreen.transparent.currentcolor".split("."));
+function Lt(e) {
 	let t = 0;
 	for (let n = 0; n < e.length; n++) if (e[n] === "(" && t++, e[n] === ")" && (t--, t < 0 || t === 0 && n !== e.length - 1)) return !1;
 	return t === 0;
 }
-function Nt(e) {
+function Rt(e) {
 	let t = e.trim();
-	if (t.length === 0 || t.length > 100 || !At.test(t)) return !1;
-	if (Ot.test(t) || jt.has(t.toLowerCase())) return !0;
-	let n = kt.exec(t);
-	if (n === null || !Mt(t)) return !1;
+	if (t.length === 0 || t.length > 100 || !Ft.test(t)) return !1;
+	if (Nt.test(t) || It.has(t.toLowerCase())) return !0;
+	let n = Pt.exec(t);
+	if (n === null || !Lt(t)) return !1;
 	if (n[1]?.toLowerCase() !== "var") return !0;
 	let [r, ...i] = (n[2] ?? "").split(",");
-	return /^\s*--[a-zA-Z0-9-]+\s*$/.test(r ?? "") && (i.length === 0 || Nt(i.join(",")));
+	return /^\s*--[a-zA-Z0-9-]+\s*$/.test(r ?? "") && (i.length === 0 || Rt(i.join(",")));
 }
-var Pt = (e) => e == null;
-function Ft(e) {
+var zt = (e) => e == null;
+function Bt(e) {
 	switch (e.kind) {
-		case "number": return k.number(String(e.min), String(e.max));
-		case "color": return k.color;
-		case "boolean": return k.boolean;
-		case "choice": return k.choice(e.choices);
-		case "list": return k.list;
+		case "number": return T.number(String(e.min), String(e.max));
+		case "color": return T.color;
+		case "boolean": return T.boolean;
+		case "choice": return T.choice(e.choices);
+		case "list": return T.list;
 	}
 }
-var It = (e) => e === null || [
+var Vt = (e) => e === null || [
 	"string",
 	"number",
 	"boolean"
 ].includes(typeof e);
-function Lt(e) {
+function Ht(e) {
 	return e.map((e) => typeof e == "boolean" ? e ? "on" : "off" : e === null ? "" : String(e)).filter((e) => e.trim() !== "");
 }
-function Rt(e, t) {
+function Ut(e, t) {
 	switch (e.kind) {
 		case "number": return typeof t == "number" && Number.isFinite(t) && t >= e.min && t <= e.max;
-		case "color": return typeof t == "string" && Nt(t);
+		case "color": return typeof t == "string" && Rt(t);
 		case "boolean": return typeof t == "boolean";
 		case "choice": return typeof t == "string" && e.choices.includes(t);
-		case "list": return Array.isArray(t) && t.every(It);
+		case "list": return Array.isArray(t) && t.every(Vt);
 	}
 }
-function zt(e, t) {
+function Wt(e, t) {
 	let n = t.split(".").slice(0, -1);
 	for (let t = 1; t <= n.length; t++) {
-		let r = n.slice(0, t).join("."), i = F(e, r);
-		if (!Pt(i) && (typeof i != "object" || Array.isArray(i))) return r;
+		let r = n.slice(0, t).join("."), i = A(e, r);
+		if (!zt(i) && (typeof i != "object" || Array.isArray(i))) return r;
 	}
 }
-function Bt(e, t) {
+function Gt(e, t) {
 	let n = t.flatMap((t) => {
-		let n = zt(e, t.path);
-		if (n !== void 0) return [k.invalid(n, k.object)];
-		let r = F(e, t.path);
-		return Pt(r) || Rt(t, r) ? [] : [k.invalid(t.path, Ft(t))];
+		let n = Wt(e, t.path);
+		if (n !== void 0) return [T.invalid(n, T.object)];
+		let r = A(e, t.path);
+		return zt(r) || Ut(t, r) ? [] : [T.invalid(t.path, Bt(t))];
 	});
 	return [...new Set(n)];
 }
-function I(e, t) {
-	let n = F(e, t.path);
-	if (t.kind === "list" && Array.isArray(n) && Rt(t, n)) {
-		let e = Lt(n);
+function Kt(e, t) {
+	let n = A(e, t.path);
+	if (t.kind === "list" && Array.isArray(n) && Ut(t, n)) {
+		let e = Ht(n);
 		return e.length > 0 ? e : t.default;
 	}
-	return Pt(n) || !Rt(t, n) ? t.default : n;
+	return zt(n) || !Ut(t, n) ? t.default : n;
 }
 // src/diagram/colors.ts
-var Vt = [
+var qt = [
 	{
 		temperature: -10,
 		color: "#1e5aa8"
@@ -1189,30 +1190,30 @@ var Vt = [
 		temperature: 70,
 		color: "#d7263d"
 	}
-], Ht = "var(--disabled-text-color)", Ut = (e) => typeof e == "object" && !!e && !Array.isArray(e), Wt = (e) => typeof e == "string" && Bt({ color: e }, [{
+], Jt = "var(--disabled-text-color)", Yt = "#8a8a8a", Xt = `var(--ecogeo-coil-muted, ${Jt})`, Zt = (e) => e ? Jt : Yt, Qt = (e) => typeof e == "object" && !!e && !Array.isArray(e), $t = (e) => typeof e == "string" && Gt({ color: e }, [{
 	kind: "color",
 	path: "color",
 	default: ""
-}]).length === 0, Gt = (e) => e.map((e) => ({
+}]).length === 0, en = (e) => e.map((e) => ({
 	temperature: e.temperature,
 	color: e.color.trim()
 }));
-function Kt(e) {
-	let t = F(e, "colors");
+function tn(e) {
+	let t = A(e, "colors");
 	if (t == null) return [];
-	if (!Array.isArray(t) || t.length < 2 || t.length > 8) return [j.colors];
+	if (!Array.isArray(t) || t.length < 2 || t.length > 8) return [D.colors];
 	let n = t;
-	if (!n.every((e) => Ut(e) && typeof e.temperature == "number" && Number.isFinite(e.temperature) && Wt(e.color))) return [j.colors];
-	let r = Gt(n).map((e) => e.temperature);
-	return r.every((e, t) => t === 0 || e > (r[t - 1] ?? 0)) ? [] : [j.colors];
+	if (!n.every((e) => Qt(e) && typeof e.temperature == "number" && Number.isFinite(e.temperature) && $t(e.color))) return [D.colors];
+	let r = en(n).map((e) => e.temperature);
+	return r.every((e, t) => t === 0 || e > (r[t - 1] ?? 0)) ? [] : [D.colors];
 }
-function qt(e) {
-	let t = F(e, "colors");
-	return Array.isArray(t) && Kt(e).length === 0 ? Gt(t) : Vt;
+function nn(e) {
+	let t = A(e, "colors");
+	return Array.isArray(t) && tn(e).length === 0 ? en(t) : qt;
 }
-function Jt(e, t = Vt) {
+function rn(e, t = qt) {
 	let n = t[0], r = t[t.length - 1];
-	if (e === void 0 || !Number.isFinite(e) || n === void 0 || r === void 0) return Ht;
+	if (e === void 0 || !Number.isFinite(e) || n === void 0 || r === void 0) return Jt;
 	if (e <= n.temperature) return n.color;
 	if (e >= r.temperature) return r.color;
 	let i = t.findIndex((t) => t.temperature >= e), a = t[i - 1], o = t[i];
@@ -1221,18 +1222,18 @@ function Jt(e, t = Vt) {
 	return s <= 0 ? a.color : s >= 100 ? o.color : `color-mix(in srgb, ${o.color} ${String(s)}%, ${a.color})`;
 }
 // src/config/variants.ts
-var Yt = [
+var an = [
 	"active_cooling",
 	"passive_cooling",
 	"htr",
 	"backup_heater"
-], L = [
+], on = [
 	1,
 	2,
 	3,
 	4
 ];
-function Xt(e) {
+function sn(e) {
 	return {
 		active_cooling: e === 3 || e === 4,
 		passive_cooling: e === 2 || e === 4,
@@ -1240,53 +1241,53 @@ function Xt(e) {
 		backup_heater: !0
 	};
 }
-function Zt(e, t) {
+function cn(e, t) {
 	return {
-		...Xt(e),
+		...sn(e),
 		...t
 	};
 }
 // src/config/options.ts
-var Qt = ["B", "C"], $t = [
+var ln = ["B", "C"], un = [
 	"air",
 	"ground",
 	"hybrid"
-], en = [
+], dn = [
 	"external",
 	"internal",
 	"none"
-], tn = ["simplified", "full"], nn = {
+], fn = ["simplified", "full"], pn = {
 	kind: "choice",
 	path: "model",
 	default: "B",
-	choices: Qt
-}, rn = {
+	choices: ln
+}, mn = {
 	kind: "choice",
 	path: "source",
 	default: "ground",
-	choices: $t
-}, an = {
+	choices: un
+}, hn = {
 	kind: "choice",
 	path: "dhw",
 	default: "external",
-	choices: en
-}, on = {
+	choices: dn
+}, gn = {
 	kind: "choice",
 	path: "detail",
 	default: "simplified",
-	choices: tn
-}, sn = {
+	choices: fn
+}, _n = {
 	kind: "choice",
 	path: "exchanger_fill",
 	default: "gradient",
 	choices: ["gradient", "none"]
-}, cn = [
-	nn,
-	rn,
-	an,
-	on,
-	sn
-], ln = [
+}, vn = [
+	pn,
+	mn,
+	hn,
+	gn,
+	_n
+], yn = [
 	"type",
 	"model",
 	"variant",
@@ -1302,79 +1303,79 @@ var Qt = ["B", "C"], $t = [
 	"layout_options",
 	"grid_options",
 	"visibility"
-], un = (e) => e === "C" ? "internal" : "external", R = (e) => e == null, dn = (e) => R(e) || typeof e == "string" && e.trim() === "", z = (e) => typeof e == "object" && !!e && !Array.isArray(e), fn = /^[a-z0-9_]+$/;
-function pn(e) {
-	let t = F(e, "prefix");
-	return dn(t) ? void 0 : t.trim();
+], bn = (e) => e === "C" ? "internal" : "external", j = (e) => e == null, xn = (e) => j(e) || typeof e == "string" && e.trim() === "", Sn = (e) => typeof e == "object" && !!e && !Array.isArray(e), Cn = /^[a-z0-9_]+$/;
+function wn(e) {
+	let t = A(e, "prefix");
+	return xn(t) ? void 0 : t.trim();
 }
-function mn(e) {
-	let t = F(e, "variant");
-	return L.find((e) => e === t) ?? 4;
+function Tn(e) {
+	let t = A(e, "variant");
+	return on.find((e) => e === t) ?? 4;
 }
-function hn(e) {
-	let t = I(e, nn), n = !R(F(e, "dhw"));
+function En(e) {
+	let t = Kt(e, pn), n = !j(A(e, "dhw"));
 	return {
 		model: t,
-		source: I(e, rn),
-		dhw: n ? I(e, an) : un(t)
+		source: Kt(e, mn),
+		dhw: n ? Kt(e, hn) : bn(t)
 	};
 }
-var gn = (e) => I(e, on), _n = (e) => I(e, sn);
-function vn(e) {
-	let t = F(e, "features");
-	if (!z(t)) return {};
+var Dn = (e) => Kt(e, gn), On = (e) => Kt(e, _n);
+function kn(e) {
+	let t = A(e, "features");
+	if (!Sn(t)) return {};
 	let n = {};
-	for (let e of Yt) {
+	for (let e of an) {
 		let r = t[e];
 		(r === !0 || r === !1 || r === "unused") && (n[e] = r);
 	}
 	return n;
 }
-var yn = (e) => e === !0 || e === !1 || e === "unused";
-function bn(e, t = "") {
+var An = (e) => e === !0 || e === !1 || e === "unused";
+function jn(e, t = "") {
 	return Object.entries(e).flatMap(([e, n]) => {
 		let r = t === "" ? e : `${t}.${e}`;
-		return z(n) ? bn(n, r) : [[r, n]];
+		return Sn(n) ? jn(n, r) : [[r, n]];
 	});
 }
-function xn(e) {
-	let t = F(e, "variant");
-	return R(t) || L.some((e) => e === t) ? [] : [k.invalid("variant", j.integer(String(L[0]), String(L[L.length - 1])))];
+function Mn(e) {
+	let t = A(e, "variant");
+	return j(t) || on.some((e) => e === t) ? [] : [T.invalid("variant", D.integer(String(on[0]), String(on[on.length - 1])))];
 }
-function Sn(e) {
-	let t = F(e, "prefix");
-	return dn(t) || typeof t == "string" && fn.test(t.trim()) ? [] : [k.invalid("prefix", j.prefix)];
+function Nn(e) {
+	let t = A(e, "prefix");
+	return xn(t) || typeof t == "string" && Cn.test(t.trim()) ? [] : [T.invalid("prefix", D.prefix)];
 }
-function Cn(e) {
-	let t = F(e, "features");
-	return R(t) ? [] : z(t) ? Object.entries(t).flatMap(([e, t]) => Yt.some((t) => t === e) ? R(t) || yn(t) ? [] : [j.featureState(e)] : [j.unknownFeature(e, Yt)]) : [k.invalid("features", k.object)];
+function Pn(e) {
+	let t = A(e, "features");
+	return j(t) ? [] : Sn(t) ? Object.entries(t).flatMap(([e, t]) => an.some((t) => t === e) ? j(t) || An(t) ? [] : [D.featureState(e)] : [D.unknownFeature(e, an)]) : [T.invalid("features", T.object)];
 }
-function wn(e) {
-	let t = F(e, "entities");
-	return R(t) ? [] : z(t) ? bn(t).flatMap(([e, t]) => dn(t) ? [] : yt.has(e) ? Et(t) === void 0 ? [j.notEntityId(e)] : [] : [j.unknownRole(e)]) : [k.invalid("entities", k.object)];
+function Fn(e) {
+	let t = A(e, "entities");
+	return j(t) ? [] : Sn(t) ? jn(t).flatMap(([e, t]) => xn(t) ? [] : wt.has(e) ? jt(t) === void 0 ? [D.notEntityId(e)] : [] : [D.unknownRole(e)]) : [T.invalid("entities", T.object)];
 }
-function Tn(e) {
-	let t = F(e, "entities");
-	return z(t) && bn(t).some(([, e]) => !dn(e));
+function In(e) {
+	let t = A(e, "entities");
+	return Sn(t) && jn(t).some(([, e]) => !xn(e));
 }
-function En(e) {
-	let t = Object.keys(e).filter((e) => !ln.includes(e)).map((e) => j.unknownOption(e)), n = Bt(e, cn), r = [
+function Ln(e) {
+	let t = Object.keys(e).filter((e) => !yn.includes(e)).map((e) => D.unknownOption(e)), n = Gt(e, vn), r = [
 		...t,
 		...n,
-		...xn(e),
-		...Sn(e),
-		...Cn(e),
-		...wn(e),
-		...Kt(e)
+		...Mn(e),
+		...Nn(e),
+		...Pn(e),
+		...Fn(e),
+		...tn(e)
 	];
-	if (Bt(e, [nn, an]).length === 0 && !R(F(e, "dhw"))) {
-		let { model: t, dhw: n } = hn(e);
-		(t === "B" && n === "internal" || t === "C" && n === "external") && r.push(j.dhwMismatch(n, t));
+	if (Gt(e, [pn, hn]).length === 0 && !j(A(e, "dhw"))) {
+		let { model: t, dhw: n } = En(e);
+		(t === "B" && n === "internal" || t === "C" && n === "external") && r.push(D.dhwMismatch(n, t));
 	}
 	return r;
 }
 // src/config/sample.ts
-var Dn = (e) => `ecogeo_sample.${e.replace(".", "_")}`, On = {
+var Rn = (e) => `ecogeo_sample.${e.replace(".", "_")}`, zn = {
 	"production.outlet_temperature": "25.2",
 	"production.return_temperature": "22",
 	"production.pressure": "1.2",
@@ -1412,36 +1413,36 @@ var Dn = (e) => `ecogeo_sample.${e.replace(".", "_")}`, On = {
 	"unit.alarm": "off",
 	"unit.connection": "on",
 	"unit.cop": "6"
-}, kn = "2026-01-01T12:00:00Z", An = Object.fromEntries(bt.map((e) => [e, Dn(e)])), jn = Object.fromEntries(bt.map((e) => {
-	let t = yt.get(e)?.unit, n = Dn(e);
+}, Bn = "2026-01-01T12:00:00Z", Vn = Object.fromEntries(Tt.map((e) => [e, Rn(e)])), Hn = Object.fromEntries(Tt.map((e) => {
+	let t = wt.get(e)?.unit, n = Rn(e);
 	return [n, {
 		entity_id: n,
-		state: On[e],
-		last_updated: kn,
+		state: zn[e],
+		last_updated: Bn,
 		attributes: t === void 0 ? {} : { unit_of_measurement: t }
 	}];
 }));
 // src/config/resolve.ts
-function Mn(e, t) {
-	return Object.fromEntries(vt.map((n) => [n.path, Dt(e, `entities.${n.path}`) ?? (t === void 0 ? void 0 : xt(n, t))]));
+function Un(e, t) {
+	return Object.fromEntries(Ct.map((n) => [n.path, Mt(e, `entities.${n.path}`) ?? (t === void 0 ? void 0 : Et(n, t))]));
 }
-var Nn = (e) => pn(e) === void 0 && !Tn(e);
-function Pn(e) {
-	let t = pn(e), n = mn(e), r = Nn(e);
+var Wn = (e) => wn(e) === void 0 && !In(e);
+function Gn(e) {
+	let t = wn(e), n = Tn(e), r = Wn(e);
 	return {
-		...hn(e),
-		detail: gn(e),
-		exchangerFill: _n(e),
+		...En(e),
+		detail: Dn(e),
+		exchangerFill: On(e),
 		variant: n,
 		prefix: t,
-		colors: qt(e),
-		features: Zt(n, vn(e)),
-		entities: r ? An : Mn(e, t),
+		colors: nn(e),
+		features: cn(n, kn(e)),
+		entities: r ? Vn : Un(e, t),
 		sample: r
 	};
 }
 // src/diagram/component-info.ts
-var Fn = {
+var Kn = {
 	7: "refrigerant.evaporation_temperature",
 	8: "refrigerant.condensation_temperature",
 	11: "compressor.speed",
@@ -1461,13 +1462,13 @@ var Fn = {
 	38: "production.pressure",
 	50: "dhw.temperature",
 	54: "dhw.temperature"
-}, In = "source.fan_speed", Ln = "dhw.temperature", Rn = (e, t) => e === void 0 || t?.onTap === void 0 ? void 0 : t.entities[e];
-function zn(e, t) {
+}, qn = "source.fan_speed", Jn = "dhw.temperature", Yn = (e, t) => e === void 0 || t?.onTap === void 0 ? void 0 : t.entities[e];
+function Xn(e, t) {
 	return e === void 0 || t === void 0 ? {
-		role: E,
-		tabindex: E,
-		click: E,
-		keydown: E
+		role: C,
+		tabindex: C,
+		click: C,
+		keydown: C
 	} : {
 		role: "button",
 		tabindex: "0",
@@ -1480,64 +1481,86 @@ function zn(e, t) {
 	};
 }
 // src/diagram/geometry.ts
-var Bn = {
+var Zn = {
 	width: 1e3,
 	height: 620
-}, Vn = {
+}, M = {
 	x: 240,
 	y: 130,
 	width: 520,
 	height: 475
-}, B = {
+}, N = {
 	x: 408,
 	y: 138,
 	width: 182,
 	height: 66
-}, Hn = {
+}, Qn = {
+	x: 495,
+	y: 185
+}, P = {
 	x: 806,
-	y: 150,
-	width: 178,
+	y: M.y,
+	width: 168,
 	height: 180,
 	dome: 14
-}, Un = {
-	x: 40,
-	y: 120,
-	width: 150,
-	height: 180,
-	fanX: 115,
-	fanY: 250,
-	fanRadius: 36,
+}, $n = P.x + P.width / 2, er = P.y + 62, tr = P.y + 146, nr = 50, rr = P.x + 14;
+function ir() {
+	let { x: e, y: t, width: n, height: r, dome: i } = P, a = n / 2;
+	return `M${String(e)} ${String(t + i)} A${String(a)} ${String(i)} 0 0 1 ${String(e + n)} ${String(t + i)} V${String(t + r - i)} A${String(a)} ${String(i)} 0 0 1 ${String(e)} ${String(t + r - i)} Z`;
+}
+var F = {
+	x: 26,
+	y: M.y,
+	width: 124,
+	height: 210,
+	fanX: 88,
+	fanY: M.y + 162,
+	fanRadius: 34,
 	coil: {
-		x: 60,
-		y: 136,
-		width: 100,
-		height: 62
+		x: 36,
+		y: M.y + 16,
+		width: 104,
+		height: 74
 	},
 	fins: {
-		x: 74,
+		x: 52,
 		step: 6,
 		count: 13,
-		y0: 140,
-		y1: 194
+		y0: M.y + 20,
+		y1: M.y + 86
 	},
 	slats: {
-		y0: 218,
+		y0: M.y + 134,
 		step: 9,
 		count: 8
 	},
-	dividerY: 206,
-	captionX: 95,
-	captionY: 112
-}, Wn = {
-	ground: 160,
-	hybrid: 350
-}, Gn = {
-	x: 105,
-	y: {
-		ground: 320,
-		hybrid: 510
+	dividerY: M.y + 114,
+	captionX: 88,
+	captionY: M.y - 8,
+	passes: {
+		y0: M.y + 30,
+		step: 15,
+		count: 4,
+		left: 44,
+		right: 132
 	}
-}, V = (e, t, n, r, i, a, o = {}) => ({
+}, ar = F.x + F.width, I = {
+	top: F.passes.y0,
+	bottom: F.passes.y0 + (F.passes.count - 1) * F.passes.step
+}, L = {
+	downX: 166,
+	upX: 106,
+	depth: 140
+}, R = {
+	ground: M.y,
+	hybrid: F.y + F.height + 70
+}, or = {
+	x: (L.downX + L.upX) / 2,
+	y: {
+		ground: R.ground + L.depth + 28,
+		hybrid: R.hybrid + L.depth + 28
+	}
+}, z = (e, t, n, r, i, a, o = {}) => ({
 	item: e,
 	kind: t,
 	x: n,
@@ -1545,53 +1568,53 @@ var Bn = {
 	rotation: i,
 	tag: a,
 	...o
-}), Kn = [
-	V(1, "port", 270, 130, 0, [
+}), sr = [
+	z(1, "port", 270, 130, 0, [
 		-7,
 		-8,
 		"end"
 	]),
-	V(2, "port", 312, 130, 0, [
+	z(2, "port", 312, 130, 0, [
 		-7,
 		-8,
 		"end"
 	]),
-	V(3, "port", 630, 130, 0, [
+	z(3, "port", 630, 130, 0, [
 		-7,
 		-8,
 		"end"
 	]),
-	V(4, "port", 690, 130, 0, [
+	z(4, "port", 690, 130, 0, [
 		-7,
 		-8,
 		"end"
 	]),
-	V(5, "port", 722, 130, 0, [
+	z(5, "port", 722, 130, 0, [
 		-7,
 		-8,
 		"end"
 	], { dhw: "external" }),
-	V(6, "port", 748, 130, 0, [
+	z(6, "port", 748, 130, 0, [
 		-7,
 		-8,
 		"end"
 	], { dhw: "external" }),
-	V(47, "port", 440, 130, 0, [
+	z(47, "port", 440, 130, 0, [
 		-7,
 		-8,
 		"end"
 	], { dhw: "internal" }),
-	V(48, "port", 490, 130, 0, [
+	z(48, "port", 490, 130, 0, [
 		-7,
 		-8,
 		"end"
 	], { dhw: "internal" }),
-	V(49, "port", 540, 130, 0, [
+	z(49, "port", 540, 130, 0, [
 		-7,
 		-8,
 		"end"
 	], { dhw: "internal" }),
-	V(7, "exchanger", 572, 382, 0, [
+	z(7, "exchanger", 572, 382, 0, [
 		-26,
 		6,
 		"end"
@@ -1610,7 +1633,7 @@ var Bn = {
 			enters: "top"
 		}]
 	}),
-	V(8, "exchanger", 432, 382, 0, [
+	z(8, "exchanger", 432, 382, 0, [
 		-26,
 		6,
 		"end"
@@ -1629,7 +1652,7 @@ var Bn = {
 			reversible: !0
 		}]
 	}),
-	V(9, "exchanger", 373, 273, 0, [
+	z(9, "exchanger", 373, 273, 0, [
 		26,
 		-2,
 		"start"
@@ -1648,67 +1671,67 @@ var Bn = {
 			enters: "top"
 		}]
 	}),
-	V(11, "compressor", 510, 250, 0, [
+	z(11, "compressor", 510, 250, 0, [
 		0,
 		-26,
 		"middle"
 	]),
-	V(12, "expansion_valve", 527, 416, 0, [
+	z(12, "expansion_valve", 527, 416, 0, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(13, "filter_dryer", 487, 416, 0, [
+	z(13, "filter_dryer", 487, 416, 0, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(14, "inversion_valve", 430, 296, 0, [
+	z(14, "inversion_valve", 430, 296, 0, [
 		-16,
 		22,
 		"end"
 	], { feature: "active_cooling" }),
-	V(29, "probe_t", 542, 234, 0, [
+	z(29, "probe_t", 542, 234, 0, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(30, "probe_t", 430, 234, 0, [
+	z(30, "probe_t", 430, 234, 0, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(35, "transducer_p", 564, 234, 0, [
+	z(35, "transducer_p", 564, 234, 0, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(36, "transducer_p", 474, 234, 0, [
+	z(36, "transducer_p", 474, 234, 0, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(39, "pressure_switch", 586, 234, 0, [
+	z(39, "pressure_switch", 586, 234, 0, [
 		0,
 		-14,
 		"middle"
 	], { detail: "full" }),
-	V(40, "pressure_switch", 452, 234, 0, [
+	z(40, "pressure_switch", 452, 234, 0, [
 		0,
 		-14,
 		"middle"
 	], { detail: "full" }),
-	V(41, "service_outlet", 464, 406, 0, [
+	z(41, "service_outlet", 464, 406, 0, [
 		0,
 		28,
 		"middle"
 	], { detail: "full" }),
-	V(41, "service_outlet", 620, 270, 90, [
+	z(41, "service_outlet", 620, 270, 90, [
 		0,
 		14,
 		"middle"
 	], { detail: "full" }),
-	V(10, "exchanger", 520, 470, 0, [
+	z(10, "exchanger", 520, 470, 0, [
 		28,
 		4,
 		"start"
@@ -1727,17 +1750,17 @@ var Bn = {
 			enters: "top"
 		}]
 	}),
-	V(15, "pump", 385, 416, 0, [
+	z(15, "pump", 385, 416, 0, [
 		0,
 		-19,
 		"middle"
 	]),
-	V(16, "pump", 690, 300, 90, [
+	z(16, "pump", 690, 300, 90, [
 		19,
 		4,
 		"start"
 	]),
-	V(17, "pump", 340, 226, 90, [
+	z(17, "pump", 340, 226, 90, [
 		-14,
 		4,
 		"end"
@@ -1745,27 +1768,27 @@ var Bn = {
 		feature: "htr",
 		dhw: "any"
 	}),
-	V(18, "vessel", 725, 520, 0, [
+	z(18, "vessel", 725, 520, 0, [
 		-16,
 		4,
 		"end"
 	], { detail: "full" }),
-	V(19, "vessel", 368, 556, 0, [
+	z(19, "vessel", 368, 556, 0, [
 		-16,
 		4,
 		"end"
 	], { detail: "full" }),
-	V(20, "safety_valve", 741, 440, 90, [
+	z(20, "safety_valve", 741, 440, 90, [
 		0,
 		-14,
 		"middle"
 	], { detail: "full" }),
-	V(21, "safety_valve", 384, 520, 90, [
+	z(21, "safety_valve", 384, 520, 90, [
 		0,
 		-14,
 		"middle"
 	], { detail: "full" }),
-	V(22, "valve", 340, 256, 0, [
+	z(22, "valve", 340, 256, 0, [
 		-10,
 		4,
 		"end"
@@ -1773,17 +1796,17 @@ var Bn = {
 		feature: "htr",
 		dhw: "any"
 	}),
-	V(23, "drain_valve", 630, 572, 0, [
+	z(23, "drain_valve", 630, 572, 0, [
 		14,
 		4,
 		"start"
 	], { detail: "full" }),
-	V(24, "drain_valve", 404, 572, 0, [
+	z(24, "drain_valve", 404, 572, 0, [
 		14,
 		4,
 		"start"
 	], { detail: "full" }),
-	V(25, "drain_valve", 340, 318, 0, [
+	z(25, "drain_valve", 340, 318, 0, [
 		-10,
 		4,
 		"end"
@@ -1791,72 +1814,72 @@ var Bn = {
 		feature: "htr",
 		dhw: "any"
 	}),
-	V(26, "valve3", 270, 172, 270, [
+	z(26, "valve3", 270, 172, 270, [
 		-14,
 		22,
 		"end"
 	], { dhw: "any" }),
-	V(27, "valve3", 350, 416, 0, [
+	z(27, "valve3", 350, 416, 0, [
 		0,
 		-24,
 		"middle"
 	], { feature: "passive_cooling" }),
-	V(28, "valve3", 610, 416, 0, [
+	z(28, "valve3", 610, 416, 0, [
 		0,
 		-24,
 		"middle"
 	], { feature: "passive_cooling" }),
-	V(31, "probe_t", 614, 228, 270, [
+	z(31, "probe_t", 614, 228, 270, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(32, "probe_t", 674, 228, 270, [
+	z(32, "probe_t", 674, 228, 270, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(33, "probe_t", 254, 228, 270, [
+	z(33, "probe_t", 254, 228, 270, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(34, "probe_t", 296, 228, 270, [
+	z(34, "probe_t", 296, 228, 270, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(37, "transducer_p", 709, 440, 270, [
+	z(37, "transducer_p", 709, 440, 270, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(38, "transducer_p", 352, 520, 270, [
+	z(38, "transducer_p", 352, 520, 270, [
 		0,
 		-14,
 		"middle"
 	]),
-	V(44, "resistor", 270, 320, 90, [
+	z(44, "resistor", 270, 320, 90, [
 		12,
 		6,
 		"start"
 	], { feature: "backup_heater" }),
-	V(45, "thermostat", 286, 282, 90, [
+	z(45, "thermostat", 286, 282, 90, [
 		0,
 		-12,
 		"middle"
 	], { feature: "backup_heater" }),
-	V(50, "tank", B.x + B.width / 2, B.y + B.height / 2, 0, [
-		-80,
-		-17,
-		"start"
+	z(50, "tank", N.x + N.width / 2, N.y + N.height / 2, 0, [
+		-96,
+		-26,
+		"end"
 	], { dhw: "internal" }),
-	V(51, "coil", 495, 185, 0, [
-		0,
-		-25,
+	z(51, "coil", Qn.x, Qn.y, 0, [
+		-74,
+		3,
 		"middle"
 	], { dhw: "internal" }),
-	V(52, "service_outlet", 395, 162, 0, [
+	z(52, "service_outlet", 395, 162, 0, [
 		-8,
 		4,
 		"end"
@@ -1864,7 +1887,7 @@ var Bn = {
 		dhw: "internal",
 		detail: "full"
 	}),
-	V(53, "drain_valve", 599, 196, 270, [
+	z(53, "drain_valve", 599, 196, 270, [
 		0,
 		-12,
 		"middle"
@@ -1872,22 +1895,35 @@ var Bn = {
 		dhw: "internal",
 		detail: "full"
 	}),
-	V(54, "probe_t", 574, 171, 270, [
-		0,
-		-14,
-		"middle"
+	z(54, "probe_t", 574, 171, 270, [
+		26,
+		-11,
+		"start"
 	], { dhw: "internal" })
-], qn = (e) => e.split(" ").map((e) => {
+], cr = (e) => e.split(" ").map((e) => {
 	let [t, n] = e.split(",").map(Number);
 	return [t ?? 0, n ?? 0];
-}), H = (e, t, n, r, i = {}) => ({
+}), B = 85, V = 50, lr = 226, ur = 206, dr = 234, fr = 214, pr = 12, mr = F.coil.x + F.coil.width, hr = F.passes.step / 2, gr = (L.downX - L.upX) / 2;
+function _r(e) {
+	let { y0: t, step: n, count: r, left: i, right: a } = F.passes, o = [[mr, t]];
+	for (let e = 0; e < r; e += 1) {
+		let s = t + e * n;
+		e % 2 == 0 ? (e > 0 && o.push([a, s]), o.push([i, s])) : o.push([i, s], e === r - 1 ? [mr, s] : [a, s]);
+	}
+	return (e ? o.reverse() : o).map(([e, t]) => `${String(e)},${String(t)}`).join(" ");
+}
+function vr(e, t) {
+	let { downX: n, upX: r, depth: i } = L, [a, o] = [(n + r) / 2, e + i];
+	return t === "down" ? `${String(n)},${String(e)} ${String(n)},${String(o)} ${String(a)},${String(o)}` : `${String(a)},${String(o)} ${String(r)},${String(o)} ${String(r)},${String(e)}`;
+}
+var H = (...e) => e.map(([e, t]) => `${String(e)},${String(t)}`).join(" "), U = (e, t, n, r, i = {}) => ({
 	id: e,
 	circuit: t,
-	points: qn(n),
+	points: cr(n),
 	temperatureRole: r,
 	direction: 1,
 	...i
-}), U = ["production_dg1"], W = ["production_dg1", "production_dhw"], G = "production.outlet_temperature", K = "production.return_temperature", q = "production.pump", J = "brine.inlet_temperature", Y = "brine.outlet_temperature", X = "brine.pump", Jn = "compressor.discharge_temperature", Yn = "compressor.suction_temperature", Xn = "refrigerant.condensation_temperature", Zn = "refrigerant.evaporation_temperature", Z = "compressor.percentage", Q = "dhw.temperature", Qn = "source.air_unit_outlet_temperature", $n = [
+}), yr = ["production_dg1"], W = ["production_dg1", "production_dhw"], G = "production.outlet_temperature", K = "production.return_temperature", q = "production.pump", J = "brine.inlet_temperature", Y = "brine.outlet_temperature", X = "brine.pump", br = "compressor.discharge_temperature", xr = "compressor.suction_temperature", Sr = "refrigerant.condensation_temperature", Cr = "refrigerant.evaporation_temperature", Z = "compressor.percentage", Q = "dhw.temperature", wr = "source.air_unit_outlet_temperature", Tr = [
 	"dhw_sup_b",
 	"dhw_sup_c",
 	"dhw_ret_b",
@@ -1895,256 +1931,279 @@ var Bn = {
 	"dhw_ext_in",
 	"dhw_ext_coil",
 	"dhw_ext_out"
-], er = [
-	H("p1_stub", U, "270,130 270,118", G, { stub: !0 }),
-	H("p2_stub", U, "312,118 312,130", K, { stub: !0 }),
-	H("p1_up", U, "270,160 270,130", G, {
+], Er = [
+	U("p1_stub", yr, "270,130 270,118", G, { stub: !0 }),
+	U("p2_stub", yr, "312,118 312,130", K, { stub: !0 }),
+	U("p1_up", yr, "270,160 270,130", G, {
 		dhw: "any",
 		speedRole: q
 	}),
-	H("p1_direct", U, "270,184 270,130", G, {
+	U("p1_direct", yr, "270,184 270,130", G, {
 		dhw: "none",
 		speedRole: q
 	}),
-	H("p2_in", U, "312,130 312,198", K, { speedRole: q }),
-	H("prod_44_26", W, "270,292 270,184", G, { speedRole: q }),
-	H("prod_bypass44", W, "270,348 270,292", G, {
+	U("p2_in", yr, "312,130 312,198", K, { speedRole: q }),
+	U("prod_44_26", W, "270,292 270,184", G, { speedRole: q }),
+	U("prod_bypass44", W, "270,348 270,292", G, {
 		bypass: "backup_heater",
 		speedRole: q
 	}),
-	H("prod_8_44", W, "420,348 270,348", G, { speedRole: q }),
-	H("prod_15_8", W, "397,416 420,416", K, { speedRole: q }),
-	H("trunk", W, "312,198 312,416", K, { speedRole: q }),
-	H("prod_27_in", W, "312,416 338,416", K, {
+	U("prod_8_44", W, "420,348 270,348", G, { speedRole: q }),
+	U("prod_15_8", W, "397,416 420,416", K, { speedRole: q }),
+	U("trunk", W, "312,198 312,416", K, { speedRole: q }),
+	U("prod_27_in", W, "312,416 338,416", K, {
 		through: "passive_cooling",
 		speedRole: q,
 		onlyWhen: { valves2728: "closed" }
 	}),
-	H("prod_27_15", W, "362,416 373,416", K, {
+	U("prod_27_15", W, "362,416 373,416", K, {
 		through: "passive_cooling",
 		speedRole: q
 	}),
-	H("prod_bypass27", W, "312,416 373,416", K, {
+	U("prod_bypass27", W, "312,416 373,416", K, {
 		bypass: "passive_cooling",
 		speedRole: q
 	}),
-	H("prod_10_in", ["exchanger_10"], "312,416 312,492 508,492", K, {
+	U("prod_10_in", ["exchanger_10"], "312,416 312,492 508,492", K, {
 		feature: "passive_cooling",
 		speedRole: q
 	}),
-	H("prod_10_out", ["exchanger_10"], "508,448 350,448 350,428", G, {
+	U("prod_10_out", ["exchanger_10"], "508,448 350,448 350,428", G, {
 		feature: "passive_cooling",
 		speedRole: q
 	}),
-	H("prod_tap_a", W, "368,416 368,520", K, { stub: !0 }),
-	H("prod_tap_b", W, "368,520 368,544", K, {
+	U("prod_tap_a", W, "368,416 368,520", K, { stub: !0 }),
+	U("prod_tap_b", W, "368,520 368,544", K, {
 		stub: !0,
 		detail: "full"
 	}),
-	H("prod_drain", W, "404,416 404,563", K, {
+	U("prod_drain", W, "404,416 404,563", K, {
 		stub: !0,
 		detail: "full"
 	}),
-	H("dhw_sup_a", ["production_dhw"], "282,172 361,172", G, {
+	U("dhw_sup_a", ["production_dhw"], "282,172 361,172", G, {
 		dhw: "any",
 		speedRole: q
 	}),
-	H("dhw_sup_b", ["dhw_coil"], "361,172 420,172", G, {
+	U("dhw_sup_b", ["dhw_coil"], "361,172 420,172", G, {
 		dhw: "any",
 		speedRole: q
 	}),
-	H("dhw_sup_c", ["dhw_coil"], "420,172 722,172 722,130", G, {
+	U("dhw_sup_c", ["dhw_coil"], "420,172 722,172 722,130", G, {
 		dhw: "external",
 		speedRole: q
 	}),
-	H("dhw_ret_c", ["dhw_coil"], "748,130 748,198 420,198", K, {
+	U("dhw_ret_c", ["dhw_coil"], "748,130 748,198 420,198", K, {
 		dhw: "external",
 		speedRole: q
 	}),
-	H("dhw_ret_b", ["dhw_coil"], "420,198 340,198", K, {
+	U("dhw_ret_b", ["dhw_coil"], "420,198 340,198", K, {
 		dhw: "any",
 		speedRole: q
 	}),
-	H("dhw_ret_a", ["production_dhw"], "340,198 312,198", K, {
+	U("dhw_ret_a", ["production_dhw"], "340,198 312,198", K, {
 		dhw: "any",
 		speedRole: q
 	}),
-	H("htr_in", ["htr"], "340,198 340,214", Q, {
+	U("htr_in", ["htr"], "340,198 340,214", Q, {
 		feature: "htr",
 		dhw: "any"
 	}),
-	H("htr_pump", ["htr"], "340,238 340,247", Q, {
+	U("htr_pump", ["htr"], "340,238 340,247", Q, {
 		feature: "htr",
 		dhw: "any"
 	}),
-	H("htr_to_9", ["htr"], "340,265 340,296 361,296", Q, {
+	U("htr_to_9", ["htr"], "340,265 340,296 361,296", Q, {
 		feature: "htr",
 		dhw: "any"
 	}),
-	H("htr_drain", ["htr"], "340,296 340,309", Q, {
+	U("htr_drain", ["htr"], "340,296 340,309", Q, {
 		feature: "htr",
 		dhw: "any",
 		stub: !0
 	}),
-	H("htr_riser", ["htr"], "361,250 361,172", Q, {
+	U("htr_riser", ["htr"], "361,250 361,172", Q, {
 		feature: "htr",
 		dhw: "any"
 	}),
-	H("dhw_ext_in", ["dhw_coil"], "722,130 722,50 940,50 940,212", G, {
+	U("dhw_ext_in", ["dhw_coil"], `722,130 722,50 ${String($n + nr)},50 ${String($n + nr)},${String(er)}`, G, {
 		dhw: "external",
 		speedRole: q
 	}),
-	H("dhw_ext_coil", ["dhw_coil"], "940,212 840,296", G, {
+	U("dhw_ext_coil", ["dhw_coil"], `${String($n + nr)},${String(er)} ${String($n - nr)},${String(tr)}`, G, {
 		dhw: "external",
 		speedRole: q,
 		shape: {
 			kind: "helix",
-			cx: 890,
-			top: 212,
-			bottom: 296,
-			rx: 50,
+			cx: $n,
+			top: er,
+			bottom: tr,
+			rx: nr,
 			turns: 4.5
 		}
 	}),
-	H("dhw_ext_out", ["dhw_coil"], "840,296 820,296 820,85 748,85 748,130", K, {
+	U("dhw_ext_out", ["dhw_coil"], `${String($n - nr)},${String(tr)} ${String(rr)},${String(tr)} ${String(rr)},85 748,85 748,130`, K, {
 		dhw: "external",
 		speedRole: q
 	}),
-	H("tap_47", ["dhw_coil"], "440,118 440,138", Q, {
+	U("tap_47", ["dhw_coil"], "440,118 440,138", Q, {
 		dhw: "internal",
 		stub: !0
 	}),
-	H("tap_48", ["dhw_coil"], "490,138 490,118", Q, {
+	U("tap_48", ["dhw_coil"], "490,138 490,118", Q, {
 		dhw: "internal",
 		stub: !0
 	}),
-	H("tap_49", ["dhw_coil"], "540,118 540,138", Q, {
+	U("tap_49", ["dhw_coil"], "540,118 540,138", Q, {
 		dhw: "internal",
 		stub: !0
 	}),
-	H("src_out", ["brine"], "630,130 630,85 150,85", Y, { speedRole: X }),
-	H("src_in", ["brine"], "20,50 690,50 690,130", J, { speedRole: X }),
-	H("src_air_feed", ["brine"], "150,85 150,150", Y, {
-		source: ["air", "hybrid"],
-		speedRole: X
-	}),
-	H("src_air_coil", ["brine"], "150,150 70,150 70,168 150,168 150,186 70,186", Y, {
-		source: ["air", "hybrid"],
-		speedRole: X,
-		bend: 9
-	}),
-	H("src_air_exit", ["brine"], "70,186 20,186 20,50", Qn, {
+	U("src_out", ["brine"], H([630, 130], [630, B], [dr, B]), Y, { speedRole: X }),
+	U("src_in", ["brine"], H([fr, V], [690, V], [690, 130]), J, { speedRole: X }),
+	U("src_air_feed", ["brine"], H([dr, B], [lr, B], [lr, I.bottom], [mr, I.bottom]), Y, {
 		source: ["air"],
 		speedRole: X
 	}),
-	H("src_gnd_feed", ["brine"], "150,85 150,210", Y, {
+	U("src_air_coil", ["brine"], _r(!0), Y, {
+		source: ["air"],
+		speedRole: X,
+		bend: hr
+	}),
+	U("src_air_exit", ["brine"], H([mr, I.top], [ur, I.top], [ur, V], [fr, V]), wr, {
+		source: ["air"],
+		speedRole: X
+	}),
+	U("src_gnd_feed", ["brine"], H([dr, B], [L.downX, B], [L.downX, R.ground]), Y, {
 		source: ["ground"],
 		speedRole: X
 	}),
-	H("src_gnd_loop", ["brine"], "150,210 60,210 60,250 150,250 150,290 20,290", Y, {
+	U("src_gnd_down", ["brine"], vr(R.ground, "down"), Y, {
+		source: ["ground"],
+		speedRole: X,
+		roundEnd: !0,
+		bend: gr
+	}),
+	U("src_gnd_up", ["brine"], vr(R.ground, "up"), J, {
+		source: ["ground"],
+		speedRole: X,
+		bend: gr
+	}),
+	U("src_gnd_exit", ["brine"], H([L.upX, R.ground], [L.upX, V], [fr, V]), J, {
 		source: ["ground"],
 		speedRole: X
 	}),
-	H("src_gnd_exit", ["brine"], "20,290 20,50", J, {
-		source: ["ground"],
-		speedRole: X
-	}),
-	H("src_hyb_link", ["brine"], "70,186 29,186 29,390", Qn, {
+	U("src_hyb_feed", ["brine"], H([dr, B], [lr, B], [lr, I.top], [mr, I.top]), Y, {
 		source: ["hybrid"],
 		speedRole: X
 	}),
-	H("src_hyb_loop", ["brine"], "29,390 150,390 150,420 60,420 60,450 150,450 150,480 20,480", Qn, {
+	U("src_hyb_coil", ["brine"], _r(!1), Y, {
+		source: ["hybrid"],
+		speedRole: X,
+		bend: hr
+	}),
+	U("src_hyb_link", ["brine"], H([mr, I.bottom], [L.downX, I.bottom], [L.downX, R.hybrid]), wr, {
 		source: ["hybrid"],
 		speedRole: X
 	}),
-	H("src_hyb_exit", ["brine"], "20,480 20,50", J, {
+	U("src_hyb_down", ["brine"], vr(R.hybrid, "down"), wr, {
+		source: ["hybrid"],
+		speedRole: X,
+		roundEnd: !0,
+		bend: gr
+	}),
+	U("src_hyb_up", ["brine"], vr(R.hybrid, "up"), J, {
+		source: ["hybrid"],
+		speedRole: X,
+		bend: gr
+	}),
+	U("src_hyb_exit", ["brine"], H([L.upX, R.hybrid], [L.upX, R.hybrid - 15], [pr, R.hybrid - 15], [pr, V], [fr, V]), J, {
 		source: ["hybrid"],
 		speedRole: X
 	}),
-	H("ref_discharge", ["refrigerant"], "496,250 385,250", Jn, {
+	U("ref_discharge", ["refrigerant"], "496,250 385,250", br, {
 		through: "htr",
 		speedRole: Z
 	}),
-	H("ref_9_14", ["refrigerant"], "385,296 416,296", Jn, {
+	U("ref_9_14", ["refrigerant"], "385,296 416,296", br, {
 		through: "htr",
 		speedRole: Z
 	}),
-	H("ref_discharge_direct", ["refrigerant"], "496,250 416,250 416,296", Jn, {
+	U("ref_discharge_direct", ["refrigerant"], "496,250 416,250 416,296", br, {
 		bypass: "htr",
 		speedRole: Z
 	}),
-	H("ref_14_8", ["refrigerant"], "444,306 444,348", Jn, {
+	U("ref_14_8", ["refrigerant"], "444,306 444,348", br, {
 		through: "active_cooling",
 		reversible: !0,
 		speedRole: Z
 	}),
-	H("ref_7_14", ["refrigerant"], "560,348 560,296 444,296", Yn, {
+	U("ref_7_14", ["refrigerant"], "560,348 560,296 444,296", xr, {
 		through: "active_cooling",
 		reversible: !0,
 		speedRole: Z
 	}),
-	H("ref_suction", ["refrigerant"], "444,286 610,286 610,250 524,250", Yn, {
+	U("ref_suction", ["refrigerant"], "444,286 610,286 610,250 524,250", xr, {
 		through: "active_cooling",
 		speedRole: Z
 	}),
-	H("ref_direct_8", ["refrigerant"], "416,296 444,296 444,348", Jn, {
+	U("ref_direct_8", ["refrigerant"], "416,296 444,296 444,348", br, {
 		bypass: "active_cooling",
 		speedRole: Z
 	}),
-	H("ref_direct_suction", ["refrigerant"], "560,348 560,286 610,286 610,250 524,250", Yn, {
+	U("ref_direct_suction", ["refrigerant"], "560,348 560,286 610,286 610,250 524,250", xr, {
 		bypass: "active_cooling",
 		speedRole: Z
 	}),
-	H("ref_8_13", ["refrigerant"], "444,416 473,416", Xn, {
+	U("ref_8_13", ["refrigerant"], "444,416 473,416", Sr, {
 		reversible: !0,
 		speedRole: Z
 	}),
-	H("ref_13_12", ["refrigerant"], "501,416 515,416", Xn, {
+	U("ref_13_12", ["refrigerant"], "501,416 515,416", Sr, {
 		reversible: !0,
 		speedRole: Z
 	}),
-	H("ref_12_7", ["refrigerant"], "539,416 560,416", Zn, {
+	U("ref_12_7", ["refrigerant"], "539,416 560,416", Cr, {
 		reversible: !0,
 		speedRole: Z
 	}),
-	H("ln4_a", ["brine"], "690,130 690,288", J, { speedRole: X }),
-	H("ln4_b", ["brine"], "690,312 690,348", J, { speedRole: X }),
-	H("br_feed7", ["brine"], "690,348 584,348", J, {
+	U("ln4_a", ["brine"], "690,130 690,288", J, { speedRole: X }),
+	U("ln4_b", ["brine"], "690,312 690,348", J, { speedRole: X }),
+	U("br_feed7", ["brine"], "690,348 584,348", J, {
 		speedRole: X,
 		onlyWhen: { valves2728: "closed" }
 	}),
-	H("brine_7_28", ["brine"], "584,416 598,416", Y, {
+	U("brine_7_28", ["brine"], "584,416 598,416", Y, {
 		through: "passive_cooling",
 		speedRole: X,
 		onlyWhen: { valves2728: "closed" }
 	}),
-	H("brine_28_ln3", ["brine"], "622,416 630,416", Y, {
+	U("brine_28_ln3", ["brine"], "622,416 630,416", Y, {
 		through: "passive_cooling",
 		speedRole: X
 	}),
-	H("brine_bypass28", ["brine"], "584,416 630,416", Y, {
+	U("brine_bypass28", ["brine"], "584,416 630,416", Y, {
 		bypass: "passive_cooling",
 		speedRole: X
 	}),
-	H("ln3", ["brine"], "630,416 630,130", Y, { speedRole: X }),
-	H("br_10_in", ["exchanger_10"], "690,348 690,448 532,448", J, {
+	U("ln3", ["brine"], "630,416 630,130", Y, { speedRole: X }),
+	U("br_10_in", ["exchanger_10"], "690,348 690,448 532,448", J, {
 		feature: "passive_cooling",
 		speedRole: X
 	}),
-	H("br_10_28", ["exchanger_10"], "532,492 610,492 610,428", Y, {
+	U("br_10_28", ["exchanger_10"], "532,492 610,492 610,428", Y, {
 		feature: "passive_cooling",
 		speedRole: X
 	}),
-	H("brine_tap_a", ["brine"], "690,270 725,270 725,440", J, { stub: !0 }),
-	H("brine_tap_b", ["brine"], "725,440 725,508", J, {
+	U("brine_tap_a", ["brine"], "690,270 725,270 725,440", J, { stub: !0 }),
+	U("brine_tap_b", ["brine"], "725,440 725,508", J, {
 		stub: !0,
 		detail: "full"
 	}),
-	H("brine_drain", ["brine"], "630,416 630,563", Y, {
+	U("brine_drain", ["brine"], "630,416 630,563", Y, {
 		stub: !0,
 		detail: "full"
 	})
-], tr = [
+], Dr = [
 	{
 		over: "dhw_sup_a",
 		under: "p2_in",
@@ -2215,7 +2274,7 @@ var Bn = {
 		under: "prod_drain",
 		at: [404, 492]
 	}
-], nr = [
+], Or = [
 	{
 		key: "dg1",
 		x: 291,
@@ -2232,27 +2291,27 @@ var Bn = {
 		y: 112,
 		dhw: "external"
 	}
-], rr = (e, t) => t === "htr" && e.dhw === "none" ? !1 : e.features[t], ir = (e, t) => e === "any" ? t !== "none" : e === t;
-function ar(e, t) {
-	if (e.detail === "full" && t.detail !== "full" || e.source !== void 0 && !e.source.includes(t.source) || e.dhw !== void 0 && !ir(e.dhw, t.dhw) || e.bypass !== void 0 && rr(t, e.bypass) !== !1 || e.through !== void 0 && rr(t, e.through) === !1) return "hidden";
+], kr = (e, t) => t === "htr" && e.dhw === "none" ? !1 : e.features[t], Ar = (e, t) => e === "any" ? t !== "none" : e === t;
+function jr(e, t) {
+	if (e.detail === "full" && t.detail !== "full" || e.source !== void 0 && !e.source.includes(t.source) || e.dhw !== void 0 && !Ar(e.dhw, t.dhw) || e.bypass !== void 0 && kr(t, e.bypass) !== !1 || e.through !== void 0 && kr(t, e.through) === !1) return "hidden";
 	if (e.feature !== void 0) {
-		let n = rr(t, e.feature);
+		let n = kr(t, e.feature);
 		if (n === !1) return "hidden";
 		if (n === "unused") return "muted";
 	}
 	return "normal";
 }
-function or(e, t) {
+function Mr(e, t) {
 	return e.flatMap((e) => {
-		let n = ar(e, t);
+		let n = jr(e, t);
 		return n === "hidden" ? [] : [{
 			part: e,
 			state: n
 		}];
 	});
 }
-var sr = (e) => or(Kn, e), cr = (e) => or(er, e), lr = (e, t) => (e.onlyWhen === void 0 || e.onlyWhen.valves2728 === t.valves2728) && e.circuit.some((e) => t.active.has(e)), ur = .35;
-function dr(e) {
+var Nr = (e) => Mr(sr, e), Pr = (e) => Mr(Er, e), Fr = (e, t) => (e.onlyWhen === void 0 || e.onlyWhen.valves2728 === t.valves2728) && e.circuit.some((e) => t.active.has(e)), Ir = .35;
+function Lr(e) {
 	let t = Math.max(1, Math.round(e.turns * 2)), n = (e.bottom - e.top) / t, r = 4 / 3 * Math.max(3, n);
 	return Array.from({ length: t }, (i, a) => {
 		let o = a % 2 == 0, [s, c] = o ? [e.cx + e.rx, e.cx - e.rx] : [e.cx - e.rx, e.cx + e.rx], l = e.top + a * n, u = l + n, d = o ? r : -r, f = a === t - 1;
@@ -2267,46 +2326,47 @@ function dr(e) {
 		};
 	});
 }
-function fr(e) {
+var Rr = (e) => [...e.filter((e) => !e.front), ...e.filter((e) => e.front)];
+function zr(e) {
 	let t = (e) => String(Math.round(e * 100) / 100);
-	return dr(e).map(({ front: e, curve: [n, r, i, a] }) => ({
+	return Lr(e).map(({ front: e, curve: [n, r, i, a] }) => ({
 		front: e,
 		d: `M${t(n[0])} ${t(n[1])} C${t(r[0])} ${t(r[1])} ${t(i[0])} ${t(i[1])} ${t(a[0])} ${t(a[1])}`
 	}));
 }
-function pr(e, t) {
-	let n = hr(e, 0), r = [`M${String(n[0])} ${String(n[1])}`];
+function Br(e, t) {
+	let n = Hr(e, 0), r = [`M${String(n[0])} ${String(n[1])}`];
 	for (let n = 1; n < e.length; n += 1) {
 		let [i, a, o] = [
-			hr(e, n - 1),
-			hr(e, n),
+			Hr(e, n - 1),
+			Hr(e, n),
 			e[n + 1]
 		];
 		if (o === void 0) {
 			r.push(`L${String(a[0])} ${String(a[1])}`);
 			break;
 		}
-		let s = Math.abs(a[0] - i[0]) + Math.abs(a[1] - i[1]), c = Math.abs(o[0] - a[0]) + Math.abs(o[1] - a[1]), l = Math.min(t, s / 2, c / 2), [u, d] = [Math.sign(a[0] - i[0]), Math.sign(a[1] - i[1])], [f, p] = [Math.sign(o[0] - a[0]), Math.sign(o[1] - a[1])], m = +(u * p - d * f > 0);
+		let s = Math.abs(a[0] - i[0]) + Math.abs(a[1] - i[1]), c = Math.abs(o[0] - a[0]) + Math.abs(o[1] - a[1]), l = Math.min(t, n === 1 ? s : s / 2, n === e.length - 2 ? c : c / 2), [u, d] = [Math.sign(a[0] - i[0]), Math.sign(a[1] - i[1])], [f, p] = [Math.sign(o[0] - a[0]), Math.sign(o[1] - a[1])], m = +(u * p - d * f > 0);
 		r.push(`L${String(a[0] - u * l)} ${String(a[1] - d * l)} A${String(l)} ${String(l)} 0 0 ${String(m)} ${String(a[0] + f * l)} ${String(a[1] + p * l)}`);
 	}
 	return r.join(" ");
 }
-var mr = (e, t) => e[0] === t[0] && e[1] === t[1];
-function hr(e, t) {
+var Vr = (e, t) => e[0] === t[0] && e[1] === t[1];
+function Hr(e, t) {
 	let n = e[t];
 	if (n === void 0) throw Error(`No point ${String(t)}`);
 	return n;
 }
-var gr = (e) => e.slice(1).map((t, n) => [hr(e, n), t]), _r = (e, t, n) => e >= Math.min(t, n) && e <= Math.max(t, n);
-function vr(e, t = []) {
+var Ur = (e) => e.slice(1).map((t, n) => [Hr(e, n), t]), Wr = (e, t, n) => e >= Math.min(t, n) && e <= Math.max(t, n);
+function Gr(e, t = []) {
 	let n = [], r, i = (e) => {
 		n.push(r === void 0 ? `M${String(e[0])} ${String(e[1])}` : `L${String(e[0])} ${String(e[1])}`), r = e;
 	}, a = (e) => {
 		n.push(`M${String(e[0])} ${String(e[1])}`), r = e;
 	};
-	i(hr(e, 0));
-	for (let [n, r] of gr(e)) {
-		let e = Math.sign(r[0] - n[0]), o = Math.sign(r[1] - n[1]), s = Math.abs(r[0] - n[0]) + Math.abs(r[1] - n[1]), c = t.filter((e) => yr(e, n, r) && !mr(e, n) && !mr(e, r)).sort((e, t) => Math.abs(e[0] - n[0]) + Math.abs(e[1] - n[1]) - (Math.abs(t[0] - n[0]) + Math.abs(t[1] - n[1])));
+	i(Hr(e, 0));
+	for (let [n, r] of Ur(e)) {
+		let e = Math.sign(r[0] - n[0]), o = Math.sign(r[1] - n[1]), s = Math.abs(r[0] - n[0]) + Math.abs(r[1] - n[1]), c = t.filter((e) => Kr(e, n, r) && !Vr(e, n) && !Vr(e, r)).sort((e, t) => Math.abs(e[0] - n[0]) + Math.abs(e[1] - n[1]) - (Math.abs(t[0] - n[0]) + Math.abs(t[1] - n[1])));
 		for (let t of c) {
 			let c = Math.abs(t[0] - n[0]) + Math.abs(t[1] - n[1]);
 			c > 7 && i([t[0] - e * 7, t[1] - o * 7]), a(s - c > 7 ? [t[0] + e * 7, t[1] + o * 7] : r);
@@ -2315,44 +2375,44 @@ function vr(e, t = []) {
 	}
 	return n.join(" ");
 }
-var yr = (e, t, n) => t[0] === n[0] && e[0] === t[0] && _r(e[1], t[1], n[1]) || t[1] === n[1] && e[1] === t[1] && _r(e[0], t[0], n[0]);
-function br(e, t) {
-	return tr.filter((n) => n.under === e && t.has(n.over) && t.has(n.under)).map((e) => e.at);
+var Kr = (e, t, n) => t[0] === n[0] && e[0] === t[0] && Wr(e[1], t[1], n[1]) || t[1] === n[1] && e[1] === t[1] && Wr(e[0], t[0], n[0]);
+function qr(e, t) {
+	return Dr.filter((n) => n.under === e && t.has(n.over) && t.has(n.under)).map((e) => e.at);
 }
 // src/diagram/pipes.ts
-var xr = 1.2, Sr = .6, Cr = [
+var Jr = 1.2, Yr = .6, Xr = [
 	"tap_47",
 	"tap_48",
 	"tap_49"
-], wr = [
+], Zr = [
 	"prod_27_15",
 	"prod_15_8",
 	"prod_tap_a",
 	"prod_tap_b",
 	"prod_drain"
 ];
-function Tr(e) {
-	if (e !== void 0 && e > 0) return Math.min(8, Math.max(Sr, xr * 100 / e));
+function Qr(e) {
+	if (e !== void 0 && e > 0) return Math.min(8, Math.max(Yr, Jr * 100 / e));
 }
-var Er = {
+var $r = {
 	"compressor.discharge_temperature": "compressor.suction_temperature",
 	"compressor.suction_temperature": "compressor.discharge_temperature",
 	"refrigerant.condensation_temperature": "refrigerant.evaporation_temperature",
 	"refrigerant.evaporation_temperature": "refrigerant.condensation_temperature"
-}, Dr = (e, t) => $n.includes(e.id) && Or(t), Or = (e) => e.active.has("htr") && !e.active.has("production_dhw");
-function kr(e, t) {
-	return Dr(e, t.circuits) ? "dhw.temperature" : e.reversible === !0 && t.mode === "active_cooling" ? Er[e.temperatureRole] ?? e.temperatureRole : (t.mode === "passive_cooling" || t.mode === "defrost") && t.circuits.valves2728 === "exchanger" && wr.includes(e.id) ? "production.outlet_temperature" : e.temperatureRole;
+}, ei = (e, t) => Tr.includes(e.id) && ti(t), ti = (e) => e.active.has("htr") && !e.active.has("production_dhw");
+function ni(e, t) {
+	return ei(e, t.circuits) ? "dhw.temperature" : e.reversible === !0 && t.mode === "active_cooling" ? $r[e.temperatureRole] ?? e.temperatureRole : (t.mode === "passive_cooling" || t.mode === "defrost") && t.circuits.valves2728 === "exchanger" && Zr.includes(e.id) ? "production.outlet_temperature" : e.temperatureRole;
 }
-function Ar(e, t, n) {
+function ri(e, t, n) {
 	return t === "muted" && n === "defrost" && e.feature === "passive_cooling" ? "normal" : t;
 }
-var jr = (e, t) => {
+var ii = (e, t) => {
 	let n = e[t];
 	return typeof n == "number" ? n : void 0;
 };
-function Mr(e, t, n) {
-	let { mode: r, circuits: i, readings: a, stops: o } = n, s = Cr.includes(e.id), c = Ar(e, t, r), l = s || lr(e, i), u = jr(a, kr(e, n)), d = c === "muted" || !l || u === void 0, f = e.direction === -1 != (e.reversible === !0 && r === "active_cooling"), p = {
-		color: d ? Ht : Jt(u, o),
+function ai(e, t, n) {
+	let { mode: r, circuits: i, readings: a, stops: o } = n, s = Xr.includes(e.id), c = ri(e, t, r), l = s || Fr(e, i), u = ii(a, ni(e, n)), d = c === "muted" || !l || u === void 0, f = e.direction === -1 != (e.reversible === !0 && r === "active_cooling"), p = {
+		color: d ? Jt : rn(u, o),
 		muted: d,
 		reversed: f
 	};
@@ -2360,7 +2420,7 @@ function Mr(e, t, n) {
 		...p,
 		animated: !1
 	};
-	let m = Dr(e, i) || e.speedRole === void 0 && e.circuit.includes("htr") ? 3 : e.speedRole === void 0 ? void 0 : Tr(jr(a, e.speedRole));
+	let m = ei(e, i) || e.speedRole === void 0 && e.circuit.includes("htr") ? 3 : e.speedRole === void 0 ? void 0 : Qr(ii(a, e.speedRole));
 	return m === void 0 ? {
 		...p,
 		animated: !1
@@ -2370,65 +2430,66 @@ function Mr(e, t, n) {
 		duration: m
 	};
 }
-var Nr = (e) => Jt(jr(e.readings, "dhw.temperature"), e.stops);
-function Pr(e) {
+var oi = (e) => rn(ii(e.readings, "dhw.temperature"), e.stops);
+function si(e) {
 	let { circuits: t, readings: n, stops: r } = e;
-	return Or(t) ? Jt(jr(n, "dhw.temperature"), r) : t.active.has("dhw_coil") ? Jt(jr(n, "production.outlet_temperature"), r) : Ht;
+	return ti(t) ? rn(ii(n, "dhw.temperature"), r) : t.active.has("dhw_coil") ? rn(ii(n, "production.outlet_temperature"), r) : Jt;
 }
 // src/diagram/symbols.ts
-var Fr = .55;
-function Ir(e, t, n) {
+var ci = .55;
+function li(e, t, n) {
 	let r = -t - 9, i = t + 9;
-	return w`<path class="exchanger-fill" data-half=${e} d=${e === "left" ? `M0 ${String(r)} H-16 A4 4 0 0 0 -20 ${String(r + 4)} V${String(i - 4)} A4 4 0 0 0 -16 ${String(i)} H0 Z` : `M0 ${String(r)} H16 A4 4 0 0 1 20 ${String(r + 4)} V${String(i - 4)} A4 4 0 0 1 16 ${String(i)} H0 Z`} fill=${n} fill-opacity=${Fr} stroke="none" />`;
+	return x`<path class="exchanger-fill" data-half=${e} d=${e === "left" ? `M0 ${String(r)} H-16 A4 4 0 0 0 -20 ${String(r + 4)} V${String(i - 4)} A4 4 0 0 0 -16 ${String(i)} H0 Z` : `M0 ${String(r)} H16 A4 4 0 0 1 20 ${String(r + 4)} V${String(i - 4)} A4 4 0 0 1 16 ${String(i)} H0 Z`} fill=${n} fill-opacity=${ci} stroke="none" />`;
 }
-var Lr = (e, t) => w`<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(${-t})">${e}</text>`;
-function Rr() {
-	return w`<g transform="matrix(0 -1 1 0 0 0)">${fr({
-		kind: "helix",
-		cx: 2,
-		top: -60,
-		bottom: 60,
-		rx: 11,
-		turns: 5.5
-	}).map((e) => w`<path data-half=${e.front ? "front" : "back"} d=${e.d} opacity=${e.front ? E : ur} />`)}</g><path d="M-75 -13 H-60 M60 9 V13 H-75" />`;
+var ui = (e, t) => x`<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(${-t})">${e}</text>`, di = {
+	kind: "helix",
+	cx: 2,
+	top: -60,
+	bottom: 60,
+	rx: 11,
+	turns: 7.5
+};
+function fi() {
+	let e = N.x + 2 - Qn.x;
+	return x`<g transform="matrix(0 -1 1 0 0 0)">${Rr(zr(di)).map((e) => x`<path data-half=${e.front ? "front" : "back"} stroke-linecap=${e.front ? "round" : "butt"} d=${e.d} opacity=${e.front ? C : Ir} />`)}</g><path stroke-width="3" d="M${e} -13 H-60 M60 9 V13 H${e}" />`;
 }
-var zr = (e, t) => w`<path d="M0 ${t} V${e}" />`, Br = (e, t) => w`<path d="${e}" fill=${t ? "currentColor" : "none"} />`;
-function Vr(e, t) {
+var pi = "M9 -10.7 L-13 -3 M9 10.7 L-13 3", mi = (e, t) => x`<path d="M0 ${t} V${e}" />`, hi = (e, t) => x`<path d="${e}" fill=${t ? "currentColor" : "none"} />`;
+function gi(e, t) {
 	let n = t.rotation ?? 0;
 	switch (e) {
-		case "pump": return w`<circle r="12" /><path d="M-5 -7 V7 L8 0 Z" fill="currentColor" />`;
+		case "pump": return x`<circle r="12" /><path d="M-5 -7 V7 L8 0 Z" fill="currentColor" />`;
 		case "valve3": {
 			let e = t.open ?? ["l", "r"];
-			return w`${Br("M-12 -6 V6 L0 0 Z", e.includes("l"))}${Br("M12 -6 V6 L0 0 Z", e.includes("r"))}${Br("M-6 12 H6 L0 0 Z", e.includes("d"))}<rect x="-4" y="-21" width="8" height="8" /><path d="M0 -13 V-8" />`;
+			return x`${hi("M-12 -6 V6 L0 0 Z", e.includes("l"))}${hi("M12 -6 V6 L0 0 Z", e.includes("r"))}${hi("M-6 12 H6 L0 0 Z", e.includes("d"))}<rect x="-4" y="-21" width="8" height="8" /><path d="M0 -13 V-8" />`;
 		}
-		case "inversion_valve": return w`<rect x="-10" y="-14" width="20" height="28" rx="3" /><path d="M-14 0 H-10 M10 -10 H14 M10 0 H14 M10 10 H14" />${t.reversed === !0 ? w`<path d="M-14 0 H14 M14 10 H5 V-10 H14" />` : w`<path d="M-14 0 H-5 V10 H14 M14 0 H5 V-10 H14" />`}`;
-		case "probe_t": return w`<circle r="9" />${zr(16, 9)}${Lr("T", n)}`;
-		case "transducer_p": return w`<circle r="9" />${zr(16, 9)}${Lr("P", n)}`;
-		case "pressure_switch": return w`<rect x="-7" y="-7" width="14" height="14" />${zr(16, 7)}${Lr("P", n)}`;
-		case "thermostat": return w`<rect x="-7" y="-7" width="14" height="14" />${zr(16, 7)}${Lr("T", n)}`;
+		case "inversion_valve": return x`<rect x="-10" y="-14" width="20" height="28" rx="3" /><path d="M-14 0 H-10 M10 -10 H14 M10 0 H14 M10 10 H14" />${t.reversed === !0 ? x`<path d="M-14 0 H14 M14 10 H5 V-10 H14" />` : x`<path d="M-14 0 H-5 V10 H14 M14 0 H5 V-10 H14" />`}`;
+		case "probe_t": return x`<circle r="9" />${mi(16, 9)}${ui("T", n)}`;
+		case "transducer_p": return x`<circle r="9" />${mi(16, 9)}${ui("P", n)}`;
+		case "pressure_switch": return x`<rect x="-7" y="-7" width="14" height="14" />${mi(16, 7)}${ui("P", n)}`;
+		case "thermostat": return x`<rect x="-7" y="-7" width="14" height="14" />${mi(16, 7)}${ui("T", n)}`;
 		case "exchanger": {
 			let e = t.size ?? 34, n = t.fills;
-			return w`${n === void 0 ? E : w`${Ir("left", e, n.left)}${Ir("right", e, n.right)}`}<rect x="-20" y="${-e - 9}" width="40" height="${2 * e + 18}" rx="4" /><path d="M-12 ${-e} V${e} M12 ${-e} V${e}" /><circle cx="-12" cy="${-e}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${-e}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="-12" cy="${e}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${e}" r="3.5" fill="var(--card-background-color, transparent)" />`;
+			return x`${n === void 0 ? C : x`${li("left", e, n.left)}${li("right", e, n.right)}`}<rect x="-20" y="${-e - 9}" width="40" height="${2 * e + 18}" rx="4" /><path d="M-12 ${-e} V${e} M12 ${-e} V${e}" /><circle cx="-12" cy="${-e}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${-e}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="-12" cy="${e}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${e}" r="3.5" fill="var(--card-background-color, transparent)" />`;
 		}
-		case "compressor": return w`<circle r="14" /><path d="M0 -8 A8 8 0 1 0 8 0 M0 -8 L6 -4" />`;
-		case "vessel": return w`<circle r="12" /><path d="M-12 2 H12" />`;
-		case "safety_valve": return w`<path d="M0 16 V6 M-6 6 H6 L0 -4 Z M0 -4 L-3 -7 L3 -10 L0 -13" />`;
-		case "valve": return w`<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z" />`;
-		case "drain_valve": return w`<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z" />`;
-		case "resistor": return w`<rect x="-28" y="-6" width="56" height="12" rx="2" /><path d="M-18 -6 V6 M18 -6 V6" />`;
-		case "filter_dryer": return w`<rect x="-14" y="-5" width="28" height="10" rx="5" />`;
-		case "expansion_valve": return w`<path d="M-12 -6 V6 L0 0 L12 -6 V6 L0 0 Z" />`;
-		case "service_outlet": return w`<rect x="-3" y="-3" width="6" height="6" />${zr(10, 3)}`;
-		case "port": return w`<rect x="-5" y="-6" width="10" height="6" />`;
-		case "tank": return w`<rect class="tank-body" data-dhw-tank="internal" x=${-B.width / 2} y=${-B.height / 2} width=${B.width} height=${B.height} rx="14" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />`;
-		case "coil": return Rr();
+		case "compressor": return x`<circle r="14" /><path class="compressor-lines" d="${pi}" />`;
+		case "vessel": return x`<circle r="12" /><path d="M-12 2 H12" />`;
+		case "safety_valve": return x`<path d="M0 16 V6 M-6 6 H6 L0 -4 Z M0 -4 L-3 -7 L3 -10 L0 -13" />`;
+		case "valve": return x`<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z" />`;
+		case "drain_valve": return x`<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z" />`;
+		case "resistor": return x`<rect x="-28" y="-6" width="56" height="12" rx="2" /><path d="M-18 -6 V6 M18 -6 V6" />`;
+		case "filter_dryer": return x`<rect x="-14" y="-5" width="28" height="10" rx="5" />`;
+		case "expansion_valve": return x`<path d="M-12 -6 V6 L0 0 L12 -6 V6 L0 0 Z" />`;
+		case "service_outlet": return x`<rect x="-3" y="-3" width="6" height="6" />${mi(10, 3)}`;
+		case "port": return x`<rect x="-5" y="-6" width="10" height="6" />`;
+		case "tank": return x`<rect class="tank-body" data-dhw-tank="internal" x=${-N.width / 2} y=${-N.height / 2} width=${N.width} height=${N.height} rx="14" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />`;
+		case "coil": return fi();
 	}
 }
-function Hr(e, t = {}) {
-	return w`<g class="symbol ${e}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="rotate(${t.rotation ?? 0})">${Vr(e, t)}</g>`;
+function _i(e, t = {}) {
+	return x`<g class="symbol ${e}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="rotate(${t.rotation ?? 0})">${gi(e, t)}</g>`;
 }
 // src/diagram/cabinet.ts
-var Ur = o`
+var vi = o`
   .outline {
     fill: none;
     stroke: var(--primary-text-color);
@@ -2442,6 +2503,17 @@ var Ur = o`
   }
   .pipe.muted {
     stroke: var(--disabled-text-color);
+  }
+  /* A muted helix (external coil, coil 51) takes its own grey (design D8; set by the card, light theme only). */
+  .helix .pipe.muted {
+    stroke: var(--ecogeo-coil-muted, var(--disabled-text-color));
+  }
+  /* The part of an idle coil pipe inside the tank, in the coil's grey (clipped to the tank body, design D8). */
+  .pipe-inside {
+    fill: none;
+    stroke: var(--ecogeo-coil-muted, var(--disabled-text-color));
+    stroke-width: 3;
+    stroke-linejoin: round;
   }
   /* The dash overlay of an active pipe: dashes in the card colour run along it in the direction of the flow. */
   .flow {
@@ -2491,37 +2563,37 @@ var Ur = o`
     font-weight: 500;
   }
 `;
-function Wr(e, t) {
+function yi(e, t) {
 	return e === 26 ? t.valve26 === "dhw" ? ["l", "d"] : ["l", "r"] : t.valves2728 === "exchanger" ? ["d", "r"] : ["l", "r"];
 }
-function Gr(e, t, n, r, i) {
-	let { part: a } = e, { circuits: o } = t, s = Ar(a, e.state, t.mode), [c, l, u] = a.tag, d = gt(a.item), f = zn(Rn(Fn[a.item], r), r?.onTap);
-	return w`<g class="symbol-group ${s}" data-item=${a.item} data-kind=${a.kind} aria-label=${d} role=${f.role} tabindex=${f.tabindex} @click=${f.click} @keydown=${f.keydown} style=${a.kind === "coil" ? `color: ${Pr(t)}` : E}>
+function bi(e, t, n, r, i) {
+	let { part: a } = e, { circuits: o } = t, s = ri(a, e.state, t.mode), [c, l, u] = a.tag, d = xt(a.item), f = Xn(Yn(Kn[a.item], r), r?.onTap);
+	return x`<g class="symbol-group ${s}" data-item=${a.item} data-kind=${a.kind} aria-label=${d} role=${f.role} tabindex=${f.tabindex} @click=${f.click} @keydown=${f.keydown} style=${a.kind === "coil" ? `color: ${Ti(t)}` : C}>
     <title>${d}</title>
-    <g transform="translate(${a.x} ${a.y})">${Hr(a.kind, {
+    <g transform="translate(${a.x} ${a.y})">${_i(a.kind, {
 		rotation: a.rotation,
 		size: a.size,
-		open: a.kind === "valve3" ? Wr(a.item, o) : void 0,
+		open: a.kind === "valve3" ? yi(a.item, o) : void 0,
 		reversed: a.kind === "inversion_valve" ? o.valve14 === "reversed" : void 0,
 		fills: i
 	})}</g>
-    ${n === "full" ? w`<text class="item" x=${a.x + c} y=${a.y + l} text-anchor=${u ?? "start"}>${a.item}</text>` : E}
+    ${n === "full" ? x`<text class="item" x=${a.x + c} y=${a.y + l} text-anchor=${u ?? "start"}>${a.item}</text>` : C}
   </g>`;
 }
-function Kr(e, t, n) {
-	let r = fr(t), i = n.muted ? E : `stroke: ${n.color}`;
-	return w`<g class="helix ${n.muted ? "muted" : ""}" data-segment=${e.id} style=${i}>
-    ${r.map((e) => w`<path class="pipe ${n.muted ? "muted" : ""}" data-half=${e.front ? "front" : "back"} style=${i} opacity=${e.front ? E : ur} d=${e.d} />`)}
-    ${n.animated ? w`<path class="flow ${n.reversed ? "reversed" : ""}" data-flow=${e.id} style="--flow-duration: ${String(n.duration)}s" d=${r.filter((e) => e.front).map((e) => e.d).join(" ")} />` : E}
+function xi(e, t, n) {
+	let r = zr(t), i = n.muted ? C : `stroke: ${n.color}`;
+	return x`<g class="helix ${n.muted ? "muted" : ""}" data-segment=${e.id} style=${i}>
+    ${Rr(r).map((e) => x`<path class="pipe ${n.muted ? "muted" : ""}" data-half=${e.front ? "front" : "back"} style=${i} stroke-linecap=${e.front ? "round" : "butt"} opacity=${e.front ? C : Ir} d=${e.d} />`)}
+    ${n.animated ? x`<path class="flow ${n.reversed ? "reversed" : ""}" data-flow=${e.id} style="--flow-duration: ${String(n.duration)}s" d=${r.filter((e) => e.front).map((e) => e.d).join(" ")} />` : C}
   </g>`;
 }
-function qr(e, t, n) {
-	if (e.shape !== void 0) return Kr(e, e.shape, t);
-	let r = e.bend === void 0 ? vr(e.points, n) : pr(e.points, e.bend);
-	return w`<path class="pipe ${t.muted ? "muted" : ""}" data-segment=${e.id} style=${t.muted ? E : `stroke: ${t.color}`} d=${r} />${t.animated ? w`<path class="flow ${t.reversed ? "reversed" : ""}" data-flow=${e.id} style="--flow-duration: ${String(t.duration)}s" d=${r} />` : E}`;
+function Si(e, t, n, r) {
+	if (e.shape !== void 0) return xi(e, e.shape, t);
+	let i = e.bend === void 0 ? Gr(e.points, n) : Br(e.points, e.bend);
+	return x`<path class="pipe ${t.muted ? "muted" : ""}" data-segment=${e.id} style=${t.muted ? C : `stroke: ${t.color}`} stroke-linecap=${e.roundEnd === !0 ? "round" : C} d=${i} />${t.muted && r !== void 0 && Ei.has(e.id) ? x`<path class="pipe-inside" data-inside=${e.id} clip-path="url(#${r})" d=${i} />` : C}${t.animated ? x`<path class="flow ${t.reversed ? "reversed" : ""}" data-flow=${e.id} style="--flow-duration: ${String(t.duration)}s" d=${i} />` : C}`;
 }
-function Jr(e, t, n, r) {
-	let i = (e) => e.map((e) => n.get(e)).find((e) => e !== void 0), a = e.reversible === !0 && r === "active_cooling", [o, s] = a ? [e.leaving, e.entering] : [e.entering, e.leaving], c = i(o), l = i(s), u = (c?.muted ?? !0) && (l?.muted ?? !0), d = (e) => u ? Ht : e?.color ?? "var(--disabled-text-color)", f = e.enters === "top" !== a;
+function Ci(e, t, n, r) {
+	let i = (e) => e.map((e) => n.get(e)).find((e) => e !== void 0), a = e.reversible === !0 && r === "active_cooling", [o, s] = a ? [e.leaving, e.entering] : [e.entering, e.leaving], c = i(o), l = i(s), u = (c?.muted ?? !0) && (l?.muted ?? !0), d = (e) => u ? Jt : e?.color ?? "var(--disabled-text-color)", f = e.enters === "top" !== a;
 	return {
 		id: t,
 		y1: +!f,
@@ -2531,40 +2603,45 @@ function Jr(e, t, n, r) {
 		muted: u
 	};
 }
-var Yr = (e) => w`<linearGradient id=${e.id} x1="0" y1=${e.y1} x2="0" y2=${e.y2} data-muted=${e.muted}>
+var wi = (e) => x`<linearGradient id=${e.id} x1="0" y1=${e.y1} x2="0" y2=${e.y2} data-muted=${e.muted}>
       <stop offset="0" style="stop-color: ${e.start}" />
       <stop offset="1" style="stop-color: ${e.end}" />
     </linearGradient>`;
-function Xr(e, t, n, r = {
+function Ti(e) {
+	let t = si(e);
+	return t === "var(--disabled-text-color)" ? Xt : t;
+}
+var Ei = /* @__PURE__ */ new Set(["dhw_ext_in", "dhw_ext_out"]);
+function Di(e, t, n, r = {
 	mode: "gradient",
 	idPrefix: "ecogeo"
 }) {
-	let i = cr(e), a = new Set(i.map((e) => e.part.id)), o = new Map(i.map((e) => [e.part.id, Mr(e.part, e.state, t)])), s = [], c = sr(e).map((i) => {
+	let i = Pr(e), a = new Set(i.map((e) => e.part.id)), o = new Map(i.map((e) => [e.part.id, ai(e.part, e.state, t)])), s = [], c = e.dhw === "external" ? `${r.idPrefix}-tank-clip` : void 0, l = Nr(e).map((i) => {
 		let a = r.mode === "gradient" ? i.part.sides : void 0;
-		if (a === void 0) return Gr(i, t, e.detail, n);
+		if (a === void 0) return bi(i, t, e.detail, n);
 		let c = {
 			left: "none",
 			right: "none"
 		};
 		for (let e of a) {
-			let n = Jr(e, `${r.idPrefix}-x${String(i.part.item)}-${e.half}`, o, t.mode);
+			let n = Ci(e, `${r.idPrefix}-x${String(i.part.item)}-${e.half}`, o, t.mode);
 			s.push(n), c[e.half] = `url(#${n.id})`;
 		}
-		return Gr(i, t, e.detail, n, c);
+		return bi(i, t, e.detail, n, c);
 	});
-	return w`<g class="cabinet">
-    <defs>${s.map(Yr)}</defs>
-    <rect class="outline" x=${Vn.x} y=${Vn.y} width=${Vn.width} height=${Vn.height} rx="6" />
-    ${nr.filter((t) => ar(t, e) !== "hidden").map((e) => w`<text class="circuit-label" x=${e.x} y=${e.y} text-anchor="middle">${ut[e.key]}</text>`)}
+	return x`<g class="cabinet">
+    <defs>${s.map(wi)}${c === void 0 ? C : x`<clipPath id=${c} data-tank-clip><path d=${ir()} /></clipPath>`}</defs>
+    <rect class="outline" x=${M.x} y=${M.y} width=${M.width} height=${M.height} rx="6" />
+    ${Or.filter((t) => jr(t, e) !== "hidden").map((e) => x`<text class="circuit-label" x=${e.x} y=${e.y} text-anchor="middle">${mt[e.key]}</text>`)}
     ${i.map((e) => {
 		let t = o.get(e.part.id);
-		return t === void 0 ? E : qr(e.part, t, br(e.part.id, a));
+		return t === void 0 ? C : Si(e.part, t, qr(e.part.id, a), c);
 	})}
-    ${c}
+    ${l}
   </g>`;
 }
 // src/diagram/dhw.ts
-var Zr = o`
+var Oi = o`
   .tank-body {
     stroke: var(--primary-text-color);
     stroke-width: 2.5;
@@ -2588,23 +2665,23 @@ var Zr = o`
     font-size: 11px;
   }
 `;
-function Qr(e, t) {
-	if (e.dhw !== "external") return w``;
-	let { x: n, y: r, width: i, height: a, dome: o } = Hn, s = i / 2, c = `M${String(n)} ${String(r + o)} A${String(s)} ${String(o)} 0 0 1 ${String(n + i)} ${String(r + o)} V${String(r + a - o)} A${String(s)} ${String(o)} 0 0 1 ${String(n)} ${String(r + a - o)} Z`, l = `M${String(n)} ${String(r + o)} A${String(s)} ${String(o)} 0 0 0 ${String(n + i)} ${String(r + o)}`, u = zn(Rn(Ln, t), t?.onTap);
-	return w`<g class="dhw-storage" data-dhw="external" aria-label=${ft.externalTank} role=${u.role} tabindex=${u.tabindex} @click=${u.click} @keydown=${u.keydown}>
-    <title>${ft.externalTank}</title>
-    <path class="tank-body" data-dhw-tank="external" d=${c} fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />
-    <path class="tank-rim" d=${l} />
-    <text class="tank-caption" x=${n + i / 2} y=${r - 6} text-anchor="middle">${ft.externalTank}</text>
+function ki(e, t) {
+	if (e.dhw !== "external") return x``;
+	let { x: n, y: r, width: i, dome: a } = P, o = i / 2, s = ir(), c = `M${String(n)} ${String(r + a)} A${String(o)} ${String(a)} 0 0 0 ${String(n + i)} ${String(r + a)}`, l = Xn(Yn(Jn, t), t?.onTap);
+	return x`<g class="dhw-storage" data-dhw="external" aria-label=${gt.externalTank} role=${l.role} tabindex=${l.tabindex} @click=${l.click} @keydown=${l.keydown}>
+    <title>${gt.externalTank}</title>
+    <path class="tank-body" data-dhw-tank="external" d=${s} fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />
+    <path class="tank-rim" d=${c} />
+    <text class="tank-caption" x=${n + i / 2} y=${r - 6} text-anchor="middle">${gt.externalTank}</text>
   </g>`;
 }
 // src/lib/format.ts
-var $r = "−";
-function ei(e) {
+var Ai = "−";
+function ji(e) {
 	let t = e?.locale;
 	return typeof t == "object" && t ? t : e?.language === void 0 ? {} : { language: e.language };
 }
-function ti(e) {
+function Mi(e) {
 	switch (e.number_format) {
 		case "comma_decimal": return ["en-US", "en"];
 		case "decimal_comma": return [
@@ -2623,39 +2700,39 @@ function ti(e) {
 		default: return e.language === void 0 ? void 0 : [e.language];
 	}
 }
-var ni = /* @__PURE__ */ new Map();
-function ri(e, t, n) {
-	let r = ti(e), i = n && e.number_format !== "none", a = `${r?.join(",") ?? ""}|${String(t)}|${String(i)}`, o = ni.get(a);
+var Ni = /* @__PURE__ */ new Map();
+function Pi(e, t, n) {
+	let r = Mi(e), i = n && e.number_format !== "none", a = `${r?.join(",") ?? ""}|${String(t)}|${String(i)}`, o = Ni.get(a);
 	return o === void 0 && (o = new Intl.NumberFormat(r, {
 		minimumFractionDigits: t,
 		maximumFractionDigits: t,
 		useGrouping: i
-	}), ni.set(a, o)), o;
+	}), Ni.set(a, o)), o;
 }
-function ii(e, t, n = 0, r = !0) {
+function Fi(e, t, n = 0, r = !0) {
 	if (!Number.isFinite(e)) return "–";
 	let i = Number.isFinite(n) ? Math.min(20, Math.max(0, Math.trunc(n))) : 0, a = Math.abs(e) < .5 / 10 ** i ? 0 : e;
-	return ri(t ?? {}, i, r).formatToParts(a).map((e) => e.type === "minusSign" ? $r : e.value).join("");
+	return Pi(t ?? {}, i, r).formatToParts(a).map((e) => e.type === "minusSign" ? Ai : e.value).join("");
 }
 // src/calc/display.ts
-function ai(e) {
+function Ii(e) {
 	if (typeof e != "object" || !e) return;
 	let t = e.display_precision;
 	return typeof t == "number" && Number.isInteger(t) && t >= 0 && t <= 20 ? t : void 0;
 }
-var oi = (e, t) => t ?? e.decimals ?? 0;
-function si(e, t) {
+var Li = (e, t) => t ?? e.decimals ?? 0;
+function Ri(e, t) {
 	let n = typeof t == "string" ? t.trim().replaceAll("º", "°").normalize("NFKC").toLowerCase() : "";
 	return n === (e.unit ?? "").toLowerCase() || e.quantity === "difference" && n === "°c";
 }
-function ci(e, t, n, r) {
-	let i = yt.get(e);
+function zi(e, t, n, r) {
+	let i = wt.get(e);
 	if (i === void 0 || t === void 0 || !Number.isFinite(t)) return;
-	let a = n === void 0 || !si(i, r.states?.[n]?.attributes.unit_of_measurement) ? void 0 : ai(r.entities?.[n]), o = ii(t, r.locale, oi(i, a), !1);
+	let a = n === void 0 || !Ri(i, r.states?.[n]?.attributes.unit_of_measurement) ? void 0 : Ii(r.entities?.[n]), o = Fi(t, r.locale, Li(i, a), !1);
 	return i.unit === void 0 ? o : `${o} ${i.unit}`;
 }
 // src/diagram/labels.ts
-var li = o`
+var Bi = o`
   .diagram {
     position: relative;
     container-type: inline-size;
@@ -2685,6 +2762,9 @@ var li = o`
   }
   .label.end {
     transform: translate(-100%, -50%);
+  }
+  .label.bare {
+    background: none;
   }
   .label.emphasis {
     font-size: max(9px, 1.2cqw);
@@ -2720,7 +2800,7 @@ var li = o`
 	y: r,
 	align: i,
 	...a
-}), ui = 895, di = [
+}), Vi = P.x + P.width / 2, Hi = P.y + P.height + 22, Ui = N.y + 12, Wi = N.x + N.width / 2, Gi = F.y + F.height + 12, Ki = ar + 6, qi = 12, Ji = 20, Yi = [
 	$("production_out", "production.outlet_temperature", 237, 228, "end", { item: 33 }),
 	$("production_in", "production.return_temperature", 291, 247, "middle", { item: 34 }),
 	$("production_pressure", "production.pressure", 360, 537, "end", { item: 38 }),
@@ -2745,55 +2825,77 @@ var li = o`
 	$("expansion_valve", "refrigerant.expansion_valve", 527, 388, "middle", { item: 12 }),
 	$("condensation_temperature", "refrigerant.condensation_temperature", 432, 437, "middle", { item: 8 }),
 	$("evaporation_temperature", "refrigerant.evaporation_temperature", 572, 437, "middle", { item: 7 }),
-	$("fan_speed", "source.fan_speed", 115, 312, "middle", {
+	$("fan_speed", "source.fan_speed", F.fanX, Gi, "middle", {
 		source: ["air", "hybrid"],
-		caption: M.fan
+		caption: O.fan
 	}),
-	$("outside_temperature", "source.outside_temperature", 115, 325, "middle", {
+	$("outside_temperature", "source.outside_temperature", F.fanX, Gi + 13, "middle", {
 		source: ["air", "hybrid"],
-		caption: M.outside
+		caption: O.outside
 	}),
-	$("air_unit_outlet", "source.air_unit_outlet_temperature", 115, 338, "middle", {
-		source: ["air", "hybrid"],
-		caption: M.airOutlet
+	$("air_unit_in", "brine.outlet_temperature", Ki, I.bottom - qi, "start", {
+		source: ["air"],
+		caption: O.portIn
 	}),
-	$("ground_out", "brine.outlet_temperature", 158, 203, "start", {
-		source: ["ground"],
-		caption: M.groundOut
+	$("air_unit_out", "source.air_unit_outlet_temperature", Ki, I.top + qi, "start", {
+		source: ["air"],
+		caption: O.portOut
 	}),
-	$("ground_in", "brine.inlet_temperature", 158, 290, "start", {
-		source: ["ground"],
-		caption: M.groundIn
-	}),
-	$("hybrid_ground_in", "brine.inlet_temperature", 158, 480, "start", {
+	$("hybrid_air_unit_in", "brine.outlet_temperature", Ki, I.top + qi, "start", {
 		source: ["hybrid"],
-		caption: M.groundIn
+		caption: O.portIn
 	}),
-	...["external", "internal"].flatMap((e) => {
-		let t = e === "external" ? 352 : 152;
-		return [
-			$(`tank_${e}_temperature`, "dhw.temperature", ui, t, "middle", {
-				dhw: e,
-				emphasis: !0
-			}),
-			$(`tank_${e}_setpoint`, "dhw.setpoint", ui, t + 15, "middle", {
-				dhw: e,
-				caption: M.setpoint
-			}),
-			$(`tank_${e}_start_delta`, "dhw.start_delta", ui, t + 29, "middle", {
-				dhw: e,
-				caption: M.startDelta
-			}),
-			$(`tank_${e}_demand`, "dhw.demand", ui, t + 43, "middle", {
-				dhw: e,
-				demand: !0
-			})
-		];
+	$("ground_in", "brine.outlet_temperature", L.downX + 6, R.ground + Ji, "start", {
+		source: ["ground"],
+		caption: O.portIn
+	}),
+	$("ground_out", "brine.inlet_temperature", L.upX - 6, R.ground + Ji, "end", {
+		source: ["ground"],
+		caption: O.portOut
+	}),
+	$("hybrid_ground_out", "brine.inlet_temperature", L.upX - 6, R.hybrid + Ji, "end", {
+		source: ["hybrid"],
+		caption: O.portOut
+	}),
+	$("tank_external_temperature", "dhw.temperature", Vi, Hi, "middle", {
+		dhw: "external",
+		emphasis: !0
+	}),
+	$("tank_external_setpoint", "dhw.setpoint", Vi, Hi + 15, "middle", {
+		dhw: "external",
+		caption: O.setpoint
+	}),
+	$("tank_external_start_delta", "dhw.start_delta", Vi, Hi + 29, "middle", {
+		dhw: "external",
+		caption: O.startDelta
+	}),
+	$("tank_external_demand", "dhw.demand", Vi, Hi + 43, "middle", {
+		dhw: "external",
+		demand: !0
+	}),
+	$("tank_internal_temperature", "dhw.temperature", N.x + N.width / 6, Ui, "middle", {
+		dhw: "internal",
+		bare: !0
+	}),
+	$("tank_internal_setpoint", "dhw.setpoint", Wi, Ui, "middle", {
+		dhw: "internal",
+		caption: O.setpointShort,
+		bare: !0
+	}),
+	$("tank_internal_start_delta", "dhw.start_delta", N.x + N.width * 5 / 6, Ui, "middle", {
+		dhw: "internal",
+		caption: O.startDeltaShort,
+		bare: !0
+	}),
+	$("tank_internal_demand", "dhw.demand", Wi, Ui + 13, "middle", {
+		dhw: "internal",
+		demand: !0,
+		bare: !0
 	})
 ];
-function fi(e, t, n, r) {
-	return di.flatMap((i) => {
-		if (ar(i, e) === "hidden") return [];
+function Xi(e, t, n, r) {
+	return Yi.flatMap((i) => {
+		if (jr(i, e) === "hidden") return [];
 		let a = n[i.role], o = {
 			id: i.id,
 			role: i.role,
@@ -2801,19 +2903,20 @@ function fi(e, t, n, r) {
 			y: i.y,
 			align: i.align,
 			emphasis: i.emphasis === !0,
+			...i.bare === !0 ? { bare: !0 } : {},
 			entityId: a,
 			...i.item === void 0 ? {} : { item: i.item },
 			...i.caption === void 0 ? {} : { caption: i.caption }
 		}, s = t[i.role];
 		if (i.demand === !0) {
-			let e = i.role === "heating.demand" ? pt.demand : ft.demand;
+			let e = i.role === "heating.demand" ? _t.demand : gt.demand;
 			return s === !0 ? [{
 				...o,
 				text: e,
 				missing: !1
 			}] : [];
 		}
-		let c = ci(i.role, typeof s == "number" ? s : void 0, a, r);
+		let c = zi(i.role, typeof s == "number" ? s : void 0, a, r);
 		return [{
 			...o,
 			text: c ?? "–",
@@ -2821,7 +2924,7 @@ function fi(e, t, n, r) {
 		}];
 	});
 }
-function pi(e, t, n) {
+function Zi(e, t, n) {
 	let r = (e, n, r, i) => ({
 		id: e,
 		...r === void 0 ? {} : { caption: r },
@@ -2830,24 +2933,24 @@ function pi(e, t, n) {
 		entityId: t[n]
 	}), i = (i, a, o) => {
 		let s = e[a];
-		return r(i, a, o, ci(a, typeof s == "number" ? s : void 0, t[a], n));
-	}, a = e["unit.on_off"], o = e["unit.summer"] === !0 ? N.summer : e["unit.winter"] === !0 ? N.winter : void 0;
+		return r(i, a, o, zi(a, typeof s == "number" ? s : void 0, t[a], n));
+	}, a = e["unit.on_off"], o = e["unit.summer"] === !0 ? vt.summer : e["unit.winter"] === !0 ? vt.winter : void 0;
 	return [
-		r("on_off", "unit.on_off", void 0, a === void 0 ? void 0 : mt[a.toLowerCase()] ?? a),
+		r("on_off", "unit.on_off", void 0, a === void 0 ? void 0 : yt[a.toLowerCase()] ?? a),
 		r("season", e["unit.summer"] === !0 ? "unit.summer" : "unit.winter", void 0, o),
-		i("outside_temperature", "source.outside_temperature", N.outside),
-		i("cop", "unit.cop", N.cop),
-		i("condensation_capacity", "heating.capacity", N.condensation),
-		i("evaporation_capacity", "cooling.capacity", N.evaporation)
+		i("outside_temperature", "source.outside_temperature", vt.outside),
+		i("cop", "unit.cop", vt.cop),
+		i("condensation_capacity", "heating.capacity", vt.condensation),
+		i("evaporation_capacity", "cooling.capacity", vt.evaporation)
 	];
 }
-var mi = (e) => ({
-	left: `${String(e.x / Bn.width * 100)}%`,
-	top: `${String(e.y / Bn.height * 100)}%`
+var Qi = (e) => ({
+	left: `${String(e.x / Zn.width * 100)}%`,
+	top: `${String(e.y / Zn.height * 100)}%`
 });
-function hi(e, t, n, r) {
+function $i(e, t, n, r) {
 	let i = n ? "value missing" : "value";
-	return e === void 0 || r === void 0 ? C`<span class=${i}>${t}</span>` : C`<button
+	return e === void 0 || r === void 0 ? b`<span class=${i}>${t}</span>` : b`<button
         class=${i}
         type="button"
         @click=${() => {
@@ -2857,26 +2960,26 @@ function hi(e, t, n, r) {
         ${t}
       </button>`;
 }
-function gi(e, t) {
-	return C`${e.map((e) => {
-		let { left: n, top: r } = mi(e);
-		return C`<span
-      class="label ${e.align}${e.emphasis ? " emphasis" : ""}"
+function ea(e, t) {
+	return b`${e.map((e) => {
+		let { left: n, top: r } = Qi(e);
+		return b`<span
+      class="label ${e.align}${e.emphasis ? " emphasis" : ""}${e.bare === !0 ? " bare" : ""}"
       data-label=${e.id}
       data-role=${e.role}
-      data-label-item=${e.item ?? E}
+      data-label-item=${e.item ?? C}
       style="left: ${n}; top: ${r}"
-      >${e.caption === void 0 ? E : C`<span class="caption">${e.caption}</span>`}${hi(e.entityId, e.text, e.missing, t)}</span
+      >${e.caption === void 0 ? C : b`<span class="caption">${e.caption}</span>`}${$i(e.entityId, e.text, e.missing, t)}</span
     >`;
 	})}`;
 }
-function _i(e, t) {
-	return C`${e.map((e) => C`<span class="footer-item" data-footer=${e.id}
-        >${e.caption === void 0 ? E : C`<span class="caption">${e.caption}</span>`}${hi(e.entityId, e.text, e.missing, t)}</span
+function ta(e, t) {
+	return b`${e.map((e) => b`<span class="footer-item" data-footer=${e.id}
+        >${e.caption === void 0 ? C : b`<span class="caption">${e.caption}</span>`}${$i(e.entityId, e.text, e.missing, t)}</span
       >`)}`;
 }
 // src/diagram/source.ts
-var vi = o`
+var na = o`
   .source-outline {
     fill: none;
     stroke: var(--primary-text-color);
@@ -2953,86 +3056,86 @@ var vi = o`
       animation: none;
     }
   }
-`, yi = (e) => e === void 0 || !(e > 0) ? void 0 : Math.min(6, Math.max(.5, 120 / e)), bi = [
+`, ra = (e) => e === void 0 || !(e > 0) ? void 0 : Math.min(6, Math.max(.5, 120 / e)), ia = [
 	0,
 	72,
 	144,
 	216,
 	288
-].map((e) => w`<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(${e})" />`);
-function xi(e, t, n) {
-	let { x: r, y: i, width: a, height: o, fanX: s, fanY: c, fanRadius: l, coil: u, fins: d, slats: f, dividerY: p } = Un, m = yi(e), ee = Array.from({ length: d.count }, (e, t) => d.x + t * d.step), te = Array.from({ length: f.count }, (e, t) => f.y0 + t * f.step), [ne, re] = [r + 6, s + l + 6], h = s - l - 6 - ne, g = zn(Rn(In, n), n?.onTap);
-	return w`<g class="air-unit${t ? " muted" : ""}" data-source="air">
+].map((e) => x`<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(${e})" />`);
+function aa(e, t, n) {
+	let { x: r, y: i, width: a, height: o, fanX: s, fanY: c, fanRadius: l, coil: u, fins: d, slats: f, dividerY: p } = F, m = ra(e), ee = Array.from({ length: d.count }, (e, t) => d.x + t * d.step), te = Array.from({ length: f.count }, (e, t) => f.y0 + t * f.step), [ne, re] = [r + 6, s + l + 6], h = s - l - 6 - ne, g = Xn(Yn(qn, n), n?.onTap);
+	return x`<g class="air-unit${t ? " muted" : ""}" data-source="air">
     <rect class="source-outline" x=${r} y=${i} width=${a} height=${o} rx="6" />
     <path class="source-divider" d="M${r} ${p} H${r + a}" />
-    ${te.map((e) => w`<path class="source-slat" data-slat d="M${ne} ${e} h${h} M${re} ${e} h${h}" />`)}
+    ${te.map((e) => x`<path class="source-slat" data-slat d="M${ne} ${e} h${h} M${re} ${e} h${h}" />`)}
     <rect class="source-frame" data-coil-block x=${u.x} y=${u.y} width=${u.width} height=${u.height} rx="3" />
-    ${ee.map((e) => w`<path class="source-fin" d="M${e} ${d.y0} V${d.y1}" />`)}
-    <g class="fan-part" aria-label=${_t} role=${g.role} tabindex=${g.tabindex} @click=${g.click} @keydown=${g.keydown}>
-      <title>${_t}</title>
+    ${ee.map((e) => x`<path class="source-fin" d="M${e} ${d.y0} V${d.y1}" />`)}
+    <g class="fan-part" aria-label=${St} role=${g.role} tabindex=${g.tabindex} @click=${g.click} @keydown=${g.keydown}>
+      <title>${St}</title>
       <circle class="fan-ring" cx=${s} cy=${c} r=${l} />
       <circle class="fan-hit" cx=${s} cy=${c} r=${l} fill="transparent" stroke="none" />
       <g class="fan" data-fan transform="translate(${s} ${c})">
-        <g class=${m === void 0 ? "fan-rotor still" : "fan-rotor"} style=${m === void 0 ? "" : `--fan-duration: ${String(m)}s`}>${bi}<circle class="fan-hub" r="5" fill="var(--primary-text-color)" /></g>
+        <g class=${m === void 0 ? "fan-rotor still" : "fan-rotor"} style=${m === void 0 ? "" : `--fan-duration: ${String(m)}s`}>${ia}<circle class="fan-hub" r="5" fill="var(--primary-text-color)" /></g>
       </g>
     </g>
-    <text class="source-caption" x=${Un.captionX} y=${Un.captionY} text-anchor="middle">${dt.air}</text>
+    <text class="source-caption" x=${F.captionX} y=${F.captionY} text-anchor="middle">${ht.air}</text>
   </g>`;
 }
-function Si(e, t) {
-	return cr(e).flatMap(({ part: e }) => e.id.startsWith("src_") ? e.points.slice(1).flatMap((n, r) => {
+function oa(e, t) {
+	return Pr(e).flatMap(({ part: e }) => e.id.startsWith("src_") ? e.points.slice(1).flatMap((n, r) => {
 		let i = e.points[r];
-		return i?.[0] === n[0] && t > Math.min(i[1], n[1]) && t < Math.max(i[1], n[1]) ? [n[0]] : [];
+		return i?.[0] === n[0] && t >= Math.min(i[1], n[1]) && t <= Math.max(i[1], n[1]) ? [n[0]] : [];
 	}) : []);
 }
-function Ci(e, t, n, r) {
-	let i = Si(e, n), a = Array.from({ length: 16 }, (e, t) => 44 + t * 10).filter((e) => !i.some((t) => Math.abs(t - e) < 8)), o = Gn.y[t];
-	return w`<g class="ground-loop${r ? " muted" : ""}" data-source="ground">
-    <path class="source-ground" d="M8 ${n} H202" />
-    ${a.map((e) => w`<path class="source-ground" d="M${e} ${n} l-6 8" />`)}
-    <text class="source-caption" x=${Gn.x} y=${o} text-anchor="middle">${dt.ground}</text>
+function sa(e, t, n, r) {
+	let i = oa(e, n), a = Array.from({ length: 21 }, (e, t) => 14 + t * 10).filter((e) => !i.some((t) => Math.abs(t - e) < 10)), o = or.y[t];
+	return x`<g class="ground-loop${r ? " muted" : ""}" data-source="ground">
+    <path class="source-ground" d="M8 ${n} H220" />
+    ${a.map((e) => x`<path class="source-ground" d="M${e} ${n} l-6 8" />`)}
+    <text class="source-caption" x=${or.x} y=${o} text-anchor="middle">${ht.ground}</text>
   </g>`;
 }
-function wi(e, t, n, r) {
+function ca(e, t, n, r) {
 	let i = e.source === "air" || e.source === "hybrid", a = e.source === "ground" || e.source === "hybrid", o = e.source === "hybrid" ? "hybrid" : "ground";
-	return w`<g class="source" data-source-kind=${e.source}>
-    ${i ? xi(t["source.fan_speed"], !n, r) : w``}
-    ${a ? Ci(e, o, Wn[o], !n) : w``}
+	return x`<g class="source" data-source-kind=${e.source}>
+    ${i ? aa(t["source.fan_speed"], !n, r) : x``}
+    ${a ? sa(e, o, R[o], !n) : x``}
   </g>`;
 }
 // src/lib/define.ts
-function Ti(e, t) {
+function la(e, t) {
 	let n = customElements.get(e);
 	n === void 0 ? customElements.define(e, t) : n !== t && console.warn(`${e} is already defined by another copy of the module; that copy stays in use.`);
 }
 // src/lib/render.ts
-function Ei(e, t) {
+function ua(e, t) {
 	return e === t || Array.isArray(e) && Array.isArray(t) && e.length === t.length && e.every((e, n) => e === t[n]);
 }
-function Di(e, t) {
+function da(e, t) {
 	if (e === t) return !0;
 	if (typeof e != "object" || typeof t != "object" || e === null || t === null) return !1;
 	let n = Object.keys(e), r = Object.keys(t);
-	return n.length === r.length && n.every((n) => Object.hasOwn(t, n) && Ei(e[n], t[n]));
+	return n.length === r.length && n.every((n) => Object.hasOwn(t, n) && ua(e[n], t[n]));
 }
-function Oi(e, t, n) {
-	return e === void 0 || e.locale !== t.locale || e.language !== t.language || e.localize !== t.localize || e.formatEntityState !== t.formatEntityState || e.themes?.darkMode !== t.themes?.darkMode || n.some((n) => e.states[n] !== t.states[n] || !Di(e.entities?.[n], t.entities?.[n]));
+function fa(e, t, n) {
+	return e === void 0 || e.locale !== t.locale || e.language !== t.language || e.localize !== t.localize || e.formatEntityState !== t.formatEntityState || e.themes?.darkMode !== t.themes?.darkMode || n.some((n) => e.states[n] !== t.states[n] || !da(e.entities?.[n], t.entities?.[n]));
 }
-function ki(e, t, n, r) {
-	return e.size === 1 && e.has("hass") ? t !== void 0 && Oi(n, t, r) : !0;
+function pa(e, t, n, r) {
+	return e.size === 1 && e.has("hass") ? t !== void 0 && fa(n, t, r) : !0;
 }
 // src/card/ecogeo-card.ts
-var Ai = "ecogeo-card", ji = Bn.width, Mi = Bn.height, Ni = 0;
-Ti(Ai, class extends Le {
+var ma = "ecogeo-card", ha = Zn.width, ga = Zn.height, _a = 0;
+la(ma, class extends Ve {
 	constructor(...e) {
-		super(...e), this.entityIds = [], this.idPrefix = `ecogeo${String(++Ni)}`;
+		super(...e), this.entityIds = [], this.idPrefix = `ecogeo${String(++_a)}`;
 	}
 	static {
 		this.styles = [
-			Ur,
 			vi,
-			Zr,
-			li,
+			na,
+			Oi,
+			Bi,
 			o`
       .footer {
         display: flex;
@@ -3060,9 +3163,9 @@ Ti(Ai, class extends Le {
 		};
 	}
 	setConfig(e) {
-		let t = En(e);
+		let t = Ln(e);
 		if (t.length > 0) throw Error(t.join("; "));
-		this.resolved = Pn(e), this.entityIds = [...new Set(Object.values(this.resolved.entities).filter((e) => e !== void 0))], this.config = e;
+		this.resolved = Gn(e), this.entityIds = [...new Set(Object.values(this.resolved.entities).filter((e) => e !== void 0))], this.config = e;
 	}
 	getCardSize() {
 		return 10;
@@ -3075,69 +3178,69 @@ Ti(Ai, class extends Le {
 		};
 	}
 	shouldUpdate(e) {
-		return ki(e, this.hass, this.renderedHass, this.entityIds);
+		return pa(e, this.hass, this.renderedHass, this.entityIds);
 	}
 	readings(e) {
-		let t = e.sample ? jn : this.hass?.states ?? {};
+		let t = e.sample ? Hn : this.hass?.states ?? {};
 		return {
-			readings: wt(t, e.entities),
-			offline: Ue(Qe(t, e.entities["unit.connection"]))
+			readings: kt(t, e.entities),
+			offline: qe(nt(t, e.entities["unit.connection"]))
 		};
 	}
 	render() {
 		this.renderedHass = this.hass;
 		let e = this.resolved;
-		if (e === void 0) return C`<ha-card><div class="diagram"></div></ha-card>`;
-		let { readings: t, offline: n } = this.readings(e), r = He(t, e.features), i = Ge(r, e.features, e.dhw, t), a = {
+		if (e === void 0) return b`<ha-card><div class="diagram"></div></ha-card>`;
+		let { readings: t, offline: n } = this.readings(e), r = Ke(t, e.features), i = Ye(r, e.features, e.dhw, t), a = {
 			mode: r,
 			circuits: i,
 			readings: t,
 			stops: e.colors
-		}, o = e.sample ? jn : this.hass?.states ?? {}, s = {
-			locale: ei(this.hass),
+		}, o = e.sample ? Hn : this.hass?.states ?? {}, s = {
+			locale: ji(this.hass),
 			entities: this.hass?.entities,
 			states: o
 		}, c = e.sample ? void 0 : (e) => {
-			$e(this, e);
+			rt(this, e);
 		}, l = {
 			entities: e.entities,
 			onTap: c
 		};
-		return C`<ha-card>
+		return b`<ha-card>
       <div class="diagram">
         <svg
-          viewBox="0 0 ${ji} ${Mi}"
+          viewBox="0 0 ${ha} ${ga}"
           preserveAspectRatio="xMidYMid meet"
           role="group"
-          aria-label=${st}
-          style="--dhw-tank-color: ${Nr(a)}"
+          aria-label=${dt}
+          style="--dhw-tank-color: ${oi(a)}; --ecogeo-coil-muted: ${Zt(this.hass?.themes?.darkMode === !0)}"
         >
-          ${w`${wi(e, t, i.active.has("brine"), l)}${Qr(e, l)}${Xr(e, a, l, {
+          ${x`${ca(e, t, i.active.has("brine"), l)}${ki(e, l)}${Di(e, a, l, {
 			mode: e.exchangerFill,
 			idPrefix: this.idPrefix
 		})}`}
         </svg>
-        ${gi(fi(e, t, e.entities, s), c)}
+        ${ea(Xi(e, t, e.entities, s), c)}
       </div>
       <div class="footer">
-        <span class="mode">${ct[r]}</span>
-        ${_i(pi(t, e.entities, s), c)}
-        ${We(t["unit.alarm"]) ? C`<span class="alarm">${lt.alarm}</span>` : E}
-        ${n ? C`<span class="offline">${lt.offline}</span>` : E}
-        ${e.sample ? C`<span class="sample">${lt.sampleValues}</span>` : E}
+        <span class="mode">${ft[r]}</span>
+        ${ta(Zi(t, e.entities, s), c)}
+        ${Je(t["unit.alarm"]) ? b`<span class="alarm">${pt.alarm}</span>` : C}
+        ${n ? b`<span class="offline">${pt.offline}</span>` : C}
+        ${e.sample ? b`<span class="sample">${pt.sampleValues}</span>` : C}
       </div>
     </ha-card>`;
 	}
 });
 // src/index.ts
-var Pi = {
-	type: Ai,
-	...ot,
+var va = {
+	type: ma,
+	...ut,
 	preview: !0
 };
-function Fi(e = window) {
+function ya(e = window) {
 	let t = e.customCards ??= [];
-	t.some((e) => e.type === Pi.type) || t.push({ ...Pi });
+	t.some((e) => e.type === va.type) || t.push({ ...va });
 }
-Fi();
-export { Pi as CARD_ENTRY, Fi as registerCardPicker };
+ya();
+export { va as CARD_ENTRY, ya as registerCardPicker };

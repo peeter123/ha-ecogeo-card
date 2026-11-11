@@ -156,12 +156,12 @@ Added 2026-11-11 after the live release, at the user's request (design D11-D14).
 
 ## 7. Release the follow-up fixes
 
-- [ ] 7.1 Run `npm run release`.
+- [x] 7.1 Run `npm run release`.
   Verify: check-release reports `custom:ecogeo-card` registered and `dist/ecogeo-card.js` is updated.
-- [ ] 7.2 Deploy `dist/ecogeo-card.js` explicitly (command in `private/installation.md`), then bump the dashboard
+- [x] 7.2 Deploy `dist/ecogeo-card.js` explicitly (command in `private/installation.md`), then bump the dashboard
   resource to the next `?v=` and record it in `private/installation.md`.
   Verify: the deploy prints UPLOAD with no CONFLICT, and the resource reads the new `?v=`.
-- [ ] 7.3 Live verification (light screenshots only: a dark-mode screenshot changes the account's saved theme): the
+- [x] 7.3 Live verification (light screenshots only: a dark-mode screenshot changes the account's saved theme): the
   idle coil, the centred and aligned tank, the compressor symbol, the air unit ports and port labels against the
   entity states, and the HA logs for errors mentioning `ecogeo`.
   Verify: verdict with no mismatches and no log errors.
