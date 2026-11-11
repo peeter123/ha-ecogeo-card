@@ -2,6 +2,7 @@
 // an unknown option, an invalid value, an unknown feature or role, or a dhw that does not fit the model, instead of
 // falling back to a default silently. The option checking is the copied lib/options.ts; the checks it cannot
 // express (a whole-number variant, tri-state features, nested entity roles) are here.
+import { colorsErrors } from '../diagram/colors';
 import { asEntityId, valueAt, type CardConfig } from '../lib/config';
 import { invalidOptions, optionValue, type ChoiceOption, type OptionSpec } from '../lib/options';
 import { CONFIG_ERRORS, OPTIONS } from '../strings';
@@ -24,7 +25,7 @@ export const CHOICE_OPTIONS: readonly OptionSpec[] = [MODEL_OPTION, SOURCE_OPTIO
 
 export const DEFAULT_VARIANT = 4;
 
-/** The options of the card, plus the keys Home Assistant adds to any card of a dashboard. `colors` is checked by its group. */
+/** The options of the card, plus the keys Home Assistant adds to any card of a dashboard. `colors` is checked by diagram/colors.ts. */
 export const TOP_LEVEL_OPTIONS: readonly string[] = [
   'type',
   'model',
@@ -158,6 +159,7 @@ export function configErrors(config: CardConfig): string[] {
     ...prefixErrors(config),
     ...featureErrors(config),
     ...entityErrors(config),
+    ...colorsErrors(config),
   ];
   // The mismatch is only checked when model and dhw are valid by themselves.
   if (invalidOptions(config, [MODEL_OPTION, DHW_OPTION]).length === 0 && !isLeftOut(valueAt(config, 'dhw'))) {

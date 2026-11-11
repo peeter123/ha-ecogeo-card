@@ -1,6 +1,8 @@
-// Copied from hrv-ventilation test/lib/format.test.ts
+// Copied from hrv-ventilation test/lib/format.test.ts. Deviations, as in src/lib/format.ts: the `grouping` flag of
+// formatNumber, and the no-value dash instead of "n/a".
 import { describe, expect, test } from 'vitest';
 import { formatNumber, localeFromHass } from '../../src/lib/format';
+import { NO_VALUE } from '../../src/strings';
 
 const MINUS = '−';
 
@@ -55,9 +57,9 @@ describe('formatNumber', () => {
     expect(formatNumber(1250.5, { language: 'en', number_format: 'quote_decimal' }, 1)).toMatch(/^1['’]250\.5$/u);
   });
 
-  test('a value that is not finite gives n/a', () => {
-    expect(formatNumber(Number.NaN, { language: 'en' })).toBe('n/a');
-    expect(formatNumber(Number.POSITIVE_INFINITY, { language: 'en' })).toBe('n/a');
+  test('a value that is not finite gives the no-value dash', () => {
+    expect(formatNumber(Number.NaN, { language: 'en' })).toBe(NO_VALUE);
+    expect(formatNumber(Number.POSITIVE_INFINITY, { language: 'en' })).toBe(NO_VALUE);
   });
 
   test('decimals outside 0 to 20 are clamped instead of throwing', () => {
@@ -90,5 +92,13 @@ describe('localeFromHass', () => {
   test('gives an empty locale without either', () => {
     expect(localeFromHass(undefined)).toEqual({});
     expect(localeFromHass({})).toEqual({});
+  });
+});
+
+describe('formatNumber grouping (deviation from hrv)', () => {
+  test('grouping can be turned off: no thousands separator in any locale', () => {
+    expect(formatNumber(2803, { language: 'en' }, 0, false)).toBe('2803');
+    expect(formatNumber(4712.5, { language: 'de' }, 1, false)).toBe('4712,5');
+    expect(formatNumber(2803, { language: 'en' })).toBe('2,803');
   });
 });

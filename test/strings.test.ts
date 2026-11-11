@@ -80,8 +80,8 @@ describe('UI text lives in strings.ts', () => {
 });
 
 describe('texts', () => {
-  test('the no-value text', () => {
-    expect(NO_VALUE).toBe('n/a');
+  test('the no-value dash', () => {
+    expect(NO_VALUE).toBe('–');
   });
 
   test('the no-break space is U+00A0', () => {
@@ -90,7 +90,7 @@ describe('texts', () => {
   });
 
   test('a no-break space joins every number to its unit, in every text', () => {
-    const units = new RegExp(`(\\d|${MARK}|n/a)(\\s)(${unitPattern})(?!\\p{L})`, 'gu');
+    const units = new RegExp(`(\\d|${MARK}|–)(\\s)(${unitPattern})(?!\\p{L})`, 'gu');
     const joins = filledTexts().flatMap((text) => [...text.matchAll(units)].map((match) => match[2]));
     expect(joins.every((space) => space === '\u00a0')).toBe(true);
   });

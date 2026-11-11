@@ -46,8 +46,9 @@ its own values.
 
 ### Requirement: Outer loop active with the brine circuit
 The outer-loop pipes and the source SHALL be coloured and animated when the brine circuit is active (see
-operating-mode), and muted otherwise. This includes `defrost`, in which exchanger 10 warms the brine that runs to
-the air unit.
+operating-mode), and muted otherwise. "The source" includes its symbols (air unit housing and coil, ground loop),
+which take the muted style with the pipes; the fan keeps following its own speed. This includes `defrost`, in
+which exchanger 10 warms the brine that runs to the air unit.
 
 #### Scenario: Standby
 - **WHEN** the mode is `standby`

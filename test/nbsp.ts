@@ -13,4 +13,4 @@ export const unitPattern = [...NUMBER_UNITS]
   .join('|');
 
 /** A text as the card writes it: a no-break space between each number and its unit (the role table's display units). */
-export const nb = (text: string): string => text.replace(new RegExp(`(\\d|n/a) (${unitPattern})`, 'g'), '$1 $2');
+export const nb = (text: string): string => text.replace(new RegExp(`(\\d|–) (${unitPattern})`, 'g'), '$1 $2');

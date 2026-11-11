@@ -1,5 +1,6 @@
 // Config to ResolvedConfig (design D2, D3): the options with their defaults, the features (preset merged with the
 // overrides), the entity id of every role and the sample flag. Pure; call after options.configErrors found no problem.
+import { stopsOf, type ColorStop } from '../diagram/colors';
 import { entityAt, type CardConfig } from '../lib/config';
 import {
   featureOverrides,
@@ -24,6 +25,8 @@ export interface ResolvedConfig {
   features: Features;
   /** The entity id of each role, or undefined when the role has no entity (no override and no prefix). */
   entities: Readonly<Record<RolePath, string | undefined>>;
+  /** The temperature colour stops: the `colors` option or the default scale. */
+  colors: readonly ColorStop[];
   /** True when the config sets neither a prefix nor an entity: the roles are the sample entities. */
   sample: boolean;
 }
@@ -52,6 +55,7 @@ export function resolveConfig(config: CardConfig): ResolvedConfig {
     ...installationOf(config),
     variant,
     prefix,
+    colors: stopsOf(config),
     features: mergeFeatures(variant, featureOverrides(config)),
     entities: sample ? SAMPLE_ENTITIES : resolveEntities(config, prefix),
     sample,

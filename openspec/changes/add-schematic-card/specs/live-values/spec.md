@@ -58,7 +58,9 @@ K for temperature differences (superheat, start delta-T). The COP has no unit.
 
 ### Requirement: Locale and precision
 Numbers SHALL use Home Assistant's locale and number format setting. The decimals SHALL come from the entity's
-display precision when Home Assistant has one, and from the card's default for the role otherwise.
+display precision when Home Assistant has one and the entity's unit is the card's unit for the role, and from the
+card's default for the role otherwise (a converted value, such as kW shown in W, uses the role default). A
+temperature difference reported in °C counts as the card's unit K, since the number is unchanged.
 
 #### Scenario: Locale
 - **WHEN** Home Assistant's number format uses a decimal comma

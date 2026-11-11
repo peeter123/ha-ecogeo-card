@@ -183,14 +183,14 @@ the compressor discharge and 29 on the suction line, as in the figure.
 
 The outer-loop source and the DHW storage are drawn outside the cabinet, in the zones left (x 0 to 210) and right
 (x 790 to 1000) of it. Their pipes are segments in `src/diagram/geometry.ts`, like the cabinet's, so they will take
-the same colour and animation (planned, with the colours section). The air unit, the ground loop and the external tank have no item number in the manual;
+the same colour and animation (see Colours). The air unit, the ground loop and the external tank have no item number in the manual;
 the manual's figures stop at the connections.
 
 ### Outer-loop source (`source`)
 
 Connection 3 (brine outlet) and 4 (brine inlet) rise from the top edge into the pipe run above the cabinet, above the
 DG1 stubs and the circuit labels. Port 4's pipe is the higher one (y 50, port 3's runs at y 85), so the two never
-cross on their way left. They belong to the brine circuit: they are to be active with it, defrost included.
+cross on their way left. They belong to the brine circuit: they are active with it, defrost included.
 
 - **Air:** a housing with a finned coil of three rows and a fan. The brine enters the coil at the top and leaves
   on the left. The fan rotates while `source.fan_speed` is above 0 % (a full turn takes 120 s divided by the speed
@@ -215,20 +215,147 @@ cross on their way left. They belong to the brine circuit: they are to be active
   instead of the coil's high point, and probe 54 and drain valve 53 touch the wall.
 - **None:** no tank, no DHW pipes, no connections 5/6, no valve 26 and no HTR group. The mode label "DHW" can still show when the unit reports DHW mode.
 
-The tank body is planned to take the DHW temperature colour through the custom property `--dhw-tank-color`, which
-nothing sets yet.
-
-The fan speed, outside temperature, air unit outlet temperature, the ground loop's brine temperatures and the tank
-values are planned as live labels (see Live values); the space for them is kept free beside the source and the
-tanks.
+The tank body takes the DHW temperature colour through the custom property `--dhw-tank-color` (see Colours). The
+fan speed, outside temperature, air unit outlet temperature, the ground loop's brine temperatures and the tank
+values are live labels (see Live values).
 
 ## Colours
 
-To be written.
+Every pipe is drawn twice: a base stroke in the colour of its temperature, and, while it flows, a dash overlay that
+runs along it in the direction of the flow. The logic is in `src/diagram/colors.ts` (the scale) and
+`src/diagram/pipes.ts` (which pipe takes which temperature, which is muted, which flows); both are pure functions
+with unit tests.
+
+### The scale
+
+The scale is absolute: a temperature has the same colour whatever the other temperatures are. The default stops are
+
+| Temperature | Colour |
+|---|---|
+| -10 °C | blue `#1e88e5` |
+| 20 °C | green `#43a047` |
+| 45 °C | orange `#fb8c00` |
+| 70 °C | red `#e53935` |
+
+Between two stops the colour is a CSS `color-mix(in srgb, ...)` of the two, by the share of the way between them
+(rounded to 0.1 %); outside the scale it is the colour of the nearest end, so a discharge of 95 °C is the 70 °C red.
+The `colors` option replaces the stops with an ascending list of 2 to 8 `{ temperature, color }` entries; a list that
+is too short or long, not ascending, or with something that is not a number or a CSS colour is a configuration error.
+The interpolation is copied from hrv-ventilation `src/diagram/streams.ts` (`mixColor`); the card finds the two
+neighbouring stops of an absolute temperature first, where hrv mixes two colours on a relative position.
+
+### Which probe colours which pipe
+
+| Pipe segments | Temperature role | Probe or point |
+|---|---|---|
+| Supply from the condenser to connection 1 (or 5 in DHW mode), the DHW supply, the DG1 stub of connection 1 | `production.outlet_temperature` | 33 |
+| Return from connection 2 (or 6) to the condenser, the DG1 stub of connection 2 | `production.return_temperature` | 34 |
+| Brine from connection 4 to the evaporator | `brine.inlet_temperature` | 32 |
+| Brine from the evaporator to connection 3, and the pipes from 3 to the source | `brine.outlet_temperature` | 31 |
+| Compressor 11 through HTR exchanger 9 and valve 14 to the condenser | `compressor.discharge_temperature` | 30 |
+| Condenser 8 to the expansion valve | `refrigerant.condensation_temperature` | 8 |
+| Expansion valve to evaporator 7 | `refrigerant.evaporation_temperature` | 7 |
+| Evaporator 7 to the compressor | `compressor.suction_temperature` | 29 |
+| Exit of the air unit; in a hybrid also the link down and the whole ground loop | `source.air_unit_outlet_temperature` | air unit |
+| Exit of the ground loop (a hybrid: the return up to connection 4) | `brine.inlet_temperature` | 32 |
+| HTR water (exchanger 9, pump 17, valves 22/25 and their lines) | `dhw.temperature` | tank |
+| Model C stubs of connections 47, 48 and 49 | `dhw.temperature` | tank |
+
+The mode changes some of these (they are looked up when drawing; the geometry does not change):
+
+- **Active cooling** reverses the refrigerant legs that flip direction: the discharge colour then runs from the
+  compressor through exchanger 9 to evaporator 7, which works as the condenser, and the suction colour from
+  exchanger 8 back; the condensation and evaporation colours swap along with them.
+- **Passive cooling and defrost:** the compressor is stopped, so the condenser does not change the water
+  temperature. The production legs from valve 27 through pump 15 to the condenser (with the taps on the pump's
+  suction and the drain) take the outlet temperature, as does the leg from exchanger 10 (`prod_10_out`, after
+  valve 27), but only while valves 27/28 are in the exchanger position: without exchanger 10 the water runs through
+  the bypass and the legs keep the return colour.
+- **HTR recovery** (active cooling with HTR active): the DHW lines between valve 26 and the tank, outside the arm of
+  valve 26, and the pipes to and in an external tank carry HTR water, so they take the DHW temperature.
+- **The tank** body takes the DHW temperature on the same scale (a 25 % tint of the colour). Model C's coil 51 is a
+  symbol: it takes the colour of the water feeding it: the production outlet colour in DHW mode, the DHW
+  temperature during HTR recovery, and the muted colour otherwise.
+
+### Muted pipes
+
+A pipe is drawn in the theme's disabled colour (`--disabled-text-color`), without animation, when
+
+- its circuit is not active in the derived mode (see Operating mode): the DHW loop while heating, the refrigerant
+  circuit in defrost and passive cooling, everything in standby and off;
+- its feature is `unused` (not `false`, which removes the part), except exchanger 10, valves 27/28 and their pipes in
+  defrost, which use them (their symbols are un-muted too);
+- or its probe has no value (unavailable, unknown, not a number or the firmware sentinel -999.9), even when its
+  circuit is active. Such a pipe keeps its animation, since the flow is known and only the colour is not.
+
+The source's symbols (air unit housing and coil, ground line) are muted the same way while the brine circuit is
+inactive; the fan keeps following its own speed.
+
+The tap-water stubs of model C (47, 48, 49) are the exception: they are coloured by the DHW temperature in every
+mode, and never animated.
+
+### Animation
+
+An active pipe shows moving dashes in the direction of the flow (the geometry's direction, flipped for the reversible
+refrigerant legs in active cooling). The dash period (`--flow-duration`) follows the speed of the pump or compressor
+that moves the fluid: 1.2 s at 100 %, proportionally slower below, never faster than 0.6 s or slower than 8 s.
+
+| Pipes | Speed from |
+|---|---|
+| Production, including through exchanger 10 and the DHW lines | `production.pump` (pump 15) |
+| Brine, including through exchanger 10 and the source pipes | `brine.pump` (pump 16) |
+| Refrigerant | `compressor.percentage` |
+| HTR water (pump 17 reports no speed) | a fixed 3 s |
+
+At 0 % or without a value the pipe is still. Dead-end taps (vessels, drain valves, safety valves, probes) are coloured
+but never animated. With `prefers-reduced-motion: reduce` nothing is animated, the pipes and the fan alike; the colours
+stay the same.
+
+The tank body colour is the custom property `--dhw-tank-color` on the drawing; the tank takes the muted colour and
+shows no number while the DHW temperature is unavailable.
 
 ## Live values
 
-To be written.
+Values are HTML labels laid over the drawing at percentage positions computed from viewBox coordinates, so text stays
+crisp and selectable; they scale with the drawing. Positions are in `src/diagram/labels.ts`. Tapping a value opens
+Home Assistant's more-info dialog for its entity (in sample mode they do nothing); the card calls no service and
+writes no entity.
+
+| Value | Where |
+|---|---|
+| Production outlet (33) and return (34), pressure (38), pump 15 | left of probe 33, under probe 34, under pressure probe 38, above pump 15 |
+| DG1 setpoint | above the DG1 label at connections 1/2 |
+| Brine outlet (31) and inlet (32), pressure (37), pump 16 | under the probes, under probe 37, left of the pump |
+| Discharge (30) and suction (29) temperatures, pressures 36 and 35 | below the discharge and suction lines of the probe row |
+| Compressor 11: rpm, %, W | a stack inside the refrigerant loop |
+| Superheat (K) and valve opening (%) at 12 | above the expansion valve |
+| Condensation (8) and evaporation (7) temperatures | under exchangers 8 and 7 |
+| Air unit: fan, outside temperature, outlet temperature | under the housing |
+| Ground loop: brine out and in (a hybrid: only its exit) | right of the collector |
+| Tank: temperature, setpoint, start delta-T (K), "Demand" while on | under the external tank; on model C in the DHW zone right of the cabinet |
+
+A value of a part that is not drawn is not shown (no DHW storage, no tank values; a source that is not drawn, no
+source values). A drawn value with no value shows a muted dash and keeps its place.
+
+The footer shows the mode, the on/off state, the season, the outside temperature, the COP, the condensation and
+evaporation capacity, and the alarm and offline indications.
+
+### Formatting
+
+The card formats every number itself (`src/calc/display.ts`), never through `hass.formatEntityState`, which would turn
+"38.9 %" into "38.9%" and "rpm" into "RPM".
+
+- The number uses Home Assistant's language and number format, without a thousands separator ("2803 rpm", "4712 W").
+  The copied `formatNumber` has a `grouping` flag for this.
+- The decimals come from the entity's `display_precision` in the entity registry when it has one and the entity's unit
+  is the role's own unit; else (no precision, or a converted value such as kW shown as W, a Fahrenheit probe) from the role
+  table (1 for temperatures, bar and %, 0 for rpm, W, the valve opening, the DHW setpoint and start delta-T).
+- The unit is the role's own, joined to the number by a no-break space: °C for temperatures, K for temperature
+  differences (superheat, start delta-T), bar, %, rpm and W. The COP has none.
+- A state in °F is converted to °C and one in kW to W; a temperature difference in °F is converted back with the
+  same absolute formula (43.2 °F is 6.2 K), because Home Assistant converted it as if it were a temperature.
+- The card re-renders when the state or registry entry of one of its entities changes, or the theme, locale or
+  configuration; other entities changing do nothing.
 
 ## Installation
 

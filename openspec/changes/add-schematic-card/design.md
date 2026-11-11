@@ -232,7 +232,9 @@ noted). Display units are the card's own, not the entity's.
   - The effective feature state (with HTR `false` under `dhw: none`) comes from one exported helper, used by
     the drawing and by the labels.
   - In active cooling the refrigerant segments flip `direction`. The swapped roles of 7 and 8 are expressed by
-    `temperatureRole` lookups in `circuits.ts`, not by separate geometry.
+    `temperatureRole` lookups in `diagram/pipes.ts` (`roleFor`), not by separate geometry (decided 2026-11-11 in
+    group 6: the lookup sits with the other mode-dependent roles of D7). On the `reversible` legs, discharge and
+    suction swap, and condensation and evaporation swap. The value labels at items 7 and 8 keep their roles.
   - The discharge line runs 11 -> 9 -> 14. HTR water segments run between exchanger 9, pump 17, valves 22/25
     and the 5/6 lines inside the cabinet.
 - **Integrity tests:** unit tests check the geometry:
@@ -262,9 +264,13 @@ noted). Display units are the card's own, not the entity's.
 - **Number formatting:** the card formats every number itself in `calc/display.ts`, not through
   `hass.formatEntityState`. This keeps the no-break space and the card's units, which HA would otherwise change
   ("38.9%", "2803 RPM").
-  - The number goes through hrv's `formatNumber` (copied `lib/format.ts`) with HA's locale.
-  - The decimals come from the entity's `display_precision` in `hass.entities` when set, and from the role
-    table otherwise.
+  - The number goes through hrv's `formatNumber` (copied `lib/format.ts`) with HA's locale, without thousands
+    grouping ("2803 rpm", "4712 W", as the live-values scenarios read).
+  - Missing values show `NO_VALUE`, an en dash, in a muted colour.
+  - The decimals come from the entity's `display_precision` in `hass.entities` when set and the entity's unit
+    is the role's display unit, and from the role table otherwise (a converted value uses the role default).
+  - The hybrid's ground loop shows only its exit value (brine inlet); its entry would repeat the air unit's
+    outlet, which is labelled at the air unit.
   - The display unit comes from the role table and is joined with `NBSP`.
 - **Label room:** model C's tank values (temperature, setpoint, start delta-T, demand) go in the empty DHW zone
   right of the cabinet (about x 800-990, y 140-230), since the squat internal tank has no room. The ground
@@ -283,12 +289,19 @@ noted). Display units are the card's own, not the entity's.
 - **Mode-dependent roles** (looked up at render time, like the 7/8 swap; no geometry change):
   - `prod_10_out` takes the production outlet temperature (probe 33 is the first probe after exchanger 10).
     In `passive_cooling` and `defrost` the production legs from valve 27 to condenser 8 take it too, because
-    the condenser does not change the water temperature with the compressor stopped.
+    the condenser does not change the water temperature with the compressor stopped: `prod_27_15`, `prod_15_8`,
+    and the taps and drain on pump 15's suction. This applies only while valves 27/28 are in the `exchanger`
+    position; when passive cooling is `false` the water comes through `prod_bypass27` and these legs keep the
+    return role.
+  - A segment muted only because its probe is missing keeps its flow animation when its circuit is active and
+    its speed is known (the flow is known from the pump). Segments muted by an inactive circuit or `unused`, and
+    stubs, are still.
   - When `htr` is active and `production_dhw` is not, the DHW lines between valve 26 / port 2 and the tank
     (`dhw_sup_*`, `dhw_ret_*` outside the 26 arm, and `dhw_ext_*`) carry HTR water: they take the DHW
     temperature and the fixed HTR speed.
-  - Model C coil 51 is a symbol, not a segment: it takes the `dhw_coil` state (production outlet colour when
-    active, muted otherwise) without animation.
+  - Model C coil 51 is a symbol, not a segment: it takes the `dhw_coil` state without animation, in the colour
+    of the water feeding it: the production outlet in `production_dhw`, the DHW temperature during HTR recovery
+    (the same rule as the DHW lines above), muted otherwise (decided 2026-11-11 after the group 6 captures).
   - In `defrost`, exchanger 10, valves 27/28 and their pipes are drawn active even when `unused`.
   - The model C tap-water stubs 47/48/49 are coloured by the DHW temperature whenever the internal tank is
     drawn, and never animated.
@@ -307,7 +320,10 @@ Each is copied with its unit test and adjusted only where noted:
 - `lib/config.ts`: `valueAt`, `asEntityId` and `entityAt`, with the role type replaced by this card's role
   table. The hrv humidity and stream helpers are dropped.
 - `lib/options.ts`: `optionValue` and `invalidOptions`.
-- `lib/format.ts`: `formatNumber` and `localeFromHass`.
+- `diagram/colors.ts`: the `mixColor` interpolation from hrv `src/diagram/streams.ts`, applied to a stop list
+  (configurable stops, clamped at the ends) instead of hrv's fixed pair.
+- `lib/format.ts`: `formatNumber` and `localeFromHass`. Adds a `grouping` flag (the card's labels pass it off,
+  D6), and non-finite input returns `NO_VALUE`.
 - `lib/sample.ts`: the pattern only, with its own sample states.
 - `strings.ts`: the NBSP pattern, plus `test/nbsp.ts` and the strings test.
 

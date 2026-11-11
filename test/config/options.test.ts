@@ -44,7 +44,18 @@ describe('card type and options', () => {
   });
 
   test('the type, the colors option and the keys Home Assistant adds are known', () => {
-    expect(errors({ colors: [], view_layout: {}, grid_options: {}, layout_options: {}, visibility: [] })).toEqual([]);
+    expect(
+      errors({
+        colors: [
+          { temperature: 0, color: 'blue' },
+          { temperature: 50, color: 'red' },
+        ],
+        view_layout: {},
+        grid_options: {},
+        layout_options: {},
+        visibility: [],
+      }),
+    ).toEqual([]);
   });
 
   test('prefix must be an object id prefix; blank counts as left out', () => {

@@ -170,10 +170,10 @@ something visible also ends with emulator screenshots, which an agent inspects a
 
 ## 6. Colour, animation and live values
 
-- [ ] 6.1 Implement `src/diagram/colors.ts` per design D7 and the `colors` option validation. Unit-test the
+- [x] 6.1 Implement `src/diagram/colors.ts` per design D7 and the `colors` option validation. Unit-test the
   temperature-coloring scale scenarios: cold brine, out of range, custom stops, invalid stops.
   Verify: `npm test`.
-- [ ] 6.2 Implement `src/diagram/pipes.ts`:
+- [x] 6.2 Implement `src/diagram/pipes.ts`:
   - each segment coloured by its temperature role
   - muted when its circuit is inactive, its feature is `unused` or its probe is missing
   - the dash overlay animated in its direction, at a speed from its speed role, and at a fixed speed on the
@@ -186,7 +186,7 @@ something visible also ends with emulator screenshots, which an agent inspects a
   Unit-test the segment, muted, animation and reduced-motion scenarios, including the source and DHW active
   and muted states deferred from group 5 (standby, heating, DHW, defrost, HTR recovery on `dhw_ext_*`, coil 51).
   Verify: `npm test`.
-- [ ] 6.3 Implement `src/calc/display.ts` and `src/diagram/labels.ts`:
+- [x] 6.3 Implement `src/calc/display.ts` and `src/diagram/labels.ts`:
   - `display.ts` formats per design D6: `formatNumber` with HA's locale, the decimals from the entity's display
     precision or the role table, the role's own unit joined by NBSP; never `hass.formatEntityState`
   - HTML value labels at the positions in the live-values spec, and the footer
@@ -200,11 +200,11 @@ something visible also ends with emulator screenshots, which an agent inspects a
   setpoint, start delta-T, "Demand"), DHW temperature unavailable (muted body, no number), the hybrid's per-unit
   labels, and model C's tank values in the DHW zone (design D6).
   Verify: `npm run check`.
-- [ ] 6.4 Emulator verification: run `npm run capture`. A subagent inspects every scenario. It checks colours
+- [x] 6.4 Emulator verification: run `npm run capture`. A subagent inspects every scenario. It checks colours
   against the scale, that active and muted circuits match the mode, that labels do not overlap at the default
   width, and that the dark theme is legible. It returns a verdict.
   Verify: verdict with no blocking findings.
-- [ ] 6.5 Update `docs/ecogeo-card.md` (colour scale, segment-to-probe table, animation) and the README (features
+- [x] 6.5 Update `docs/ecogeo-card.md` (colour scale, segment-to-probe table, animation) and the README (features
   list, `colors` option, a screenshot from `build/captures/` copied to `docs/images/`).
   Verify: sections and image exist.
 

@@ -27,6 +27,15 @@ export const sourceStyles = css`
     stroke: var(--secondary-text-color);
     stroke-width: 1.5;
   }
+  /* The brine circuit is inactive: the housing, coil and ground line are muted like the pipes; the fan follows its own speed. */
+  .muted .source-outline,
+  .muted .source-fin,
+  .muted .source-ground {
+    stroke: var(--disabled-text-color);
+  }
+  .muted .source-caption {
+    fill: var(--disabled-text-color);
+  }
   .source-caption {
     fill: var(--secondary-text-color);
     font-size: 11px;
@@ -67,12 +76,12 @@ const BLADES = [0, 90, 180, 270].map(
     svg`<path class="fan-blade" d="M0 0 C6 -8 6 -24 0 -30 C-8 -24 -8 -8 0 0 Z" transform="rotate(${angle})" />`,
 );
 
-function airUnit(speed: number | undefined): SVGTemplateResult {
+function airUnit(speed: number | undefined, muted: boolean): SVGTemplateResult {
   const { x, y, width, height, fanX, fanY, fanRadius } = AIR_UNIT;
   const duration = fanDuration(speed);
   const { fins: fin } = AIR_UNIT;
   const fins = Array.from({ length: fin.count }, (_, index) => fin.x + index * fin.step);
-  return svg`<g class="air-unit" data-source="air">
+  return svg`<g class="air-unit${muted ? ' muted' : ''}" data-source="air">
     <rect class="source-outline" x=${x} y=${y} width=${width} height=${height} rx="6" />
     ${fins.map((fin) => svg`<path class="source-fin" d="M${fin} ${AIR_UNIT.fins.y0} V${AIR_UNIT.fins.y1}" />`)}
     <circle class="fan-ring" cx=${fanX} cy=${fanY} r=${fanRadius} />
@@ -97,26 +106,33 @@ function pipesAcross(context: DrawContext, lineY: number): number[] {
 }
 
 /** The ground line with its hatching, at `lineY`, leaving out the places where the source pipes pass. */
-function groundLine(context: DrawContext, kind: 'ground' | 'hybrid', lineY: number): SVGTemplateResult {
+function groundLine(context: DrawContext, kind: 'ground' | 'hybrid', lineY: number, muted: boolean): SVGTemplateResult {
   const skip = pipesAcross(context, lineY);
   const ticks = Array.from({ length: 16 }, (_, index) => 44 + index * 10).filter(
     (tick) => !skip.some((pipe) => Math.abs(pipe - tick) < 8),
   );
   const captionY = GROUND_CAPTION.y[kind];
-  return svg`<g class="ground-loop" data-source="ground">
+  return svg`<g class="ground-loop${muted ? ' muted' : ''}" data-source="ground">
     <path class="source-ground" d="M8 ${lineY} H202" />
     ${ticks.map((tick) => svg`<path class="source-ground" d="M${tick} ${lineY} l-6 8" />`)}
     <text class="source-caption" x=${GROUND_CAPTION.x} y=${captionY} text-anchor="middle">${SOURCE_LABELS.ground}</text>
   </g>`;
 }
 
-/** The source for the config: air unit, ground loop or both (hybrid), with the fan turning at `source.fan_speed`. */
-export function renderSource(context: DrawContext, readings: Pick<Readings, 'source.fan_speed'>): SVGTemplateResult {
+/**
+ * The source for the config: air unit, ground loop or both (hybrid), with the fan turning at `source.fan_speed`. The
+ * housing, coil and ground line are muted while the brine circuit is inactive (`brineActive` false), like the pipes.
+ */
+export function renderSource(
+  context: DrawContext,
+  readings: Pick<Readings, 'source.fan_speed'>,
+  brineActive: boolean,
+): SVGTemplateResult {
   const air = context.source === 'air' || context.source === 'hybrid';
   const ground = context.source === 'ground' || context.source === 'hybrid';
   const kind = context.source === 'hybrid' ? 'hybrid' : 'ground';
   return svg`<g class="source" data-source-kind=${context.source}>
-    ${air ? airUnit(readings['source.fan_speed']) : svg``}
-    ${ground ? groundLine(context, kind, GROUND_LINE_Y[kind]) : svg``}
+    ${air ? airUnit(readings['source.fan_speed'], !brineActive) : svg``}
+    ${ground ? groundLine(context, kind, GROUND_LINE_Y[kind], !brineActive) : svg``}
   </g>`;
 }

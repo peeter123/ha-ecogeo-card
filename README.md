@@ -8,12 +8,27 @@ The card is meant to be used with the ESPHome firmware `esphome-ecoforest-ecogeo
 defaults. Every entity role can be overridden in the card configuration. See [docs/ecogeo-card.md](docs/ecogeo-card.md)
 for the explanation of what the card shows and where each part comes from.
 
+![The card while heating: pipes coloured by temperature, live values beside each component](docs/images/heating.png)
+
+## Features
+
+- The unit's internal schematic drawn as inline SVG after the manual's figures B1 to B4 and C, with the item number of
+  every component, for any model, variant, outer-loop source (air, ground or hybrid) and DHW storage.
+- Pipes coloured by temperature on an absolute scale (blue at -10 °C, green at 20 °C, orange at 45 °C, red at
+  70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe with no probe value is muted.
+- The active circuits move: dashes run in the direction of the flow at a speed that follows the pump or the
+  compressor, the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode
+  are muted. `prefers-reduced-motion` stops all animation.
+- Live values beside their components (temperatures, pressures, pump and compressor speeds, power, superheat, the
+  tank's values) and a footer with the mode, season, outside temperature, COP and capacities. The card formats the
+  numbers itself with Home Assistant's locale and keeps every number joined to its unit by a no-break space.
+- Read-only: tapping a value opens the entity's more-info dialog; the card calls no service and writes no entity.
+
 ## Status
 
 Work in progress. The card validates its configuration, resolves its entities (or shows built-in sample values),
-reads them and derives the operating mode, which it shows as a label with the alarm and offline indications. It draws
-the cabinet after the manual's B and C figures, with the outer-loop source and the DHW storage. The colours, the live
-values and the installation instructions come next, in the later task groups of the planned change
+reads them, derives the operating mode and draws the schematic with coloured, flowing pipes and live values. The
+installation instructions come next, in the last task group of the planned change
 (`openspec/changes/add-schematic-card/`).
 
 ## Configuration
@@ -50,7 +65,7 @@ fault.
 | `prefix` | lowercase letters, digits, `_` | none | Entity object id prefix; the firmware default is `ecoforest_ecogeo`. |
 | `features` | group | from the variant | Feature states that override the variant (see Features). |
 | `entities` | group | from the prefix | Entity id per role, nested by role path (see Roles). |
-| `colors` | list | built-in scale | Temperature colour stops (arrives with the colour task group). |
+| `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 
 ### Source and DHW
 
@@ -158,6 +173,23 @@ converted; a temperature difference is shown in K).
 
 A state that is `unavailable`, `unknown`, not a number or the firmware's -999.9 (an absent probe) is shown as no
 value.
+
+### Colours
+
+`colors` is an ascending list of 2 to 8 stops, each a `temperature` in °C and a CSS `color`. Between two stops the
+colour is mixed; below the first and above the last stop it is that stop's colour. A list that is too short or long,
+not ascending, or with a value that is not a number or a CSS colour is a configuration error. Without the option the
+card uses blue at -10 °C, green at 20 °C, orange at 45 °C and red at 70 °C.
+
+```yaml
+colors:
+  - { temperature: 0, color: '#1565c0' }
+  - { temperature: 35, color: '#f9a825' }
+  - { temperature: 60, color: '#c62828' }
+```
+
+The colour scale, which pipe takes which probe and the animation are explained in
+[docs/ecogeo-card.md](docs/ecogeo-card.md#colours).
 
 ### Operating mode
 

@@ -7,8 +7,8 @@
 /** A no-break space: keeps a number on one line with its unit, in every text below. */
 export const NBSP = '\u00a0';
 
-/** Shown for a figure whose inputs have no value. */
-export const NO_VALUE = 'n/a';
+/** Shown, muted, for a value that is missing: unavailable, unknown, not a number or the firmware sentinel. */
+export const NO_VALUE = '–';
 
 /** The message setConfig throws for an option with an invalid value: what the option accepts. */
 export const OPTIONS = {
@@ -69,6 +69,8 @@ export const CONFIG_ERRORS = {
   featureState: (feature: string): string => `Invalid option features.${feature}: expected true, false or unused`,
   integer: (min: string, max: string): string => `a whole number from ${min} to ${max}`,
   prefix: 'a prefix of lowercase letters, digits and underscores',
+  colors:
+    'Invalid option colors: expected an ascending list of 2 to 8 stops, each { temperature, color } with a number and a CSS colour',
   dhwMismatch: (dhw: string, model: string): string => `Invalid option dhw: ${dhw} does not fit model ${model}`,
 } as const;
 
@@ -88,4 +90,34 @@ export const SOURCE_LABELS = {
 /** The caption of the external DHW tank (not a manual item: ports 5/6 are the "DHW inter-accumulator"). */
 export const DHW_LABELS = {
   externalTank: 'DHW tank',
+  /** Shown beside the tank values only while the DHW demand is on. */
+  demand: 'Demand',
 } as const;
+
+/** The small captions in front of a value label where its position alone would not say what it is. */
+export const VALUE_CAPTIONS = {
+  setpoint: 'Setpoint',
+  startDelta: 'Start ΔT',
+  fan: 'Fan',
+  outside: 'Outside',
+  airOutlet: 'Outlet',
+  groundIn: 'In',
+  groundOut: 'Out',
+} as const;
+
+/** The footer's captions and the texts of its season and on/off values. */
+export const FOOTER_LABELS = {
+  outside: 'Outside',
+  cop: 'COP',
+  condensation: 'Condensation',
+  evaporation: 'Evaporation',
+  summer: 'Summer',
+  winter: 'Winter',
+} as const;
+
+/** The heat pump's on/off text (register 5058) by its lower-case state; any other state is shown as it is. */
+export const ON_OFF_LABELS: Readonly<Record<string, string>> = {
+  on: 'On',
+  off: 'Off',
+  emergency: 'Emergency',
+};
