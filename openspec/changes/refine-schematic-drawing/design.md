@@ -17,7 +17,8 @@ from each component's `tag` offset. See proposal.md for the motivation.
 - The live card changes look without a dashboard edit (new options default to the new look).
 
 **Non-Goals:**
-- No change to roles, operating-mode logic or segment roles. No change to label positions, except the labels that
+- No change to roles, operating-mode logic or segment roles (except the ground loop's up leg, which carries the
+  brine inlet temperature since D12). No change to label positions, except the labels that
   follow the moved tank and sources and the new source port labels of D14 (follow-up fixes, groups 5-6).
 - No change to the scale behaviour beyond the default stops (no adaptive scale).
 - Narrow-card behaviour (`add-compact-layout`).
@@ -192,6 +193,8 @@ The air unit housing's top (`AIR_UNIT.y`) and the ground loop's ground line (`GR
 cabinet's top line (`CABINET.y`, y 130), derived from `CABINET`. In the hybrid the air unit sits there and the
 ground loop stays below it, moved by the same offset. The captions keep their places relative to their device
 (the air unit caption above the housing, the ground caption below the loop).
+As built: the hybrid's ground line sits 70 units under the (taller) housing's bottom (y 410), clear of the fan
+and outside-temperature labels.
 
 ### D12. Ground loop as one U-loop
 The ground loop becomes a single vertical loop (a borehole U-tube): one leg down from the ground line, a half
@@ -200,6 +203,9 @@ equal to half the leg spacing, so the bottom is a half circle), which keeps the 
 integrity tests. Both ends are at the ground line; the down leg carries the brine to the ground (role
 `brine.outlet_temperature`), the up leg brings it back (`brine.inlet_temperature`). The same loop is drawn in the
 hybrid, below the air unit. The `CROSSINGS` test of group 3 (no hop under a `bend` segment) still applies.
+As built: the loop is two segments split at the middle of the half circle (down leg and up leg, each with its own
+role), so the colour changes at the bottom of the loop; `roundedPathData` lets a corner use a whole end piece so a
+half circle can be split. Ground: legs at x 166 (down) and 106 (up), depth 140.
 
 ### D13. Air unit ports on one side
 The brine serpentine gets an even number of passes (four), so that it enters and leaves the coil block on the
@@ -207,6 +213,11 @@ same side: the right side, facing the cabinet. Both pipes leave the housing thro
 the brine lines; they are routed without crossing any pipe. A declared hop is allowed only where no crossing-free
 route exists, and is then listed in `CROSSINGS`. In the hybrid the link to the ground loop leaves from that same
 outlet port. Fins, slats and fan stay as D6, the coil block may grow to fit the four passes.
+As built: the housing is x 26-150 (narrower, taller), the coil block 104 x 90 with passes at y 164-218. With
+`source: air` the brine enters the bottom pass and leaves the top one (the exit rises left of the feed column); in
+the hybrid it enters the top pass and the link leaves the bottom one towards the ground loop. That needs
+per-source segments (`src_air_*`, `src_hyb_*`) instead of shared ones; the roles they carry are those the pipes
+carried before. No hop is needed: no `CROSSINGS` entry involves a `src_*` segment.
 
 ### D14. Source port labels
 Each source device shows the temperature of the brine entering and leaving it next to its ports, so the outer
@@ -218,8 +229,10 @@ loop reads at a glance without looking into the cabinet; the probe labels 31/32 
 - Ground loop: In = `brine.outlet_temperature` at the down leg, Out = `brine.inlet_temperature` at the up leg,
   both at the ground line. The ground captions change meaning accordingly (they were the heat pump's point of
   view).
-- Hybrid: the air unit's In and Out, and the ground loop's Out. The ground loop's In is the air unit's Out on the
-  same link pipe, so it is shown once.
+- Hybrid: the air unit's In and the ground loop's Out only. The air unit's Out is left out (user's decision): it
+  would sit beside the ground loop's Out with the same caption on the same brine loop and read as a duplicate; the
+  ground loop's In (the same link pipe) is not shown either. Fan speed and outside temperature stay under the
+  housing.
 - The labels are ordinary value labels: NBSP between number and unit, tappable for more-info, no label touching a
   pipe or another label (checked in the captures).
 

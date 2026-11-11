@@ -1,13 +1,12 @@
-// The outer-loop source (design D5, D6; outer-loop-source spec): the air unit, the ground loop or both on one brine
-// loop, drawn in the zone left of the cabinet (viewBox x 0-210). This file draws what is not a pipe: the air unit's
-// housing (slatted front), finned coil block and fan, the ground line and the captions. The pipes (ports 3/4 up into the run, left to the zone, the
-// coil rows and the collector rows) are segments in geometry.ts, so pipes.ts colours and animates them like every other
-// pipe. None of these parts is a manual item: the manual's figures stop at connections 3 (brine outlet) and 4 (brine
-// inlet).
+// The outer-loop source (design D5, D6, D11-D14; outer-loop-source spec): the air unit, the ground loop or both on
+// one brine loop, drawn in the zone left of the cabinet (viewBox x 0-240), its top on the cabinet's top line. This
+// file draws what is not a pipe: the air unit's housing (slatted front), finned coil block and fan, the ground line
+// and the captions. The pipes (ports 3/4 up into the run, left to the zone, the serpentine and the ground loop's U)
+// are segments in geometry.ts, so pipes.ts colours and animates them like every other pipe. None of these parts is
+// a manual item: the manual's figures stop at connections 3 (brine outlet) and 4 (brine inlet).
 //
-// The live values (labels.ts): the air unit's fan speed, outside temperature and air unit outlet temperature
-// go under the housing (y 305-345); the ground loop's outlet and inlet temperatures go where its pipes meet it, at
-// the right of the collector (x 160-205).
+// The live values (labels.ts): the air unit's fan speed and outside temperature go under the housing, its In and Out
+// beside its two ports on the housing's right; the ground loop's In and Out sit at the ground line, beside the legs.
 import { css, svg, type SVGTemplateResult } from 'lit';
 import type { Readings } from '../calc/readings';
 import { AIR_UNIT_FAN_NAME, SOURCE_LABELS } from '../strings';
@@ -129,14 +128,14 @@ function airUnit(speed: number | undefined, muted: boolean, taps: Taps | undefin
   </g>`;
 }
 
-/** The x of the drawn source pipes that run across the height `lineY`. */
+/** The x of the drawn source pipes that run across or end on the height `lineY`. */
 function pipesAcross(context: DrawContext, lineY: number): number[] {
   return drawnSegments(context).flatMap(({ part }) =>
     part.id.startsWith('src_')
       ? part.points.slice(1).flatMap((end, index) => {
           const start = part.points[index];
           if (start?.[0] !== end[0]) return [];
-          return lineY > Math.min(start[1], end[1]) && lineY < Math.max(start[1], end[1]) ? [end[0]] : [];
+          return lineY >= Math.min(start[1], end[1]) && lineY <= Math.max(start[1], end[1]) ? [end[0]] : [];
         })
       : [],
   );
@@ -145,12 +144,12 @@ function pipesAcross(context: DrawContext, lineY: number): number[] {
 /** The ground line with its hatching, at `lineY`, leaving out the places where the source pipes pass. */
 function groundLine(context: DrawContext, kind: 'ground' | 'hybrid', lineY: number, muted: boolean): SVGTemplateResult {
   const skip = pipesAcross(context, lineY);
-  const ticks = Array.from({ length: 16 }, (_, index) => 44 + index * 10).filter(
-    (tick) => !skip.some((pipe) => Math.abs(pipe - tick) < 8),
+  const ticks = Array.from({ length: 21 }, (_, index) => 14 + index * 10).filter(
+    (tick) => !skip.some((pipe) => Math.abs(pipe - tick) < 10),
   );
   const captionY = GROUND_CAPTION.y[kind];
   return svg`<g class="ground-loop${muted ? ' muted' : ''}" data-source="ground">
-    <path class="source-ground" d="M8 ${lineY} H202" />
+    <path class="source-ground" d="M8 ${lineY} H220" />
     ${ticks.map((tick) => svg`<path class="source-ground" d="M${tick} ${lineY} l-6 8" />`)}
     <text class="source-caption" x=${GROUND_CAPTION.x} y=${captionY} text-anchor="middle">${SOURCE_LABELS.ground}</text>
   </g>`;

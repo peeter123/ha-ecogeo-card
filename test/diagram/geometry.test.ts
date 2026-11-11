@@ -11,7 +11,12 @@ import {
 import type { RolePath } from '../../src/config/roles';
 import { FEATURE_KEYS, type FeatureKey, type FeatureState, type Features } from '../../src/config/variants';
 import {
+  AIR_PORT_Y,
+  AIR_UNIT_WALL_X,
   CABINET,
+  GROUND_CAPTION,
+  GROUND_LINE_Y,
+  GROUND_LOOP,
   COMPONENTS,
   AIR_UNIT,
   CROSSINGS,
@@ -261,7 +266,7 @@ describe('integrity in every configuration', () => {
     // the source and DHW parts appear only for their config values
     const idsDrawn = new Set(segments.map((segment) => segment.id));
     const has = (prefix: string): boolean => [...idsDrawn].some((id) => id.startsWith(prefix));
-    expect(has('src_air_'), 'air').toBe(context.source !== 'ground');
+    expect(has('src_air_'), 'air').toBe(context.source === 'air');
     expect(has('src_gnd_'), 'ground').toBe(context.source === 'ground');
     expect(has('src_hyb_'), 'hybrid').toBe(context.source === 'hybrid');
     expect(idsDrawn.has('src_out') && idsDrawn.has('src_in')).toBe(true);
@@ -296,7 +301,7 @@ describe('integrity in every configuration', () => {
       expect(entering(AIR_UNIT).sort()).toEqual(
         context.source === 'air'
           ? ['src_air_coil', 'src_air_exit', 'src_air_feed']
-          : ['src_air_coil', 'src_air_feed', 'src_hyb_link'],
+          : ['src_hyb_coil', 'src_hyb_feed', 'src_hyb_link'],
       );
     }
 
@@ -448,14 +453,22 @@ describe('feature states', () => {
   test('the source parts follow the source option', () => {
     const idsFor = (source: Source): string[] => ids(full('external', source)).filter((id) => id.startsWith('src_'));
     expect(idsFor('air')).toEqual(['src_out', 'src_in', 'src_air_feed', 'src_air_coil', 'src_air_exit']);
-    expect(idsFor('ground')).toEqual(['src_out', 'src_in', 'src_gnd_feed', 'src_gnd_loop', 'src_gnd_exit']);
+    expect(idsFor('ground')).toEqual([
+      'src_out',
+      'src_in',
+      'src_gnd_feed',
+      'src_gnd_down',
+      'src_gnd_up',
+      'src_gnd_exit',
+    ]);
     expect(idsFor('hybrid')).toEqual([
       'src_out',
       'src_in',
-      'src_air_feed',
-      'src_air_coil',
+      'src_hyb_feed',
+      'src_hyb_coil',
       'src_hyb_link',
-      'src_hyb_loop',
+      'src_hyb_down',
+      'src_hyb_up',
       'src_hyb_exit',
     ]);
   });
@@ -575,24 +588,202 @@ describe('helical coil and air coil (design D5, D6)', () => {
     ).toBe('M0 0 L11 0 A9 9 0 0 1 20 9 L20 9 A9 9 0 0 1 11 18 L0 18');
   });
 
-  test('src_air_coil has three passes, rounded bends and its fins lie inside the coil block', () => {
-    const air = SEGMENTS.find((segment) => segment.id === 'src_air_coil');
-    expect(air?.bend).toBeGreaterThan(0);
-    const passes = (air?.points ?? []).slice(1).filter((end, index) => end[1] === air?.points[index]?.[1]);
-    expect(passes).toHaveLength(3);
-    const { coil: block, fins } = AIR_UNIT;
+  test('roundedPathData lets a corner use the whole first or last piece, so a half circle can be split in two', () => {
+    // a quarter circle of radius 30 ends exactly on the last piece's end, which is only 30 long
+    expect(
+      roundedPathData(
+        [
+          [0, 0],
+          [0, 100],
+          [30, 100],
+        ],
+        30,
+      ),
+    ).toBe('M0 0 L0 70 A30 30 0 0 0 30 100 L30 100');
+    // inner pieces are still shared between their two corners
+    expect(
+      roundedPathData(
+        [
+          [0, 0],
+          [20, 0],
+          [20, 10],
+          [0, 10],
+        ],
+        9,
+      ),
+    ).toBe('M0 0 L15 0 A5 5 0 0 1 20 5 L20 5 A5 5 0 0 1 15 10 L0 10');
+  });
+
+  test('src_air_coil and src_hyb_coil have four passes, rounded bends and their fins lie inside the coil block', () => {
+    const { coil: block, fins, passes } = AIR_UNIT;
+    for (const id of ['src_air_coil', 'src_hyb_coil']) {
+      const coil = SEGMENTS.find((segment) => segment.id === id);
+      expect(coil?.bend, id).toBe(passes.step / 2);
+      // the horizontal pieces are the passes: an even number, at least four, on the lines of AIR_UNIT.passes
+      const points = coil?.points ?? [];
+      const horizontal = points.slice(1).flatMap((end, index) => {
+        const start = points[index];
+        return start?.[1] === end[1] ? [end[1]] : [];
+      });
+      expect(horizontal.length % 2, id).toBe(0);
+      expect(horizontal.length, id).toBeGreaterThanOrEqual(4);
+      expect(horizontal.length, id).toBe(passes.count);
+      expect(
+        [...horizontal].sort((a, b) => a - b),
+        id,
+      ).toEqual(Array.from({ length: passes.count }, (_, index) => passes.y0 + index * passes.step));
+      // the first and the last point are the ports, on the coil block's right side; the bends stay inside the block
+      for (const end of [points[0], points.at(-1)]) expect(end?.[0], id).toBe(block.x + block.width);
+      for (const point of points.slice(1, -1)) {
+        expect(point[0], id).toBeGreaterThan(block.x);
+        expect(point[0], id).toBeLessThan(block.x + block.width);
+      }
+      for (const point of points) {
+        expect(point[1], id).toBeGreaterThan(block.y);
+        expect(point[1], id).toBeLessThan(block.y + block.height);
+      }
+    }
     expect(fins.count).toBeGreaterThanOrEqual(12);
-    const last = fins.x + (fins.count - 1) * fins.step;
+    const lastFin = fins.x + (fins.count - 1) * fins.step;
     expect(fins.x).toBeGreaterThan(block.x);
-    expect(last).toBeLessThan(block.x + block.width);
+    expect(lastFin).toBeLessThan(block.x + block.width);
     expect(fins.y0).toBeGreaterThan(block.y);
     expect(fins.y1).toBeLessThan(block.y + block.height);
-    for (const point of air?.points ?? []) {
-      expect(point[0]).toBeGreaterThan(block.x);
-      expect(point[0]).toBeLessThan(block.x + block.width);
-      expect(point[1]).toBeGreaterThan(block.y);
-      expect(point[1]).toBeLessThan(block.y + block.height);
+  });
+});
+
+describe('outer-loop source geometry (design D11-D13)', () => {
+  const first = (id: string): Point => {
+    const point = segmentPoints(id)[0];
+    if (point === undefined) throw new Error(id);
+    return point;
+  };
+  const last = (id: string): Point => {
+    const point = segmentPoints(id).at(-1);
+    if (point === undefined) throw new Error(id);
+    return point;
+  };
+  const role = (id: string): RolePath | undefined => SEGMENTS.find((segment) => segment.id === id)?.temperatureRole;
+
+  test('Source aligned to the cabinet: the housing top and the ground line are on the cabinet top, the hybrid loop is below the unit', () => {
+    expect(AIR_UNIT.y).toBe(CABINET.y);
+    expect(GROUND_LINE_Y.ground).toBe(CABINET.y);
+    // the ground loop's pipes start on the line; in the hybrid it is under the air unit's housing
+    expect(first('src_gnd_down')[1]).toBe(GROUND_LINE_Y.ground);
+    expect(last('src_gnd_up')[1]).toBe(GROUND_LINE_Y.ground);
+    expect(GROUND_LINE_Y.hybrid).toBeGreaterThan(AIR_UNIT.y + AIR_UNIT.height);
+    expect(first('src_hyb_down')[1]).toBe(GROUND_LINE_Y.hybrid);
+    expect(last('src_hyb_up')[1]).toBe(GROUND_LINE_Y.hybrid);
+    // the captions stay where they were relative to their device: above the housing, under the loop
+    expect(AIR_UNIT.captionY).toBeLessThan(AIR_UNIT.y);
+    for (const kind of ['ground', 'hybrid'] as const) {
+      expect(GROUND_CAPTION.y[kind]).toBeGreaterThan(GROUND_LINE_Y[kind] + GROUND_LOOP.depth);
     }
+    // everything stays inside the drawing
+    expect(GROUND_CAPTION.y.hybrid).toBeLessThan(viewBox.height);
+  });
+
+  test('Single loop: one leg down, a half circle, one leg up, both at the ground line, with the roles of the legs', () => {
+    const { downX, upX, depth } = GROUND_LOOP;
+    const spacing = downX - upX;
+    expect(spacing).toBeGreaterThan(0);
+    const arc = (id: string): string => {
+      const segment = SEGMENTS.find((candidate) => candidate.id === id);
+      return roundedPathData(segment?.points ?? [], segment?.bend ?? 0);
+    };
+    const [r, middle] = [spacing / 2, (downX + upX) / 2];
+    for (const [kind, lineY, down, up, downRole] of [
+      ['ground', GROUND_LINE_Y.ground, 'src_gnd_down', 'src_gnd_up', 'brine.outlet_temperature'],
+      ['hybrid', GROUND_LINE_Y.hybrid, 'src_hyb_down', 'src_hyb_up', 'source.air_unit_outlet_temperature'],
+    ] as const) {
+      const bottom = lineY + depth;
+      // the down leg and the first quarter circle, then the second quarter circle and the up leg, meeting in the
+      // middle of the bottom
+      expect(segmentPoints(down), kind).toEqual([
+        [downX, lineY],
+        [downX, bottom],
+        [middle, bottom],
+      ]);
+      expect(segmentPoints(up), kind).toEqual([
+        [middle, bottom],
+        [upX, bottom],
+        [upX, lineY],
+      ]);
+      // the bend is half the legs' spacing: a half circle in all
+      for (const id of [down, up]) expect(SEGMENTS.find((segment) => segment.id === id)?.bend, id).toBe(r);
+      expect(arc(down), kind).toBe(
+        `M${String(downX)} ${String(lineY)} L${String(downX)} ${String(bottom - r)} A${String(r)} ${String(r)} 0 0 1 ${String(middle)} ${String(bottom)} L${String(middle)} ${String(bottom)}`,
+      );
+      expect(arc(up), kind).toContain(`A${String(r)} ${String(r)} 0 0 1 ${String(upX)} ${String(bottom - r)}`);
+      // the down leg carries the heat pump's brine outlet (the air unit's outlet in the hybrid), the up leg its brine inlet
+      expect(role(down), kind).toBe(downRole);
+      expect(role(up), kind).toBe('brine.inlet_temperature');
+    }
+    // the loop is one U: the feed ends on the down leg, the exit starts on the up leg
+    expect(last('src_gnd_feed')).toEqual(first('src_gnd_down'));
+    expect(last('src_gnd_up')).toEqual(first('src_gnd_exit'));
+    expect(last('src_hyb_link')).toEqual(first('src_hyb_down'));
+    expect(last('src_hyb_up')).toEqual(first('src_hyb_exit'));
+  });
+
+  test('no corner of the source pipes is a boundary between two segments (it would show a square notch)', () => {
+    const source = SEGMENTS.filter((segment) => segment.id.startsWith('src_'));
+    const direction = (from: Point, to: Point): string =>
+      `${String(Math.sign(to[0] - from[0]))},${String(Math.sign(to[1] - from[1]))}`;
+    let joints = 0;
+    for (const first of source) {
+      for (const second of source) {
+        const [end, before] = [first.points.at(-1), first.points.at(-2)];
+        const [start, after] = [second.points[0], second.points[1]];
+        if (first === second || end === undefined || before === undefined || start === undefined || after === undefined)
+          continue;
+        if (end[0] !== start[0] || end[1] !== start[1]) continue;
+        // segments of different sources are never drawn together
+        if (
+          first.source !== undefined &&
+          second.source !== undefined &&
+          !first.source.some((kind) => second.source?.includes(kind))
+        )
+          continue;
+        joints += 1;
+        expect(direction(before, end), `${first.id} to ${second.id}`).toBe(direction(start, after));
+      }
+    }
+    expect(joints).toBeGreaterThan(10);
+  });
+
+  test('Air unit ports: both pipes meet the coil block and leave the housing on its right wall, without a hop', () => {
+    const wall = AIR_UNIT_WALL_X;
+    const portX = AIR_UNIT.coil.x + AIR_UNIT.coil.width;
+    expect(portX).toBeLessThan(wall);
+    // air: the feed enters the bottom pass and the exit leaves the top pass
+    expect(last('src_air_feed')).toEqual([portX, AIR_PORT_Y.bottom]);
+    expect(first('src_air_coil')).toEqual([portX, AIR_PORT_Y.bottom]);
+    expect(last('src_air_coil')).toEqual([portX, AIR_PORT_Y.top]);
+    expect(first('src_air_exit')).toEqual([portX, AIR_PORT_Y.top]);
+    // hybrid: entered at the top pass, the link to the ground loop leaves from the outlet port, at the bottom
+    expect(last('src_hyb_feed')).toEqual([portX, AIR_PORT_Y.top]);
+    expect(first('src_hyb_coil')).toEqual([portX, AIR_PORT_Y.top]);
+    expect(last('src_hyb_coil')).toEqual([portX, AIR_PORT_Y.bottom]);
+    expect(first('src_hyb_link')).toEqual([portX, AIR_PORT_Y.bottom]);
+    // every pipe at the housing crosses its right wall and stays right of the coil block
+    for (const id of ['src_air_feed', 'src_air_exit', 'src_hyb_feed', 'src_hyb_link']) {
+      const points = segmentPoints(id);
+      const crossesWall = points.slice(1).some((end, index) => {
+        const start = points[index];
+        return start?.[1] === end[1] && Math.min(start[0], end[0]) < wall && Math.max(start[0], end[0]) > wall;
+      });
+      expect(crossesWall, id).toBe(true);
+      expect(Math.min(...points.map((point) => point[0])), id).toBeGreaterThanOrEqual(portX);
+    }
+    // no pipe of the source needs a hop
+    expect(
+      CROSSINGS.filter((crossing) => crossing.over.startsWith('src_') || crossing.under.startsWith('src_')),
+    ).toEqual([]);
+    // air: the exit rises left of the feed's column (that is why it leaves the top pass)
+    expect(last('src_air_exit')[0]).toBeLessThan(first('src_air_feed')[0]);
+    expect(role('src_air_exit')).toBe('source.air_unit_outlet_temperature');
+    expect(role('src_air_feed')).toBe('brine.outlet_temperature');
   });
 });
 

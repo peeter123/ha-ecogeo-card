@@ -169,7 +169,7 @@ function helix(segment: Segment, shape: HelixShape, state: PipeState): SVGTempla
 function pipe(segment: Segment, state: PipeState, gaps: readonly Point[], clipId?: string): SVGTemplateResult {
   if (segment.shape !== undefined) return helix(segment, segment.shape, state);
   const d = segment.bend === undefined ? pathData(segment.points, gaps) : roundedPathData(segment.points, segment.bend);
-  return svg`<path class="pipe ${state.muted ? 'muted' : ''}" data-segment=${segment.id} style=${state.muted ? nothing : `stroke: ${state.color}`} d=${d} />${
+  return svg`<path class="pipe ${state.muted ? 'muted' : ''}" data-segment=${segment.id} style=${state.muted ? nothing : `stroke: ${state.color}`} stroke-linecap=${segment.roundEnd === true ? 'round' : nothing} d=${d} />${
     state.muted && clipId !== undefined && COIL_PIPES.has(segment.id)
       ? svg`<path class="pipe-inside" data-inside=${segment.id} clip-path="url(#${clipId})" d=${d} />`
       : nothing

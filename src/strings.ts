@@ -106,9 +106,9 @@ export const VALUE_CAPTIONS = {
   startDeltaShort: 'ΔT',
   fan: 'Fan',
   outside: 'Outside',
-  airOutlet: 'Outlet',
-  groundIn: 'In',
-  groundOut: 'Out',
+  /** The source ports, from the device's point of view: In where the brine enters it, Out where it leaves. */
+  portIn: 'In',
+  portOut: 'Out',
 } as const;
 
 /** The footer's captions and the texts of its season and on/off values. */

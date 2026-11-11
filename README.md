@@ -110,9 +110,11 @@ dhw: internal
 
 | `source` | Drawn |
 |---|---|
-| `air` | An air unit with a coil and a fan. |
-| `ground` | A ground loop with a collector. |
-| `hybrid` | Both, in series on one brine loop. |
+| `air` | An air unit with a four-pass coil and a fan, its brine In and Out values at its two ports on the side facing the heat pump. |
+| `ground` | A ground loop: a single U-shaped loop below a ground line, with its In and Out values at the line. |
+| `hybrid` | Both, in series on one brine loop (the air unit shows only its In and the ground loop only its Out). |
+
+The top of the air unit or of the ground line is level with the top of the heat pump.
 
 | `dhw` | Drawn |
 |---|---|

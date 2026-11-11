@@ -215,7 +215,7 @@ the compressor discharge and 29 on the suction line, as in the figure.
 
 ## Source and DHW
 
-The outer-loop source and the DHW storage are drawn outside the cabinet, in the zones left (x 0 to 210) and right
+The outer-loop source and the DHW storage are drawn outside the cabinet, in the zones left (x 0 to 240) and right
 (x 790 to 1000) of it. Their pipes are segments in `src/diagram/geometry.ts`, like the cabinet's, so they take
 the same colour and animation (see Colours). The air unit, the ground loop and the external tank have no item number in the manual;
 the manual's figures stop at the connections.
@@ -226,15 +226,40 @@ Connection 3 (brine outlet) and 4 (brine inlet) rise from the top edge into the 
 DG1 stubs and the circuit labels. Port 4's pipe is the higher one (y 50, port 3's runs at y 85), so the two never
 cross on their way left. They belong to the brine circuit: they are active with it, defrost included.
 
+The top of the source sits on the cabinet's top line (y 130): the air unit's housing, or the ground loop's ground
+line when there is no air unit, so that the thick top lines of the unit and of the source are level (the external
+tank's top is level with them too). In the hybrid the air unit sits there and the ground loop below it. The captions
+keep their places relative to their device: "Air unit" above the housing, "Ground loop" under the loop.
+
 - **Air:** a housing with a slatted front (slats left and right of the fan), a coil block with a frame and 13 thin
-  vertical fins, and a fan under it. The brine tube winds over the fins in three passes joined by rounded U-bends;
-  it enters the coil at the top and leaves on the left. The fan is a ring with a hub and five swept blades. It rotates while `source.fan_speed` is above 0 % (a full turn takes 120 s divided by the speed
-  in %, between 0.5 and 6 s) and stands still at 0 % or without a value. It does not depend on the mode, so it
-  also turns in standby when its own speed says so. With `prefers-reduced-motion` the fan stands still.
-- **Ground:** a ground line with a collector loop of three rows below it, joined to the brine pipes.
+  vertical fins, and a fan under it. The brine tube winds over the fins in four passes joined by rounded U-bends
+  (half circles). It enters and leaves the coil block on its right side, the side facing the cabinet: both pipes
+  leave through the housing's right wall. The feed comes down from port 3's line at x 226 to the bottom pass; the
+  exit leaves the top pass and rises at x 206, left of the feed, so that no pipe crosses another (it is the reason
+  for the order of the ports: the exit on top). The fan is a ring with a hub and five swept blades. It rotates
+  while `source.fan_speed` is above 0 % (a full turn takes 120 s divided by the speed in %, between 0.5 and 6 s) and
+  stands still at 0 % or without a value. It does not depend on the mode, so it also turns in standby when its own
+  speed says so. With `prefers-reduced-motion` the fan stands still.
+- **Ground:** a ground line (the surface, hatched) with a single loop below it, like a borehole's U-tube: one leg
+  goes down from the line, a half circle forms the bottom and one leg comes back up. The brine goes down the leg
+  fed from port 3 (at x 166) and returns up the other (x 106) to port 4. The hatching leaves out the places where
+  the legs pass.
 - **Hybrid:** both on one brine loop, in series. The brine runs through the air unit first and then down to the
-  ground loop, which sits under the air unit; the loop's exit returns up along the left edge to port 4. Series
-  keeps the drawing free of crossings in the narrow zone, which two branches in parallel would not.
+  ground loop, which sits under the air unit; the link leaves the air unit from its outlet port. In the hybrid the
+  air unit is entered at its top pass (and left at the bottom one), the other way round than the air source, so
+  that the link can run down on the right without crossing the feed. The loop's exit returns up along the left
+  edge to port 4, left of the housing. Series keeps the drawing free of crossings in the narrow zone, which two
+  branches in parallel would not.
+
+The source shows the brine temperature entering and leaving each device where its pipes meet it, so that the outer
+loop reads at a glance without looking into the cabinet (probes 31 and 32 stay inside it). The captions are from
+the device's point of view: "In" where the brine enters the device, "Out" where it leaves. The air unit's "In" is
+`brine.outlet_temperature` (the heat pump's brine outlet feeds the unit) and its "Out"
+`source.air_unit_outlet_temperature`; the ground loop's "In" is `brine.outlet_temperature` at the down leg and its
+"Out" `brine.inlet_temperature` at the up leg, both at the ground line. In the hybrid the air unit shows only its "In"
+and the ground loop only its "Out"; the link pipe between them (the air unit's "Out", the ground loop's "In")
+carries no label. The fan speed and the outside temperature stay under the
+housing. These are ordinary value labels (see Live values).
 
 ### DHW storage (`dhw`)
 
@@ -261,7 +286,7 @@ cross on their way left. They belong to the brine circuit: they are active with 
 - **None:** no tank, no DHW pipes, no connections 5/6, no valve 26 and no HTR group. The mode label "DHW" can still show when the unit reports DHW mode.
 
 The tank body takes the DHW temperature colour through the custom property `--dhw-tank-color` (see Colours). The
-fan speed, outside temperature, air unit outlet temperature, the ground loop's brine temperatures and the tank
+fan speed, outside temperature, the In and Out temperatures of the air unit and of the ground loop and the tank
 values are live labels (see Live values).
 
 ## Colours
@@ -307,8 +332,9 @@ neighbouring stops of an absolute temperature first, where hrv mixes two colours
 | Condenser 8 to the expansion valve | `refrigerant.condensation_temperature` | 8 |
 | Expansion valve to evaporator 7 | `refrigerant.evaporation_temperature` | 7 |
 | Evaporator 7 to the compressor | `compressor.suction_temperature` | 29 |
-| Exit of the air unit; in a hybrid also the link down and the whole ground loop | `source.air_unit_outlet_temperature` | air unit |
-| Exit of the ground loop (a hybrid: the return up to connection 4) | `brine.inlet_temperature` | 32 |
+| Exit of the air unit; in a hybrid also the link down and the ground loop's down leg | `source.air_unit_outlet_temperature` | air unit |
+| The ground loop's down leg (ground source), the first half of its bottom | `brine.outlet_temperature` | 31 |
+| The ground loop's up leg and the second half of its bottom, and the return to connection 4 | `brine.inlet_temperature` | 32 |
 | HTR water (exchanger 9, pump 17, valves 22/25 and their lines) | `dhw.temperature` | tank |
 | Model C stubs of connections 47, 48 and 49 | `dhw.temperature` | tank |
 
@@ -408,8 +434,9 @@ writes no entity.
 | Compressor 11: rpm, %, W | a stack inside the refrigerant loop |
 | Superheat (K) and valve opening (%) at 12 | above the expansion valve |
 | Condensation (8) and evaporation (7) temperatures | under exchangers 8 and 7 |
-| Air unit: fan, outside temperature, outlet temperature | under the housing |
-| Ground loop: brine out and in (a hybrid: only its exit) | right of the collector |
+| Air unit: fan, outside temperature | under the housing |
+| Air unit: In (brine outlet of the heat pump) and Out (air unit outlet temperature); a hybrid: only In | right of the housing, next to the ports: air, In at the bottom port and Out at the top one; hybrid, In at the top port |
+| Ground loop: In (brine outlet) and Out (brine inlet); a hybrid: only Out | at the ground line, In right of the down leg and Out left of the up leg |
 | Tank: temperature, setpoint, start delta-T (K), "Demand" while on | under the external tank; on model C as one row inside tank 50, in the strip above coil 51, with no background plate, at the normal label size and with the short captions "Set" and "ΔT" (the "Demand" text under the row) |
 
 The labels have a minimum font size, so on a card narrower than about 560 px while the demand line shows (about 510 px for the three values alone) the labels inside tank 50 start to touch; narrower cards are left to the compact layout (`add-compact-layout`).

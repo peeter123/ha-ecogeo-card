@@ -7,7 +7,7 @@
 // Positions are viewBox points with an alignment: `start` puts the label's left edge at x, `end` its right edge,
 // `middle` centres it; y is the vertical centre. They sit where the drawing leaves room (checked on the emulator
 // captures): the probe row's values below the discharge line, the compressor's stack inside the refrigerant loop,
-// the source's values under the air unit and right of the collector, the tank's values under the external tank or,
+// the source's values under the air unit and beside its ports and the ground loop's legs, the tank's values under the external tank or,
 // for model C, inside tank 50 above its coil (design D8b). A label of a part that is not drawn is not shown (same rules as
 // geometry.ts `partState`); a drawn label with no value shows a muted dash and keeps its place.
 import { css, html, nothing, type TemplateResult } from 'lit';
@@ -15,7 +15,19 @@ import { formatReading, type DisplayContext } from '../calc/display';
 import type { Readings } from '../calc/readings';
 import type { RolePath } from '../config/roles';
 import { DHW_LABELS, FOOTER_LABELS, HEATING_LABELS, NO_VALUE, ON_OFF_LABELS, VALUE_CAPTIONS } from '../strings';
-import { EXTERNAL_TANK, INTERNAL_TANK, partState, viewBox, type DrawContext, type Visibility } from './geometry';
+import {
+  AIR_PORT_Y,
+  AIR_UNIT,
+  AIR_UNIT_WALL_X,
+  EXTERNAL_TANK,
+  GROUND_LINE_Y,
+  GROUND_LOOP,
+  INTERNAL_TANK,
+  partState,
+  viewBox,
+  type DrawContext,
+  type Visibility,
+} from './geometry';
 
 export const labelStyles = css`
   .diagram {
@@ -118,6 +130,14 @@ const EXT_TANK_Y = EXTERNAL_TANK.y + EXTERNAL_TANK.height + 22;
 export const INTERNAL_ROW_Y = INTERNAL_TANK.y + 12;
 const INTERNAL_CENTRE_X = INTERNAL_TANK.x + INTERNAL_TANK.width / 2;
 
+/** The air unit's fan and outside labels: the first 12 units under the housing, the second 13 below it. */
+const AIR_LABELS_Y = AIR_UNIT.y + AIR_UNIT.height + 12;
+/** The air unit's port labels: 6 units right of the housing's wall, 12 units under (top port) or above (bottom port) the port's pipe. */
+const PORT_LABEL_X = AIR_UNIT_WALL_X + 6;
+const PORT_LABEL_DY = 12;
+/** The ground loop's labels: 20 units under the ground line, clear of its hatching. */
+const GROUND_LABEL_DY = 20;
+
 /** Every value label of the drawing. */
 export const LABEL_SPECS: readonly LabelSpec[] = [
   // production: probes 33 and 34, pressure 38, pump 15, and the DG1 setpoint above connections 1/2
@@ -145,29 +165,58 @@ export const LABEL_SPECS: readonly LabelSpec[] = [
   spec('expansion_valve', 'refrigerant.expansion_valve', 527, 388, 'middle', { item: 12 }),
   spec('condensation_temperature', 'refrigerant.condensation_temperature', 432, 437, 'middle', { item: 8 }),
   spec('evaporation_temperature', 'refrigerant.evaporation_temperature', 572, 437, 'middle', { item: 7 }),
-  // air unit (also in the hybrid): the fan, the outside air and the brine at the unit's outlet, under the housing
-  spec('fan_speed', 'source.fan_speed', 115, 312, 'middle', { source: ['air', 'hybrid'], caption: VALUE_CAPTIONS.fan }),
-  spec('outside_temperature', 'source.outside_temperature', 115, 325, 'middle', {
+  // air unit (also in the hybrid): the fan and the outside air under the housing, the brine In and Out beside the two
+  // ports on the housing's right (design D14). The label of the top port hangs under its pipe, that of the bottom port
+  // sits on its pipe, so the two stay between the pipes and clear of the production labels at the cabinet. Air: In at the
+  // bottom port, Out at the top one. Hybrid (entered at the top): only In, at the top port; the air unit's Out and the ground loop's In would be the same value on the link pipe, which carries no label.
+  spec('fan_speed', 'source.fan_speed', AIR_UNIT.fanX, AIR_LABELS_Y, 'middle', {
+    source: ['air', 'hybrid'],
+    caption: VALUE_CAPTIONS.fan,
+  }),
+  spec('outside_temperature', 'source.outside_temperature', AIR_UNIT.fanX, AIR_LABELS_Y + 13, 'middle', {
     source: ['air', 'hybrid'],
     caption: VALUE_CAPTIONS.outside,
   }),
-  spec('air_unit_outlet', 'source.air_unit_outlet_temperature', 115, 338, 'middle', {
-    source: ['air', 'hybrid'],
-    caption: VALUE_CAPTIONS.airOutlet,
+  spec('air_unit_in', 'brine.outlet_temperature', PORT_LABEL_X, AIR_PORT_Y.bottom - PORT_LABEL_DY, 'start', {
+    source: ['air'],
+    caption: VALUE_CAPTIONS.portIn,
   }),
-  // ground loop, right of the collector: the brine out and in; in the hybrid only its exit
-  spec('ground_out', 'brine.outlet_temperature', 158, 203, 'start', {
-    source: ['ground'],
-    caption: VALUE_CAPTIONS.groundOut,
+  spec('air_unit_out', 'source.air_unit_outlet_temperature', PORT_LABEL_X, AIR_PORT_Y.top + PORT_LABEL_DY, 'start', {
+    source: ['air'],
+    caption: VALUE_CAPTIONS.portOut,
   }),
-  spec('ground_in', 'brine.inlet_temperature', 158, 290, 'start', {
-    source: ['ground'],
-    caption: VALUE_CAPTIONS.groundIn,
-  }),
-  spec('hybrid_ground_in', 'brine.inlet_temperature', 158, 480, 'start', {
+  spec('hybrid_air_unit_in', 'brine.outlet_temperature', PORT_LABEL_X, AIR_PORT_Y.top + PORT_LABEL_DY, 'start', {
     source: ['hybrid'],
-    caption: VALUE_CAPTIONS.groundIn,
+    caption: VALUE_CAPTIONS.portIn,
   }),
+  // ground loop (design D14): In (the brine entering it) right of the down leg and Out (the brine leaving it) left of
+  // the up leg, both just under the ground line; in the hybrid only Out
+  spec(
+    'ground_in',
+    'brine.outlet_temperature',
+    GROUND_LOOP.downX + 6,
+    GROUND_LINE_Y.ground + GROUND_LABEL_DY,
+    'start',
+    {
+      source: ['ground'],
+      caption: VALUE_CAPTIONS.portIn,
+    },
+  ),
+  spec('ground_out', 'brine.inlet_temperature', GROUND_LOOP.upX - 6, GROUND_LINE_Y.ground + GROUND_LABEL_DY, 'end', {
+    source: ['ground'],
+    caption: VALUE_CAPTIONS.portOut,
+  }),
+  spec(
+    'hybrid_ground_out',
+    'brine.inlet_temperature',
+    GROUND_LOOP.upX - 6,
+    GROUND_LINE_Y.hybrid + GROUND_LABEL_DY,
+    'end',
+    {
+      source: ['hybrid'],
+      caption: VALUE_CAPTIONS.portOut,
+    },
+  ),
   // external tank: stacked under the tank (EXTERNAL_TANK)
   spec('tank_external_temperature', 'dhw.temperature', EXT_TANK_X, EXT_TANK_Y, 'middle', {
     dhw: 'external',

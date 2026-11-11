@@ -5,7 +5,7 @@
 // zone) and of the external DHW tank (right zone), and the stubs of connections 47-49. No Lit here: this file is
 // data plus small pure helpers that the renderer and the integrity tests share.
 //
-// Layout in viewBox units (1000 x 620): source zone x 0-210, cabinet x 240-760, DHW zone x 790-1000, the pipe run
+// Layout in viewBox units (1000 x 620): source zone x 0-240, cabinet x 240-760, DHW zone x 790-1000, the pipe run
 // above the cabinet y 0-110, the cabinet's top edge at y 130. Ports 1-6 sit on the top edge in the manual's order.
 // Inside, from the top: the DHW supply (y 172) and return (y 198) lines of valve 26, the probe row, the discharge
 // line of compressor 11 (y 250) through HTR exchanger 9 to inversion valve 14, condenser 8 and evaporator 7, the
@@ -50,33 +50,58 @@ export function externalTankBody(): string {
   return `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x + width)} ${String(y + dome)} V${String(y + height - dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x)} ${String(y + height - dome)} Z`;
 }
 
-/** The air unit's housing and the fan in it, left of the cabinet (not manual items). */
+/**
+ * The air unit's housing and the fan in it, left of the cabinet (not manual items). The housing's top is the
+ * cabinet's top line (design D11); everything else is placed from it. Both brine pipes leave through the housing's
+ * right wall, the side facing the cabinet (design D13).
+ */
 export const AIR_UNIT = {
-  x: 40,
-  y: 120,
-  width: 150,
-  height: 180,
-  fanX: 115,
-  fanY: 250,
-  fanRadius: 36,
+  x: 26,
+  y: CABINET.y,
+  width: 124,
+  height: 210,
+  fanX: 88,
+  fanY: CABINET.y + 162,
+  fanRadius: 34,
   /** The coil block's frame (the brine serpentine runs inside it, over the fins). */
-  coil: { x: 60, y: 136, width: 100, height: 62 },
+  coil: { x: 36, y: CABINET.y + 16, width: 104, height: 74 },
   /** The coil's fins: the first x, the step, how many, and where they start and end. */
-  fins: { x: 74, step: 6, count: 13, y0: 140, y1: 194 },
+  fins: { x: 52, step: 6, count: 13, y0: CABINET.y + 20, y1: CABINET.y + 86 },
   /** The slats of the housing's front, in the gutters left and right of the fan: the first y, the step and how many. */
-  slats: { y0: 218, step: 9, count: 8 },
+  slats: { y0: CABINET.y + 134, step: 9, count: 8 },
   /** Where the fan section starts (a divider under the coil block). */
-  dividerY: 206,
+  dividerY: CABINET.y + 114,
   /** Where the caption sits. */
-  captionX: 95,
-  captionY: 112,
+  captionX: 88,
+  captionY: CABINET.y - 8,
+  /** The serpentine: four passes (an even number, so that it enters and leaves on the right), 15 apart, bending at x `left` and `right`. */
+  passes: { y0: CABINET.y + 30, step: 15, count: 4, left: 44, right: 132 },
 } as const;
 
-/** The ground line (the surface) of the ground loop: lower in the hybrid, under the air unit. */
-export const GROUND_LINE_Y = { ground: 160, hybrid: 350 } as const;
+/** The housing's right wall, where both brine pipes leave the air unit. */
+export const AIR_UNIT_WALL_X = AIR_UNIT.x + AIR_UNIT.width;
 
-/** Where the ground loop's caption sits (below the collector). */
-export const GROUND_CAPTION = { x: 105, y: { ground: 320, hybrid: 510 } } as const;
+/** The y of the air unit's top and bottom brine ports (the first and last pass), on the coil block's right side. */
+export const AIR_PORT_Y = {
+  top: AIR_UNIT.passes.y0,
+  bottom: AIR_UNIT.passes.y0 + (AIR_UNIT.passes.count - 1) * AIR_UNIT.passes.step,
+} as const;
+
+/**
+ * The ground loop (design D12): a single vertical U. One leg goes down from the ground line (at `downX`), a half circle
+ * forms the bottom and one leg comes back up (at `upX`), `depth` below the line at its lowest. The legs' spacing is the
+ * bottom's diameter.
+ */
+export const GROUND_LOOP = { downX: 166, upX: 106, depth: 140 } as const;
+
+/** The ground line (the surface) of the ground loop: on the cabinet's top line, or in the hybrid under the air unit. */
+export const GROUND_LINE_Y = { ground: CABINET.y, hybrid: AIR_UNIT.y + AIR_UNIT.height + 70 } as const;
+
+/** Where the ground loop's caption sits (under the bottom of the loop). */
+export const GROUND_CAPTION = {
+  x: (GROUND_LOOP.downX + GROUND_LOOP.upX) / 2,
+  y: { ground: GROUND_LINE_Y.ground + GROUND_LOOP.depth + 28, hybrid: GROUND_LINE_Y.hybrid + GROUND_LOOP.depth + 28 },
+} as const;
 
 export type Point = readonly [x: number, y: number];
 export type Rotation = 0 | 90 | 180 | 270;
@@ -180,8 +205,10 @@ export interface Segment extends Visibility {
   reversible?: boolean;
   /** A coil drawn as a helix; `points` then keep only its two end points. */
   shape?: HelixShape;
-  /** The radius of the rounded corners of the pipe (the air coil's U-bends). */
+  /** The radius of the rounded corners of the pipe (the air coil's U-bends and the ground loop's bottom). */
   bend?: number;
+  /** The base stroke ends in a round cap: it closes the seam where the ground loop's half circle is split in two segments. */
+  roundEnd?: true;
   /** A dead-end tap (vessel, drain, safety valve): coloured, never animated. */
   stub?: boolean;
   /** The pipe carries water only in this position of valves 27/28 (the legs behind a closed arm). */
@@ -330,6 +357,62 @@ const parsePoints = (path: string): Point[] =>
     return [x ?? 0, y ?? 0];
   });
 
+/** The y of the port 3 and 4 pipes above the cabinet, and the x where they turn down or up to the source. */
+const SRC_OUT_Y = 85;
+const SRC_IN_Y = 50;
+const SRC_FEED_X = 226;
+const SRC_RETURN_X = 206;
+/**
+ * Where port 3's line (`src_out`) hands over to the source, and where the exits hand over to port 4's line (`src_in`):
+ * a few units along the straight run past the turn, so that no corner is a boundary between two segments (a butt-capped
+ * boundary would show a square notch where the pipe turns).
+ */
+const SRC_OUT_JOIN_X = SRC_FEED_X + 8;
+const SRC_IN_JOIN_X = SRC_RETURN_X + 8;
+/** The column of the hybrid's return pipe, left of the air unit's housing. */
+const HYB_RETURN_X = 12;
+/** The x where the brine pipes meet the coil block's right edge (the ports of the first and last pass). */
+const COIL_PORT_X = AIR_UNIT.coil.x + AIR_UNIT.coil.width;
+/** The serpentine's U-bends: half the distance between two passes, so each bend is a half circle. */
+const AIR_COIL_BEND = AIR_UNIT.passes.step / 2;
+/** The ground loop's bottom: half the legs' spacing, so the bottom is a half circle. */
+const LOOP_BEND = (GROUND_LOOP.downX - GROUND_LOOP.upX) / 2;
+
+/**
+ * The air coil's points (design D13): a serpentine of the passes of `AIR_UNIT.passes`. It starts at the right of the
+ * top pass and, the number of passes being even, ends at the right of the bottom pass. `reverse` gives the other
+ * direction: the air source is entered at the bottom, so that its exit on the top pass rises left of the feed.
+ */
+function coilPath(reverse: boolean): string {
+  const { y0, step, count, left, right } = AIR_UNIT.passes;
+  const points: Point[] = [[COIL_PORT_X, y0]];
+  for (let index = 0; index < count; index += 1) {
+    const y = y0 + index * step;
+    if (index % 2 === 0) {
+      if (index > 0) points.push([right, y]);
+      points.push([left, y]);
+    } else {
+      points.push([left, y], index === count - 1 ? [COIL_PORT_X, y] : [right, y]);
+    }
+  }
+  return (reverse ? points.reverse() : points).map(([x, y]) => `${String(x)},${String(y)}`).join(' ');
+}
+
+/**
+ * One half of the ground loop's U from the ground line at `lineY` (design D12): `down` is the leg down and the bottom's
+ * first quarter circle, `up` the second quarter circle and the leg up. They meet in the middle of the bottom.
+ */
+function loopHalf(lineY: number, half: 'down' | 'up'): string {
+  const { downX, upX, depth } = GROUND_LOOP;
+  const [middleX, bottom] = [(downX + upX) / 2, lineY + depth];
+  return half === 'down'
+    ? `${String(downX)},${String(lineY)} ${String(downX)},${String(bottom)} ${String(middleX)},${String(bottom)}`
+    : `${String(middleX)},${String(bottom)} ${String(upX)},${String(bottom)} ${String(upX)},${String(lineY)}`;
+}
+
+/** Points as text: "x,y x,y ...". */
+const line = (...points: Point[]): string => points.map(([x, y]) => `${String(x)},${String(y)}`).join(' ');
+
 const seg = (
   id: string,
   circuit: readonly CircuitId[],
@@ -449,31 +532,135 @@ export const SEGMENTS: readonly Segment[] = [
   seg('tap_47', ['dhw_coil'], '440,118 440,138', DHWT, { dhw: 'internal', stub: true }),
   seg('tap_48', ['dhw_coil'], '490,138 490,118', DHWT, { dhw: 'internal', stub: true }),
   seg('tap_49', ['dhw_coil'], '540,118 540,138', DHWT, { dhw: 'internal', stub: true }),
-  // Outer-loop source (left zone). Port 3 (brine out) rises to y 85 and runs left, port 4 (brine in) comes back at
-  // y 50: both stay above the DG1 stubs (y > 110) and the circuit labels, and port 4's pipe is the higher one so that
-  // the two do not cross. Air unit: feed, coil rows, exit. Ground loop: feed, collector rows, exit.
-  seg('src_out', ['brine'], '630,130 630,85 150,85', BOUT, { speedRole: BP }),
-  seg('src_in', ['brine'], '20,50 690,50 690,130', BIN, { speedRole: BP }),
-  seg('src_air_feed', ['brine'], '150,85 150,150', BOUT, { source: ['air', 'hybrid'], speedRole: BP }),
-  seg('src_air_coil', ['brine'], '150,150 70,150 70,168 150,168 150,186 70,186', BOUT, {
-    source: ['air', 'hybrid'],
-    speedRole: BP,
-    bend: 9,
-  }),
-  seg('src_air_exit', ['brine'], '70,186 20,186 20,50', AIRO, { source: ['air'], speedRole: BP }),
-  seg('src_gnd_feed', ['brine'], '150,85 150,210', BOUT, { source: ['ground'], speedRole: BP }),
-  seg('src_gnd_loop', ['brine'], '150,210 60,210 60,250 150,250 150,290 20,290', BOUT, {
+  // Outer-loop source (left zone). Port 3 (brine out) rises to y 85 and runs left to x 226, port 4 (brine in) comes back
+  // at y 50 from x 206: both stay above the DG1 stubs (y > 110) and the circuit labels, and port 4's pipe is the higher
+  // one so that the two do not cross. Air unit (design D13): the feed comes down the column x 226 to the bottom pass,
+  // the exit leaves the top pass and rises at x 206 (left of the feed's column, so no pipe crosses another); both
+  // leave the housing's right wall. Ground loop (design D12): feed, one leg down with the bottom's first quarter
+  // circle, the other quarter circle and the leg up, exit. Hybrid: the air unit is entered at its top pass, so that
+  // the link to the ground loop can leave from the bottom pass without crossing the feed; the ground loop's exit
+  // returns up along the housing's left side.
+  seg('src_out', ['brine'], line([630, 130], [630, SRC_OUT_Y], [SRC_OUT_JOIN_X, SRC_OUT_Y]), BOUT, { speedRole: BP }),
+  seg('src_in', ['brine'], line([SRC_IN_JOIN_X, SRC_IN_Y], [690, SRC_IN_Y], [690, 130]), BIN, { speedRole: BP }),
+  seg(
+    'src_air_feed',
+    ['brine'],
+    line(
+      [SRC_OUT_JOIN_X, SRC_OUT_Y],
+      [SRC_FEED_X, SRC_OUT_Y],
+      [SRC_FEED_X, AIR_PORT_Y.bottom],
+      [COIL_PORT_X, AIR_PORT_Y.bottom],
+    ),
+    BOUT,
+    {
+      source: ['air'],
+      speedRole: BP,
+    },
+  ),
+  seg('src_air_coil', ['brine'], coilPath(true), BOUT, { source: ['air'], speedRole: BP, bend: AIR_COIL_BEND }),
+  seg(
+    'src_air_exit',
+    ['brine'],
+    line(
+      [COIL_PORT_X, AIR_PORT_Y.top],
+      [SRC_RETURN_X, AIR_PORT_Y.top],
+      [SRC_RETURN_X, SRC_IN_Y],
+      [SRC_IN_JOIN_X, SRC_IN_Y],
+    ),
+    AIRO,
+    {
+      source: ['air'],
+      speedRole: BP,
+    },
+  ),
+  seg(
+    'src_gnd_feed',
+    ['brine'],
+    line([SRC_OUT_JOIN_X, SRC_OUT_Y], [GROUND_LOOP.downX, SRC_OUT_Y], [GROUND_LOOP.downX, GROUND_LINE_Y.ground]),
+    BOUT,
+    {
+      source: ['ground'],
+      speedRole: BP,
+    },
+  ),
+  seg('src_gnd_down', ['brine'], loopHalf(GROUND_LINE_Y.ground, 'down'), BOUT, {
     source: ['ground'],
     speedRole: BP,
+    roundEnd: true,
+    bend: LOOP_BEND,
   }),
-  seg('src_gnd_exit', ['brine'], '20,290 20,50', BIN, { source: ['ground'], speedRole: BP }),
-  // hybrid: the air unit's exit runs down to the ground loop, whose exit returns up to port 4
-  seg('src_hyb_link', ['brine'], '70,186 29,186 29,390', AIRO, { source: ['hybrid'], speedRole: BP }),
-  seg('src_hyb_loop', ['brine'], '29,390 150,390 150,420 60,420 60,450 150,450 150,480 20,480', AIRO, {
+  seg('src_gnd_up', ['brine'], loopHalf(GROUND_LINE_Y.ground, 'up'), BIN, {
+    source: ['ground'],
+    speedRole: BP,
+    bend: LOOP_BEND,
+  }),
+  seg(
+    'src_gnd_exit',
+    ['brine'],
+    line([GROUND_LOOP.upX, GROUND_LINE_Y.ground], [GROUND_LOOP.upX, SRC_IN_Y], [SRC_IN_JOIN_X, SRC_IN_Y]),
+    BIN,
+    {
+      source: ['ground'],
+      speedRole: BP,
+    },
+  ),
+  seg(
+    'src_hyb_feed',
+    ['brine'],
+    line(
+      [SRC_OUT_JOIN_X, SRC_OUT_Y],
+      [SRC_FEED_X, SRC_OUT_Y],
+      [SRC_FEED_X, AIR_PORT_Y.top],
+      [COIL_PORT_X, AIR_PORT_Y.top],
+    ),
+    BOUT,
+    {
+      source: ['hybrid'],
+      speedRole: BP,
+    },
+  ),
+  seg('src_hyb_coil', ['brine'], coilPath(false), BOUT, { source: ['hybrid'], speedRole: BP, bend: AIR_COIL_BEND }),
+  seg(
+    'src_hyb_link',
+    ['brine'],
+    line(
+      [COIL_PORT_X, AIR_PORT_Y.bottom],
+      [GROUND_LOOP.downX, AIR_PORT_Y.bottom],
+      [GROUND_LOOP.downX, GROUND_LINE_Y.hybrid],
+    ),
+    AIRO,
+    {
+      source: ['hybrid'],
+      speedRole: BP,
+    },
+  ),
+  seg('src_hyb_down', ['brine'], loopHalf(GROUND_LINE_Y.hybrid, 'down'), AIRO, {
     source: ['hybrid'],
     speedRole: BP,
+    roundEnd: true,
+    bend: LOOP_BEND,
   }),
-  seg('src_hyb_exit', ['brine'], '20,480 20,50', BIN, { source: ['hybrid'], speedRole: BP }),
+  seg('src_hyb_up', ['brine'], loopHalf(GROUND_LINE_Y.hybrid, 'up'), BIN, {
+    source: ['hybrid'],
+    speedRole: BP,
+    bend: LOOP_BEND,
+  }),
+  seg(
+    'src_hyb_exit',
+    ['brine'],
+    line(
+      [GROUND_LOOP.upX, GROUND_LINE_Y.hybrid],
+      [GROUND_LOOP.upX, GROUND_LINE_Y.hybrid - 15],
+      [HYB_RETURN_X, GROUND_LINE_Y.hybrid - 15],
+      [HYB_RETURN_X, SRC_IN_Y],
+      [SRC_IN_JOIN_X, SRC_IN_Y],
+    ),
+    BIN,
+    {
+      source: ['hybrid'],
+      speedRole: BP,
+    },
+  ),
   // refrigerant: discharge 11 -> 9 -> 14 -> 8 (heating), expansion 8 -> 13 -> 12 -> 7, suction 7 -> 14 -> 11
   seg('ref_discharge', ['refrigerant'], '496,250 385,250', DISCH, { through: 'htr', speedRole: CP }),
   seg('ref_9_14', ['refrigerant'], '385,296 416,296', DISCH, { through: 'htr', speedRole: CP }),
@@ -813,7 +1000,11 @@ export function routePoints(segment: Pick<Segment, 'points' | 'shape'>): readonl
   ];
 }
 
-/** The path data of an orthogonal polyline with every corner rounded by `radius` (at most half of the pieces next to it). */
+/**
+ * The path data of an orthogonal polyline with every corner rounded by `radius`. A corner takes at most half of an inner
+ * piece next to it (the other half belongs to the corner at its other end) but all of the first or last piece, so that a
+ * half circle can be split in two segments at its middle.
+ */
 export function roundedPathData(points: readonly Point[], radius: number): string {
   const first = pointAt(points, 0);
   const parts = [`M${String(first[0])} ${String(first[1])}`];
@@ -825,7 +1016,11 @@ export function roundedPathData(points: readonly Point[], radius: number): strin
     }
     const inLength = Math.abs(corner[0] - prev[0]) + Math.abs(corner[1] - prev[1]);
     const outLength = Math.abs(next[0] - corner[0]) + Math.abs(next[1] - corner[1]);
-    const r = Math.min(radius, inLength / 2, outLength / 2);
+    const r = Math.min(
+      radius,
+      index === 1 ? inLength : inLength / 2,
+      index === points.length - 2 ? outLength : outLength / 2,
+    );
     const [dx1, dy1] = [Math.sign(corner[0] - prev[0]), Math.sign(corner[1] - prev[1])];
     const [dx2, dy2] = [Math.sign(next[0] - corner[0]), Math.sign(next[1] - corner[1])];
     const sweep = dx1 * dy2 - dy1 * dx2 > 0 ? 1 : 0;

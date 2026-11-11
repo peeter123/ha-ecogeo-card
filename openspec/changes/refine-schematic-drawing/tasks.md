@@ -131,26 +131,26 @@ Added 2026-11-11 after the live release, at the user's request (design D8-D10).
 
 Added 2026-11-11 after the live release, at the user's request (design D11-D14).
 
-- [ ] 6.1 Align the air unit and the ground line to `CABINET.y` (D11); in the hybrid the ground loop moves down
+- [x] 6.1 Align the air unit and the ground line to `CABINET.y` (D11); in the hybrid the ground loop moves down
   with the air unit.
   Verify: `npm test` covers outer-loop-source "Source aligned to the cabinet" for air, ground and hybrid.
-- [ ] 6.2 Ground loop as one U-loop (D12) with a half-circle bottom via `bend`, in ground and hybrid.
+- [x] 6.2 Ground loop as one U-loop (D12) with a half-circle bottom via `bend`, in ground and hybrid.
   Verify: `npm test` covers outer-loop-source "Single loop" and "Ground source"; integrity and `CROSSINGS` tests
   stay green.
-- [ ] 6.3 Air unit ports on one side (D13): four passes, inlet and outlet on the coil block's right side, both
+- [x] 6.3 Air unit ports on one side (D13): four passes, inlet and outlet on the coil block's right side, both
   pipes leaving the housing's right wall, routed without crossings (or a declared hop only if unavoidable); the
   hybrid link leaves from the outlet port.
   Verify: `npm test` covers outer-loop-source "Air unit drawing" (even passes, at least four) and "Air unit ports"
   (geometry part), "Running fan", "Stopped fan"; integrity tests green.
-- [ ] 6.4 Source port labels (D14): In and Out at the air unit's ports and at the ground loop's legs, captions from
-  the device's point of view; the hybrid shows the air unit's In and Out and the ground loop's Out; the air unit
-  outlet label leaves the housing's label stack.
+- [x] 6.4 Source port labels (D14): In and Out at the air unit's ports and at the ground loop's legs, captions from
+  the device's point of view; the hybrid shows only the air unit's In and the ground loop's Out (no air unit Out,
+  user's decision); the air unit outlet label leaves the housing's label stack.
   Verify: `npm test` covers outer-loop-source "Air unit ports" (labels), "Single loop" (labels) and "Hybrid".
-- [ ] 6.5 Emulator verification: `npm run capture`. An agent inspects the air, ground and hybrid captures (light and
+- [x] 6.5 Emulator verification: `npm run capture`. An agent inspects the air, ground and hybrid captures (light and
   dark, heating and passive cooling or defrost): sources aligned to the cabinet top, the U-loop, the air unit ports
   on one side, the port labels legible and touching nothing.
   Verify: verdict with no blocking findings.
-- [ ] 6.6 Update `docs/ecogeo-card.md` (sources: alignment, U-loop, air unit ports, port labels) and the README
+- [x] 6.6 Update `docs/ecogeo-card.md` (sources: alignment, U-loop, air unit ports, port labels) and the README
   where it describes the sources' labels.
   Verify: the sections match the drawing and `test/readme.ts` passes.
 

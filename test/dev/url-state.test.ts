@@ -69,6 +69,23 @@ describe('capture list', () => {
     }
   });
 
+  test('each source is captured in light and dark, in heating and in a cold-source mode (passive cooling or defrost)', () => {
+    const states = CAPTURES.map(({ query }) => parseState(`?${query}`));
+    for (const source of ['air', 'ground', 'hybrid'] as const) {
+      for (const theme of ['light', 'dark'] as const) {
+        const own = states.filter((state) => state.source === source && state.theme === theme);
+        expect(
+          own.some((state) => state.scenario === 'heating'),
+          `${source} ${theme} heating`,
+        ).toBe(true);
+        expect(
+          own.some((state) => state.scenario === 'passive_cooling' || state.scenario === 'defrost'),
+          `${source} ${theme} passive cooling or defrost`,
+        ).toBe(true);
+      }
+    }
+  });
+
   test('it has full-detail captures of heating and of model C', () => {
     const full = CAPTURES.map(({ query }) => parseState(`?${query}`)).filter((s) => s.detail === 'full');
     expect(full.some((s) => s.scenario === 'heating' && s.model === 'B')).toBe(true);

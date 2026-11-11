@@ -20,6 +20,7 @@ export const CAPTURES: readonly CaptureStep[] = [
     step(`source-${source}-heating`, `scenario=heating&source=${source}`),
     step(`source-${source}-passive_cooling`, `scenario=passive_cooling&source=${source}`),
   ]),
+  step('source-air-defrost', 'scenario=defrost&source=air'),
   // each dhw value (internal only exists on model C)
   step('dhw-external', 'scenario=dhw&dhw=external'),
   step('dhw-none', 'scenario=heating&dhw=none'),
@@ -49,6 +50,11 @@ export const CAPTURES: readonly CaptureStep[] = [
   step('theme-dark-modelC', 'scenario=dhw&model=C&dhw=internal&theme=dark'),
   step('theme-dark-defrost', 'scenario=defrost&theme=dark'),
   step('theme-dark-hybrid', 'scenario=heating&theme=dark&source=hybrid'),
+  step('theme-dark-air', 'scenario=heating&theme=dark&source=air'),
+  step('theme-dark-ground', 'scenario=heating&theme=dark&source=ground'),
+  step('theme-dark-air-defrost', 'scenario=defrost&theme=dark&source=air'),
+  step('theme-dark-hybrid-passive_cooling', 'scenario=passive_cooling&theme=dark&source=hybrid'),
+  step('theme-dark-ground-passive_cooling', 'scenario=passive_cooling&theme=dark&source=ground'),
   step('theme-dark-features-unused', 'scenario=active_cooling_htr&theme=dark&passive_cooling=unused&htr=unused'),
 ];
 

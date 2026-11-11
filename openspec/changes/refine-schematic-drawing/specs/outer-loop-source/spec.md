@@ -61,10 +61,11 @@ brine inlet) where the pipes meet the loop.
 
 ### Requirement: Hybrid source
 With `source: hybrid`, the card SHALL draw both the air unit and the ground loop in one brine loop (air unit
-first), each showing its own values: the air unit its fan speed, outside temperature and its In and Out at its
-ports, the ground loop only its Out (the brine inlet of the heat pump), since its In would repeat the air unit's
-Out on the same pipe.
+first): the air unit with its fan speed and outside temperature under its housing and its In at its inlet port,
+the ground loop with only its Out (the brine inlet of the heat pump). The air unit's Out and the ground loop's In,
+on the link pipe between them, SHALL NOT be shown.
 
 #### Scenario: Hybrid
 - **WHEN** the config sets `source: hybrid`
-- **THEN** the air unit and the ground loop are both drawn on the brine pipes, each with its own labels
+- **THEN** the air unit and the ground loop are both drawn on the brine pipes, the air unit shows its In and the
+  ground loop its Out, and there is no air unit Out label

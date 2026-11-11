@@ -6,8 +6,20 @@ import { EcogeoCard } from '../../src/card/ecogeo-card';
 import { SAMPLE_STATES, sampleEntityId } from '../../src/config/sample';
 import { ROLE_BY_PATH, ROLE_PATHS, defaultEntityId, type RolePath } from '../../src/config/roles';
 import { mergeFeatures } from '../../src/config/variants';
-import { COMPONENTS, INTERNAL_TANK, SEGMENTS } from '../../src/diagram/geometry';
-import { LABEL_SPECS, footerItems, labelsFor, positionOf } from '../../src/diagram/labels';
+import {
+  AIR_PORT_Y,
+  AIR_UNIT,
+  AIR_UNIT_WALL_X,
+  CABINET,
+  COMPONENTS,
+  GROUND_LINE_Y,
+  GROUND_LOOP,
+  INTERNAL_TANK,
+  SEGMENTS,
+  drawnSegments,
+  partState,
+} from '../../src/diagram/geometry';
+import { LABEL_SPECS, footerItems, labelsFor, positionOf, type LabelSpec } from '../../src/diagram/labels';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
 import {
@@ -382,35 +394,203 @@ describe('efficient updates', () => {
 });
 
 describe('source labels', () => {
-  test('air: the fan speed label reads 34.5 % with a no-break space, plus outside and outlet temperatures', async () => {
+  test('air: the fan speed label reads 34.5 % with a no-break space, plus the outside temperature', async () => {
     const card = await mount({ source: 'air' }, hassOf());
     expect(valueOf(card, 'fan_speed')).toBe(`34.5${NBSP}%`);
     expect(label(card, 'fan_speed')?.querySelector('.caption')?.textContent.trim()).toBe(VALUE_CAPTIONS.fan);
     expect(valueOf(card, 'outside_temperature')).toBe(nb('3.8 °C'));
-    expect(valueOf(card, 'air_unit_outlet')).toBe(nb('0.5 °C'));
     expect(labelIds(card).some((id) => id.startsWith('ground_'))).toBe(false);
     card.remove();
   });
 
-  test('ground: brine out and in at the collector, no fan label', async () => {
-    const card = await mount({ source: 'ground' }, hassOf());
-    expect(valueOf(card, 'ground_out')).toBe(`−2.8${NBSP}°C`);
-    expect(valueOf(card, 'ground_in')).toBe(nb('0.5 °C'));
-    expect(labelIds(card)).not.toContain('fan_speed');
+  test('Air unit ports: In shows the brine outlet of the heat pump, Out the air unit outlet, each next to its port', async () => {
+    const card = await mount({ source: 'air' }, hassOf());
+    expect(valueOf(card, 'air_unit_in')).toBe(`−2.8${NBSP}°C`);
+    expect(label(card, 'air_unit_in')?.querySelector('.caption')?.textContent.trim()).toBe('In');
+    expect(label(card, 'air_unit_in')?.getAttribute('data-role')).toBe('brine.outlet_temperature');
+    expect(valueOf(card, 'air_unit_out')).toBe(nb('0.5 °C'));
+    expect(label(card, 'air_unit_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
+    expect(label(card, 'air_unit_out')?.getAttribute('data-role')).toBe('source.air_unit_outlet_temperature');
+    // the old label under the housing is gone: the stack under the housing is the fan and the outside temperature
+    expect(labelIds(card)).not.toContain('air_unit_outlet');
+    const under = LABEL_SPECS.filter((spec) => spec.source?.includes('air') && spec.y > AIR_UNIT.y + AIR_UNIT.height);
+    expect(under.map((spec) => spec.id)).toEqual(['fan_speed', 'outside_temperature']);
+    // In sits at the inlet port (the bottom pass) and Out at the outlet port (the top pass), right of the housing's wall
+    const at = (id: string): LabelSpec | undefined => LABEL_SPECS.find((spec) => spec.id === id);
+    expect(Math.abs((at('air_unit_in')?.y ?? 0) - AIR_PORT_Y.bottom)).toBeLessThan(20);
+    expect(Math.abs((at('air_unit_out')?.y ?? 0) - AIR_PORT_Y.top)).toBeLessThan(20);
+    for (const id of ['air_unit_in', 'air_unit_out']) expect(at(id)?.x, id).toBeGreaterThan(AIR_UNIT_WALL_X);
     card.remove();
   });
 
-  test('hybrid: the air unit and the ground loop each have their own labels', async () => {
+  test('Single loop: In at the down leg shows the brine outlet, Out at the up leg the brine inlet, both at the ground line', async () => {
+    const card = await mount({ source: 'ground' }, hassOf());
+    expect(valueOf(card, 'ground_in')).toBe(`−2.8${NBSP}°C`);
+    expect(valueOf(card, 'ground_out')).toBe(nb('0.5 °C'));
+    expect(label(card, 'ground_in')?.querySelector('.caption')?.textContent.trim()).toBe('In');
+    expect(label(card, 'ground_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
+    expect(label(card, 'ground_in')?.getAttribute('data-role')).toBe('brine.outlet_temperature');
+    expect(label(card, 'ground_out')?.getAttribute('data-role')).toBe('brine.inlet_temperature');
+    expect(labelIds(card)).not.toContain('fan_speed');
+    const at = (id: string): LabelSpec | undefined => LABEL_SPECS.find((spec) => spec.id === id);
+    // In on the down leg's side, Out on the up leg's, both just under the ground line
+    expect(at('ground_in')?.x).toBeGreaterThan(GROUND_LOOP.downX);
+    expect(at('ground_out')?.x).toBeLessThan(GROUND_LOOP.upX);
+    for (const id of ['ground_in', 'ground_out']) {
+      expect((at(id)?.y ?? 0) - GROUND_LINE_Y.ground, id).toBeGreaterThan(0);
+      expect((at(id)?.y ?? 0) - GROUND_LINE_Y.ground, id).toBeLessThan(30);
+    }
+    card.remove();
+  });
+
+  test('Hybrid: the air unit has only its In, the ground loop only its Out, and the link pipe has no label', async () => {
     const card = await mount({ source: 'hybrid' }, hassOf());
     const ids = labelIds(card);
     expect(ids).toEqual(
-      expect.arrayContaining(['fan_speed', 'outside_temperature', 'air_unit_outlet', 'hybrid_ground_in']),
+      expect.arrayContaining(['fan_speed', 'outside_temperature', 'hybrid_air_unit_in', 'hybrid_ground_out']),
     );
-    // the ground loop's entry would repeat the air unit's outlet: only its exit is shown
-    expect(ids).not.toContain('hybrid_ground_out');
-    expect(ids).not.toContain('ground_out');
-    expect(valueOf(card, 'hybrid_ground_in')).toBe(nb('0.5 °C'));
+    // no air unit Out and no ground In: both would label the link pipe
+    for (const id of [
+      'ground_in',
+      'ground_out',
+      'hybrid_ground_in',
+      'hybrid_air_unit_out',
+      'air_unit_in',
+      'air_unit_out',
+    ]) {
+      expect(ids, id).not.toContain(id);
+    }
+    expect(valueOf(card, 'hybrid_air_unit_in')).toBe(`−2.8${NBSP}°C`);
+    expect(label(card, 'hybrid_air_unit_in')?.getAttribute('data-role')).toBe('brine.outlet_temperature');
+    expect(label(card, 'hybrid_air_unit_in')?.querySelector('.caption')?.textContent.trim()).toBe('In');
+    expect(
+      ids.some((id) => LABEL_SPECS.find((spec) => spec.id === id)?.role === 'source.air_unit_outlet_temperature'),
+    ).toBe(false);
+    expect(valueOf(card, 'hybrid_ground_out')).toBe(nb('0.5 °C'));
+    expect(label(card, 'hybrid_ground_out')?.getAttribute('data-role')).toBe('brine.inlet_temperature');
+    expect(label(card, 'hybrid_ground_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
+    // the hybrid is entered at the top pass: In is at the top port
+    expect(
+      Math.abs((LABEL_SPECS.find((spec) => spec.id === 'hybrid_air_unit_in')?.y ?? 0) - AIR_PORT_Y.top),
+    ).toBeLessThan(20);
     card.remove();
+  });
+
+  test('the port labels are ordinary value labels: the same plate and size, never bare or emphasised, and they open more-info', async () => {
+    const events: CustomEvent<{ entityId: string }>[] = [];
+    const ids = {
+      air: ['air_unit_in', 'air_unit_out'],
+      ground: ['ground_in', 'ground_out'],
+      hybrid: ['hybrid_air_unit_in', 'hybrid_ground_out'],
+    } as const;
+    for (const source of ['air', 'ground', 'hybrid'] as const) {
+      const card = await mount({ source }, hassOf());
+      card.addEventListener('hass-more-info', (event) => events.push(event as CustomEvent<{ entityId: string }>));
+      for (const id of ids[source]) {
+        const element = label(card, id);
+        expect(element?.classList.contains('bare'), id).toBe(false);
+        expect(element?.classList.contains('emphasis'), id).toBe(false);
+        // the value joins its unit with a no-break space
+        expect(valueOf(card, id), id).toMatch(/\d\s°C$/);
+        const role = (element?.getAttribute('data-role') ?? '') as RolePath;
+        events.length = 0;
+        element?.querySelector<HTMLButtonElement>('button.value')?.click();
+        expect(
+          events.map((event) => event.detail.entityId),
+          id,
+        ).toEqual([idOf(role)]);
+      }
+      card.remove();
+    }
+  });
+
+  describe.each(['simplified', 'full'] as const)('port labels touch no pipe or other label (%s)', (detail) => {
+    interface Box {
+      left: number;
+      right: number;
+      top: number;
+      bottom: number;
+    }
+    // a value label with its caption: at most about 64 units wide and 13 tall at the 1000 px slot (normal size)
+    const [WIDTH, HEIGHT] = [64, 13];
+    const boxOf = (spec: LabelSpec): Box => {
+      const left = spec.align === 'start' ? spec.x : spec.align === 'end' ? spec.x - WIDTH : spec.x - WIDTH / 2;
+      return { left, right: left + WIDTH, top: spec.y - HEIGHT / 2, bottom: spec.y + HEIGHT / 2 };
+    };
+    const apart = (u: Box, v: Box): boolean =>
+      u.right <= v.left || v.right <= u.left || u.bottom <= v.top || v.bottom <= u.top;
+    const SOURCE_IDS = new Set([
+      'fan_speed',
+      'outside_temperature',
+      'air_unit_in',
+      'air_unit_out',
+      'hybrid_air_unit_in',
+      'ground_in',
+      'ground_out',
+      'hybrid_ground_out',
+    ]);
+
+    test.each(['air', 'ground', 'hybrid'] as const)('%s', (source) => {
+      const context = { dhw: 'external', source, features: mergeFeatures(4, {}), detail } as const;
+      const shown = LABEL_SPECS.filter((spec) => partState(spec, context) !== 'hidden');
+      const mine = shown.filter((spec) => SOURCE_IDS.has(spec.id));
+      expect(mine.length).toBeGreaterThanOrEqual(source === 'ground' ? 2 : 3);
+      const pipes = drawnSegments(context).map(({ part }) => part);
+      // the housing, the coil block, the cabinet, and the ground line with its hatching
+      const solids: [string, Box][] = [
+        ['cabinet', { left: CABINET.x - 2, right: 1000, top: CABINET.y - 2, bottom: 620 }],
+      ];
+      if (source !== 'ground') {
+        const { x, y, width, height } = AIR_UNIT;
+        solids.push(['housing', { left: x - 2, right: x + width + 2, top: y - 2, bottom: y + height + 2 }]);
+      }
+      if (source !== 'air') {
+        const lineY = GROUND_LINE_Y[source === 'hybrid' ? 'hybrid' : 'ground'];
+        solids.push(['ground line', { left: 8, right: 220, top: lineY - 2, bottom: lineY + 10 }]);
+      }
+      for (const spec of mine) {
+        const box = boxOf(spec);
+        expect(box.left, spec.id).toBeGreaterThan(0);
+        for (const [name, solid] of solids) expect(apart(box, solid), `${spec.id} ${name}`).toBe(true);
+        for (const other of shown.filter((item) => item.id !== spec.id)) {
+          expect(apart(box, boxOf(other)), `${spec.id} ${other.id}`).toBe(true);
+        }
+        // no pipe: every straight piece, thickened by its half stroke and a margin of 1
+        for (const pipe of pipes) {
+          pipe.points.slice(1).forEach((end, index) => {
+            const start = pipe.points[index] ?? end;
+            const run: Box = {
+              left: Math.min(start[0], end[0]) - 2.5,
+              right: Math.max(start[0], end[0]) + 2.5,
+              top: Math.min(start[1], end[1]) - 2.5,
+              bottom: Math.max(start[1], end[1]) + 2.5,
+            };
+            expect(apart(box, run), `${spec.id} ${pipe.id}`).toBe(true);
+          });
+        }
+        // the value text stays on the card: the wide estimate must not reach the cabinet or the left edge
+        expect(box.right, spec.id).toBeLessThan(CABINET.x);
+      }
+      // every other label below the cabinet's top (the probe labels at the cabinet's left edge, for one) keeps 8 units
+      // clear of every pipe of the source (the labels of the pipe run above the cabinet sit by design under the top lines)
+      for (const other of shown.filter((item) => !SOURCE_IDS.has(item.id) && item.y > CABINET.y)) {
+        const width = other.caption === undefined ? 40 : WIDTH;
+        const left = other.align === 'start' ? other.x : other.align === 'end' ? other.x - width : other.x - width / 2;
+        const box: Box = { left, right: left + width, top: other.y - HEIGHT / 2, bottom: other.y + HEIGHT / 2 };
+        for (const pipe of pipes.filter((candidate) => candidate.id.startsWith('src_'))) {
+          pipe.points.slice(1).forEach((end, index) => {
+            const start = pipe.points[index] ?? end;
+            const run: Box = {
+              left: Math.min(start[0], end[0]) - 8,
+              right: Math.max(start[0], end[0]) + 8,
+              top: Math.min(start[1], end[1]) - 8,
+              bottom: Math.max(start[1], end[1]) + 8,
+            };
+            expect(apart(box, run), `${other.id} ${pipe.id}`).toBe(true);
+          });
+        }
+      }
+    });
   });
 
   test('a stopped or unavailable fan still shows its label: 0 % or a dash', async () => {
