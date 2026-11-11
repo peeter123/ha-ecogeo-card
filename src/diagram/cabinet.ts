@@ -14,11 +14,15 @@ import {
   drawnComponents,
   drawnSegments,
   gapsIn,
+  HELIX_BACK_OPACITY,
+  helixHalves,
   partState,
   pathData,
+  roundedPathData,
   type Component,
   type DrawContext,
   type ExchangerSide,
+  type HelixShape,
   type Point,
   type Segment,
 } from './geometry';
@@ -125,9 +129,33 @@ function component(
   </g>`;
 }
 
+/**
+ * A helical coil (design D5): one path per half-turn, the front halves with the base stroke and the back halves faint,
+ * and, while it flows, the dash overlay on the front halves only, in the direction of the segment.
+ */
+function helix(segment: Segment, shape: HelixShape, state: PipeState): SVGTemplateResult {
+  const halves = helixHalves(shape);
+  const style = state.muted ? nothing : `stroke: ${state.color}`;
+  return svg`<g class="helix ${state.muted ? 'muted' : ''}" data-segment=${segment.id} style=${style}>
+    ${halves.map(
+      (half) =>
+        svg`<path class="pipe ${state.muted ? 'muted' : ''}" data-half=${half.front ? 'front' : 'back'} style=${style} opacity=${half.front ? nothing : HELIX_BACK_OPACITY} d=${half.d} />`,
+    )}
+    ${
+      state.animated
+        ? svg`<path class="flow ${state.reversed ? 'reversed' : ''}" data-flow=${segment.id} style="--flow-duration: ${String(state.duration)}s" d=${halves
+            .filter((half) => half.front)
+            .map((half) => half.d)
+            .join(' ')} />`
+        : nothing
+    }
+  </g>`;
+}
+
 /** One pipe: the base stroke in its colour (or muted) and, while it flows, the dash overlay. */
 function pipe(segment: Segment, state: PipeState, gaps: readonly Point[]): SVGTemplateResult {
-  const d = pathData(segment.points, gaps);
+  if (segment.shape !== undefined) return helix(segment, segment.shape, state);
+  const d = segment.bend === undefined ? pathData(segment.points, gaps) : roundedPathData(segment.points, segment.bend);
   return svg`<path class="pipe ${state.muted ? 'muted' : ''}" data-segment=${segment.id} style=${state.muted ? nothing : `stroke: ${state.color}`} d=${d} />${
     state.animated
       ? svg`<path class="flow ${state.reversed ? 'reversed' : ''}" data-flow=${segment.id} style="--flow-duration: ${String(state.duration)}s" d=${d} />`

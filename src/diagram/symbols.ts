@@ -3,7 +3,7 @@
 // theme's text colour, or the muted colour) through CSS. The shapes follow the manual's symbols (section 3.1) in a
 // simplified form. The letters of probes and switches stay upright whatever the rotation.
 import { nothing, svg, type SVGTemplateResult } from 'lit';
-import { INTERNAL_TANK, type ComponentKind, type Rotation } from './geometry';
+import { HELIX_BACK_OPACITY, INTERNAL_TANK, helixHalves, type ComponentKind, type Rotation } from './geometry';
 
 /** The ports of a three-way valve in its own frame: left, right and down (valve 26 is turned to put them up, down and right). */
 export type ValvePort = 'l' | 'r' | 'd';
@@ -38,14 +38,13 @@ function exchangerHalf(half: 'left' | 'right', span: number, paint: string): SVG
 const letter = (text: string, rotation: Rotation): SVGTemplateResult =>
   svg`<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(${-rotation})">${text}</text>`;
 
-/** A zigzag run of the coil from x0 to x1 (either way) around the line y: the wire of a heating coil. */
-function zigzag(x0: number, x1: number, y: number): string {
-  const steps = 15;
-  const points = Array.from({ length: steps - 1 }, (_, index) => {
-    const k = index + 1;
-    return `L${String(x0 + ((x1 - x0) * k) / steps)} ${String(y + (k % 2 === 1 ? -3 : 3))}`;
-  });
-  return `M${String(x0)} ${String(y)} ${points.join(' ')} L${String(x1)} ${String(y)}`;
+/**
+ * Coil 51 (model C): the helix of design D5, lying on its side (axis along x, turned 90 degrees), smaller than the external one. Both
+ * ends sit at its left: the supply starts the helix, the return drops 4 units below the loops and runs straight back to the second port.
+ */
+function helixCoil(): SVGTemplateResult {
+  const halves = helixHalves({ kind: 'helix', cx: 2, top: -60, bottom: 60, rx: 11, turns: 5.5 });
+  return svg`<g transform="matrix(0 -1 1 0 0 0)">${halves.map((half) => svg`<path data-half=${half.front ? 'front' : 'back'} d=${half.d} opacity=${half.front ? nothing : HELIX_BACK_OPACITY} />`)}</g><path d="M-75 -13 H-60 M60 9 V13 H-75" />`;
 }
 
 const stem = (length: number, from: number): SVGTemplateResult => svg`<path d="M0 ${from} V${length}" />`;
@@ -106,8 +105,8 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
       // the integrated tank (50): its body takes the DHW temperature colour through --dhw-tank-color
       return svg`<rect class="tank-body" data-dhw-tank="internal" x=${-INTERNAL_TANK.width / 2} y=${-INTERNAL_TANK.height / 2} width=${INTERNAL_TANK.width} height=${INTERNAL_TANK.height} rx="14" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />`;
     case 'coil':
-      // the coil (51): a zigzag out along the top run, a turn at the end and a zigzag back; ports at its left end
-      return svg`<path d="${zigzag(-75, 60, -13)} M60 -13 V13 ${zigzag(60, -75, 13).replace('M60 13 ', '')}" />`;
+      // the coil (51): a helix on its side with both ports at its left end
+      return helixCoil();
   }
 }
 

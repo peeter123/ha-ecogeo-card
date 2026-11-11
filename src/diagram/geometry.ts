@@ -30,7 +30,7 @@ export const CABINET = { x: 240, y: 130, width: 520, height: 475 } as const;
 export const INTERNAL_TANK = { x: 408, y: 138, width: 182, height: 66 } as const;
 
 /** The external tank right of the cabinet (not a manual item: the "DHW inter-accumulator" of ports 5/6). */
-export const EXTERNAL_TANK = { x: 806, y: 150, width: 178, height: 180 } as const;
+export const EXTERNAL_TANK = { x: 806, y: 150, width: 178, height: 180, dome: 14 } as const;
 
 /** The air unit's housing and the fan in it, left of the cabinet (not manual items). */
 export const AIR_UNIT = {
@@ -41,8 +41,14 @@ export const AIR_UNIT = {
   fanX: 115,
   fanY: 250,
   fanRadius: 36,
+  /** The coil block's frame (the brine serpentine runs inside it, over the fins). */
+  coil: { x: 60, y: 136, width: 100, height: 62 },
   /** The coil's fins: the first x, the step, how many, and where they start and end. */
-  fins: { x: 76, step: 12, count: 7, y0: 144, y1: 192 },
+  fins: { x: 74, step: 6, count: 13, y0: 140, y1: 194 },
+  /** The slats of the housing's front, in the gutters left and right of the fan: the first y, the step and how many. */
+  slats: { y0: 218, step: 9, count: 8 },
+  /** Where the fan section starts (a divider under the coil block). */
+  dividerY: 206,
   /** Where the caption sits. */
   captionX: 95,
   captionY: 112,
@@ -127,6 +133,20 @@ export interface Component extends Pick<Visibility, 'feature' | 'dhw' | 'detail'
   tag: Tag;
 }
 
+/**
+ * A helical coil seen from the side (design D5), drawn between two end points that sit on the pipes: it starts at
+ * (cx + rx, top) and winds down `turns` turns (a half-turn counts as 0.5) to (cx - rx, bottom) when the number of
+ * half-turns is odd. The pieces of its path are made by `helixHalves`.
+ */
+export interface HelixShape {
+  kind: 'helix';
+  cx: number;
+  top: number;
+  bottom: number;
+  rx: number;
+  turns: number;
+}
+
 export interface Segment extends Visibility {
   id: string;
   /** The circuits the pipe belongs to; it is active when any of them is. */
@@ -140,6 +160,10 @@ export interface Segment extends Visibility {
   direction: 1 | -1;
   /** The pipe flows the other way in active cooling (the refrigerant legs between valve 14 and the expansion valve). */
   reversible?: boolean;
+  /** A coil drawn as a helix; `points` then keep only its two end points. */
+  shape?: HelixShape;
+  /** The radius of the rounded corners of the pipe (the air coil's U-bends). */
+  bend?: number;
   /** A dead-end tap (vessel, drain, safety valve): coloured, never animated. */
   stub?: boolean;
   /** The pipe carries water only in this position of valves 27/28 (the legs behind a closed arm). */
@@ -375,12 +399,13 @@ export const SEGMENTS: readonly Segment[] = [
   seg('htr_riser', ['htr'], '361,250 361,172', DHWT, { feature: 'htr', dhw: 'any' }),
   // DHW storage. External (ports 5/6, a tank with a coil right of the cabinet, the pipes rise into the run and go
   // right: 5 higher than 6, so that they do not cross).
-  seg('dhw_ext_in', ['dhw_coil'], '722,130 722,50 940,50 940,190', OUT, { dhw: 'external', speedRole: PP }),
-  seg('dhw_ext_coil', ['dhw_coil'], '940,190 840,190 840,235 940,235 940,280 840,280', OUT, {
+  seg('dhw_ext_in', ['dhw_coil'], '722,130 722,50 940,50 940,212', OUT, { dhw: 'external', speedRole: PP }),
+  seg('dhw_ext_coil', ['dhw_coil'], '940,212 840,296', OUT, {
     dhw: 'external',
     speedRole: PP,
+    shape: { kind: 'helix', cx: 890, top: 212, bottom: 296, rx: 50, turns: 4.5 },
   }),
-  seg('dhw_ext_out', ['dhw_coil'], '840,280 820,280 820,85 748,85 748,130', RET, {
+  seg('dhw_ext_out', ['dhw_coil'], '840,296 820,296 820,85 748,85 748,130', RET, {
     dhw: 'external',
     speedRole: PP,
   }),
@@ -397,6 +422,7 @@ export const SEGMENTS: readonly Segment[] = [
   seg('src_air_coil', ['brine'], '150,150 70,150 70,168 150,168 150,186 70,186', BOUT, {
     source: ['air', 'hybrid'],
     speedRole: BP,
+    bend: 9,
   }),
   seg('src_air_exit', ['brine'], '70,186 20,186 20,50', AIRO, { source: ['air'], speedRole: BP }),
   seg('src_gnd_feed', ['brine'], '150,85 150,210', BOUT, { source: ['ground'], speedRole: BP }),
@@ -658,6 +684,114 @@ export function portsOf(component: Component): Point[] {
     const [dx, dy] = rotate(port, component.rotation);
     return [component.x + dx, component.y + dy];
   });
+}
+
+/** The half-turns of a helix, in order from its start: the lower arcs (front, solid) and the upper arcs (back, faint). */
+export interface HelixHalf {
+  front: boolean;
+  d: string;
+}
+
+/** The opacity of the back halves of a helical coil (design D5). */
+export const HELIX_BACK_OPACITY = 0.35;
+
+/** The cubic Bezier of one half-turn: start, two control points and end. */
+type Cubic = readonly [Point, Point, Point, Point];
+
+/**
+ * The half-turns of a helix as cubic Beziers, each a half ellipse from one side of the coil to the other, going down
+ * by an equal pitch: even ones pass in front (the lower arc), odd ones behind (the upper arc). The last half ends with
+ * a horizontal tangent, so the pipe that leaves the coil there does not hook.
+ */
+function helixCubics(shape: HelixShape): { front: boolean; curve: Cubic }[] {
+  const count = Math.max(1, Math.round(shape.turns * 2));
+  const pitch = (shape.bottom - shape.top) / count;
+  const bulge = (4 / 3) * Math.max(3, pitch);
+  return Array.from({ length: count }, (_, index) => {
+    const front = index % 2 === 0;
+    const [from, to] = front ? [shape.cx + shape.rx, shape.cx - shape.rx] : [shape.cx - shape.rx, shape.cx + shape.rx];
+    const y0 = shape.top + index * pitch;
+    const y1 = y0 + pitch;
+    const lift = front ? bulge : -bulge;
+    const last = index === count - 1;
+    const curve: Cubic = [
+      [from, y0],
+      [from, y0 + lift],
+      last ? [to + (from - to) * 0.3, y1] : [to, y1 + lift],
+      [to, y1],
+    ];
+    return { front, curve };
+  });
+}
+
+/** The half-turns of a helix, in order from its start: the lower arcs (front, solid) and the upper arcs (back, faint). */
+export function helixHalves(shape: HelixShape): HelixHalf[] {
+  const n = (value: number): string => String(Math.round(value * 100) / 100);
+  return helixCubics(shape).map(({ front, curve: [p0, p1, p2, p3] }) => ({
+    front,
+    d: `M${n(p0[0])} ${n(p0[1])} C${n(p1[0])} ${n(p1[1])} ${n(p2[0])} ${n(p2[1])} ${n(p3[0])} ${n(p3[1])}`,
+  }));
+}
+
+/** The box around the drawn curve of a helix, from sampling every half-turn (16 points each), rounded outward. */
+export function helixExtent(shape: HelixShape): { left: number; right: number; top: number; bottom: number } {
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const { curve } of helixCubics(shape)) {
+    for (let step = 0; step <= 16; step += 1) {
+      const t = step / 16;
+      const w = [(1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t ** 2, t ** 3];
+      xs.push(curve.reduce((sum, point, i) => sum + point[0] * (w[i] ?? 0), 0));
+      ys.push(curve.reduce((sum, point, i) => sum + point[1] * (w[i] ?? 0), 0));
+    }
+  }
+  return {
+    left: Math.floor(Math.min(...xs)),
+    right: Math.ceil(Math.max(...xs)),
+    top: Math.floor(Math.min(...ys)),
+    bottom: Math.ceil(Math.max(...ys)),
+  };
+}
+
+/**
+ * The points the integrity tests use for a segment: its own points, except for a helix, which stands for its coil as
+ * the box around its drawn curve (`helixExtent`), so it is still checked against every other pipe, and the only overlap
+ * left out is the coil's own, between its turns. Other pipes may end only on its two end points (a test checks it).
+ */
+export function routePoints(segment: Pick<Segment, 'points' | 'shape'>): readonly Point[] {
+  const { shape } = segment;
+  if (shape === undefined) return segment.points;
+  const { left, right, top, bottom } = helixExtent(shape);
+  return [
+    [right, top],
+    [left, top],
+    [left, bottom],
+    [right, bottom],
+    [right, top],
+  ];
+}
+
+/** The path data of an orthogonal polyline with every corner rounded by `radius` (at most half of the pieces next to it). */
+export function roundedPathData(points: readonly Point[], radius: number): string {
+  const first = pointAt(points, 0);
+  const parts = [`M${String(first[0])} ${String(first[1])}`];
+  for (let index = 1; index < points.length; index += 1) {
+    const [prev, corner, next] = [pointAt(points, index - 1), pointAt(points, index), points[index + 1]];
+    if (next === undefined) {
+      parts.push(`L${String(corner[0])} ${String(corner[1])}`);
+      break;
+    }
+    const inLength = Math.abs(corner[0] - prev[0]) + Math.abs(corner[1] - prev[1]);
+    const outLength = Math.abs(next[0] - corner[0]) + Math.abs(next[1] - corner[1]);
+    const r = Math.min(radius, inLength / 2, outLength / 2);
+    const [dx1, dy1] = [Math.sign(corner[0] - prev[0]), Math.sign(corner[1] - prev[1])];
+    const [dx2, dy2] = [Math.sign(next[0] - corner[0]), Math.sign(next[1] - corner[1])];
+    const sweep = dx1 * dy2 - dy1 * dx2 > 0 ? 1 : 0;
+    parts.push(
+      `L${String(corner[0] - dx1 * r)} ${String(corner[1] - dy1 * r)} A${String(r)} ${String(r)} 0 0 ${String(sweep)} ${String(corner[0] + dx2 * r)} ${String(corner[1] + dy2 * r)}`,
+    );
+  }
+  return parts.join(' ');
 }
 
 const same = (a: Point, b: Point): boolean => a[0] === b[0] && a[1] === b[1];

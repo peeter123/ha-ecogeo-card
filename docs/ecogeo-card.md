@@ -224,8 +224,9 @@ Connection 3 (brine outlet) and 4 (brine inlet) rise from the top edge into the 
 DG1 stubs and the circuit labels. Port 4's pipe is the higher one (y 50, port 3's runs at y 85), so the two never
 cross on their way left. They belong to the brine circuit: they are active with it, defrost included.
 
-- **Air:** a housing with a finned coil of three rows and a fan. The brine enters the coil at the top and leaves
-  on the left. The fan rotates while `source.fan_speed` is above 0 % (a full turn takes 120 s divided by the speed
+- **Air:** a housing with a slatted front (slats left and right of the fan), a coil block with a frame and 13 thin
+  vertical fins, and a fan under it. The brine tube winds over the fins in three passes joined by rounded U-bends;
+  it enters the coil at the top and leaves on the left. The fan is a ring with a hub and five swept blades. It rotates while `source.fan_speed` is above 0 % (a full turn takes 120 s divided by the speed
   in %, between 0.5 and 6 s) and stands still at 0 % or without a value. It does not depend on the mode, so it
   also turns in standby when its own speed says so. With `prefers-reduced-motion` the fan stands still.
 - **Ground:** a ground line with a collector loop of three rows below it, joined to the brine pipes.
@@ -236,10 +237,14 @@ cross on their way left. They belong to the brine circuit: they are active with 
 ### DHW storage (`dhw`)
 
 - **External (model B):** ports 5 (outlet) and 6 (inlet), the manual's "DHW inter-accumulator", rise into the run and
-  go right to a tank with a coil. Port 5's pipe is the higher one (y 50 against y 85) so they do not cross. The
-  coil is three rows inside the tank body.
+  go right to a tank drawn as a rounded cylinder (straight walls, elliptical domed caps). Port 5's pipe is the
+  higher one (y 50 against y 85) so they do not cross. The coil is a helix in the lower part of the tank, seen from
+  the side: four and a half turns, the front half of each turn solid and the back half faint (35 % opacity). Its two
+  ends meet the pipes from ports 5 and 6. The colour, the muting and the flow animation are those of the coil pipe;
+  the dash overlay runs along the front halves only. Model C's coil 51 is drawn the same way, smaller and lying on
+  its side.
 - **Internal (model C):** the integrated tank is drawn inside the cabinet, under the top edge, after figure C: tank
-  50 with coil 51, probe 54 and the connections 47 (tap water inlet), 48 (DHW outlet) and 49 (recirculation) on the
+  50 with coil 51 (a helix, see above), probe 54 and the connections 47 (tap water inlet), 48 (DHW outlet) and 49 (recirculation) on the
   top edge, the manual trap 52 on the coil's supply line, and the drain valve 53 on the tank wall. The figure's tank
   is tall and fills the cabinet; this one is squat so that the probe row and the rest of the cabinet stay as in the
   B figures. It differs from the figure in these ways: 47 and 49 are short stubs that end at the tank's top rather

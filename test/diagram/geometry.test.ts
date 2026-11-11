@@ -25,6 +25,8 @@ import {
   drawnComponents,
   drawnSegments,
   gapsIn,
+  helixExtent,
+  helixHalves,
   isSegmentActive,
   onInternalTank,
   onPolyline,
@@ -32,6 +34,8 @@ import {
   partState,
   pathData,
   portsOf,
+  roundedPathData,
+  routePoints,
   viewBox,
   type DrawContext,
   type Point,
@@ -200,7 +204,13 @@ describe('integrity in every configuration', () => {
       for (const end of [segment.points[0], segment.points[segment.points.length - 1]]) {
         if (end === undefined) throw new Error('no point');
         const atPort = ports.some((port) => port[0] === end[0] && port[1] === end[1]);
-        const onOther = segments.some((other) => other !== segment && onPolyline(end, other.points));
+        const onOther = segments.some(
+          (other) =>
+            other !== segment &&
+            (other.shape === undefined
+              ? onPolyline(end, other.points)
+              : other.points.some((p) => p[0] === end[0] && p[1] === end[1])),
+        );
         // a stub may end free above the top edge (DG1, the taps of model C) or on the integrated tank
         const stub = segment.stub === true && (end[1] < CABINET.y || onInternalTank(end));
         expect(atPort || onOther || stub, `${segment.id} at ${end.join(',')}`).toBe(true);
@@ -276,7 +286,7 @@ describe('integrity in every configuration', () => {
     // only the coil lines enter the integrated tank (the taps end on its top wall), only the external coil pipes the external tank
     // and only the air coil pipes the air unit's housing
     const entering = (rect: { x: number; y: number; width: number; height: number }): string[] =>
-      segments.filter((segment) => enters(segment.points, rect)).map((segment) => segment.id);
+      segments.filter((segment) => enters(routePoints(segment), rect)).map((segment) => segment.id);
     // (a tank that is not drawn is not checked)
     if (context.dhw === 'internal') expect(entering(INTERNAL_TANK).sort()).toEqual(['dhw_ret_b', 'dhw_sup_b']);
     if (context.dhw === 'external') {
@@ -297,7 +307,7 @@ describe('integrity in every configuration', () => {
     );
     segments.forEach((first, index) => {
       for (const second of segments.slice(index + 1)) {
-        for (const at of crossingPoints(first.points, second.points)) {
+        for (const at of crossingPoints(routePoints(first), routePoints(second))) {
           const found =
             declared.has(`${first.id}|${second.id}|${at.join(',')}`) ||
             declared.has(`${second.id}|${first.id}|${at.join(',')}`);
@@ -307,7 +317,7 @@ describe('integrity in every configuration', () => {
             `${first.id} x ${second.id} outside the cabinet`,
           ).toBe(true);
         }
-        expect(overlap(first.points, second.points), `${first.id} along ${second.id}`).toBe(false);
+        expect(overlap(routePoints(first), routePoints(second)), `${first.id} along ${second.id}`).toBe(false);
       }
     });
   });
@@ -475,6 +485,114 @@ describe('pathData', () => {
       [20, 0],
     ];
     expect(pathData(points, [[10, 0]])).toBe(`M0 0 L${String(10 - HOP)} 0 M${String(10 + HOP)} 0 L20 0`);
+  });
+});
+
+describe('helical coil and air coil (design D5, D6)', () => {
+  const coil = SEGMENTS.find((segment) => segment.id === 'dhw_ext_coil');
+  const shape = coil?.shape;
+
+  test('dhw_ext_coil is a helix of at least four turns whose two points are its ends on the pipes 5/6', () => {
+    if (coil === undefined || shape === undefined) throw new Error('no helix');
+    expect(shape.turns).toBeGreaterThanOrEqual(4);
+    expect(coil.points).toHaveLength(2);
+    expect(coil.points[0]).toEqual([shape.cx + shape.rx, shape.top]);
+    expect(coil.points[1]).toEqual([shape.cx - shape.rx, shape.bottom]);
+    expect(segmentPoints('dhw_ext_in').at(-1)).toEqual(coil.points[0]);
+    expect(segmentPoints('dhw_ext_out')[0]).toEqual(coil.points[1]);
+    // the coil sits in the lower part of the tank, inside its walls
+    expect((shape.top + shape.bottom) / 2).toBeGreaterThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height / 2);
+    expect(shape.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height - EXTERNAL_TANK.dome);
+  });
+
+  test('helixHalves alternates front (lower arcs) and back halves, two per turn, from the start to the end', () => {
+    if (shape === undefined) throw new Error('no helix');
+    const halves = helixHalves(shape);
+    expect(halves).toHaveLength(Math.round(shape.turns * 2));
+    expect(halves.map((half) => half.front)).toEqual(halves.map((_, index) => index % 2 === 0));
+    expect(halves[0]?.d.startsWith(`M${String(shape.cx + shape.rx)} ${String(shape.top)} `)).toBe(true);
+    expect(halves.at(-1)?.d.endsWith(`${String(shape.cx - shape.rx)} ${String(shape.bottom)}`)).toBe(true);
+  });
+
+  test('a helix is checked as the rectangle of its extent, other segments as their points', () => {
+    if (coil === undefined || shape === undefined) throw new Error('no helix');
+    const ring = routePoints(coil);
+    // both end points lie on the box's edge
+    for (const end of coil.points) expect(onPolyline(end, ring)).toBe(true);
+    expect(routePoints({ points: segmentPoints('trunk') })).toEqual(segmentPoints('trunk'));
+    // a pipe that cuts through the coil would be found
+    expect(
+      crossingPoints(ring, [
+        [890, 150],
+        [890, 250],
+      ]).length,
+    ).toBeGreaterThan(0);
+  });
+
+  test('every point of the drawn helix lies inside the box that stands for it', () => {
+    if (shape === undefined || coil === undefined) throw new Error('no helix');
+    const box = routePoints(coil);
+    const [right, top] = box[0] ?? [0, 0];
+    const [left, bottom] = box[2] ?? [0, 0];
+    expect({ left, right, top, bottom }).toEqual(helixExtent(shape));
+    expect(bottom).toBeGreaterThanOrEqual(shape.bottom);
+    expect(top).toBeLessThanOrEqual(shape.top);
+    for (const half of helixHalves(shape)) {
+      const numbers = (half.d.match(/-?[\d.]+/g) ?? []).map(Number);
+      expect(numbers).toHaveLength(8);
+      // sample the Bezier independently of helixExtent
+      for (let t = 0; t <= 1; t += 0.05) {
+        const w = [(1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t ** 2, t ** 3];
+        const x = w.reduce((sum, weight, i) => sum + weight * (numbers[2 * i] ?? 0), 0);
+        const y = w.reduce((sum, weight, i) => sum + weight * (numbers[2 * i + 1] ?? 0), 0);
+        expect(x).toBeGreaterThanOrEqual(left);
+        expect(x).toBeLessThanOrEqual(right);
+        expect(y).toBeGreaterThanOrEqual(top);
+        expect(y).toBeLessThanOrEqual(bottom);
+      }
+    }
+  });
+
+  test('no hop gap is declared in a helix or a rounded pipe', () => {
+    for (const crossing of CROSSINGS) {
+      const under = SEGMENTS.find((segment) => segment.id === crossing.under);
+      expect(under?.shape, crossing.under).toBeUndefined();
+      expect(under?.bend, crossing.under).toBeUndefined();
+    }
+  });
+
+  test('roundedPathData rounds each corner with an arc and keeps the end points', () => {
+    expect(
+      roundedPathData(
+        [
+          [0, 0],
+          [20, 0],
+          [20, 18],
+          [0, 18],
+        ],
+        9,
+      ),
+    ).toBe('M0 0 L11 0 A9 9 0 0 1 20 9 L20 9 A9 9 0 0 1 11 18 L0 18');
+  });
+
+  test('src_air_coil has three passes, rounded bends and its fins lie inside the coil block', () => {
+    const air = SEGMENTS.find((segment) => segment.id === 'src_air_coil');
+    expect(air?.bend).toBeGreaterThan(0);
+    const passes = (air?.points ?? []).slice(1).filter((end, index) => end[1] === air?.points[index]?.[1]);
+    expect(passes).toHaveLength(3);
+    const { coil: block, fins } = AIR_UNIT;
+    expect(fins.count).toBeGreaterThanOrEqual(12);
+    const last = fins.x + (fins.count - 1) * fins.step;
+    expect(fins.x).toBeGreaterThan(block.x);
+    expect(last).toBeLessThan(block.x + block.width);
+    expect(fins.y0).toBeGreaterThan(block.y);
+    expect(fins.y1).toBeLessThan(block.y + block.height);
+    for (const point of air?.points ?? []) {
+      expect(point[0]).toBeGreaterThan(block.x);
+      expect(point[0]).toBeLessThan(block.x + block.width);
+      expect(point[1]).toBeGreaterThan(block.y);
+      expect(point[1]).toBeLessThan(block.y + block.height);
+    }
   });
 });
 

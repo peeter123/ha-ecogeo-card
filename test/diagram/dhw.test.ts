@@ -2,15 +2,24 @@ import { describe, expect, test } from 'vitest';
 import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
 import type { CardConfig } from '../../src/lib/config';
+import type { HassLike } from '../../src/lib/hass';
 import { DHW_LABELS } from '../../src/strings';
+import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 
-async function mount(config: CardConfig = {}): Promise<EcogeoCard> {
+async function mount(config: CardConfig = {}, hass?: HassLike): Promise<EcogeoCard> {
   const card = document.createElement('ecogeo-card') as EcogeoCard;
   card.setConfig({ type: 'custom:ecogeo-card', ...config });
+  if (hass !== undefined) card.hass = hass;
   document.body.append(card);
   await card.updateComplete;
   return card;
 }
+
+const hot: HassLike = {
+  states: Object.fromEntries(
+    Object.entries(scenarioStates(SCENARIOS.dhw.states)).map(([id, value]) => [id, { entity_id: id, ...value }]),
+  ),
+};
 
 const root = (card: EcogeoCard): ShadowRoot => {
   if (card.shadowRoot === null) throw new Error('no shadow root');
@@ -34,6 +43,69 @@ describe('DHW storage', () => {
     expect(d('dhw_ext_in').startsWith('M722 130 L722 50')).toBe(true);
     expect(d('dhw_ext_out').endsWith('L748 130')).toBe(true);
     expect(items(card).some((item) => item >= 47)).toBe(false);
+    card.remove();
+  });
+
+  test('external tank: a rounded cylinder (straight walls, domed caps) whose body keeps the DHW colour hook', async () => {
+    const card = await mount({ model: 'B', dhw: 'external' });
+    const body = root(card).querySelector('path.tank-body[data-dhw-tank="external"]');
+    expect(body?.getAttribute('fill')).toContain('--dhw-tank-color');
+    const d = body?.getAttribute('d') ?? '';
+    expect(d).toMatch(/^M806 164 A89 14 0 0 1 984 164 V316 A89 14 0 0 1 806 316 Z$/);
+    expect(root(card).querySelector('.dhw-storage .tank-rim')).not.toBeNull();
+    card.remove();
+  });
+
+  test('helical coil: at least four turns, front halves solid, back halves faint, flow on the front halves only', async () => {
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'B', dhw: 'external' }, hot);
+    const halves = [...root(card).querySelectorAll('[data-segment="dhw_ext_coil"] path[data-half]')];
+    const front = halves.filter((half) => half.getAttribute('data-half') === 'front');
+    const back = halves.filter((half) => half.getAttribute('data-half') === 'back');
+    expect(halves.length).toBeGreaterThanOrEqual(8);
+    expect(front.length + back.length).toBe(halves.length);
+    expect(front.length).toBeGreaterThanOrEqual(4);
+    expect(back.length).toBeGreaterThanOrEqual(4);
+    for (const half of front) expect(half.hasAttribute('opacity')).toBe(false);
+    for (const half of back) expect(Number(half.getAttribute('opacity'))).toBeLessThan(0.5);
+    // same colour on every half, and the pipes' base stroke
+    expect(new Set(halves.map((half) => half.getAttribute('style'))).size).toBe(1);
+    expect(halves.every((half) => half.classList.contains('pipe'))).toBe(true);
+    // the dash overlay follows the front halves only
+    const flow = root(card).querySelector('[data-flow="dhw_ext_coil"]');
+    expect(flow).not.toBeNull();
+    expect((flow?.getAttribute('d') ?? '').match(/M/g)).toHaveLength(front.length);
+    for (const half of front) expect(flow?.getAttribute('d')).toContain(half.getAttribute('d'));
+    for (const half of back) expect(flow?.getAttribute('d')).not.toContain(half.getAttribute('d'));
+    // its ends meet the pipes from ports 5 and 6
+    const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
+    expect(d('dhw_ext_in').endsWith('L940 212')).toBe(true);
+    expect(halves[0]?.getAttribute('d')?.startsWith('M940 212')).toBe(true);
+    expect(halves.at(-1)?.getAttribute('d')?.endsWith('840 296')).toBe(true);
+    expect(d('dhw_ext_out').startsWith('M840 296')).toBe(true);
+    card.remove();
+  });
+
+  test('helical coil: muted without a flow, no overlay', async () => {
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'B', dhw: 'external' }, { states: {} });
+    expect(root(card).querySelector('[data-flow="dhw_ext_coil"]')).toBeNull();
+    const halves = [...root(card).querySelectorAll('[data-segment="dhw_ext_coil"] path[data-half]')];
+    expect(halves.length).toBeGreaterThanOrEqual(8);
+    expect(halves.every((half) => half.classList.contains('muted'))).toBe(true);
+    card.remove();
+  });
+
+  test('simplified model C: coil 51 is drawn as a helix of the same kind (front solid, back faint)', async () => {
+    const card = await mount({ model: 'C' });
+    const coil = root(card).querySelector('[data-item="51"] .symbol.coil');
+    const paths = [...(coil?.querySelectorAll('path[data-half]') ?? [])];
+    const faint = paths.filter((path) => path.getAttribute('data-half') === 'back');
+    const solid = paths.filter((path) => path.getAttribute('data-half') === 'front');
+    expect(solid).toHaveLength(6);
+    expect(faint).toHaveLength(5);
+    for (const path of solid) expect(path.hasAttribute('opacity')).toBe(false);
+    for (const path of faint) expect(path.hasAttribute('opacity')).toBe(true);
+    expect(root(card).querySelector('[data-item="52"]')).toBeNull();
+    expect(root(card).querySelector('[data-item="53"]')).toBeNull();
     card.remove();
   });
 

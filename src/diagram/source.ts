@@ -1,6 +1,6 @@
 // The outer-loop source (design D5, D6; outer-loop-source spec): the air unit, the ground loop or both on one brine
 // loop, drawn in the zone left of the cabinet (viewBox x 0-210). This file draws what is not a pipe: the air unit's
-// housing, fins and fan, the ground line and the captions. The pipes (ports 3/4 up into the run, left to the zone, the
+// housing (slatted front), finned coil block and fan, the ground line and the captions. The pipes (ports 3/4 up into the run, left to the zone, the
 // coil rows and the collector rows) are segments in geometry.ts, so pipes.ts colours and animates them like every other
 // pipe. None of these parts is a manual item: the manual's figures stop at connections 3 (brine outlet) and 4 (brine
 // inlet).
@@ -20,9 +20,24 @@ export const sourceStyles = css`
     stroke: var(--primary-text-color);
     stroke-width: 2.5;
   }
+  .source-frame {
+    fill: none;
+    stroke: var(--primary-text-color);
+    stroke-width: 2;
+  }
   .source-fin {
-    stroke: var(--divider-color);
+    stroke: var(--secondary-text-color);
+    stroke-opacity: 0.55;
     stroke-width: 1;
+  }
+  .source-slat {
+    stroke: var(--secondary-text-color);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .source-divider {
+    stroke: var(--primary-text-color);
+    stroke-width: 1.5;
   }
   .source-ground {
     stroke: var(--secondary-text-color);
@@ -30,7 +45,10 @@ export const sourceStyles = css`
   }
   /* The brine circuit is inactive: the housing, coil and ground line are muted like the pipes; the fan follows its own speed. */
   .muted .source-outline,
+  .muted .source-frame,
   .muted .source-fin,
+  .muted .source-slat,
+  .muted .source-divider,
   .muted .source-ground {
     stroke: var(--disabled-text-color);
   }
@@ -79,27 +97,32 @@ export const sourceStyles = css`
 export const fanDuration = (speed: number | undefined): number | undefined =>
   speed === undefined || !(speed > 0) ? undefined : Math.min(6, Math.max(0.5, 120 / speed));
 
-/** The fan's four blades around the origin. */
-const BLADES = [0, 90, 180, 270].map(
+/** The fan's five swept blades around the origin (design D6): each curves away from its root at the hub. */
+const BLADES = [0, 72, 144, 216, 288].map(
   (angle) =>
-    svg`<path class="fan-blade" d="M0 0 C6 -8 6 -24 0 -30 C-8 -24 -8 -8 0 0 Z" transform="rotate(${angle})" />`,
+    svg`<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(${angle})" />`,
 );
 
 function airUnit(speed: number | undefined, muted: boolean, taps: Taps | undefined): SVGTemplateResult {
-  const { x, y, width, height, fanX, fanY, fanRadius } = AIR_UNIT;
+  const { x, y, width, height, fanX, fanY, fanRadius, coil, fins: fin, slats: slat, dividerY } = AIR_UNIT;
   const duration = fanDuration(speed);
-  const { fins: fin } = AIR_UNIT;
   const fins = Array.from({ length: fin.count }, (_, index) => fin.x + index * fin.step);
+  const slatYs = Array.from({ length: slat.count }, (_, index) => slat.y0 + index * slat.step);
+  const [gutterLeft, gutterRight] = [x + 6, fanX + fanRadius + 6];
+  const gutter = fanX - fanRadius - 6 - gutterLeft;
   const tap = tapBindings(tapTarget(FAN_ROLE, taps), taps?.onTap);
   return svg`<g class="air-unit${muted ? ' muted' : ''}" data-source="air">
     <rect class="source-outline" x=${x} y=${y} width=${width} height=${height} rx="6" />
-    ${fins.map((fin) => svg`<path class="source-fin" d="M${fin} ${AIR_UNIT.fins.y0} V${AIR_UNIT.fins.y1}" />`)}
+    <path class="source-divider" d="M${x} ${dividerY} H${x + width}" />
+    ${slatYs.map((slatY) => svg`<path class="source-slat" data-slat d="M${gutterLeft} ${slatY} h${gutter} M${gutterRight} ${slatY} h${gutter}" />`)}
+    <rect class="source-frame" data-coil-block x=${coil.x} y=${coil.y} width=${coil.width} height=${coil.height} rx="3" />
+    ${fins.map((finX) => svg`<path class="source-fin" d="M${finX} ${fin.y0} V${fin.y1}" />`)}
     <g class="fan-part" aria-label=${AIR_UNIT_FAN_NAME} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>
       <title>${AIR_UNIT_FAN_NAME}</title>
       <circle class="fan-ring" cx=${fanX} cy=${fanY} r=${fanRadius} />
       <circle class="fan-hit" cx=${fanX} cy=${fanY} r=${fanRadius} fill="transparent" stroke="none" />
       <g class="fan" data-fan transform="translate(${fanX} ${fanY})">
-        <g class=${duration === undefined ? 'fan-rotor still' : 'fan-rotor'} style=${duration === undefined ? '' : `--fan-duration: ${String(duration)}s`}>${BLADES}<circle r="4" fill="var(--primary-text-color)" /></g>
+        <g class=${duration === undefined ? 'fan-rotor still' : 'fan-rotor'} style=${duration === undefined ? '' : `--fan-duration: ${String(duration)}s`}>${BLADES}<circle class="fan-hub" r="5" fill="var(--primary-text-color)" /></g>
       </g>
     </g>
     <text class="source-caption" x=${AIR_UNIT.captionX} y=${AIR_UNIT.captionY} text-anchor="middle">${SOURCE_LABELS.air}</text>

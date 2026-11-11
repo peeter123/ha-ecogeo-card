@@ -9,7 +9,7 @@
 // - None: nothing is drawn (no tank, no pipes, no ports 5/6, no valve 26).
 //
 // The tank body hook (design D7: the body takes the DHW temperature on the card's colour scale): both
-// tank bodies are a `.tank-body` rect with a `data-dhw-tank` attribute, filled from the custom property
+// tank bodies are a `.tank-body` shape (a path for the external cylinder, a rect for tank 50) with a `data-dhw-tank` attribute, filled from the custom property
 // `--dhw-tank-color` (no fill while it is not set). A muted body (DHW temperature unavailable) gets the muted colour
 // through the same property. The values (temperature, setpoint, start delta-T, demand) go under the external tank
 // (x 806-984, y 340-420) for the external one, and in the empty DHW zone right of the cabinet for the internal one (labels.ts).
@@ -22,6 +22,12 @@ export const dhwStyles = css`
   .tank-body {
     stroke: var(--primary-text-color);
     stroke-width: 2.5;
+  }
+  .tank-rim {
+    fill: none;
+    stroke: var(--primary-text-color);
+    stroke-width: 1.5;
+    stroke-opacity: 0.6;
   }
   .dhw-storage[role='button'] {
     cursor: pointer;
@@ -38,16 +44,21 @@ export const dhwStyles = css`
 `;
 
 /**
- * The DHW storage outside the cabinet: the external tank's body and caption (a button for the DHW temperature's
+ * The DHW storage outside the cabinet: the external tank's body (a rounded cylinder) and caption (a button for the DHW temperature's
  * more-info, with its name as tooltip); the other storages draw nothing here.
  */
 export function renderDhw(context: DrawContext, taps?: Taps): SVGTemplateResult {
   if (context.dhw !== 'external') return svg``;
-  const { x, y, width, height } = EXTERNAL_TANK;
+  const { x, y, width, height, dome } = EXTERNAL_TANK;
+  const rx = width / 2;
+  // straight walls with elliptical domed caps: the top cap's lower arc is drawn as a rim
+  const body = `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x + width)} ${String(y + dome)} V${String(y + height - dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x)} ${String(y + height - dome)} Z`;
+  const rim = `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 0 ${String(x + width)} ${String(y + dome)}`;
   const tap = tapBindings(tapTarget(EXTERNAL_TANK_ROLE, taps), taps?.onTap);
   return svg`<g class="dhw-storage" data-dhw="external" aria-label=${DHW_LABELS.externalTank} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>
     <title>${DHW_LABELS.externalTank}</title>
-    <rect class="tank-body" data-dhw-tank="external" x=${x} y=${y} width=${width} height=${height} rx="22" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />
+    <path class="tank-body" data-dhw-tank="external" d=${body} fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />
+    <path class="tank-rim" d=${rim} />
     <text class="tank-caption" x=${x + width / 2} y=${y - 6} text-anchor="middle">${DHW_LABELS.externalTank}</text>
   </g>`;
 }

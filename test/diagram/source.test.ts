@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
+import { AIR_UNIT } from '../../src/diagram/geometry';
 import { fanDuration } from '../../src/diagram/source';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
@@ -53,6 +54,42 @@ describe('outer-loop source', () => {
     card.remove();
   });
 
+  test('air unit drawing: a slatted housing, a finned coil block crossed by the serpentine, a fan of blades in a ring', async () => {
+    for (const source of ['air', 'hybrid'] as const) {
+      const card = await mount({ source });
+      const unit = root(card).querySelector('.air-unit');
+      // slatted front, and a coil block with at least twelve fins
+      expect(unit?.querySelectorAll('[data-slat]').length, source).toBe(AIR_UNIT.slats.count);
+      const block = unit?.querySelector('[data-coil-block]');
+      expect(block, source).not.toBeNull();
+      const fins = [...(unit?.querySelectorAll('.source-fin') ?? [])];
+      expect(fins.length, source).toBe(AIR_UNIT.fins.count);
+      expect(fins.length, source).toBeGreaterThanOrEqual(12);
+      const blockX = Number(block?.getAttribute('x'));
+      const blockRight = blockX + Number(block?.getAttribute('width'));
+      for (const fin of fins) {
+        const x = Number(/^M([\d.]+) /.exec(fin.getAttribute('d') ?? '')?.[1]);
+        expect(x).toBeGreaterThan(blockX);
+        expect(x).toBeLessThan(blockRight);
+      }
+      // the serpentine: three passes joined by rounded U-bends, drawn after (over) the fins
+      const coil = root(card).querySelector('path[data-segment="src_air_coil"]');
+      const d = coil?.getAttribute('d') ?? '';
+      expect(d.match(/ L/g)?.length, source).toBeGreaterThanOrEqual(3);
+      expect(d.match(/A/g), source).toHaveLength(4);
+      expect(d.startsWith('M150 150'), source).toBe(true);
+      expect(d.endsWith('L70 186'), source).toBe(true);
+      expect(
+        coil !== null && (fins[0]?.compareDocumentPosition(coil) ?? 0) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      // the fan: a ring, a hub and five blades
+      expect(unit?.querySelectorAll('.fan-ring')).toHaveLength(1);
+      expect(unit?.querySelectorAll('.fan-hub')).toHaveLength(1);
+      expect(unit?.querySelectorAll('.fan-rotor .fan-blade')).toHaveLength(5);
+      card.remove();
+    }
+  });
+
   test('ground: a ground loop, and no air unit or fan', async () => {
     const card = await mount({ source: 'ground' });
     expect(root(card).querySelector('.ground-loop')).not.toBeNull();
@@ -80,6 +117,7 @@ describe('outer-loop source', () => {
     const slow = await mount({ prefix: P, source: 'air' }, withFan('34.5'));
     const quick = await mount({ prefix: P, source: 'air' }, withFan('100'));
     expect(fan(slow)?.classList.contains('still')).toBe(false);
+    expect(fan(slow)?.querySelectorAll('.fan-blade')).toHaveLength(5);
     const seconds = (card: EcogeoCard): number =>
       Number.parseFloat(/--fan-duration: ([\d.]+)s/.exec(fan(card)?.getAttribute('style') ?? '')?.[1] ?? '');
     expect(seconds(slow)).toBeGreaterThan(seconds(quick));
@@ -93,6 +131,7 @@ describe('outer-loop source', () => {
     const none = await mount({ prefix: P, source: 'air' }, { states: {} });
     for (const card of [zero, unavailable, none]) {
       expect(fan(card)?.classList.contains('still')).toBe(true);
+      expect(fan(card)?.querySelectorAll('.fan-blade')).toHaveLength(5);
       expect(fan(card)?.getAttribute('style') ?? '').not.toContain('--fan-duration');
       card.remove();
     }

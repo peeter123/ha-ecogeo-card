@@ -107,7 +107,10 @@ Alternative considered: one fill per exchanger (average). Rejected: the two medi
 - The tank becomes a rounded cylinder: straight walls with elliptical domed caps; its body fill keeps
   `--dhw-tank-color` (the DHW temperature).
 - The crossing tests skip a helix segment's self-overlap (by design) but still check it against every other
-  segment; only its own pipes may enter the tank (existing test).
+  segment; only its own pipes may enter the tank (existing test). The integrity tests check the helix as the
+  bounding box of its drawn curve (sampled from the half-turns, so the bulge of the front halves is inside it);
+  other segments may end only on its two true end points, not anywhere on that box.
+- Model C's tank 50 keeps its rounded rectangle: the cylinder applies to the external tank only.
 - Model C coil 51 (`kind: 'coil'` symbol) is drawn by the same helix function, smaller, keeping its
   `coilColor` from D7 of add-schematic-card.
 

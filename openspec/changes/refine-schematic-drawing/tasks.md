@@ -59,20 +59,20 @@ unchanged.
 
 ## 3. DHW tank and air unit drawing
 
-- [ ] 3.1 Redraw the external tank as a domed cylinder and the coil `dhw_ext_coil` as a helix (design D5: `shape`
+- [x] 3.1 Redraw the external tank as a domed cylinder and the coil `dhw_ext_coil` as a helix (design D5: `shape`
   data, front and back halves, overlay on front halves only, crossing-test exemption for the helix's self-overlap
   only). Draw model C's coil 51 with the same helix function.
   Verify: `npm test` covers dhw-storage "External tank", "Helical coil" (at least four turns, front solid, back
   faint, ends on the 5/6 pipes) and "Internal tank", and the existing coil colour, animation and muting tests stay
   green.
-- [ ] 3.2 Redraw the air unit (design D6): slatted housing, finned coil block (12 or more fins), rounded U-bends on
+- [x] 3.2 Redraw the air unit (design D6): slatted housing, finned coil block (12 or more fins), rounded U-bends on
   the serpentine, a five-bladed fan with ring and hub.
   Verify: `npm test` covers outer-loop-source "Air unit drawing", "Running fan" and "Stopped fan".
-- [ ] 3.3 Emulator verification: `npm run capture`. An agent inspects the air, hybrid and ground captures, the
+- [x] 3.3 Emulator verification: `npm run capture`. An agent inspects the air, hybrid and ground captures, the
   external tank in heating, DHW and HTR recovery, and model C: the helix reads as a coil, its colour and flow
   follow the mode, the air unit reads as a finned coil with a fan, nothing overlaps.
   Verify: verdict with no blocking findings.
-- [ ] 3.4 Update `docs/ecogeo-card.md` (tank and air unit drawing) and replace `docs/images/heating.png` with the
+- [x] 3.4 Update `docs/ecogeo-card.md` (tank and air unit drawing) and replace `docs/images/heating.png` with the
   new heating capture from `build/captures/`.
   Verify: the section exists and the image shows the new drawing.
 
