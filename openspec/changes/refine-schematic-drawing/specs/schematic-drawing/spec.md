@@ -1,0 +1,114 @@
+# Spec Delta
+
+## MODIFIED Requirements
+
+### Requirement: Cabinet with top connections
+The card SHALL draw the cabinet as a rectangle with its six hydraulic connections on the top edge, left to right
+in the manual's order:
+- 1 production outlet and 2 production return, labelled as the heating circuit (DG1).
+- 3 brine outlet and 4 brine inlet, labelled as the outer loop.
+- 5 and 6, labelled as DHW.
+Each connection SHALL show its item number with `detail: full`, and SHALL NOT show it with `detail: simplified`.
+
+#### Scenario: Port order
+- **WHEN** the card renders model B with `dhw: external`
+- **THEN** the top edge shows connections 1, 2, 3, 4, 5, 6 left to right, labelled DG1, outer loop and DHW
+
+#### Scenario: No DHW
+- **WHEN** the config sets `dhw: none`
+- **THEN** connections 5 and 6 and valve 26 are not drawn, and ports 1/2 connect directly to the production circuit
+- **AND** the HTR group (9, 17, 22, 25) is not drawn, and the discharge line runs from compressor 11 straight to
+  valve 14
+
+#### Scenario: No crossings
+- **WHEN** the card renders model B with `dhw: external` and any source
+- **THEN** the DG1 stubs of connections 1/2 end below the pipe run above the cabinet, the 3/4 pipes run left to
+  the source, the 5/6 pipes run right to the tank, and no two pipes outside the cabinet cross
+
+#### Scenario: Hops inside the cabinet
+- **WHEN** the card renders model B with `dhw: external`
+- **THEN** every crossing of pipes inside the cabinet (such as the DHW supply and return lines over the lines of
+  connections 2, 3 and 4) is drawn as a hop, there are no more crossings than in the manual figure, and no pipe
+  outside the cabinet crosses another
+
+### Requirement: Refrigerant components after the manual figure
+The cabinet SHALL contain the refrigerant circuit in the topology of the manual's B4 figure:
+- compressor 11, condenser 8, evaporator 7
+- expansion valve 12, filter dryer 13, inversion valve 14
+- temperature probes 29/30, pressure transducers 35/36
+- with `detail: full` only: mini-pressure switches 39/40 and service outlets 41
+
+With `detail: full` each component SHALL show its item number; with `detail: simplified` none SHALL.
+
+#### Scenario: Refrigerant items
+- **WHEN** the card renders variant 4 with every feature `true` and `detail: full`
+- **THEN** items 7, 8, 11, 12, 13, 14, 29, 30, 35, 36, 39, 40 and 41 are drawn with their item numbers
+
+#### Scenario: Simplified refrigerant
+- **WHEN** the card renders variant 4 with every feature `true` and no `detail`
+- **THEN** items 7, 8, 11, 12, 13, 14, 29, 30, 35 and 36 are drawn without item numbers, and 39, 40 and 41 are not
+  drawn
+
+### Requirement: Hydraulic components after the manual figure
+The cabinet SHALL contain the hydraulic circuits in the topology of the manual's B4 figure:
+- **Production:** pump 15, DHW valve 26, probes 33/34, transducer 38, outlet resistor 44 with safety thermostat 45.
+- **Brine:** pump 16, probes 31/32, transducer 37, exchanger 10 with valves 27/28.
+- **HTR:** exchanger 9, pump 17, valves 22/25.
+- **Safety and service, with `detail: full` only:** vessels 18/19, safety valves 20/21, drain valves 23/24.
+
+With `detail: full` each component SHALL show its item number; with `detail: simplified` none SHALL, and the stub
+pipes that lead only to a left-out part SHALL NOT be drawn either.
+
+Items 42 and 43 (cooling outlet and inlet of the inverter) and 46 (electrical panel) are not drawn: they carry no
+production, brine or refrigerant flow and have no live value.
+
+#### Scenario: Hydraulic items
+- **WHEN** the card renders variant 4 with every feature `true` and `detail: full`
+- **THEN** items 9, 10, 15-28, 31-34, 37, 38, 44 and 45 are drawn with their item numbers
+
+#### Scenario: Simplified hydraulics
+- **WHEN** the card renders variant 4 with every feature `true` and no `detail`
+- **THEN** items 9, 10, 15, 16, 17, 22, 25-28, 31-34, 37, 38, 44 and 45 are drawn without item numbers, and items
+  18-21, 23 and 24 and their stub pipes are not drawn
+
+#### Scenario: HTR placement
+- **WHEN** the card renders variant 4 with HTR `true`
+- **THEN** exchanger 9 sits on the compressor discharge line between compressor 11 and valve 14, and its water
+  lines with pump 17 and valves 22/25 join the DHW lines of connections 5/6
+
+#### Scenario: Probe placement
+- **WHEN** the card renders
+- **THEN** probe 33 sits on the production outlet line, 34 on the production return, 31 on the brine outlet, 32 on
+  the brine inlet, 30 on the compressor discharge and 29 on the compressor suction, as in the manual figure
+
+### Requirement: Theme aware
+The drawing SHALL use Home Assistant theme variables for its outlines, text and muted colours, and SHALL be
+legible in both light and dark themes.
+
+#### Scenario: Dark theme
+- **WHEN** Home Assistant uses a dark theme
+- **THEN** the cabinet outline, the component outlines, the labels and, with `detail: full`, the item numbers
+  contrast with the dark card background
+
+## ADDED Requirements
+
+### Requirement: Detail level
+The card SHALL draw the schematic at the level of detail set by the `detail` option: `simplified` (the default)
+or `full`. Simplified SHALL leave out the service and safety parts that have no live value and SHALL show no item
+numbers; full SHALL draw every part of the manual figure with its item number.
+
+#### Scenario: Default is simplified
+- **WHEN** the config sets no `detail`
+- **THEN** no item number is shown anywhere on the drawing, and the safety valves 20/21 are not drawn
+
+#### Scenario: Full detail
+- **WHEN** the config sets `detail: full`
+- **THEN** the drawing shows the same parts and item numbers as before this option existed
+
+### Requirement: Line weights
+Pipes SHALL be drawn with a stroke of at least 3 drawing units and component outlines with a stroke of at least 2
+drawing units, so that the drawing stays legible when the card is scaled down.
+
+#### Scenario: Pipe stroke
+- **WHEN** the card renders
+- **THEN** every pipe's base stroke is at least 3 units wide and every component outline at least 2 units
