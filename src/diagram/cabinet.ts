@@ -4,7 +4,9 @@
 // pipes outside the cabinet too, coloured by temperature and animated by flow
 // (pipes.ts). Valve positions come from circuits.ts; a feature that is `false` removes its parts (geometry.ts), `unused` draws them muted.
 import { css, nothing, svg, type SVGTemplateResult } from 'lit';
+import type { ExchangerFill } from '../config/options';
 import { CIRCUIT_LABELS, componentLabel } from '../strings';
+import { MUTED_COLOR } from './colors';
 import { COMPONENT_ROLES, tapBindings, tapTarget, type Taps } from './component-info';
 import {
   CABINET,
@@ -16,22 +18,23 @@ import {
   pathData,
   type Component,
   type DrawContext,
+  type ExchangerSide,
   type Point,
   type Segment,
 } from './geometry';
-import { coilColor, pipeState, shownState, type PipeView } from './pipes';
+import { coilColor, pipeState, shownState, type PipeState, type PipeView } from './pipes';
 import { symbol, type ValvePort } from './symbols';
 
 export const cabinetStyles = css`
   .outline {
     fill: none;
     stroke: var(--primary-text-color);
-    stroke-width: 2;
+    stroke-width: 3;
   }
   .pipe {
     fill: none;
     stroke: var(--secondary-text-color);
-    stroke-width: 2;
+    stroke-width: 3;
     stroke-linejoin: round;
   }
   .pipe.muted {
@@ -42,9 +45,9 @@ export const cabinetStyles = css`
     fill: none;
     stroke: var(--card-background-color, #fff);
     stroke-opacity: 0.55;
-    stroke-width: 2;
+    stroke-width: 3;
     stroke-linecap: round;
-    stroke-dasharray: 2 12;
+    stroke-dasharray: 3 18;
     animation: flow-dash var(--flow-duration, 2s) linear infinite;
   }
   .flow.reversed {
@@ -52,7 +55,7 @@ export const cabinetStyles = css`
   }
   @keyframes flow-dash {
     to {
-      stroke-dashoffset: -14;
+      stroke-dashoffset: -21;
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -101,6 +104,7 @@ function component(
   view: PipeView,
   detail: DrawContext['detail'],
   taps: Taps | undefined,
+  fills?: { left: string; right: string },
 ): SVGTemplateResult {
   const { part } = entry;
   const { circuits } = view;
@@ -115,19 +119,14 @@ function component(
       size: part.size,
       open: part.kind === 'valve3' ? openPorts(part.item, circuits) : undefined,
       reversed: part.kind === 'inversion_valve' ? circuits.valve14 === 'reversed' : undefined,
+      fills,
     })}</g>
     ${detail === 'full' ? svg`<text class="item" x=${part.x + dx} y=${part.y + dy} text-anchor=${anchor ?? 'start'}>${part.item}</text>` : nothing}
   </g>`;
 }
 
 /** One pipe: the base stroke in its colour (or muted) and, while it flows, the dash overlay. */
-function pipe(
-  segment: Segment,
-  geometryState: 'normal' | 'muted',
-  view: PipeView,
-  gaps: readonly Point[],
-): SVGTemplateResult {
-  const state = pipeState(segment, geometryState, view);
+function pipe(segment: Segment, state: PipeState, gaps: readonly Point[]): SVGTemplateResult {
   const d = pathData(segment.points, gaps);
   return svg`<path class="pipe ${state.muted ? 'muted' : ''}" data-segment=${segment.id} style=${state.muted ? nothing : `stroke: ${state.color}`} d=${d} />${
     state.animated
@@ -136,17 +135,98 @@ function pipe(
   }`;
 }
 
+/** How the exchangers are filled: the option, and the id prefix of this card's gradients (unique per card instance). */
+export interface FillOptions {
+  mode: ExchangerFill;
+  idPrefix: string;
+}
+
+/** A gradient of one exchanger side, as defs content, and the paint that refers to it. */
+interface SideGradient {
+  id: string;
+  y1: number;
+  y2: number;
+  start: string;
+  end: string;
+  muted: boolean;
+}
+
+/**
+ * The colours of one exchanger side (design D4): from the state of the segment that enters it to the one that leaves
+ * it. A reversed side (active cooling, refrigerant legs of 7 and 8) swaps start and end. Candidates that are not drawn
+ * are skipped; a side is muted when none of its drawn segments is coloured. Every drawn side has exactly one drawn candidate at each end
+ * (a geometry test checks it).
+ */
+function sideGradient(
+  side: ExchangerSide,
+  id: string,
+  states: ReadonlyMap<string, PipeState>,
+  mode: PipeView['mode'],
+): SideGradient {
+  const find = (ids: readonly string[]): PipeState | undefined =>
+    ids.map((candidate) => states.get(candidate)).find((state) => state !== undefined);
+  const reversed = side.reversible === true && mode === 'active_cooling';
+  const [first, last] = reversed ? [side.leaving, side.entering] : [side.entering, side.leaving];
+  const from = find(first);
+  const to = find(last);
+  const muted = (from?.muted ?? true) && (to?.muted ?? true);
+  const colorOf = (state: PipeState | undefined): string => (muted ? MUTED_COLOR : (state?.color ?? MUTED_COLOR));
+  // the first stop sits at the end the flow enters (the bottom or the top of the half), the second where it leaves
+  const startAtTop = (side.enters === 'top') !== reversed;
+  return {
+    id,
+    y1: startAtTop ? 0 : 1,
+    y2: startAtTop ? 1 : 0,
+    start: colorOf(from),
+    end: colorOf(to),
+    muted,
+  };
+}
+
+const gradientDef = (gradient: SideGradient): SVGTemplateResult =>
+  svg`<linearGradient id=${gradient.id} x1="0" y1=${gradient.y1} x2="0" y2=${gradient.y2} data-muted=${gradient.muted}>
+      <stop offset="0" style="stop-color: ${gradient.start}" />
+      <stop offset="1" style="stop-color: ${gradient.end}" />
+    </linearGradient>`;
+
 /** The cabinet as SVG content for the card's viewBox: no images, only paths, symbols and text. */
-export function renderCabinet(context: DrawContext, view: PipeView, taps?: Taps): SVGTemplateResult {
+export function renderCabinet(
+  context: DrawContext,
+  view: PipeView,
+  taps?: Taps,
+  fill: FillOptions = { mode: 'gradient', idPrefix: 'ecogeo' },
+): SVGTemplateResult {
   const segments = drawnSegments(context);
   const ids = new Set(segments.map((entry) => entry.part.id));
+  const states = new Map(segments.map((entry) => [entry.part.id, pipeState(entry.part, entry.state, view)] as const));
+  const gradients: SideGradient[] = [];
+  const components = drawnComponents(context).map((entry) => {
+    const sides = fill.mode === 'gradient' ? entry.part.sides : undefined;
+    if (sides === undefined) return component(entry, view, context.detail, taps);
+    const paints = { left: 'none', right: 'none' };
+    for (const side of sides) {
+      const gradient = sideGradient(
+        side,
+        `${fill.idPrefix}-x${String(entry.part.item)}-${side.half}`,
+        states,
+        view.mode,
+      );
+      gradients.push(gradient);
+      paints[side.half] = `url(#${gradient.id})`;
+    }
+    return component(entry, view, context.detail, taps, paints);
+  });
   return svg`<g class="cabinet">
+    <defs>${gradients.map(gradientDef)}</defs>
     <rect class="outline" x=${CABINET.x} y=${CABINET.y} width=${CABINET.width} height=${CABINET.height} rx="6" />
     ${LABEL_POSITIONS.filter((label) => partState(label, context) !== 'hidden').map(
       (label) =>
         svg`<text class="circuit-label" x=${label.x} y=${label.y} text-anchor="middle">${CIRCUIT_LABELS[label.key]}</text>`,
     )}
-    ${segments.map((entry) => pipe(entry.part, entry.state, view, gapsIn(entry.part.id, ids)))}
-    ${drawnComponents(context).map((entry) => component(entry, view, context.detail, taps))}
+    ${segments.map((entry) => {
+      const state = states.get(entry.part.id);
+      return state === undefined ? nothing : pipe(entry.part, state, gapsIn(entry.part.id, ids));
+    })}
+    ${components}
   </g>`;
 }

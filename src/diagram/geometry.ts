@@ -99,6 +99,19 @@ export interface Visibility {
 /** Where an item number is written, relative to the component: dx, dy and the text anchor. */
 export type Tag = readonly [dx: number, dy: number, anchor?: 'start' | 'middle' | 'end'];
 
+/**
+ * One side of a plate exchanger (design D4): the half of the symbol it fills, the segments that enter and leave it
+ * in normal flow (candidates: the first one that is drawn counts, as a bypass replaces a through pipe) and the end
+ * the entering one is attached to. A `reversible` side runs the other way in active cooling.
+ */
+export interface ExchangerSide {
+  half: 'left' | 'right';
+  entering: readonly string[];
+  leaving: readonly string[];
+  enters: 'top' | 'bottom';
+  reversible?: true;
+}
+
 export interface Component extends Pick<Visibility, 'feature' | 'dhw' | 'detail'> {
   /** The manual's item number, 1-54. */
   item: number;
@@ -109,6 +122,8 @@ export interface Component extends Pick<Visibility, 'feature' | 'dhw' | 'detail'
   rotation: Rotation;
   /** An exchanger's half span between its top and bottom ports. */
   size?: number;
+  /** An exchanger's two sides (manual items 7, 8, 9, 10), filled from the pipes that enter and leave them. */
+  sides?: readonly ExchangerSide[];
   tag: Tag;
 }
 
@@ -145,7 +160,7 @@ const c = (
   y: number,
   rotation: Rotation,
   tag: Tag,
-  extra: Partial<Pick<Component, 'feature' | 'dhw' | 'detail' | 'size'>> = {},
+  extra: Partial<Pick<Component, 'feature' | 'dhw' | 'detail' | 'size' | 'sides'>> = {},
 ): Component => ({ item, kind, x, y, rotation, tag, ...extra });
 
 /** Components. Items 1-6 are the ports on the top edge. */
@@ -162,9 +177,46 @@ export const COMPONENTS: readonly Component[] = [
   c(48, 'port', 490, 130, 0, [-7, -8, 'end'], { dhw: 'internal' }),
   c(49, 'port', 540, 130, 0, [-7, -8, 'end'], { dhw: 'internal' }),
   // refrigerant circuit
-  c(7, 'exchanger', 572, 382, 0, [-26, 6, 'end'], { size: 34 }),
-  c(8, 'exchanger', 432, 382, 0, [-26, 6, 'end'], { size: 34 }),
-  c(9, 'exchanger', 373, 273, 0, [26, -2, 'start'], { size: 23, feature: 'htr' }),
+  c(7, 'exchanger', 572, 382, 0, [-26, 6, 'end'], {
+    size: 34,
+    sides: [
+      // refrigerant (left): expansion valve in at the bottom, suction line out at the top
+      {
+        half: 'left',
+        entering: ['ref_12_7'],
+        leaving: ['ref_7_14', 'ref_direct_suction'],
+        enters: 'bottom',
+        reversible: true,
+      },
+      // brine (right): from pump 16 in at the top, towards valve 28 out at the bottom
+      { half: 'right', entering: ['br_feed7'], leaving: ['brine_7_28', 'brine_bypass28'], enters: 'top' },
+    ],
+  }),
+  c(8, 'exchanger', 432, 382, 0, [-26, 6, 'end'], {
+    size: 34,
+    sides: [
+      // production water (left): from pump 15 in at the bottom, towards resistor 44 out at the top
+      { half: 'left', entering: ['prod_15_8'], leaving: ['prod_8_44'], enters: 'bottom' },
+      // refrigerant (right): discharge in at the top, towards the expansion valve out at the bottom
+      {
+        half: 'right',
+        entering: ['ref_14_8', 'ref_direct_8'],
+        leaving: ['ref_8_13'],
+        enters: 'top',
+        reversible: true,
+      },
+    ],
+  }),
+  c(9, 'exchanger', 373, 273, 0, [26, -2, 'start'], {
+    size: 23,
+    feature: 'htr',
+    sides: [
+      // HTR water (left): from valve 22 in at the bottom, up the riser into the DHW supply out at the top
+      { half: 'left', entering: ['htr_to_9'], leaving: ['htr_riser'], enters: 'bottom' },
+      // refrigerant (right): the discharge line passes through, at the discharge temperature at both ends
+      { half: 'right', entering: ['ref_discharge'], leaving: ['ref_9_14'], enters: 'top' },
+    ],
+  }),
   c(11, 'compressor', 510, 250, 0, [0, -26, 'middle']),
   c(12, 'expansion_valve', 527, 416, 0, [0, -14, 'middle']),
   c(13, 'filter_dryer', 487, 416, 0, [0, -14, 'middle']),
@@ -178,7 +230,16 @@ export const COMPONENTS: readonly Component[] = [
   c(41, 'service_outlet', 464, 406, 0, [0, 28, 'middle'], { detail: 'full' }),
   c(41, 'service_outlet', 620, 270, 90, [0, 14, 'middle'], { detail: 'full' }),
   // hydraulic circuits
-  c(10, 'exchanger', 520, 470, 0, [28, 4, 'start'], { size: 22, feature: 'passive_cooling' }),
+  c(10, 'exchanger', 520, 470, 0, [28, 4, 'start'], {
+    size: 22,
+    feature: 'passive_cooling',
+    sides: [
+      // production water (left): in at the bottom, out at the top
+      { half: 'left', entering: ['prod_10_in'], leaving: ['prod_10_out'], enters: 'bottom' },
+      // brine (right): in at the top, out at the bottom
+      { half: 'right', entering: ['br_10_in'], leaving: ['br_10_28'], enters: 'top' },
+    ],
+  }),
   c(15, 'pump', 385, 416, 0, [0, -19, 'middle']),
   c(16, 'pump', 690, 300, 90, [19, 4, 'start']),
   c(17, 'pump', 340, 226, 90, [-14, 4, 'end'], { feature: 'htr', dhw: 'any' }),
@@ -497,7 +558,7 @@ export const isSegmentActive = (segment: Pick<Segment, 'circuit' | 'onlyWhen'>, 
   segment.circuit.some((circuit) => circuits.active.has(circuit));
 
 /** The hop of a crossing: the gap in the `under` segment is this many units on each side of the crossing. */
-export const HOP = 5;
+export const HOP = 7;
 
 // Where the connectable ports of each symbol are, relative to its centre, before the rotation.
 const STEM = {

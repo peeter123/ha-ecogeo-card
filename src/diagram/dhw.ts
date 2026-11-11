@@ -21,7 +21,7 @@ import { EXTERNAL_TANK, type DrawContext } from './geometry';
 export const dhwStyles = css`
   .tank-body {
     stroke: var(--primary-text-color);
-    stroke-width: 2;
+    stroke-width: 2.5;
   }
   .dhw-storage[role='button'] {
     cursor: pointer;

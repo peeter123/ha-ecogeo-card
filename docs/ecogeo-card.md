@@ -264,10 +264,16 @@ The scale is absolute: a temperature has the same colour whatever the other temp
 
 | Temperature | Colour |
 |---|---|
-| -10 °C | blue `#1e88e5` |
-| 20 °C | green `#43a047` |
-| 45 °C | orange `#fb8c00` |
-| 70 °C | red `#e53935` |
+| -10 °C | blue `#1e5aa8` |
+| 10 °C | light blue `#5fa8e0` |
+| 20 °C | pale blue `#8ecae6` |
+| 30 °C | amber `#e8a317` |
+| 50 °C | orange `#f2711c` |
+| 70 °C | red `#d7263d` |
+
+There is no green stop: the hues are about 214, 206, 199, 40, 24 and 352 degrees, none between 75 and 165. The pale blue at 20 °C keeps
+the mix of light blue and amber from turning grey-green (a unit test samples the whole scale in 1 K steps), so cold brine at -2.8 °C is a blue between the first two stops, closer to blue, and nothing reads as
+"fine" by colour alone.
 
 Between two stops the colour is a CSS `color-mix(in srgb, ...)` of the two, by the share of the way between them
 (rounded to 0.1 %); outside the scale it is the colour of the nearest end, so a discharge of 95 °C is the 70 °C red.
@@ -325,6 +331,33 @@ inactive; the fan keeps following its own speed.
 
 The tap-water stubs of model C (47, 48, 49) are the exception: they are coloured by the DHW temperature in every
 mode, and never animated.
+
+### Exchanger fills
+
+With `exchanger_fill: gradient` (the default) each plate exchanger (7 evaporator, 8 condenser, 9 HTR, 10 passive
+cooling) is filled on each of its two sides, under the outline, the plate lines and the ports, with a vertical gradient
+at 55 % opacity. A side runs from the colour of the pipe that enters it to the colour of the pipe that leaves it, so
+the fill always agrees with the pipes at its ports:
+
+| Exchanger | Left side | Right side |
+|---|---|---|
+| 8 condenser | production water, return colour in, outlet colour out | refrigerant, discharge colour in, condensation colour out |
+| 7 evaporator | refrigerant, evaporation colour in, suction colour out | brine, inlet colour in, outlet colour out |
+| 9 HTR | HTR water, the DHW colour at both ends | refrigerant, the discharge colour at both ends |
+| 10 passive cooling | production water, return in, outlet out | brine, inlet in, outlet out |
+
+In active cooling the refrigerant sides of 7 and 8 run the other way (7 condenses, 8 evaporates), so their start and
+end swap, exactly as their pipes do. A side whose pipes are both muted (an idle circuit, HTR water outside HTR
+recovery, exchanger 10 outside passive cooling and defrost) is filled in the muted colour. `exchanger_fill: none`
+leaves the exchangers unfilled. The gradient ids carry a per-card prefix, so two cards on one dashboard do not share
+them. The sides are data in `src/diagram/geometry.ts` (`sides` on the four exchangers) and the colours come from
+`src/diagram/pipes.ts`.
+
+### Line weights
+
+Pipes are drawn 3 drawing units wide (the flow overlay too, with dashes of 3 and gaps of 18 units), component symbols
+with a 2 unit outline, the cabinet outline 3 units and the source and tank outlines 2.5 units, so the drawing stays
+legible when the card is scaled down. The hop of a crossing leaves a gap of 7 units on each side.
 
 ### Animation
 

@@ -33,24 +33,26 @@ unchanged.
 
 ## 2. Colours and line weights
 
-- [ ] 2.1 Change the default stops in `src/diagram/colors.ts` (design D3). Unit-test the temperature-coloring
+- [x] 2.1 Change the default stops in `src/diagram/colors.ts` (design D3). Unit-test the temperature-coloring
   scenarios "Cold brine" (between blue and light blue, closer to blue), "Out of range" and "No green by default"
   (hue of each default stop).
   Verify: `npm test`.
-- [ ] 2.2 Add the `exchanger_fill` option (`gradient` default, `none`) and the exchanger side fills of design D4:
+- [x] 2.2 Add the `exchanger_fill` option (`gradient` default, `none`) and the exchanger side fills of design D4:
   `sides` data on exchangers 7, 8, 9, 10, gradients from the entering and leaving segments' states, reversal,
   muting, per-instance gradient ids. Wire the emulator's fill select.
   Verify: `npm test` covers "Condenser while heating", "Idle exchanger", "Fill off", the active-cooling reversal
   on condenser 8 and evaporator 7, the HTR side of exchanger 9, and two cards in one DOM with distinct gradient ids.
-- [ ] 2.3 Apply the line weights of design D7 (pipes, flow overlay, hops, symbols, cabinet, source and tank
+- [x] 2.3 Apply the line weights of design D7 (pipes, flow overlay, hops, symbols, cabinet, source and tank
   outlines).
   Verify: `npm test` covers the schematic-drawing "Pipe stroke" scenario from the rendered DOM.
-- [ ] 2.4 Emulator verification: `npm run capture`. An agent inspects every scenario in light and dark: colours
+- [x] 2.4 Emulator verification: `npm run capture`. An agent inspects every scenario in light and dark: colours
   follow the new scale, exchanger sides match their pipes (heating, DHW, active cooling, defrost, passive
   cooling), muted exchangers in idle circuits, amber legible on the light card, no label touched by the thicker
   lines, hops still visible.
   Verify: verdict with no blocking findings.
-- [ ] 2.5 Update `docs/ecogeo-card.md` (colour scale table with the new stops, exchanger fills, line weights) and
+  Note (review round 1): the "Demand" label clears the 3-unit cabinet edge by about 1 unit (1.5 before) and the
+  brine label beside `ln3` by about 3.5 units; accepted, no label moved. `add-compact-layout` reworks labels.
+- [x] 2.5 Update `docs/ecogeo-card.md` (colour scale table with the new stops, exchanger fills, line weights) and
   the README (`exchanger_fill` option, the default `colors`). Remove the README wording from group 1 that says the
   emulator's fill select takes effect only once the card has the option.
   Verify: the sections exist and `test/readme.ts` passes.

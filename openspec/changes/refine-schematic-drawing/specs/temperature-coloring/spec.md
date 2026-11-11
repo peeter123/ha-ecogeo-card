@@ -6,6 +6,7 @@
 Temperatures SHALL map to colours on a fixed scale, with stops that can be configured. The default stops are:
 - -10 °C blue
 - 10 °C light blue
+- 20 °C pale blue
 - 30 °C amber
 - 50 °C orange
 - 70 °C red
@@ -26,7 +27,8 @@ take the colour of the nearest end. The scale SHALL NOT depend on the other temp
 
 #### Scenario: No green by default
 - **WHEN** the config sets no `colors`
-- **THEN** no default stop colour has a hue between 75° and 165°
+- **THEN** no default stop colour has a hue between 75° and 165°, and no colour of the default scale sampled in
+  1 K steps from -10 °C to 70 °C has a hue between 75° and 165° at a saturation above 20 %
 
 ## ADDED Requirements
 

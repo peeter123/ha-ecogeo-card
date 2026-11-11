@@ -2,7 +2,7 @@
 // the origin and turned by the component's rotation. Strokes use `currentColor`, so the caller sets the colour (the
 // theme's text colour, or the muted colour) through CSS. The shapes follow the manual's symbols (section 3.1) in a
 // simplified form. The letters of probes and switches stay upright whatever the rotation.
-import { svg, type SVGTemplateResult } from 'lit';
+import { nothing, svg, type SVGTemplateResult } from 'lit';
 import { INTERNAL_TANK, type ComponentKind, type Rotation } from './geometry';
 
 /** The ports of a three-way valve in its own frame: left, right and down (valve 26 is turned to put them up, down and right). */
@@ -16,6 +16,22 @@ export interface SymbolOptions {
   open?: readonly ValvePort[];
   /** An inversion valve: the position (reversed in active cooling). */
   reversed?: boolean;
+  /** An exchanger: the paint of its left and right half (a `url(#gradient)` or a colour), drawn under the plates and ports. */
+  fills?: { left: string; right: string };
+}
+
+/** The opacity of an exchanger's side fill: low enough that the plate lines and ports stay readable (design D4). */
+export const EXCHANGER_FILL_OPACITY = 0.55;
+
+/** The rounded half of an exchanger body, inside its outline (x from -20 to 0 for the left half, 0 to 20 for the right). */
+function exchangerHalf(half: 'left' | 'right', span: number, paint: string): SVGTemplateResult {
+  const top = -span - 9;
+  const bottom = span + 9;
+  const d =
+    half === 'left'
+      ? `M0 ${String(top)} H-16 A4 4 0 0 0 -20 ${String(top + 4)} V${String(bottom - 4)} A4 4 0 0 0 -16 ${String(bottom)} H0 Z`
+      : `M0 ${String(top)} H16 A4 4 0 0 1 20 ${String(top + 4)} V${String(bottom - 4)} A4 4 0 0 1 16 ${String(bottom)} H0 Z`;
+  return svg`<path class="exchanger-fill" data-half=${half} d=${d} fill=${paint} fill-opacity=${EXCHANGER_FILL_OPACITY} stroke="none" />`;
 }
 
 /** The letter of a probe or switch, upright whatever the symbol's rotation. */
@@ -63,7 +79,8 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
       return svg`<rect x="-7" y="-7" width="14" height="14" />${stem(16, 7)}${letter('T', rotation)}`;
     case 'exchanger': {
       const span = options.size ?? 34;
-      return svg`<rect x="-20" y="${-span - 9}" width="40" height="${2 * span + 18}" rx="4" /><path d="M-12 ${-span} V${span} M12 ${-span} V${span}" /><circle cx="-12" cy="${-span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${-span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="-12" cy="${span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${span}" r="3.5" fill="var(--card-background-color, transparent)" />`;
+      const fills = options.fills;
+      return svg`${fills === undefined ? nothing : svg`${exchangerHalf('left', span, fills.left)}${exchangerHalf('right', span, fills.right)}`}<rect x="-20" y="${-span - 9}" width="40" height="${2 * span + 18}" rx="4" /><path d="M-12 ${-span} V${span} M12 ${-span} V${span}" /><circle cx="-12" cy="${-span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${-span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="-12" cy="${span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${span}" r="3.5" fill="var(--card-background-color, transparent)" />`;
     }
     case 'compressor':
       return svg`<circle r="14" /><path d="M0 -8 A8 8 0 1 0 8 0 M0 -8 L6 -4" />`;
@@ -97,5 +114,5 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
 /** The symbol of a component kind as an SVG group, centred on (0, 0) and turned by `rotation`. */
 export function symbol(kind: ComponentKind, options: SymbolOptions = {}): SVGTemplateResult {
   const rotation = options.rotation ?? 0;
-  return svg`<g class="symbol ${kind}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" transform="rotate(${rotation})">${body(kind, options)}</g>`;
+  return svg`<g class="symbol ${kind}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="rotate(${rotation})">${body(kind, options)}</g>`;
 }

@@ -466,7 +466,7 @@ describe('pathData', () => {
       [0, 0],
       [20, 0],
     ];
-    expect(pathData(points, [[17, 0]])).toBe('M0 0 L12 0 M20 0 L20 0');
+    expect(pathData(points, [[17, 0]])).toBe(`M0 0 L${String(17 - HOP)} 0 M20 0 L20 0`);
   });
 
   test('a gap on each side of a crossing', () => {
@@ -474,6 +474,59 @@ describe('pathData', () => {
       [0, 0],
       [20, 0],
     ];
-    expect(pathData(points, [[10, 0]])).toBe('M0 0 L5 0 M15 0 L20 0');
+    expect(pathData(points, [[10, 0]])).toBe(`M0 0 L${String(10 - HOP)} 0 M${String(10 + HOP)} 0 L20 0`);
   });
+});
+
+describe('exchanger sides (design D4)', () => {
+  test('exchangers 7, 8, 9 and 10 have a left and a right side whose segments end on the side ports', () => {
+    const exchangers = COMPONENTS.filter((component) => component.kind === 'exchanger');
+    expect(exchangers.map((component) => component.item).sort((a, b) => a - b)).toEqual([7, 8, 9, 10]);
+    for (const component of exchangers) {
+      const sides = component.sides ?? [];
+      expect(sides.map((entry) => entry.half).sort(), `item ${String(component.item)}`).toEqual(['left', 'right']);
+      const span = component.size ?? 34;
+      for (const entry of sides) {
+        const x = component.x + (entry.half === 'left' ? -12 : 12);
+        const top = entry.enters === 'top' ? entry.entering : entry.leaving;
+        const bottom = entry.enters === 'top' ? entry.leaving : entry.entering;
+        for (const [ids, y] of [
+          [top, component.y - span],
+          [bottom, component.y + span],
+        ] as const) {
+          for (const id of ids) {
+            const segment = SEGMENTS.find((candidate) => candidate.id === id);
+            if (segment === undefined) throw new Error(`no segment ${id}`);
+            const ends = [segment.points[0], segment.points[segment.points.length - 1]];
+            expect(
+              ends.some((end) => end?.[0] === x && end[1] === y),
+              `${id} ends at ${String(x)},${String(y)}`,
+            ).toBe(true);
+          }
+        }
+      }
+    }
+  });
+});
+
+describe('exchanger sides in every configuration', () => {
+  test.each(ALL.map((context) => [label(context), context] as const))(
+    '%s: each drawn side has one drawn entering and one drawn leaving segment',
+    (_name, context) => {
+      const drawnIds = new Set(drawnSegments(context).map((entry) => entry.part.id));
+      for (const { part } of drawnComponents(context)) {
+        for (const entry of part.sides ?? []) {
+          const where = `item ${String(part.item)} ${entry.half}`;
+          expect(
+            entry.entering.filter((id) => drawnIds.has(id)),
+            `${where} entering`,
+          ).toHaveLength(1);
+          expect(
+            entry.leaving.filter((id) => drawnIds.has(id)),
+            `${where} leaving`,
+          ).toHaveLength(1);
+        }
+      }
+    },
+  );
 });

@@ -1,4 +1,4 @@
-// The temperature colour scale (design D7, temperature-coloring spec): absolute stops, interpolated with CSS
+// The temperature colour scale (design D3, temperature-coloring spec): absolute stops, interpolated with CSS
 // `color-mix(in srgb, ...)` and clamped at the end stops. The interpolation is copied from hrv-ventilation
 // src/diagram/streams.ts (`mixColor`: percentage rounded to one decimal, the end colours returned as they are at 0 and
 // 100 %, the rest as a color-mix of the warm into the cold colour). Deviation: hrv mixes between two colours on a
@@ -14,12 +14,17 @@ export interface ColorStop {
   color: string;
 }
 
-/** Blue at -10 °C, green at 20 °C, orange at 45 °C, red at 70 °C (design D7). */
+/**
+ * Blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at 30 °C, orange at 50 °C and red at 70 °C; no green
+ * (design D3). The pale blue keeps the srgb mix between light blue and amber from turning grey-green.
+ */
 export const DEFAULT_STOPS: readonly ColorStop[] = [
-  { temperature: -10, color: '#1e88e5' },
-  { temperature: 20, color: '#43a047' },
-  { temperature: 45, color: '#fb8c00' },
-  { temperature: 70, color: '#e53935' },
+  { temperature: -10, color: '#1e5aa8' },
+  { temperature: 10, color: '#5fa8e0' },
+  { temperature: 20, color: '#8ecae6' },
+  { temperature: 30, color: '#e8a317' },
+  { temperature: 50, color: '#f2711c' },
+  { temperature: 70, color: '#d7263d' },
 ];
 
 export const MIN_STOPS = 2;

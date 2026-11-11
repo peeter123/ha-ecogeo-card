@@ -4,12 +4,14 @@ import { stopsOf, type ColorStop } from '../diagram/colors';
 import { entityAt, type CardConfig } from '../lib/config';
 import {
   detailOf,
+  exchangerFillOf,
   featureOverrides,
   installationOf,
   prefixOf,
   setsAnyEntity,
   variantOf,
   type Detail,
+  type ExchangerFill,
   type DhwStorage,
   type Model,
   type Source,
@@ -25,6 +27,8 @@ export interface ResolvedConfig {
   dhw: DhwStorage;
   /** The level of detail: `simplified` leaves out the service and safety parts and the item numbers. */
   detail: Detail;
+  /** How the plate exchangers are filled: a `gradient` per side from the pipes' colours, or `none`. */
+  exchangerFill: ExchangerFill;
   prefix: string | undefined;
   features: Features;
   /** The entity id of each role, or undefined when the role has no entity (no override and no prefix). */
@@ -58,6 +62,7 @@ export function resolveConfig(config: CardConfig): ResolvedConfig {
   return {
     ...installationOf(config),
     detail: detailOf(config),
+    exchangerFill: exchangerFillOf(config),
     variant,
     prefix,
     colors: stopsOf(config),

@@ -5,10 +5,12 @@ import {
   DEFAULT_VARIANT,
   DETAIL_LEVELS,
   DHW_STORAGES,
+  EXCHANGER_FILLS,
   MODELS,
   SOURCES,
   type Detail,
   type DhwStorage,
+  type ExchangerFill,
   type Model,
   type Source,
 } from '../src/config/options';
@@ -18,14 +20,6 @@ import { DEMO_PREFIX, SCENARIO_NAMES, isScenarioName, type ScenarioName } from '
 
 export const THEMES = ['light', 'dark'] as const;
 export type Theme = (typeof THEMES)[number];
-
-/**
- * The exchanger fill of the emulator's control. The card option `exchanger_fill` arrives with the exchanger fills
- * (change refine-schematic-drawing, group 2); until then the control only travels in the URL and does not reach the
- * card's config.
- */
-export const EXCHANGER_FILLS = ['gradient', 'none'] as const;
-export type ExchangerFill = (typeof EXCHANGER_FILLS)[number];
 
 /** A feature control: the variant's preset, or an explicit state. */
 export const FEATURE_CHOICES = ['default', 'true', 'false', 'unused'] as const;
@@ -41,7 +35,7 @@ export interface EmulatorState {
   features: Record<FeatureKey, FeatureChoice>;
   /** The card's `detail` option: `simplified` (the default) or `full`. */
   detail: Detail;
-  /** The exchanger fill (URL `fill=`); not yet part of the card's config. */
+  /** The card's `exchanger_fill` option (URL `fill=`): `gradient` (the default) or `none`. */
   fill: ExchangerFill;
   theme: Theme;
   /** Seconds per step of the screenshot cycle; undefined when the cycle is off. */
@@ -113,7 +107,7 @@ export function toSearch(state: EmulatorState): string {
   return `?${params.toString()}`;
 }
 
-/** The card config of a state: the demo prefix, the options (not the exchanger fill yet) and the explicit features. */
+/** The card config of a state: the demo prefix, the options and the explicit features. */
 export function configOf(state: EmulatorState): CardConfig {
   const features: Record<string, boolean | 'unused'> = {};
   for (const key of FEATURE_KEYS) {
@@ -127,6 +121,7 @@ export function configOf(state: EmulatorState): CardConfig {
     variant: state.variant,
     source: state.source,
     detail: state.detail,
+    exchanger_fill: state.fill,
     ...(state.dhw === 'default' ? {} : { dhw: state.dhw }),
     ...(Object.keys(features).length === 0 ? {} : { features }),
   };

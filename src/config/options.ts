@@ -29,8 +29,23 @@ export const DETAIL_OPTION: ChoiceOption = {
   default: 'simplified',
   choices: DETAIL_LEVELS,
 };
+export const EXCHANGER_FILLS = ['gradient', 'none'] as const;
+export type ExchangerFill = (typeof EXCHANGER_FILLS)[number];
+/** How the plate exchangers 7-10 are filled (design D4): a gradient per side from the pipes' colours, or not at all. */
+export const EXCHANGER_FILL_OPTION: ChoiceOption = {
+  kind: 'choice',
+  path: 'exchanger_fill',
+  default: 'gradient',
+  choices: EXCHANGER_FILLS,
+};
 /** The choice options, checked by lib/options.ts. */
-export const CHOICE_OPTIONS: readonly OptionSpec[] = [MODEL_OPTION, SOURCE_OPTION, DHW_OPTION, DETAIL_OPTION];
+export const CHOICE_OPTIONS: readonly OptionSpec[] = [
+  MODEL_OPTION,
+  SOURCE_OPTION,
+  DHW_OPTION,
+  DETAIL_OPTION,
+  EXCHANGER_FILL_OPTION,
+];
 
 export const DEFAULT_VARIANT = 4;
 
@@ -46,6 +61,7 @@ export const TOP_LEVEL_OPTIONS: readonly string[] = [
   'entities',
   'colors',
   'detail',
+  'exchanger_fill',
   'view_layout',
   'layout_options',
   'grid_options',
@@ -91,6 +107,10 @@ export function installationOf(config: CardConfig): { model: Model; source: Sour
 
 /** The level of detail, `simplified` unless set. Call after configErrors found no problem. */
 export const detailOf = (config: CardConfig): Detail => optionValue(config, DETAIL_OPTION) as Detail;
+
+/** The exchanger fill, `gradient` unless set. Call after configErrors found no problem. */
+export const exchangerFillOf = (config: CardConfig): ExchangerFill =>
+  optionValue(config, EXCHANGER_FILL_OPTION) as ExchangerFill;
 
 /** The features set in the config (only valid keys and states), without the preset. */
 export function featureOverrides(config: CardConfig): Partial<Record<FeatureKey, FeatureState>> {

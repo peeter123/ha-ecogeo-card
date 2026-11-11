@@ -67,10 +67,20 @@ Alternative considered: a custom HTML tooltip overlay. Rejected for now: `<title
 in every browser; touch devices get the tap instead (and `add-compact-layout` decides more for phones).
 
 ### D3. Default palette
-`DEFAULT_STOPS` becomes `-10 #1e5aa8` (blue), `10 #5fa8e0` (light blue), `30 #e8a317` (amber), `50 #f2711c`
-(orange), `70 #d7263d` (red). Hues: about 213, 205, 40, 23 and 352 degrees, none between 75 and 165. The unit
-test computes the hue of each default stop. Interpolation (`color-mix` in srgb) and clamping are unchanged.
-Alternative considered: a blue-purple-red scale. Rejected: purple reads as neither warm nor cold.
+`DEFAULT_STOPS` becomes `-10 #1e5aa8` (blue), `10 #5fa8e0` (light blue), `20 #8ecae6` (pale blue), `30 #e8a317`
+(amber), `50 #f2711c` (orange), `70 #d7263d` (red). Hues: about 214, 206, 199, 40, 24 and 352 degrees, none between
+75 and 165. The unit test computes the hue of each default stop, and samples the scale in 1 K steps from -10 to
+70 °C: no sample may have a hue between 75 and 165 at a saturation above 20 %. Interpolation (`color-mix` in
+srgb) and clamping are unchanged.
+The 20 °C stop was added after the group 2 review: blue and amber are near complements, so the straight srgb mix
+from light blue to amber crossed a low-saturation grey-green at 15-20 °C, exactly where passive-cooling water and
+cooling returns sit, and read close to the muted grey. The pale blue stop keeps 10-20 °C clearly blue and narrows
+the neutral band to about 22-24 °C. If `#8ecae6` is too pale on the light card at 3 units, a slightly darker blue
+of the same hue replaces it (recorded here).
+Alternatives considered: a blue-purple-red scale (rejected: purple reads as neither warm nor cold); oklab
+interpolation (rejected: the middle gets greyer, closer to the muted colour); oklch (rejected: the short hue arc
+from blue to amber runs through saturated green); a warm sand stop at 20 °C (rejected: cooling water would read
+warm).
 
 ### D4. Exchanger fill from the neighbouring segments
 - Each exchanger component (7, 8, 9, 10) gets in `geometry.ts` a `sides` entry: for each side, the ids of the

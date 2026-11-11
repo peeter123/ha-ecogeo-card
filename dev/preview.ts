@@ -5,7 +5,7 @@
 import './ha-stubs';
 import '../src/index';
 import type { EcogeoCard } from '../src/card/ecogeo-card';
-import { DETAIL_LEVELS, DHW_STORAGES, MODELS, SOURCES } from '../src/config/options';
+import { DETAIL_LEVELS, DHW_STORAGES, EXCHANGER_FILLS, MODELS, SOURCES } from '../src/config/options';
 import type { RolePath } from '../src/config/roles';
 import { FEATURE_KEYS, VARIANTS } from '../src/config/variants';
 import { NBSP, NO_VALUE, UNITS } from '../src/strings';
@@ -14,7 +14,6 @@ import { MockHass } from './mock-hass';
 import { SCENARIO_NAMES, SCENARIOS, scenarioStates } from './scenarios';
 import {
   DEFAULT_CYCLE_SECONDS,
-  EXCHANGER_FILLS,
   FEATURE_CHOICES,
   THEMES,
   configOf,

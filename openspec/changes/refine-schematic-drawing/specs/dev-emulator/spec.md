@@ -28,5 +28,5 @@ condensation capacity. Moving a slider SHALL update the card's colours, labels a
 
 #### Scenario: Warmer production
 - **WHEN** the developer moves the production outlet slider from 25 °C to 55 °C
-- **THEN** the supply segment shifts from between light blue and amber towards between orange and red, and its
+- **THEN** the supply segment shifts from between pale blue and amber towards between orange and red, and its
   label shows the new value

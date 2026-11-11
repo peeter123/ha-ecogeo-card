@@ -38,6 +38,9 @@ export interface GridOptions {
   min_rows?: number;
 }
 
+/** Counts the card instances, for the ids of their SVG gradients (two cards on one page must not share ids). */
+let instances = 0;
+
 export class EcogeoCard extends LitElement {
   static override styles = [
     cabinetStyles,
@@ -74,6 +77,7 @@ export class EcogeoCard extends LitElement {
   private resolved?: ResolvedConfig;
   private entityIds: string[] = [];
   private renderedHass?: HassLike;
+  private readonly idPrefix = `ecogeo${String(++instances)}`;
 
   /** Called by Home Assistant with the card's config. Throws for an invalid config: HA shows its error card. */
   setConfig(config: CardConfig): void {
@@ -133,7 +137,7 @@ export class EcogeoCard extends LitElement {
           aria-label=${SCHEMATIC_LABEL}
           style="--dhw-tank-color: ${tankColor(view)}"
         >
-          ${svg`${renderSource(resolved, readings, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps)}`}
+          ${svg`${renderSource(resolved, readings, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix })}`}
         </svg>
         ${renderLabels(labelsFor(resolved, readings, resolved.entities, display), onTap)}
       </div>

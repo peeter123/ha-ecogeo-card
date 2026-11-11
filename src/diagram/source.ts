@@ -18,7 +18,7 @@ export const sourceStyles = css`
   .source-outline {
     fill: none;
     stroke: var(--primary-text-color);
-    stroke-width: 2;
+    stroke-width: 2.5;
   }
   .source-fin {
     stroke: var(--divider-color);
@@ -52,7 +52,7 @@ export const sourceStyles = css`
   .fan-ring {
     fill: none;
     stroke: var(--primary-text-color);
-    stroke-width: 1.5;
+    stroke-width: 2;
   }
   .fan-blade {
     fill: var(--secondary-text-color);

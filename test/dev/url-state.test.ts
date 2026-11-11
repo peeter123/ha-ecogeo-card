@@ -41,11 +41,13 @@ describe('emulator URL state', () => {
     expect(new URLSearchParams(toSearch(defaultState())).has('detail')).toBe(false);
   });
 
-  test('the exchanger fill travels in the URL as fill= and does not reach the card config yet', () => {
+  test('the exchanger fill travels in the URL as fill= and reaches the card config', () => {
     const none = { ...defaultState(), fill: 'none' as const };
     expect(new URLSearchParams(toSearch(none)).get('fill')).toBe('none');
     expect(parseState('?fill=none').fill).toBe('none');
-    expect(configOf(none)).not.toHaveProperty('exchanger_fill');
+    expect(configOf(none)['exchanger_fill']).toBe('none');
+    expect(configOf(defaultState())['exchanger_fill']).toBe('gradient');
+    expect(configErrors(configOf(none))).toEqual([]);
     expect(new URLSearchParams(toSearch(defaultState())).has('fill')).toBe(false);
   });
 

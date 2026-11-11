@@ -97,8 +97,8 @@ describe('segment colours by probe (temperature-coloring spec)', () => {
     expect(get('src_in').color).toBe(color(0.5));
   });
 
-  test('cold brine is closer to blue than to green', () => {
-    expect(color(-2.8)).toBe('color-mix(in srgb, #43a047 24%, #1e88e5)');
+  test('cold brine is closer to blue than to light blue', () => {
+    expect(color(-2.8)).toBe('color-mix(in srgb, #5fa8e0 36%, #1e5aa8)');
   });
 
   test('refrigerant: discharge, condensation, evaporation and suction points of the cycle', () => {
@@ -114,7 +114,7 @@ describe('segment colours by probe (temperature-coloring spec)', () => {
 
   test('a discharge above the scale takes the 70 degree end colour', () => {
     const { get } = scenario({ mode: 'heating' }, { ...HEATING, 'compressor.discharge_temperature': 95 });
-    expect(get('ref_discharge').color).toBe('#e53935');
+    expect(get('ref_discharge').color).toBe('#d7263d');
   });
 
   test('custom stops colour the segments', () => {

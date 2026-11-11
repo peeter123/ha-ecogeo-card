@@ -14,8 +14,10 @@ for the explanation of what the card shows and where each part comes from.
 
 - The unit's internal schematic drawn as inline SVG after the manual's figures B1 to B4 and C, with the item number of
   every component shown only with `detail: full` (components show their name on hover), for any model, variant, outer-loop source (air, ground or hybrid) and DHW storage.
-- Pipes coloured by temperature on an absolute scale (blue at -10 °C, green at 20 °C, orange at 45 °C, red at
-  70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe with no probe value is muted.
+- Pipes coloured by temperature on an absolute scale (blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at 30 °C, orange at
+  50 °C, red at 70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe with no probe value is muted. The plate exchangers are
+  filled on each side with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves
+  it (`exchanger_fill: none` turns that off).
 - The active circuits move: dashes run in the direction of the flow at a speed that follows the pump or the
   compressor, the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode
   are muted. `prefers-reduced-motion` stops all animation.
@@ -73,6 +75,7 @@ fault.
 | `features` | group | from the variant | Feature states that override the variant (see Features). |
 | `entities` | group | from the prefix | Entity id per role, nested by role path (see Roles). |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
+| `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
 | `detail` | `simplified`, `full` | `simplified` | `simplified` leaves out the service and safety parts with no live value and shows no item numbers; `full` draws every part of the manual figure with its item number. |
 
 ### Source and DHW
@@ -187,7 +190,8 @@ value.
 `colors` is an ascending list of 2 to 8 stops, each a `temperature` in °C and a CSS `color`. Between two stops the
 colour is mixed; below the first and above the last stop it is that stop's colour. A list that is too short or long,
 not ascending, or with a value that is not a number or a CSS colour is a configuration error. Without the option the
-card uses blue at -10 °C, green at 20 °C, orange at 45 °C and red at 70 °C.
+card uses blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at 30 °C, orange at 50 °C and red at 70 °C (no green). The
+plate exchangers take the colours of their pipes unless `exchanger_fill` is `none` (see the explanation below).
 
 ```yaml
 colors:
@@ -230,7 +234,7 @@ no installation data. The mock entities use the demo prefix `demo_ecogeo`.
   set of states (`dev/scenarios.ts`).
 - **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default,
   external, internal or none), each feature (the variant's preset, `true`, `false` or `unused`), the detail level
-  (simplified or full), the exchanger fill (gradient or none; it only takes effect once the card has the option) and
+  (simplified or full), the exchanger fill (gradient or none, the card's `exchanger_fill` option) and
   the light or dark theme. A combination the card rejects, such as model B with internal DHW, shows the config error under the card.
 - **Live values:** sliders for production out and in, brine out and in, DHW temperature, discharge, suction, both
   pumps, the compressor percentage (it moves the speed too), the fan speed and the condensation capacity. Picking a

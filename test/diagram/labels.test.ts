@@ -192,7 +192,7 @@ describe('units, locale and precision', () => {
     const card = await mount({}, hassOf({ 'production.outlet_temperature': ['77', '°F'] }));
     expect(valueOf(card, 'production_out')).toBe(nb('25.0 °C'));
     const stroke = root(card).querySelector('[data-segment="p1_up"]')?.getAttribute('style') ?? '';
-    expect(stroke).toContain('color-mix(in srgb, #fb8c00 20%, #43a047)');
+    expect(stroke).toContain('color-mix(in srgb, #e8a317 50%, #8ecae6)');
     card.remove();
   });
 
@@ -467,7 +467,7 @@ describe('DHW tank labels', () => {
   test('the tank body takes the DHW temperature colour', async () => {
     const card = await mount({}, hassOf());
     expect(root(card).querySelector('svg')?.getAttribute('style')).toContain(
-      '--dhw-tank-color: color-mix(in srgb, #e53935 28.4%, #fb8c00)',
+      '--dhw-tank-color: color-mix(in srgb, #d7263d 10.5%, #f2711c)',
     );
     card.remove();
   });

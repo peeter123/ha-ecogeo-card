@@ -22,7 +22,7 @@ layout (`add-compact-layout`) and the visual editor (`add-card-editor`) build on
 - **Exchangers coloured.** Plate exchangers 7, 8, 9 and 10 are filled per side with a gradient from that side's
   inlet to its outlet temperature, on the same scale as the pipes (derived from the probes of the segments that
   enter and leave each side). A new option `exchanger_fill`: `gradient` (default) or `none`.
-- **Default colour scale without green.** The default stops become blue, light blue, amber, orange and red. The
+- **Default colour scale without green.** The default stops become blue, light blue, pale blue, amber, orange and red. The
   `colors` option keeps working as it does.
 - **Real DHW coil.** The external tank is drawn as a cylinder with domed ends and a helical coil inside (front turns
   solid, back turns faint), coloured and animated as the coil segment is today. Model C's coil 51 uses the same

@@ -11,6 +11,7 @@ describe('card type and options', () => {
     const resolved = resolveConfig(config);
     expect([resolved.model, resolved.variant, resolved.source, resolved.dhw]).toEqual(['B', 4, 'ground', 'external']);
     expect(resolved.detail).toBe('simplified');
+    expect(resolved.exchangerFill).toBe('gradient');
   });
 
   test('invalid detail names the option and its allowed values', () => {
