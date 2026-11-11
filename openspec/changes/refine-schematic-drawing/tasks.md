@@ -78,12 +78,12 @@ unchanged.
 
 ## 4. Release and live installation
 
-- [ ] 4.1 Run `npm run release`.
+- [x] 4.1 Run `npm run release`.
   Verify: check-release reports `custom:ecogeo-card` registered and `dist/ecogeo-card.js` is updated.
-- [ ] 4.2 Deploy `dist/ecogeo-card.js` explicitly (command in `private/installation.md`), then bump the dashboard
+- [x] 4.2 Deploy `dist/ecogeo-card.js` explicitly (command in `private/installation.md`), then bump the dashboard
   resource to the next `?v=` and record it in `private/installation.md`.
   Verify: the deploy prints UPLOAD with no CONFLICT, and the resource reads the new `?v=`.
-- [ ] 4.3 Live verification: an agent takes a dashboard screenshot of the schematic view and reads the mapped
+- [x] 4.3 Live verification: an agent takes a dashboard screenshot of the schematic view and reads the mapped
   entities' states. It checks the simplified drawing (no item numbers, no safety valves), the exchanger fills
   against the current mode, the tank helix and the air unit, and the HA logs for errors mentioning `ecogeo`.
   Verify: verdict with no mismatches and no log errors.
