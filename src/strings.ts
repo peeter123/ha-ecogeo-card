@@ -101,6 +101,9 @@ export const HEATING_LABELS = { demand: 'Demand' } as const;
 export const VALUE_CAPTIONS = {
   setpoint: 'Setpoint',
   startDelta: 'Start ΔT',
+  /** Short captions of the row inside model C's tank 50 (design D8b); the external tank keeps the full ones. */
+  setpointShort: 'Set',
+  startDeltaShort: 'ΔT',
   fan: 'Fan',
   outside: 'Outside',
   airOutlet: 'Outlet',

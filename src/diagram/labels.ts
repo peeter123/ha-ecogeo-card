@@ -8,14 +8,14 @@
 // `middle` centres it; y is the vertical centre. They sit where the drawing leaves room (checked on the emulator
 // captures): the probe row's values below the discharge line, the compressor's stack inside the refrigerant loop,
 // the source's values under the air unit and right of the collector, the tank's values under the external tank or,
-// for model C, in the empty DHW zone (design D6). A label of a part that is not drawn is not shown (same rules as
+// for model C, inside tank 50 above its coil (design D8b). A label of a part that is not drawn is not shown (same rules as
 // geometry.ts `partState`); a drawn label with no value shows a muted dash and keeps its place.
 import { css, html, nothing, type TemplateResult } from 'lit';
 import { formatReading, type DisplayContext } from '../calc/display';
 import type { Readings } from '../calc/readings';
 import type { RolePath } from '../config/roles';
 import { DHW_LABELS, FOOTER_LABELS, HEATING_LABELS, NO_VALUE, ON_OFF_LABELS, VALUE_CAPTIONS } from '../strings';
-import { partState, viewBox, type DrawContext, type Visibility } from './geometry';
+import { EXTERNAL_TANK, INTERNAL_TANK, partState, viewBox, type DrawContext, type Visibility } from './geometry';
 
 export const labelStyles = css`
   .diagram {
@@ -47,6 +47,9 @@ export const labelStyles = css`
   }
   .label.end {
     transform: translate(-100%, -50%);
+  }
+  .label.bare {
+    background: none;
   }
   .label.emphasis {
     font-size: max(9px, 1.2cqw);
@@ -94,6 +97,8 @@ export interface LabelSpec extends Pick<Visibility, 'dhw' | 'source'> {
   demand?: true;
   /** Larger text: the tank temperature. */
   emphasis?: true;
+  /** No background plate: the label sits on a tinted body (the values inside tank 50). */
+  bare?: true;
 }
 
 const spec = (
@@ -105,7 +110,13 @@ const spec = (
   extra: Partial<Omit<LabelSpec, 'id' | 'role' | 'x' | 'y' | 'align'>> = {},
 ): LabelSpec => ({ id, role, x, y, align, ...extra });
 
-const TANK_X = 895;
+/** The external tank's values: centred under the tank, 22 units below its bottom. */
+const EXT_TANK_X = EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2;
+const EXT_TANK_Y = EXTERNAL_TANK.y + EXTERNAL_TANK.height + 22;
+
+/** Model C's tank values: the row's centre line, 12 units under the tank's top (the strip above coil 51 is ~34 tall). */
+export const INTERNAL_ROW_Y = INTERNAL_TANK.y + 12;
+const INTERNAL_CENTRE_X = INTERNAL_TANK.x + INTERNAL_TANK.width / 2;
 
 /** Every value label of the drawing. */
 export const LABEL_SPECS: readonly LabelSpec[] = [
@@ -157,18 +168,57 @@ export const LABEL_SPECS: readonly LabelSpec[] = [
     source: ['hybrid'],
     caption: VALUE_CAPTIONS.groundIn,
   }),
-  // external tank: under the tank (y 340-420); model C: in the empty DHW zone (x 800-990, y 140-230)
-  ...(['external', 'internal'] as const).flatMap((dhw) => {
-    const y = dhw === 'external' ? 352 : 152;
-    return [
-      spec(`tank_${dhw}_temperature`, 'dhw.temperature', TANK_X, y, 'middle', { dhw, emphasis: true }),
-      spec(`tank_${dhw}_setpoint`, 'dhw.setpoint', TANK_X, y + 15, 'middle', { dhw, caption: VALUE_CAPTIONS.setpoint }),
-      spec(`tank_${dhw}_start_delta`, 'dhw.start_delta', TANK_X, y + 29, 'middle', {
-        dhw,
-        caption: VALUE_CAPTIONS.startDelta,
-      }),
-      spec(`tank_${dhw}_demand`, 'dhw.demand', TANK_X, y + 43, 'middle', { dhw, demand: true }),
-    ];
+  // external tank: stacked under the tank (EXTERNAL_TANK)
+  spec('tank_external_temperature', 'dhw.temperature', EXT_TANK_X, EXT_TANK_Y, 'middle', {
+    dhw: 'external',
+    emphasis: true,
+  }),
+  spec('tank_external_setpoint', 'dhw.setpoint', EXT_TANK_X, EXT_TANK_Y + 15, 'middle', {
+    dhw: 'external',
+    caption: VALUE_CAPTIONS.setpoint,
+  }),
+  spec('tank_external_start_delta', 'dhw.start_delta', EXT_TANK_X, EXT_TANK_Y + 29, 'middle', {
+    dhw: 'external',
+    caption: VALUE_CAPTIONS.startDelta,
+  }),
+  spec('tank_external_demand', 'dhw.demand', EXT_TANK_X, EXT_TANK_Y + 43, 'middle', { dhw: 'external', demand: true }),
+  // model C: one row inside tank 50, in the strip above coil 51: three labels centred at one sixth, one half and five
+  // sixths of the tank's width (even gaps), at the normal label size, with no background plate and with short
+  // captions; the demand text goes on a second line under the row. The labels have a minimum font size, so on cards
+  // narrower than about 560 px while the demand line shows (about 510 px for the three values alone) they grow relative to the drawing and start to touch: narrower cards are left to the
+  // compact layout (add-compact-layout).
+  spec(
+    'tank_internal_temperature',
+    'dhw.temperature',
+    INTERNAL_TANK.x + INTERNAL_TANK.width / 6,
+    INTERNAL_ROW_Y,
+    'middle',
+    {
+      dhw: 'internal',
+      bare: true,
+    },
+  ),
+  spec('tank_internal_setpoint', 'dhw.setpoint', INTERNAL_CENTRE_X, INTERNAL_ROW_Y, 'middle', {
+    dhw: 'internal',
+    caption: VALUE_CAPTIONS.setpointShort,
+    bare: true,
+  }),
+  spec(
+    'tank_internal_start_delta',
+    'dhw.start_delta',
+    INTERNAL_TANK.x + (INTERNAL_TANK.width * 5) / 6,
+    INTERNAL_ROW_Y,
+    'middle',
+    {
+      dhw: 'internal',
+      caption: VALUE_CAPTIONS.startDeltaShort,
+      bare: true,
+    },
+  ),
+  spec('tank_internal_demand', 'dhw.demand', INTERNAL_CENTRE_X, INTERNAL_ROW_Y + 13, 'middle', {
+    dhw: 'internal',
+    demand: true,
+    bare: true,
   }),
 ];
 
@@ -182,6 +232,7 @@ export interface ShownLabel {
   align: Align;
   caption?: string;
   emphasis: boolean;
+  bare?: true;
   /** The value as text; the dash while the value is missing. */
   text: string;
   missing: boolean;
@@ -212,6 +263,7 @@ export function labelsFor(
       y: label.y,
       align: label.align,
       emphasis: label.emphasis === true,
+      ...(label.bare === true ? { bare: true as const } : {}),
       entityId,
       ...(label.item === undefined ? {} : { item: label.item }),
       ...(label.caption === undefined ? {} : { caption: label.caption }),
@@ -314,7 +366,7 @@ export function renderLabels(
   return html`${labels.map((label) => {
     const { left, top } = positionOf(label);
     return html`<span
-      class="label ${label.align}${label.emphasis ? ' emphasis' : ''}"
+      class="label ${label.align}${label.emphasis ? ' emphasis' : ''}${label.bare === true ? ' bare' : ''}"
       data-label=${label.id}
       data-role=${label.role}
       data-label-item=${label.item ?? nothing}

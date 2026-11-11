@@ -3,6 +3,12 @@ import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
+import { COIL_51_SHAPE } from '../../src/diagram/symbols';
+import { helixHalves } from '../../src/diagram/geometry';
+import { CABINET, COMPONENTS, EXTERNAL_TANK, INTERNAL_TANK, SEGMENTS, helixExtent } from '../../src/diagram/geometry';
+import { LABEL_SPECS } from '../../src/diagram/labels';
+import { cabinetStyles } from '../../src/diagram/cabinet';
+import { COIL_MUTED_LIGHT, MUTED_COLOR, coilMutedColor } from '../../src/diagram/colors';
 import { DHW_LABELS } from '../../src/strings';
 import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 
@@ -51,7 +57,7 @@ describe('DHW storage', () => {
     const body = root(card).querySelector('path.tank-body[data-dhw-tank="external"]');
     expect(body?.getAttribute('fill')).toContain('--dhw-tank-color');
     const d = body?.getAttribute('d') ?? '';
-    expect(d).toMatch(/^M806 164 A89 14 0 0 1 984 164 V316 A89 14 0 0 1 806 316 Z$/);
+    expect(d).toMatch(/^M806 144 A84 14 0 0 1 974 144 V296 A84 14 0 0 1 806 296 Z$/);
     expect(root(card).querySelector('.dhw-storage .tank-rim')).not.toBeNull();
     card.remove();
   });
@@ -78,10 +84,16 @@ describe('DHW storage', () => {
     for (const half of back) expect(flow?.getAttribute('d')).not.toContain(half.getAttribute('d'));
     // its ends meet the pipes from ports 5 and 6
     const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
-    expect(d('dhw_ext_in').endsWith('L940 212')).toBe(true);
-    expect(halves[0]?.getAttribute('d')?.startsWith('M940 212')).toBe(true);
-    expect(halves.at(-1)?.getAttribute('d')?.endsWith('840 296')).toBe(true);
-    expect(d('dhw_ext_out').startsWith('M840 296')).toBe(true);
+    expect(d('dhw_ext_in').endsWith('L940 192')).toBe(true);
+    expect(front[0]?.getAttribute('d')?.startsWith('M940 192')).toBe(true);
+    expect(front.at(-1)?.getAttribute('d')?.endsWith('840 276')).toBe(true);
+    // clean joints (design D8a): every back half is drawn before every front half; backs have butt caps, fronts round
+    const lastBack = halves.map((half) => half.getAttribute('data-half')).lastIndexOf('back');
+    const firstFront = halves.map((half) => half.getAttribute('data-half')).indexOf('front');
+    expect(lastBack).toBeLessThan(firstFront);
+    for (const half of back) expect(half.getAttribute('stroke-linecap')).toBe('butt');
+    for (const half of front) expect(half.getAttribute('stroke-linecap')).toBe('round');
+    expect(d('dhw_ext_out').startsWith('M840 276')).toBe(true);
     card.remove();
   });
 
@@ -94,18 +106,188 @@ describe('DHW storage', () => {
     card.remove();
   });
 
+  test('tank geometry: centred on the coil, dome apex on the cabinet top, coil and pipes inside', async () => {
+    const card = await mount({ model: 'B', dhw: 'external' });
+    const shape = SEGMENTS.find((segment) => segment.id === 'dhw_ext_coil')?.shape;
+    if (shape === undefined) throw new Error('no helix');
+    expect(shape.kind).toBe('helix');
+    // the tank's centre line is the coil's centre line
+    expect(EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2).toBe(shape.cx);
+    expect(EXTERNAL_TANK).toMatchObject({ x: 806, width: 168 });
+    // the dome apex (the path's top: its start y minus the dome rise) is the cabinet's top line
+    const d = root(card).querySelector('path.tank-body[data-dhw-tank="external"]')?.getAttribute('d') ?? '';
+    const [, startY] = /^M806 (\d+)/.exec(d) ?? [];
+    expect(Number(startY) - EXTERNAL_TANK.dome).toBe(CABINET.y);
+    expect(EXTERNAL_TANK.y).toBe(CABINET.y);
+    // the coil's curve and the pipes at its ends stay inside the tank, in its lower part
+    const extent = helixExtent(shape);
+    expect(extent.left).toBeGreaterThan(EXTERNAL_TANK.x);
+    expect(extent.right).toBeLessThan(EXTERNAL_TANK.x + EXTERNAL_TANK.width);
+    expect(extent.top).toBeGreaterThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height / 3);
+    expect(extent.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height);
+    // the value labels sit under the tank, centred on it
+    const specs = LABEL_SPECS.filter((spec) => spec.id.startsWith('tank_external'));
+    expect(specs.length).toBeGreaterThan(0);
+    for (const spec of specs) {
+      expect(spec.x).toBe(EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2);
+      expect(spec.y).toBeGreaterThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height);
+      expect(spec.align).toBe('middle');
+    }
+    card.remove();
+  });
+
+  test('idle coil in the light theme: a grey darker than the muted pipe colour; dark keeps the muted colour', async () => {
+    const light = await mount({ model: 'B', dhw: 'external' }, { states: {}, themes: { darkMode: false } });
+    const dark = await mount({ model: 'B', dhw: 'external' }, { states: {}, themes: { darkMode: true } });
+    const property = (card: EcogeoCard): string =>
+      /--ecogeo-coil-muted: ([^;]+)/.exec(root(card).querySelector('svg')?.getAttribute('style') ?? '')?.[1] ?? '';
+    expect(property(light)).toBe(COIL_MUTED_LIGHT);
+    expect(property(light)).not.toBe(MUTED_COLOR);
+    // HA's default light disabled text colour is #bdbdbd (189): the coil grey is darker
+    const level = Number.parseInt(property(light).slice(1, 3), 16);
+    expect(property(light)).toMatch(/^#[0-9a-f]{6}$/);
+    expect(level).toBeLessThan(0xbd);
+    expect(property(dark)).toBe(MUTED_COLOR);
+    expect(coilMutedColor(true)).toBe(MUTED_COLOR);
+    // the muted helix strokes take that property
+    const css = cabinetStyles.cssText.replace(/\s+/g, ' ');
+    expect(css).toContain('.helix .pipe.muted { stroke: var(--ecogeo-coil-muted, var(--disabled-text-color)); }');
+    // every muted half carries the muted class, so the rule applies to it; the back halves keep their faint opacity
+    const halves = [...root(light).querySelectorAll('[data-segment="dhw_ext_coil"] path[data-half]')];
+    expect(halves.every((half) => half.classList.contains('muted'))).toBe(true);
+    expect(
+      halves
+        .filter((half) => half.getAttribute('data-half') === 'back')
+        .every((half) => half.getAttribute('opacity') === '0.35'),
+    ).toBe(true);
+    light.remove();
+    dark.remove();
+  });
+
+  test('idle coil 51 (model C) takes the coil grey; an active one keeps its temperature colour', async () => {
+    const states = (name: 'heating' | 'dhw'): HassLike => ({
+      states: Object.fromEntries(
+        Object.entries(scenarioStates(SCENARIOS[name].states)).map(([id, value]) => [id, { entity_id: id, ...value }]),
+      ),
+      themes: { darkMode: false },
+    });
+    const heating = await mount({ prefix: DEMO_PREFIX, model: 'C' }, states('heating'));
+    expect(root(heating).querySelector('[data-item="51"]')?.getAttribute('style')).toContain('--ecogeo-coil-muted');
+    heating.remove();
+    const dhw = await mount({ prefix: DEMO_PREFIX, model: 'C' }, states('dhw'));
+    const style = root(dhw).querySelector('[data-item="51"]')?.getAttribute('style') ?? '';
+    expect(style).not.toContain('--ecogeo-coil-muted');
+    expect(style).not.toContain('--disabled-text-color');
+    dhw.remove();
+  });
+
+  test('idle coil pipes: the part inside the tank is redrawn in the coil grey, clipped to the tank body', async () => {
+    const light = { states: {}, themes: { darkMode: false } };
+    const idle = await mount({ model: 'B', dhw: 'external' }, light);
+    const overlays = [...root(idle).querySelectorAll('path.pipe-inside')];
+    expect(overlays.map((overlay) => overlay.getAttribute('data-inside')).sort()).toEqual([
+      'dhw_ext_in',
+      'dhw_ext_out',
+    ]);
+    const clip = root(idle).querySelector('clipPath[data-tank-clip]');
+    expect(clip?.id).toMatch(/-tank-clip$/);
+    // the clip is the tank body's shape
+    expect(clip?.querySelector('path')?.getAttribute('d')).toBe(
+      root(idle).querySelector('path.tank-body[data-dhw-tank="external"]')?.getAttribute('d'),
+    );
+    for (const overlay of overlays) {
+      expect(overlay.getAttribute('clip-path')).toBe(`url(#${clip?.id ?? ''})`);
+      // same path as the pipe itself, so the grey changes only at the tank wall
+      const pipe = root(idle).querySelector(`path.pipe[data-segment="${overlay.getAttribute('data-inside') ?? ''}"]`);
+      expect(overlay.getAttribute('d')).toBe(pipe?.getAttribute('d'));
+    }
+    // the stroke is the coil's grey
+    expect(cabinetStyles.cssText.replace(/\s+/g, ' ')).toContain(
+      '.pipe-inside { fill: none; stroke: var(--ecogeo-coil-muted, var(--disabled-text-color));',
+    );
+    // two cards in one DOM: distinct clip ids
+    const other = await mount({ model: 'B', dhw: 'external' }, light);
+    expect(root(other).querySelector('clipPath[data-tank-clip]')?.id).not.toBe(clip?.id);
+    other.remove();
+    idle.remove();
+    // no overlay while the pipes are active, and none without an external tank
+    const active = await mount({ prefix: DEMO_PREFIX, model: 'B', dhw: 'external' }, hot);
+    expect(root(active).querySelector('path.pipe-inside')).toBeNull();
+    active.remove();
+    const internal = await mount({ model: 'C' }, light);
+    expect(root(internal).querySelector('path.pipe-inside')).toBeNull();
+    expect(root(internal).querySelector('clipPath[data-tank-clip]')).toBeNull();
+    internal.remove();
+  });
+
   test('simplified model C: coil 51 is drawn as a helix of the same kind (front solid, back faint)', async () => {
     const card = await mount({ model: 'C' });
     const coil = root(card).querySelector('[data-item="51"] .symbol.coil');
     const paths = [...(coil?.querySelectorAll('path[data-half]') ?? [])];
     const faint = paths.filter((path) => path.getAttribute('data-half') === 'back');
     const solid = paths.filter((path) => path.getAttribute('data-half') === 'front');
-    expect(solid).toHaveLength(6);
-    expect(faint).toHaveLength(5);
+    expect(solid).toHaveLength(8);
+    expect(faint).toHaveLength(7);
+    // clean joints (design D8a): backs first with butt caps, fronts on top with round caps
+    const order = paths.map((path) => path.getAttribute('data-half'));
+    expect(order.lastIndexOf('back')).toBeLessThan(order.indexOf('front'));
+    for (const path of faint) expect(path.getAttribute('stroke-linecap')).toBe('butt');
+    for (const path of solid) expect(path.getAttribute('stroke-linecap')).toBe('round');
     for (const path of solid) expect(path.hasAttribute('opacity')).toBe(false);
     for (const path of faint) expect(path.hasAttribute('opacity')).toBe(true);
     expect(root(card).querySelector('[data-item="52"]')).toBeNull();
     expect(root(card).querySelector('[data-item="53"]')).toBeNull();
+    card.remove();
+  });
+
+  test('coil 51: closely pitched, round turns that fit tank 50 without touching probe 54', () => {
+    const shape = COIL_51_SHAPE;
+    // measure the front halves from their drawn paths: the range of each along the axis (the second coordinate)
+    const axisRange = (d: string): { min: number; max: number } => {
+      const [, y0 = 0, , y1 = 0, , y2 = 0, , y3 = 0] = (d.match(/-?[\d.]+/g) ?? []).map(Number);
+      const ys = Array.from({ length: 33 }, (_, i) => {
+        const t = i / 32;
+        return (1 - t) ** 3 * y0 + 3 * (1 - t) ** 2 * t * y1 + 3 * (1 - t) * t ** 2 * y2 + t ** 3 * y3;
+      });
+      return { min: Math.min(...ys), max: Math.max(...ys) };
+    };
+    const front = helixHalves(shape)
+      .filter((half) => half.front)
+      .map((half) => axisRange(half.d));
+    expect(front.length).toBeGreaterThanOrEqual(6);
+    // adjacent front halves: about one stroke width (2) between their edges, so the centre lines are 2 + 2 apart at most
+    for (let i = 1; i < front.length; i += 1) {
+      const gap = (front[i]?.min ?? 0) - (front[i - 1]?.max ?? 0) - 2;
+      expect(gap).toBeGreaterThan(0.5);
+      expect(gap).toBeLessThanOrEqual(2.5);
+    }
+    // round: every front half bulges along the axis by over a third of the half height (the major radius)
+    for (const range of front) expect(range.max - range.min).toBeGreaterThanOrEqual(shape.rx / 3);
+    // the drawn curve (turned 90 degrees: the axis, shape y, lies along x; shape x is the height) stays inside
+    // tank 50, clear of probe 54's circle (r 9)
+    const extent = helixExtent(shape);
+    const centre = COMPONENTS.find((component) => component.item === 51);
+    const probe = COMPONENTS.find((component) => component.item === 54);
+    if (centre === undefined || probe === undefined) throw new Error('no coil 51 or probe 54');
+    const tank = INTERNAL_TANK;
+    expect(centre.x + extent.bottom + 2).toBeLessThan(probe.x - 9);
+    expect(centre.x + extent.bottom + 2).toBeLessThan(tank.x + tank.width);
+    expect(centre.y + Math.max(extent.right - shape.cx, shape.cx - extent.left) + 2).toBeLessThan(tank.y + tank.height);
+    expect(centre.y - Math.max(extent.right - shape.cx, shape.cx - extent.left) - 2).toBeGreaterThan(tank.y);
+  });
+
+  test('coil 51 port stubs reach the wall of tank 50, so the pipes change tone at the wall only', async () => {
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'C' }, hot);
+    const coil = root(card).querySelector('[data-item="51"]');
+    const stubs = [...(coil?.querySelectorAll('path:not([data-half])') ?? [])].map(
+      (path) => path.getAttribute('d') ?? '',
+    );
+    expect(stubs).toHaveLength(1);
+    const left = [...(stubs[0] ?? '').matchAll(/(?:M|H)\s*(-?[\d.]+)/g)].map((match) => Number(match[1]));
+    const centre = COMPONENTS.find((component) => component.item === 51);
+    if (centre === undefined) throw new Error('no coil 51');
+    // the leftmost x of the port path, in viewBox coordinates, is just inside the wall
+    expect(centre.x + Math.min(...left)).toBe(INTERNAL_TANK.x + 2);
     card.remove();
   });
 

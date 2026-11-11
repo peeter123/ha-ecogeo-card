@@ -33,6 +33,15 @@ export const MAX_STOPS = 8;
 /** The colour of a pipe or tank without a temperature, or of an inactive circuit. */
 export const MUTED_COLOR = 'var(--disabled-text-color)';
 
+/**
+ * The colour of a muted helix (design D8), set as `--ecogeo-coil-muted` on the drawing: a darker neutral grey in the
+ * light theme, where the normal muted grey fades on the tinted tank body; the normal muted colour in the dark theme.
+ */
+export const COIL_MUTED_LIGHT = '#8a8a8a';
+/** The colour of a muted helix as CSS: the card's `--ecogeo-coil-muted`, else the normal muted colour. */
+export const COIL_MUTED_VAR = `var(--ecogeo-coil-muted, ${MUTED_COLOR})`;
+export const coilMutedColor = (darkMode: boolean): string => (darkMode ? MUTED_COLOR : COIL_MUTED_LIGHT);
+
 const isGroup = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 

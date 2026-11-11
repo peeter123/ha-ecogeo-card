@@ -6,15 +6,17 @@
 import { css, nothing, svg, type SVGTemplateResult } from 'lit';
 import type { ExchangerFill } from '../config/options';
 import { CIRCUIT_LABELS, componentLabel } from '../strings';
-import { MUTED_COLOR } from './colors';
+import { COIL_MUTED_VAR, MUTED_COLOR } from './colors';
 import { COMPONENT_ROLES, tapBindings, tapTarget, type Taps } from './component-info';
 import {
   CABINET,
   CIRCUIT_LABELS as LABEL_POSITIONS,
   drawnComponents,
   drawnSegments,
+  externalTankBody,
   gapsIn,
   HELIX_BACK_OPACITY,
+  helixDrawOrder,
   helixHalves,
   partState,
   pathData,
@@ -43,6 +45,17 @@ export const cabinetStyles = css`
   }
   .pipe.muted {
     stroke: var(--disabled-text-color);
+  }
+  /* A muted helix (external coil, coil 51) takes its own grey (design D8; set by the card, light theme only). */
+  .helix .pipe.muted {
+    stroke: var(--ecogeo-coil-muted, var(--disabled-text-color));
+  }
+  /* The part of an idle coil pipe inside the tank, in the coil's grey (clipped to the tank body, design D8). */
+  .pipe-inside {
+    fill: none;
+    stroke: var(--ecogeo-coil-muted, var(--disabled-text-color));
+    stroke-width: 3;
+    stroke-linejoin: round;
   }
   /* The dash overlay of an active pipe: dashes in the card colour run along it in the direction of the flow. */
   .flow {
@@ -116,7 +129,7 @@ function component(
   const [dx, dy, anchor] = part.tag;
   const label = componentLabel(part.item);
   const tap = tapBindings(tapTarget(COMPONENT_ROLES[part.item], taps), taps?.onTap);
-  return svg`<g class="symbol-group ${state}" data-item=${part.item} data-kind=${part.kind} aria-label=${label} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown} style=${part.kind === 'coil' ? `color: ${coilColor(view)}` : nothing}>
+  return svg`<g class="symbol-group ${state}" data-item=${part.item} data-kind=${part.kind} aria-label=${label} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown} style=${part.kind === 'coil' ? `color: ${coilStyleColor(view)}` : nothing}>
     <title>${label}</title>
     <g transform="translate(${part.x} ${part.y})">${symbol(part.kind, {
       rotation: part.rotation,
@@ -137,9 +150,9 @@ function helix(segment: Segment, shape: HelixShape, state: PipeState): SVGTempla
   const halves = helixHalves(shape);
   const style = state.muted ? nothing : `stroke: ${state.color}`;
   return svg`<g class="helix ${state.muted ? 'muted' : ''}" data-segment=${segment.id} style=${style}>
-    ${halves.map(
+    ${helixDrawOrder(halves).map(
       (half) =>
-        svg`<path class="pipe ${state.muted ? 'muted' : ''}" data-half=${half.front ? 'front' : 'back'} style=${style} opacity=${half.front ? nothing : HELIX_BACK_OPACITY} d=${half.d} />`,
+        svg`<path class="pipe ${state.muted ? 'muted' : ''}" data-half=${half.front ? 'front' : 'back'} style=${style} stroke-linecap=${half.front ? 'round' : 'butt'} opacity=${half.front ? nothing : HELIX_BACK_OPACITY} d=${half.d} />`,
     )}
     ${
       state.animated
@@ -153,10 +166,14 @@ function helix(segment: Segment, shape: HelixShape, state: PipeState): SVGTempla
 }
 
 /** One pipe: the base stroke in its colour (or muted) and, while it flows, the dash overlay. */
-function pipe(segment: Segment, state: PipeState, gaps: readonly Point[]): SVGTemplateResult {
+function pipe(segment: Segment, state: PipeState, gaps: readonly Point[], clipId?: string): SVGTemplateResult {
   if (segment.shape !== undefined) return helix(segment, segment.shape, state);
   const d = segment.bend === undefined ? pathData(segment.points, gaps) : roundedPathData(segment.points, segment.bend);
   return svg`<path class="pipe ${state.muted ? 'muted' : ''}" data-segment=${segment.id} style=${state.muted ? nothing : `stroke: ${state.color}`} d=${d} />${
+    state.muted && clipId !== undefined && COIL_PIPES.has(segment.id)
+      ? svg`<path class="pipe-inside" data-inside=${segment.id} clip-path="url(#${clipId})" d=${d} />`
+      : nothing
+  }${
     state.animated
       ? svg`<path class="flow ${state.reversed ? 'reversed' : ''}" data-flow=${segment.id} style="--flow-duration: ${String(state.duration)}s" d=${d} />`
       : nothing
@@ -217,6 +234,15 @@ const gradientDef = (gradient: SideGradient): SVGTemplateResult =>
       <stop offset="1" style="stop-color: ${gradient.end}" />
     </linearGradient>`;
 
+/** Coil 51's colour: its temperature colour, or the coil's muted grey (light theme: darker) while idle (design D8). */
+function coilStyleColor(view: PipeView): string {
+  const color = coilColor(view);
+  return color === MUTED_COLOR ? COIL_MUTED_VAR : color;
+}
+
+/** The pipes that feed the external coil: while muted, their part inside the tank is drawn again in the coil's grey. */
+const COIL_PIPES: ReadonlySet<string> = new Set(['dhw_ext_in', 'dhw_ext_out']);
+
 /** The cabinet as SVG content for the card's viewBox: no images, only paths, symbols and text. */
 export function renderCabinet(
   context: DrawContext,
@@ -228,6 +254,7 @@ export function renderCabinet(
   const ids = new Set(segments.map((entry) => entry.part.id));
   const states = new Map(segments.map((entry) => [entry.part.id, pipeState(entry.part, entry.state, view)] as const));
   const gradients: SideGradient[] = [];
+  const clipId = context.dhw === 'external' ? `${fill.idPrefix}-tank-clip` : undefined;
   const components = drawnComponents(context).map((entry) => {
     const sides = fill.mode === 'gradient' ? entry.part.sides : undefined;
     if (sides === undefined) return component(entry, view, context.detail, taps);
@@ -245,7 +272,7 @@ export function renderCabinet(
     return component(entry, view, context.detail, taps, paints);
   });
   return svg`<g class="cabinet">
-    <defs>${gradients.map(gradientDef)}</defs>
+    <defs>${gradients.map(gradientDef)}${clipId === undefined ? nothing : svg`<clipPath id=${clipId} data-tank-clip><path d=${externalTankBody()} /></clipPath>`}</defs>
     <rect class="outline" x=${CABINET.x} y=${CABINET.y} width=${CABINET.width} height=${CABINET.height} rx="6" />
     ${LABEL_POSITIONS.filter((label) => partState(label, context) !== 'hidden').map(
       (label) =>
@@ -253,7 +280,7 @@ export function renderCabinet(
     )}
     ${segments.map((entry) => {
       const state = states.get(entry.part.id);
-      return state === undefined ? nothing : pipe(entry.part, state, gapsIn(entry.part.id, ids));
+      return state === undefined ? nothing : pipe(entry.part, state, gapsIn(entry.part.id, ids), clipId);
     })}
     ${components}
   </g>`;

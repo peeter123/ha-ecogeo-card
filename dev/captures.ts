@@ -26,6 +26,7 @@ export const CAPTURES: readonly CaptureStep[] = [
   step('dhw-none-dhw-mode', 'scenario=dhw&dhw=none'),
   step('dhw-internal-modelC', 'scenario=dhw&model=C&dhw=internal'),
   // model C
+  step('model-C-heating', 'scenario=heating&model=C&dhw=internal'),
   step('model-C-dhw-none', 'scenario=heating&model=C&dhw=none'),
   step('model-C-active_cooling_htr', 'scenario=active_cooling_htr&model=C'),
   // each feature false and unused, in the scenario that uses it
@@ -45,6 +46,7 @@ export const CAPTURES: readonly CaptureStep[] = [
   // dark theme
   step('theme-dark-heating', 'scenario=heating&theme=dark'),
   step('theme-dark-dhw', 'scenario=dhw&theme=dark'),
+  step('theme-dark-modelC', 'scenario=dhw&model=C&dhw=internal&theme=dark'),
   step('theme-dark-defrost', 'scenario=defrost&theme=dark'),
   step('theme-dark-hybrid', 'scenario=heating&theme=dark&source=hybrid'),
   step('theme-dark-features-unused', 'scenario=active_cooling_htr&theme=dark&passive_cooling=unused&htr=unused'),

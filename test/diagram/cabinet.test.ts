@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
-import { CROSSINGS } from '../../src/diagram/geometry';
+import { COMPONENTS, CROSSINGS, SEGMENTS, type Point } from '../../src/diagram/geometry';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
 import { CIRCUIT_LABELS, MODE_LABELS } from '../../src/strings';
@@ -39,6 +39,71 @@ const heatingHass = (...extra: readonly (readonly [string, string, string?])[]):
 });
 
 describe('cabinet drawing', () => {
+  test.each([
+    ['model B', { model: 'B' }],
+    ['model C', { model: 'C' }],
+    ['no HTR (direct discharge)', { model: 'B', features: { htr: false } }],
+  ] as const)(
+    'compressor symbol (%s): a circle and two straight converging lines, wide at the suction pipe, narrow at the discharge pipe',
+    async (_name, config) => {
+      type Pt = readonly [number, number];
+      const card = await mount(config);
+      const symbol = group(card, 11)?.querySelector('.symbol.compressor');
+      expect(symbol?.querySelector('circle')?.getAttribute('r')).toBe('14');
+      expect(symbol?.querySelector('path[d*="A"]')).toBeNull();
+      const rotation = Number(/rotate\((-?[\d.]+)\)/.exec(symbol?.getAttribute('transform') ?? '')?.[1]);
+      // each line is one straight segment "M x y L x y": its start on the circle and its end
+      const d = symbol?.querySelector('.compressor-lines')?.getAttribute('d') ?? '';
+      const lines = [...d.matchAll(/M\s*(-?[\d.]+)\s+(-?[\d.]+)\s*L\s*(-?[\d.]+)\s+(-?[\d.]+)/g)].map(
+        (match): { from: Pt; to: Pt } => ({
+          from: [Number(match[1]), Number(match[2])],
+          to: [Number(match[3]), Number(match[4])],
+        }),
+      );
+      expect(lines).toHaveLength(2);
+      const [first, second] = lines;
+      if (first === undefined || second === undefined) throw new Error('no lines');
+      for (const line of lines) {
+        expect(Math.hypot(...line.from)).toBeCloseTo(14, 0);
+        expect(Math.hypot(...line.to)).toBeLessThanOrEqual(14);
+      }
+      const gap = (u: Pt, v: Pt): number => Math.hypot(u[0] - v[0], u[1] - v[1]);
+      expect(gap(first.to, second.to)).toBeLessThan(gap(first.from, second.from));
+      // turned by the symbol's rotation: the wide end faces the suction pipe, the narrow end the discharge pipe
+      const turn = (point: Pt): Pt => {
+        const angle = (rotation * Math.PI) / 180;
+        return [
+          point[0] * Math.cos(angle) - point[1] * Math.sin(angle),
+          point[0] * Math.sin(angle) + point[1] * Math.cos(angle),
+        ];
+      };
+      const mid = (u: Pt, v: Pt): Pt => [(u[0] + v[0]) / 2, (u[1] + v[1]) / 2];
+      const wide = turn(mid(first.from, second.from));
+      const narrow = turn(mid(first.to, second.to));
+      const compressor = COMPONENTS.find((component) => component.item === 11);
+      if (compressor === undefined) throw new Error('no compressor');
+      const away = (point: Point): Pt => [point[0] - compressor.x, point[1] - compressor.y];
+      const dot = (u: Pt, v: Pt): number => u[0] * v[0] + u[1] * v[1];
+      const near = (point: Pt): boolean => Math.hypot(...point) <= 15;
+      const roleEnds = (role: string, which: 'first' | 'last'): Pt[] =>
+        SEGMENTS.filter((segment) => drawn.has(segment.id) && segment.temperatureRole === role).flatMap((segment) => {
+          const end = which === 'first' ? segment.points[0] : segment.points.at(-1);
+          return end !== undefined && near(away(end)) ? [away(end)] : [];
+        });
+      const drawn = new Set(segments(card));
+      const suction = roleEnds('compressor.suction_temperature', 'last');
+      const discharge = roleEnds('compressor.discharge_temperature', 'first');
+      expect(suction.length).toBeGreaterThan(0);
+      expect(discharge.length).toBeGreaterThan(0);
+      for (const end of suction) expect(dot(end, wide)).toBeGreaterThan(0);
+      for (const end of discharge) expect(dot(end, narrow)).toBeGreaterThan(0);
+      // the title, aria label and tap stay on the group (component-info)
+      expect(group(card, 11)?.querySelector('title')).not.toBeNull();
+      expect(group(card, 11)?.getAttribute('aria-label')).toBeTruthy();
+      card.remove();
+    },
+  );
+
   test('port order: 1 to 6 left to right, labelled DG1, outer loop and DHW', async () => {
     const card = await mount({ model: 'B', dhw: 'external' });
     const ports = [...root(card).querySelectorAll('[data-kind="port"]')];

@@ -39,6 +39,13 @@ The cabinet SHALL contain the refrigerant circuit in the topology of the manual'
 - with `detail: full` only: mini-pressure switches 39/40 and service outlets 41
 
 With `detail: full` each component SHALL show its item number; with `detail: simplified` none SHALL.
+Compressor 11 SHALL use the standard compressor symbol: a circle with two straight lines converging from its
+suction side towards its discharge side.
+
+#### Scenario: Compressor symbol
+- **WHEN** the card renders any configuration
+- **THEN** compressor 11 is a circle with two straight converging lines, wide at the suction pipe and narrow at the
+  discharge pipe
 
 #### Scenario: Refrigerant items
 - **WHEN** the card renders variant 4 with every feature `true` and `detail: full`

@@ -6,6 +6,7 @@ import { EcogeoCard } from '../../src/card/ecogeo-card';
 import { SAMPLE_STATES, sampleEntityId } from '../../src/config/sample';
 import { ROLE_BY_PATH, ROLE_PATHS, defaultEntityId, type RolePath } from '../../src/config/roles';
 import { mergeFeatures } from '../../src/config/variants';
+import { COMPONENTS, INTERNAL_TANK, SEGMENTS } from '../../src/diagram/geometry';
 import { LABEL_SPECS, footerItems, labelsFor, positionOf } from '../../src/diagram/labels';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
@@ -472,7 +473,7 @@ describe('DHW tank labels', () => {
     card.remove();
   });
 
-  test('model C: the tank values are in the DHW zone, x 800-990 and y 140-230, and nothing is under an external tank', async () => {
+  test('model C: the tank values are one row inside tank 50 above coil 51, and nothing is under an external tank', async () => {
     const card = await mount({ model: 'C' }, hassOf({ 'dhw.demand': 'on' }));
     const ids = labelIds(card).filter((id) => id.startsWith('tank_'));
     expect(ids).toEqual([
@@ -482,13 +483,110 @@ describe('DHW tank labels', () => {
       'tank_internal_demand',
     ]);
     expect(valueOf(card, 'tank_internal_temperature')).toBe(nb('52.1 °C'));
-    for (const spec of LABEL_SPECS.filter((item) => item.dhw === 'internal')) {
-      expect(spec.x, spec.id).toBeGreaterThanOrEqual(800);
-      expect(spec.x, spec.id).toBeLessThanOrEqual(990);
-      expect(spec.y, spec.id).toBeGreaterThanOrEqual(140);
-      expect(spec.y, spec.id).toBeLessThanOrEqual(230);
+    // the captions are the external tank's
+    expect(label(card, 'tank_internal_setpoint')?.textContent).toContain(VALUE_CAPTIONS.setpointShort);
+    expect(label(card, 'tank_internal_start_delta')?.textContent).toContain(VALUE_CAPTIONS.startDeltaShort);
+    // no background plate and no emphasised size: the values sit on the tank's tint at the normal label size
+    for (const id of ids) {
+      expect(label(card, id)?.classList.contains('bare'), id).toBe(true);
+      expect(label(card, id)?.classList.contains('emphasis'), id).toBe(false);
     }
     card.remove();
+  });
+
+  describe.each(['simplified', 'full'] as const)('model C tank values clear of everything (%s)', (detail) => {
+    interface Box {
+      left: number;
+      right: number;
+      top: number;
+      bottom: number;
+    }
+    // widths and heights in drawing units, measured in the emulator at the 1000 px slot (normal size), rounded up
+    // with a margin of 2 to 3 units
+    const SIZE: Record<string, [number, number]> = {
+      tank_internal_temperature: [36, 13],
+      tank_internal_setpoint: [43, 13],
+      tank_internal_start_delta: [33, 13],
+      tank_internal_demand: [41, 13],
+    };
+    const boxOf = (id: string): Box => {
+      const spec = LABEL_SPECS.find((item) => item.id === id);
+      const size = SIZE[id];
+      if (spec === undefined || size === undefined) throw new Error(id);
+      const [width, height] = size;
+      const left = spec.align === 'start' ? spec.x : spec.align === 'end' ? spec.x - width : spec.x - width / 2;
+      return { left, right: left + width, top: spec.y - height / 2, bottom: spec.y + height / 2 };
+    };
+    const apart = (u: Box, v: Box): boolean =>
+      u.right <= v.left || v.right <= u.left || u.bottom <= v.top || v.bottom <= u.top;
+    const ids = Object.keys(SIZE);
+    const coil = COMPONENTS.find((component) => component.item === 51);
+    if (coil === undefined) throw new Error('no coil 51');
+    // the coil's drawn extent: its half height (turned, shape x) around its centre, plus the stroke
+    const coilTop = coil.y - 11 - 1;
+
+    test('inside tank 50, above the coil, in one row', () => {
+      const tank = INTERNAL_TANK;
+      for (const id of ids) {
+        const box = boxOf(id);
+        expect(box.left, id).toBeGreaterThan(tank.x + 2);
+        expect(box.right, id).toBeLessThan(tank.x + tank.width - 2);
+        expect(box.top, id).toBeGreaterThan(tank.y + 2);
+        expect(box.bottom, id).toBeLessThan(coilTop);
+      }
+      const rowY = ['temperature', 'setpoint', 'start_delta'].map(
+        (name) => LABEL_SPECS.find((item) => item.id === 'tank_internal_' + name)?.y,
+      );
+      expect(new Set(rowY).size).toBe(1);
+      // the demand text sits under the row
+      expect(LABEL_SPECS.find((item) => item.id === 'tank_internal_demand')?.y).toBeGreaterThan(rowY[0] ?? 0);
+    });
+
+    test('no overlap with each other, other labels, item tags, components or pipes', () => {
+      const boxes = ids.map((id) => [id, boxOf(id)] as const);
+      for (const [index, [id, box]] of boxes.entries()) {
+        for (const [other, otherBox] of boxes.slice(index + 1))
+          expect(apart(box, otherBox), id + ' ' + other).toBe(true);
+        // every other value label is outside this box
+        for (const spec of LABEL_SPECS.filter((item) => !ids.includes(item.id))) {
+          const near = { left: spec.x - 30, right: spec.x + 30, top: spec.y - 6, bottom: spec.y + 6 };
+          expect(apart(box, near), id + ' ' + spec.id).toBe(true);
+        }
+        // item tags (full detail): a 14 x 10 box at the tag's anchor
+        if (detail === 'full') {
+          for (const part of COMPONENTS.filter((item) => item.dhw === 'internal' || item.item === 26)) {
+            const [dx, dy, anchor] = part.tag;
+            const x = part.x + dx;
+            const left = anchor === 'start' ? x : anchor === 'end' ? x - 14 : x - 7;
+            const tag = { left, right: left + 14, top: part.y + dy - 9, bottom: part.y + dy + 1 };
+            expect(apart(box, tag), id + ' tag ' + String(part.item)).toBe(true);
+          }
+        }
+        // components drawn near (probe 54 and the others): their symbol boxes (radius 14, the largest symbols' half size) stay clear, except tank 50
+        for (const part of COMPONENTS.filter((item) => item.item !== 50 && item.item !== 51)) {
+          // a port is only a 10 x 6 rectangle on the cabinet's top edge, so a half size of 7 covers it
+          const half = part.kind === 'port' ? 7 : 14;
+          const symbolBox = { left: part.x - half, right: part.x + half, top: part.y - half, bottom: part.y + half };
+          expect(apart(box, symbolBox), id + ' component ' + String(part.item)).toBe(true);
+        }
+        // no pipe point or run passes through the box (orthogonal runs)
+        for (const segment of SEGMENTS.filter((item) => item.dhw !== 'external' && item.shape === undefined)) {
+          for (let i = 1; i < segment.points.length; i += 1) {
+            const [x0 = 0, y0 = 0] = segment.points[i - 1] ?? [];
+            const [x1 = 0, y1 = 0] = segment.points[i] ?? [];
+            const run = {
+              left: Math.min(x0, x1),
+              right: Math.max(x0, x1),
+              top: Math.min(y0, y1),
+              bottom: Math.max(y0, y1),
+            };
+            const crosses =
+              run.right > box.left && run.left < box.right && run.bottom > box.top && run.top < box.bottom;
+            expect(crosses, id + ' pipe ' + segment.id).toBe(false);
+          }
+        }
+      }
+    });
   });
 });
 

@@ -29,8 +29,26 @@ export const CABINET = { x: 240, y: 130, width: 520, height: 475 } as const;
  */
 export const INTERNAL_TANK = { x: 408, y: 138, width: 182, height: 66 } as const;
 
+/** Coil 51's centre (model C), inside tank 50; its port stubs reach back to the tank wall (symbols.ts). */
+export const COIL_51 = { x: 495, y: 185 } as const;
+
 /** The external tank right of the cabinet (not a manual item: the "DHW inter-accumulator" of ports 5/6). */
-export const EXTERNAL_TANK = { x: 806, y: 150, width: 178, height: 180, dome: 14 } as const;
+export const EXTERNAL_TANK = { x: 806, y: CABINET.y, width: 168, height: 180, dome: 14 } as const;
+
+/** The external coil: its centre line is the tank's, and it sits in the lower part of the tank (the tank's top plus 62 and 146). */
+const COIL_CX = EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2;
+const COIL_TOP = EXTERNAL_TANK.y + 62;
+const COIL_BOTTOM = EXTERNAL_TANK.y + 146;
+/** The coil's half width, and the x of port 6's vertical inside the tank (14 units inside the left wall). */
+const COIL_RX = 50;
+const PORT6_X = EXTERNAL_TANK.x + 14;
+
+/** The outline of the external tank's body (straight walls, elliptical domed caps), as path data. */
+export function externalTankBody(): string {
+  const { x, y, width, height, dome } = EXTERNAL_TANK;
+  const rx = width / 2;
+  return `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x + width)} ${String(y + dome)} V${String(y + height - dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x)} ${String(y + height - dome)} Z`;
+}
 
 /** The air unit's housing and the fan in it, left of the cabinet (not manual items). */
 export const AIR_UNIT = {
@@ -294,15 +312,15 @@ export const COMPONENTS: readonly Component[] = [
     INTERNAL_TANK.x + INTERNAL_TANK.width / 2,
     INTERNAL_TANK.y + INTERNAL_TANK.height / 2,
     0,
-    [-80, -17, 'start'],
+    [-96, -26, 'end'],
     {
       dhw: 'internal',
     },
   ),
-  c(51, 'coil', 495, 185, 0, [0, -25, 'middle'], { dhw: 'internal' }),
+  c(51, 'coil', COIL_51.x, COIL_51.y, 0, [-74, 3, 'middle'], { dhw: 'internal' }),
   c(52, 'service_outlet', 395, 162, 0, [-8, 4, 'end'], { dhw: 'internal', detail: 'full' }),
   c(53, 'drain_valve', 599, 196, 270, [0, -12, 'middle'], { dhw: 'internal', detail: 'full' }),
-  c(54, 'probe_t', 574, 171, 270, [0, -14, 'middle'], { dhw: 'internal' }),
+  c(54, 'probe_t', 574, 171, 270, [26, -11, 'start'], { dhw: 'internal' }),
 ];
 
 /** Points from text: "x,y x,y ...". */
@@ -399,16 +417,34 @@ export const SEGMENTS: readonly Segment[] = [
   seg('htr_riser', ['htr'], '361,250 361,172', DHWT, { feature: 'htr', dhw: 'any' }),
   // DHW storage. External (ports 5/6, a tank with a coil right of the cabinet, the pipes rise into the run and go
   // right: 5 higher than 6, so that they do not cross).
-  seg('dhw_ext_in', ['dhw_coil'], '722,130 722,50 940,50 940,212', OUT, { dhw: 'external', speedRole: PP }),
-  seg('dhw_ext_coil', ['dhw_coil'], '940,212 840,296', OUT, {
-    dhw: 'external',
-    speedRole: PP,
-    shape: { kind: 'helix', cx: 890, top: 212, bottom: 296, rx: 50, turns: 4.5 },
-  }),
-  seg('dhw_ext_out', ['dhw_coil'], '840,296 820,296 820,85 748,85 748,130', RET, {
-    dhw: 'external',
-    speedRole: PP,
-  }),
+  seg(
+    'dhw_ext_in',
+    ['dhw_coil'],
+    `722,130 722,50 ${String(COIL_CX + COIL_RX)},50 ${String(COIL_CX + COIL_RX)},${String(COIL_TOP)}`,
+    OUT,
+    { dhw: 'external', speedRole: PP },
+  ),
+  seg(
+    'dhw_ext_coil',
+    ['dhw_coil'],
+    `${String(COIL_CX + COIL_RX)},${String(COIL_TOP)} ${String(COIL_CX - COIL_RX)},${String(COIL_BOTTOM)}`,
+    OUT,
+    {
+      dhw: 'external',
+      speedRole: PP,
+      shape: { kind: 'helix', cx: COIL_CX, top: COIL_TOP, bottom: COIL_BOTTOM, rx: COIL_RX, turns: 4.5 },
+    },
+  ),
+  seg(
+    'dhw_ext_out',
+    ['dhw_coil'],
+    `${String(COIL_CX - COIL_RX)},${String(COIL_BOTTOM)} ${String(PORT6_X)},${String(COIL_BOTTOM)} ${String(PORT6_X)},85 748,85 748,130`,
+    RET,
+    {
+      dhw: 'external',
+      speedRole: PP,
+    },
+  ),
   // Internal (model C, items 47-49 on the top edge): short stubs into the tank
   seg('tap_47', ['dhw_coil'], '440,118 440,138', DHWT, { dhw: 'internal', stub: true }),
   seg('tap_48', ['dhw_coil'], '490,138 490,118', DHWT, { dhw: 'internal', stub: true }),
@@ -723,6 +759,12 @@ function helixCubics(shape: HelixShape): { front: boolean; curve: Cubic }[] {
     return { front, curve };
   });
 }
+
+/** The halves in drawing order: all back halves first (under), then all front halves, each in order from the start. */
+export const helixDrawOrder = (halves: readonly HelixHalf[]): HelixHalf[] => [
+  ...halves.filter((half) => !half.front),
+  ...halves.filter((half) => half.front),
+];
 
 /** The half-turns of a helix, in order from its start: the lower arcs (front, solid) and the upper arcs (back, faint). */
 export function helixHalves(shape: HelixShape): HelixHalf[] {

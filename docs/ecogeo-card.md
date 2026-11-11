@@ -189,7 +189,9 @@ the compressor discharge and 29 on the suction line, as in the figure.
   (see the Source and DHW sections), so no pipe outside the cabinet crosses another.
 - **DHW lines:** valve 26 sits on port 1's line. Its DHW output is the supply line across the cabinet to port 5, and
   the return line from port 6 runs back across to join port 2's line. Exchanger 9 taps the supply, pump 17 the return.
-- **Refrigerant:** compressor 11 is in the middle. The discharge runs left through 36, 40 and 30 into HTR exchanger 9 and on to inversion valve 14, which feeds condenser 8 (heating) or evaporator 7 (active
+- **Refrigerant:** compressor 11 is in the middle, drawn as the standard compressor symbol: a circle with two straight
+  lines that start on it at the suction side and converge towards the discharge side, so the wide side faces the
+  suction pipe (right) and the narrow side the discharge pipe (left). The discharge runs left through 36, 40 and 30 into HTR exchanger 9 and on to inversion valve 14, which feeds condenser 8 (heating) or evaporator 7 (active
   cooling). The expansion leg 8, 41, 13, 12, 7 runs along the lower row; the suction returns through 29, 35 and 39
   with service outlet 41.
 - **Valve 14's ports:** the three ports on its right are ordered suction (top), evaporator 7 (middle), condenser 8
@@ -237,12 +239,18 @@ cross on their way left. They belong to the brine circuit: they are active with 
 ### DHW storage (`dhw`)
 
 - **External (model B):** ports 5 (outlet) and 6 (inlet), the manual's "DHW inter-accumulator", rise into the run and
-  go right to a tank drawn as a rounded cylinder (straight walls, elliptical domed caps). Port 5's pipe is the
+  go right to a tank drawn as a rounded cylinder (straight walls, elliptical domed caps). The tank is centred on the
+  coil and the apex of its top dome sits on the cabinet's top line; its values are centred under it. Port 5's pipe is the
   higher one (y 50 against y 85) so they do not cross. The coil is a helix in the lower part of the tank, seen from
   the side: four and a half turns, the front half of each turn solid and the back half faint (35 % opacity). Its two
   ends meet the pipes from ports 5 and 6. The colour, the muting and the flow animation are those of the coil pipe;
-  the dash overlay runs along the front halves only. Model C's coil 51 is drawn the same way, smaller and lying on
-  its side.
+  the dash overlay runs along the front halves only. An idle coil (no flow) is drawn in a neutral grey, darker than the
+  other muted pipes in the light theme so that it stays visible on the tank's tinted body; the dark theme keeps the
+  normal muted grey. While the coil is idle, the two pipes that feed it are drawn in that same grey where they run
+  inside the tank (clipped to the tank body), so the grey changes at the tank wall and not at the joint with the coil.
+  The back halves are drawn first, under the front halves, with butt caps, so the joints at the coil's sides are
+  covered by a solid front half. Model C's coil 51 is drawn the same way, lying on its side, with closer (pitch 8) and
+  rounder turns (seven and a half) than the external coil.
 - **Internal (model C):** the integrated tank is drawn inside the cabinet, under the top edge, after figure C: tank
   50 with coil 51 (a helix, see above), probe 54 and the connections 47 (tap water inlet), 48 (DHW outlet) and 49 (recirculation) on the
   top edge, the manual trap 52 on the coil's supply line, and the drain valve 53 on the tank wall. The figure's tank
@@ -402,7 +410,9 @@ writes no entity.
 | Condensation (8) and evaporation (7) temperatures | under exchangers 8 and 7 |
 | Air unit: fan, outside temperature, outlet temperature | under the housing |
 | Ground loop: brine out and in (a hybrid: only its exit) | right of the collector |
-| Tank: temperature, setpoint, start delta-T (K), "Demand" while on | under the external tank; on model C in the DHW zone right of the cabinet |
+| Tank: temperature, setpoint, start delta-T (K), "Demand" while on | under the external tank; on model C as one row inside tank 50, in the strip above coil 51, with no background plate, at the normal label size and with the short captions "Set" and "ΔT" (the "Demand" text under the row) |
+
+The labels have a minimum font size, so on a card narrower than about 560 px while the demand line shows (about 510 px for the three values alone) the labels inside tank 50 start to touch; narrower cards are left to the compact layout (`add-compact-layout`).
 
 A value of a part that is not drawn is not shown (no DHW storage, no tank values; a source that is not drawn, no
 source values). A drawn value with no value shows a muted dash and keeps its place.

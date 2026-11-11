@@ -3,7 +3,16 @@
 // theme's text colour, or the muted colour) through CSS. The shapes follow the manual's symbols (section 3.1) in a
 // simplified form. The letters of probes and switches stay upright whatever the rotation.
 import { nothing, svg, type SVGTemplateResult } from 'lit';
-import { HELIX_BACK_OPACITY, INTERNAL_TANK, helixHalves, type ComponentKind, type Rotation } from './geometry';
+import {
+  COIL_51,
+  HELIX_BACK_OPACITY,
+  INTERNAL_TANK,
+  helixDrawOrder,
+  helixHalves,
+  type HelixShape,
+  type ComponentKind,
+  type Rotation,
+} from './geometry';
 
 /** The ports of a three-way valve in its own frame: left, right and down (valve 26 is turned to put them up, down and right). */
 export type ValvePort = 'l' | 'r' | 'd';
@@ -39,13 +48,25 @@ const letter = (text: string, rotation: Rotation): SVGTemplateResult =>
   svg`<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(${-rotation})">${text}</text>`;
 
 /**
+ * Coil 51's helix in the symbol's frame before the turn: 7.5 turns of pitch 8 (adjacent front halves about one stroke
+ * width apart) and a half-turn bulge as big as the pitch, which is over a third of the half height 11.
+ */
+export const COIL_51_SHAPE: HelixShape = { kind: 'helix', cx: 2, top: -60, bottom: 60, rx: 11, turns: 7.5 };
+
+/**
  * Coil 51 (model C): the helix of design D5, lying on its side (axis along x, turned 90 degrees), smaller than the external one. Both
  * ends sit at its left: the supply starts the helix, the return drops 4 units below the loops and runs straight back to the second port.
+ * The two port stubs run back to just inside tank 50's wall (2 units), so the pipes from the ports (which end at the
+ * ports, 12 units inside the wall) change tone only at the wall.
  */
 function helixCoil(): SVGTemplateResult {
-  const halves = helixHalves({ kind: 'helix', cx: 2, top: -60, bottom: 60, rx: 11, turns: 5.5 });
-  return svg`<g transform="matrix(0 -1 1 0 0 0)">${halves.map((half) => svg`<path data-half=${half.front ? 'front' : 'back'} d=${half.d} opacity=${half.front ? nothing : HELIX_BACK_OPACITY} />`)}</g><path d="M-75 -13 H-60 M60 9 V13 H-75" />`;
+  const stub = INTERNAL_TANK.x + 2 - COIL_51.x;
+  const halves = helixHalves(COIL_51_SHAPE);
+  return svg`<g transform="matrix(0 -1 1 0 0 0)">${helixDrawOrder(halves).map((half) => svg`<path data-half=${half.front ? 'front' : 'back'} stroke-linecap=${half.front ? 'round' : 'butt'} d=${half.d} opacity=${half.front ? nothing : HELIX_BACK_OPACITY} />`)}</g><path stroke-width="3" d="M${stub} -13 H-60 M60 9 V13 H${stub}" />`;
 }
+
+/** Compressor lines in the symbol's frame: from the circle (r 14) at 50 degrees either side of the suction axis (+x) to the narrow discharge end. */
+export const COMPRESSOR_LINES = 'M9 -10.7 L-13 -3 M9 10.7 L-13 3';
 
 const stem = (length: number, from: number): SVGTemplateResult => svg`<path d="M0 ${from} V${length}" />`;
 
@@ -82,7 +103,9 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
       return svg`${fills === undefined ? nothing : svg`${exchangerHalf('left', span, fills.left)}${exchangerHalf('right', span, fills.right)}`}<rect x="-20" y="${-span - 9}" width="40" height="${2 * span + 18}" rx="4" /><path d="M-12 ${-span} V${span} M12 ${-span} V${span}" /><circle cx="-12" cy="${-span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${-span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="-12" cy="${span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${span}" r="3.5" fill="var(--card-background-color, transparent)" />`;
     }
     case 'compressor':
-      return svg`<circle r="14" /><path d="M0 -8 A8 8 0 1 0 8 0 M0 -8 L6 -4" />`;
+      // the standard compressor symbol: a circle and two straight lines that start on it at the suction side and
+      // converge towards the discharge side. Drawn with the suction at +x and the discharge at -x, turned by the rotation.
+      return svg`<circle r="14" /><path class="compressor-lines" d="${COMPRESSOR_LINES}" />`;
     case 'vessel':
       return svg`<circle r="12" /><path d="M-12 2 H12" />`;
     case 'safety_valve':

@@ -12,11 +12,11 @@
 // tank bodies are a `.tank-body` shape (a path for the external cylinder, a rect for tank 50) with a `data-dhw-tank` attribute, filled from the custom property
 // `--dhw-tank-color` (no fill while it is not set). A muted body (DHW temperature unavailable) gets the muted colour
 // through the same property. The values (temperature, setpoint, start delta-T, demand) go under the external tank
-// (x 806-984, y 340-420) for the external one, and in the empty DHW zone right of the cabinet for the internal one (labels.ts).
+// (centred on it, below its bottom edge: EXTERNAL_TANK) for the external one, and inside tank 50, one row above coil 51 (design D8b), for the internal one (labels.ts).
 import { css, svg, type SVGTemplateResult } from 'lit';
 import { DHW_LABELS } from '../strings';
 import { EXTERNAL_TANK_ROLE, tapBindings, tapTarget, type Taps } from './component-info';
-import { EXTERNAL_TANK, type DrawContext } from './geometry';
+import { EXTERNAL_TANK, externalTankBody, type DrawContext } from './geometry';
 
 export const dhwStyles = css`
   .tank-body {
@@ -49,10 +49,10 @@ export const dhwStyles = css`
  */
 export function renderDhw(context: DrawContext, taps?: Taps): SVGTemplateResult {
   if (context.dhw !== 'external') return svg``;
-  const { x, y, width, height, dome } = EXTERNAL_TANK;
+  const { x, y, width, dome } = EXTERNAL_TANK;
   const rx = width / 2;
   // straight walls with elliptical domed caps: the top cap's lower arc is drawn as a rim
-  const body = `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x + width)} ${String(y + dome)} V${String(y + height - dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x)} ${String(y + height - dome)} Z`;
+  const body = externalTankBody();
   const rim = `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 0 ${String(x + width)} ${String(y + dome)}`;
   const tap = tapBindings(tapTarget(EXTERNAL_TANK_ROLE, taps), taps?.onTap);
   return svg`<g class="dhw-storage" data-dhw="external" aria-label=${DHW_LABELS.externalTank} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>
