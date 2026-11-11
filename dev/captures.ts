@@ -3,12 +3,16 @@
 // url-state.ts (scenario heating, model B, variant 4, source ground, dhw and features by preset, detail simplified, light theme).
 import { SCENARIO_NAMES } from './scenarios';
 import { FEATURE_KEYS } from '../src/config/variants';
+import { COMPACT_BELOW } from '../src/lib/layout';
 
 export interface CaptureStep {
   name: string;
   /** The query string, without the leading `?`. */
   query: string;
 }
+
+/** A phone's card width in px (the emulator's 360 px option). */
+const PHONE_WIDTH = 360;
 
 const step = (name: string, query: string): CaptureStep => ({ name, query });
 
@@ -56,6 +60,14 @@ export const CAPTURES: readonly CaptureStep[] = [
   step('theme-dark-hybrid-passive_cooling', 'scenario=passive_cooling&theme=dark&source=hybrid'),
   step('theme-dark-ground-passive_cooling', 'scenario=passive_cooling&theme=dark&source=ground'),
   step('theme-dark-features-unused', 'scenario=active_cooling_htr&theme=dark&passive_cooling=unused&htr=unused'),
+  // add-compact-layout: every scenario on a phone (360 px, automatic layout) and in the full layout at the compact
+  // threshold (the constant of src/lib/layout.ts), light and dark
+  ...(['light', 'dark'] as const).flatMap((theme) =>
+    SCENARIO_NAMES.flatMap((name) => [
+      step(`phone-${theme}-${name}`, `scenario=${name}&width=${String(PHONE_WIDTH)}&theme=${theme}`),
+      step(`threshold-${theme}-${name}`, `scenario=${name}&layout=full&width=${String(COMPACT_BELOW)}&theme=${theme}`),
+    ]),
+  ),
 ];
 
 /** The scenario in which a feature is active, so that muting or removing it shows. */

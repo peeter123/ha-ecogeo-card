@@ -7,11 +7,13 @@ import {
   exchangerFillOf,
   featureOverrides,
   installationOf,
+  layoutOf,
   prefixOf,
   setsAnyEntity,
   variantOf,
   type Detail,
   type ExchangerFill,
+  type Layout,
   type DhwStorage,
   type Model,
   type Source,
@@ -29,6 +31,8 @@ export interface ResolvedConfig {
   detail: Detail;
   /** How the plate exchangers are filled: a `gradient` per side from the pipes' colours, or `none`. */
   exchangerFill: ExchangerFill;
+  /** The `layout` option: `auto` follows the card's width, `full` and `compact` force one. */
+  layout: Layout;
   prefix: string | undefined;
   features: Features;
   /** The entity id of each role, or undefined when the role has no entity (no override and no prefix). */
@@ -63,6 +67,7 @@ export function resolveConfig(config: CardConfig): ResolvedConfig {
     ...installationOf(config),
     detail: detailOf(config),
     exchangerFill: exchangerFillOf(config),
+    layout: layoutOf(config),
     variant,
     prefix,
     colors: stopsOf(config),

@@ -1,3 +1,4 @@
+import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
 // Always builds into build/ (git-ignored, never deployed). `npm run release` then copies the checked build to
@@ -22,6 +23,20 @@ export default defineConfig({
           name: 'unit',
           environment: 'happy-dom',
           include: ['test/**/*.test.ts'],
+          exclude: ['test/**/*.browser.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'browser',
+          include: ['test/**/*.browser.test.ts'],
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium' }],
+          },
         },
       },
     ],

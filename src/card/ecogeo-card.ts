@@ -21,6 +21,7 @@ import { renderSource, sourceStyles } from '../diagram/source';
 import type { CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
+import { isCompact } from '../lib/layout';
 import { fireMoreInfo, stateOf, type HassLike } from '../lib/hass';
 import { shouldRender } from '../lib/render';
 import { INDICATIONS, MODE_LABELS, SCHEMATIC_LABEL } from '../strings';
@@ -49,6 +50,10 @@ export class EcogeoCard extends LitElement {
     dhwStyles,
     labelStyles,
     css`
+      /* Block, so the ResizeObserver reports the card's width (an inline element reports none). */
+      :host {
+        display: block;
+      }
       .footer {
         display: flex;
         flex-wrap: wrap;
@@ -71,14 +76,45 @@ export class EcogeoCard extends LitElement {
   static override properties = {
     hass: { attribute: false },
     config: { state: true },
+    width: { state: true },
   };
 
   declare hass?: HassLike;
   declare config?: CardConfig;
+  /** The card's own width in px, from the ResizeObserver; 0 until the first observation (the layout is then full). */
+  declare width: number;
   private resolved?: ResolvedConfig;
+  private observer?: ResizeObserver;
+  private renderedCompact = false;
   private entityIds: string[] = [];
   private renderedHass?: HassLike;
   private readonly idPrefix = `ecogeo${String(++instances)}`;
+
+  constructor() {
+    super();
+    this.width = 0;
+  }
+
+  /** The layout the card shows now: compact or full, from the `layout` option and the measured width (add-compact-layout D1). */
+  get layout(): 'compact' | 'full' {
+    return isCompact(this.resolved?.layout ?? 'auto', this.width) ? 'compact' : 'full';
+  }
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this.observer = new ResizeObserver((entries) => {
+      const width = entries.at(-1)?.contentRect.width;
+      // An observation whose width did not change is ignored, so a re-render that only changes the height cannot loop.
+      if (width !== undefined && width !== this.width) this.width = width;
+    });
+    this.observer.observe(this);
+  }
+
+  override disconnectedCallback(): void {
+    this.observer?.disconnect();
+    this.observer = undefined;
+    super.disconnectedCallback();
+  }
 
   /** Called by Home Assistant with the card's config. Throws for an invalid config: HA shows its error card. */
   setConfig(config: CardConfig): void {
@@ -100,6 +136,8 @@ export class EcogeoCard extends LitElement {
   }
 
   protected override shouldUpdate(changed: PropertyValues): boolean {
+    // A width change alone renders only when it flips the layout.
+    if (changed.size === 1 && changed.has('width')) return (this.layout === 'compact') !== this.renderedCompact;
     return shouldRender(changed, this.hass, this.renderedHass, this.entityIds);
   }
 
@@ -114,8 +152,9 @@ export class EcogeoCard extends LitElement {
 
   protected override render(): TemplateResult {
     this.renderedHass = this.hass;
+    this.renderedCompact = this.layout === 'compact';
     const resolved = this.resolved;
-    if (resolved === undefined) return html`<ha-card><div class="diagram"></div></ha-card>`;
+    if (resolved === undefined) return html`<ha-card data-layout=${this.layout}><div class="diagram"></div></ha-card>`;
     const { readings, offline } = this.readings(resolved);
     const mode = deriveMode(readings, resolved.features);
     const circuits = circuitsFor(mode, resolved.features, resolved.dhw, readings);
@@ -129,7 +168,7 @@ export class EcogeoCard extends LitElement {
           fireMoreInfo(this, entityId);
         };
     const taps: Taps = { entities: resolved.entities, onTap };
-    return html`<ha-card>
+    return html`<ha-card data-layout=${this.layout}>
       <div class="diagram">
         <svg
           viewBox="0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}"

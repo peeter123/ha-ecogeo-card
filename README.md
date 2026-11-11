@@ -37,8 +37,13 @@ Planned follow-up changes: `add-card-editor`, `add-hacs-release`, `add-browser-t
 Copy `dist/ecogeo-card.js` to the Home Assistant `www` folder, register it as a `module` dashboard resource and add
 the card to a view. The steps are in the Installation section of [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
-The card is designed for a full-width or panel view. On a narrow card the labels grow relative to the drawing (their
-font size is `max(8px, 0.95cqw)`) and may collide.
+The card measures its own width and chooses a layout from it (the `layout` option, see Options). With `layout: auto`
+(the default) it shows the full layout from 700 px wide, which is a panel view or a wide section, and the compact
+layout below that, which is what a phone gets. The compact layout shows the schematic at the simplified detail
+level with only the key labels (production out and in, brine out and in, compressor speed, the DHW temperature and
+the source's outlet temperature), larger and legible, and a shorter footer (mode, COP, outside temperature and the
+alarm and offline indications). Set `layout: full` or `layout: compact` to force one. How the 700 px was measured
+is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
 ## Configuration
 
@@ -76,6 +81,7 @@ fault.
 | `entities` | group | from the prefix | Entity id per role, nested by role path (see Roles). |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
+| `layout` | `auto`, `full`, `compact` | `auto` | `auto` shows the compact layout while the card is narrower than 700 px and the full layout otherwise (and before the width is known); `full` and `compact` use that layout at any width. |
 | `detail` | `simplified`, `full` | `simplified` | `simplified` leaves out the service and safety parts with no live value and shows no item numbers; `full` draws every part of the manual figure with its item number. |
 
 ### Source and DHW
@@ -218,9 +224,13 @@ Requires Node 22.13 or newer, 24, or 26 and newer.
 
 ```sh
 npm install
+npx playwright install chromium  # the browser for the browser tests and the scripts (once per machine)
 npm run dev       # the emulator: the card with a mock hass, served by Vite
 npm run capture   # one PNG per emulator URL in build/captures/
-npm test          # unit tests (Vitest, happy-dom)
+npm test          # both test projects: unit (Vitest, happy-dom) and browser (headless Chromium)
+npm run test:unit     # unit tests only
+npm run test:browser  # browser tests only (layout at real widths, no label overlaps at the threshold)
+npm run measure-layout  # re-measure the compact threshold (see docs/ecogeo-card.md)
 npm run check     # typecheck, lint, format check and tests
 npm run build     # bundle into build/ecogeo-card.js (git-ignored)
 npm run release   # check, build, verify that the bundle registers the card, copy it to dist/ecogeo-card.js

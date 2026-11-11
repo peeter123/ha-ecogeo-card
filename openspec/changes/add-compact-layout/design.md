@@ -27,6 +27,12 @@ threshold constant is this card's own) into `src/lib/layout.ts`. The card observ
 ResizeObserver (connected in `connectedCallback`, disconnected in `disconnectedCallback`), stores the width in a
 `@state`, and re-renders only when the computed layout or the stroke scale changes, so `shouldUpdate`'s
 entity-based gating stays intact for state updates. Unknown width (0 or before the first observation) means full.
+Hysteresis (from the group 1 review): once group 2 makes compact shorter than full, the page scrollbar can appear
+and disappear as the layout flips, changing the card's width by about 15-17 px near the threshold; the
+unchanged-width guard does not stop that. With `auto`, a compact card returns to full only at the threshold plus
+24 px (`COMPACT_HYSTERESIS` in `src/lib/layout.ts`); going compact still happens below the threshold. The decision
+takes the current layout as an input and stays a pure, unit-tested function. The width-only branch of
+`shouldUpdate` also re-renders when the stroke scale of D4 changes, not only on a layout flip.
 
 ### D2. Two label tiers
 Each label spec in `labels.ts` gets `tier: 'key' | 'detail'`. Key: `production.outlet_temperature`,
@@ -58,8 +64,23 @@ The emulator gains a width control and a layout select (URL `width=`, `layout=`)
 scenario in the forced full layout at widths from 320 to 800 px in 20 px steps and, per width, checks label
 overlaps in the DOM (bounding boxes of the label elements against each other and against the component groups'
 boxes), with Playwright in `scripts/`. The threshold is the narrowest width with zero overlaps in every scenario,
-rounded up to 10 px; it becomes the constant in `src/lib/layout.ts` and is recorded in the docs with the date and
-method.
+on the 20 px grid (with every wider grid width also clean); it becomes the constant in `src/lib/layout.ts` and is
+recorded in the docs with the date and method. Measured 2026-11-11: 700 px. A 10 px refinement would give 690 px,
+but there the compressor's speed, percentage and power rows have only about 6 px of margin, so the grid value is
+kept. Labels are compared by their em boxes (the half-leading trimmed, since the stacked compressor rows' line
+boxes overlap at every width) with a 0.5 px tolerance; with no tolerance the threshold would be about 740 px. The
+docs say both choices decide the result.
+
+### D7. Browser tests
+happy-dom has no layout: no ResizeObserver callbacks from real sizes, no container units, no wrapping, no rendered
+stroke widths. Copy hrv-ventilation's setup: a second Vitest project `browser` (`@vitest/browser-playwright`,
+headless Chromium, files `test/**/*.browser.test.ts`) beside the happy-dom `unit` project, which excludes them;
+`npm test` runs both, `test:unit` and `test:browser` run one. The scenarios that depend on layout are browser tests:
+the automatic layout at real widths, no overlaps at the threshold (the measurement script's boxes, as a regression
+guard), the rendered minimum stroke and font sizes, and the wrapping footer. Pure logic (`isCompact`, the stroke
+scale, the tiers) stays in unit tests. Chromium is installed once per machine with `npx playwright install chromium`.
+Alternative considered: mocking ResizeObserver and computed styles in happy-dom. Rejected: it tests the mock, not
+the rendered sizes the spec names.
 
 ## Risks / Trade-offs
 

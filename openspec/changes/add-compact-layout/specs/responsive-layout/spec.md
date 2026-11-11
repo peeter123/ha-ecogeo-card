@@ -24,10 +24,20 @@ compact threshold and full otherwise; before the card's width is known it SHALL 
 - **WHEN** the config sets `layout: full` and the card is 360 px wide
 - **THEN** the card shows the full layout
 
+### Requirement: Layout hysteresis
+With `auto`, a card already in compact SHALL return to full only once it is at least 24 px wider than the compact
+threshold, so a page scrollbar that appears or disappears with the layout's height cannot make the layout flip
+back and forth.
+
+#### Scenario: No flip at the threshold
+- **WHEN** the config sets no `layout`, the card is compact, and it widens to 10 px above the threshold
+- **THEN** it stays compact, and it shows the full layout once it is 24 px or more above the threshold
+
 ### Requirement: Compact threshold
-The compact threshold SHALL be the narrowest card width at which the full layout, at the simplified detail level,
-shows no overlapping labels in any emulator scenario, rounded up to the next 10 px. It SHALL be recorded in the
-docs with how it was measured.
+The compact threshold SHALL be the narrowest card width, on a grid of 20 px steps from 320 to 800 px, at which the
+full layout, at the simplified detail level, shows no overlapping labels in any emulator scenario, and no wider
+width on that grid does. It SHALL be recorded in the docs with how it was measured, including the label box and
+tolerance the result depends on.
 
 #### Scenario: No overlaps above the threshold
 - **WHEN** the emulator captures every scenario in the full layout at the threshold width

@@ -12,11 +12,14 @@
     "build": "vite build",
     "release": "npm run check && npm run build && node scripts/check-release.mjs",
     "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:browser": "vitest run --project browser",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "capture": "node scripts/capture.mjs",
+    "measure-layout": "node scripts/measure-layout.mjs",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
   },
   "dependencies": {
@@ -26,6 +29,7 @@
     "@eslint/js": "^10.0.1",
     "@happy-dom/global-registrator": "^21.0.1",
     "@types/node": "^24.19.2",
+    "@vitest/browser-playwright": "^5.1.0",
     "eslint": "^10.12.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-lit": "^2.3.1",
@@ -37,6 +41,6 @@
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.2",
     "vite": "^8.3.4",
-    "vitest": "^5.0.4"
+    "vitest": "^5.1.0"
   }
 }

@@ -464,6 +464,53 @@ The card formats every number itself (`src/calc/display.ts`), never through `has
 - The card re-renders when the state or registry entry of one of its entities changes, or the theme, locale or
   configuration; other entities changing do nothing.
 
+## Layout
+
+The card observes its own width (a `ResizeObserver` on the card element) and derives a layout from it and from the
+`layout` option (`auto`, `full` or `compact`, default `auto`). `full` and `compact` force that layout at any width.
+With `auto` the card is compact while it is narrower than the compact threshold and full from the threshold up;
+before the first width is known (or while the card is not displayed, width 0) it is full. The rule is `isCompact` in
+`src/lib/layout.ts`, copied from the hrv-ventilation repo (`src/diagram/labels.ts`); the threshold constant
+`COMPACT_BELOW` is this card's own. A re-render happens only when the derived layout changes, so state updates keep
+their entity-based gating, and an observation whose width did not change is ignored.
+
+What the compact layout shows: the schematic at the simplified detail level whatever `detail` says, only the key
+value labels (production outlet and return, brine outlet and inlet, compressor speed, the DHW temperature and the
+source's outlet temperature), and a footer with the mode, the COP, the outside temperature and the alarm and
+offline indications. Lines and text keep a minimum rendered size so that a thin card stays legible. This content
+arrives with the `add-compact-layout` change; the threshold and the `layout` option come first.
+
+### The compact threshold
+
+The threshold is 700 px (measured on 2026-11-11). It is the narrowest card width at which the full layout, at the
+simplified detail level, shows no overlapping labels in any emulator scenario, on the 20 px grid from 320 to 800 px with
+every wider grid width also clean.
+
+Method (`npm run measure-layout`, `scripts/measure-layout.mjs`, Playwright): every emulator scenario is opened in
+the forced full layout at the simplified detail level, in four installations (a ground loop on model B, an air unit,
+the hybrid, and model C with its internal tank), and the card is set to every width from 320 to 800 px in 20 px
+steps. At each width the script compares, in the DOM, the bounding boxes of the value labels with each other and
+with the boxes of the drawing's component groups (the symbol groups, the DHW storage, the air unit and the marks of
+the ground loop). A label's box leaves out the half-leading above and below its text; two boxes overlap when they
+share more than 0.5 px in both directions. The labels inside tank 50 on model C are not compared with tank 50, which
+they sit on by design. The threshold is the narrowest width with zero overlaps in every case, provided every wider
+measured width is also clean. Pipes are not checked by the script; the emulator captures at the threshold
+(`threshold-*` in `npm run capture`) are inspected by eye for those.
+
+The boxes, exclusions, installations and tolerance live in `dev/overlaps.ts`, shared by the script and by the
+browser test `test/card/overlaps.browser.test.ts`, which runs the same check at the threshold in headless Chromium
+so that a change to the drawing or the labels that brings overlaps back fails `npm test`. The layout at real widths
+(`test/card/layout.browser.test.ts`) is also a browser test: happy-dom has no layout.
+
+Two choices decide the result. A label's box is its em box, with the half-leading trimmed, because the line boxes of
+the stacked compressor rows overlap at every width. And the tolerance is 0.5 px; with no tolerance the threshold
+would be about 740 px. Measuring in 10 px steps would give 690 px, but there the compressor rows have only about 6 px
+of margin, so the 20 px grid value of 700 px is kept.
+
+Result: below 700 px the stacked compressor values (speed, percentage, power) start to touch because the labels stop
+shrinking at their 8 px minimum while their spacing keeps shrinking; below about 600 px more labels collide with
+each other and with components.
+
 ## Installation
 
 The card is one JavaScript module, `ecogeo-card.js`, built from `src/` and committed as `dist/ecogeo-card.js`

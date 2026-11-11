@@ -5,7 +5,7 @@
 import './ha-stubs';
 import '../src/index';
 import type { EcogeoCard } from '../src/card/ecogeo-card';
-import { DETAIL_LEVELS, DHW_STORAGES, EXCHANGER_FILLS, MODELS, SOURCES } from '../src/config/options';
+import { DETAIL_LEVELS, DHW_STORAGES, EXCHANGER_FILLS, LAYOUTS, MODELS, SOURCES } from '../src/config/options';
 import type { RolePath } from '../src/config/roles';
 import { FEATURE_KEYS, VARIANTS } from '../src/config/variants';
 import { NBSP, NO_VALUE, UNITS } from '../src/strings';
@@ -16,6 +16,7 @@ import {
   DEFAULT_CYCLE_SECONDS,
   FEATURE_CHOICES,
   THEMES,
+  WIDTHS,
   configOf,
   parseState,
   toSearch,
@@ -85,6 +86,7 @@ cardsRoot.append(slot);
 /** Pushes the state into the card: the config, the mock states, the theme and the URL. */
 function apply(): void {
   document.body.className = state.theme;
+  slot.style.width = `${String(state.width)}px`;
   try {
     card.setConfig(configOf(state));
     error.hidden = true;
@@ -126,6 +128,8 @@ function select<T extends string>(
     syncControls();
   });
   syncers.push(() => {
+    // A value that is not one of the choices (a width written in the URL) gets its own entry.
+    if (!choices.some((choice) => choice === get())) element.add(new Option(get(), get()));
     element.value = get();
   });
   return labelled(text, element);
@@ -290,6 +294,24 @@ controlsRoot.append(
       () => state.fill,
       (value) => {
         state = { ...state, fill: value };
+      },
+    ),
+    select(
+      'layout',
+      'Layout',
+      LAYOUTS,
+      () => state.layout,
+      (value) => {
+        state = { ...state, layout: value };
+      },
+    ),
+    select(
+      'width',
+      'Card width',
+      WIDTHS.map(String),
+      () => String(state.width),
+      (value) => {
+        state = { ...state, width: Number(value) };
       },
     ),
     select(

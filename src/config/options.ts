@@ -38,6 +38,10 @@ export const EXCHANGER_FILL_OPTION: ChoiceOption = {
   default: 'gradient',
   choices: EXCHANGER_FILLS,
 };
+export const LAYOUTS = ['auto', 'full', 'compact'] as const;
+export type Layout = (typeof LAYOUTS)[number];
+/** The layout of the card (add-compact-layout D1): `auto` picks by the card's width, `full` and `compact` force one. */
+export const LAYOUT_OPTION: ChoiceOption = { kind: 'choice', path: 'layout', default: 'auto', choices: LAYOUTS };
 /** The choice options, checked by lib/options.ts. */
 export const CHOICE_OPTIONS: readonly OptionSpec[] = [
   MODEL_OPTION,
@@ -45,6 +49,7 @@ export const CHOICE_OPTIONS: readonly OptionSpec[] = [
   DHW_OPTION,
   DETAIL_OPTION,
   EXCHANGER_FILL_OPTION,
+  LAYOUT_OPTION,
 ];
 
 export const DEFAULT_VARIANT = 4;
@@ -62,6 +67,7 @@ export const TOP_LEVEL_OPTIONS: readonly string[] = [
   'colors',
   'detail',
   'exchanger_fill',
+  'layout',
   'view_layout',
   'layout_options',
   'grid_options',
@@ -111,6 +117,9 @@ export const detailOf = (config: CardConfig): Detail => optionValue(config, DETA
 /** The exchanger fill, `gradient` unless set. Call after configErrors found no problem. */
 export const exchangerFillOf = (config: CardConfig): ExchangerFill =>
   optionValue(config, EXCHANGER_FILL_OPTION) as ExchangerFill;
+
+/** The layout choice, `auto` unless set. Call after configErrors found no problem. */
+export const layoutOf = (config: CardConfig): Layout => optionValue(config, LAYOUT_OPTION) as Layout;
 
 /** The features set in the config (only valid keys and states), without the preset. */
 export function featureOverrides(config: CardConfig): Partial<Record<FeatureKey, FeatureState>> {

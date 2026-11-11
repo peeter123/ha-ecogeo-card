@@ -3,6 +3,7 @@ import { CAPTURES } from '../../dev/captures';
 import { SCENARIO_NAMES } from '../../dev/scenarios';
 import { configOf, defaultState, parseState, toSearch } from '../../dev/url-state';
 import { configErrors } from '../../src/config/options';
+import { COMPACT_BELOW } from '../../src/lib/layout';
 
 describe('emulator URL state', () => {
   test('an empty query is the default state', () => {
@@ -19,6 +20,8 @@ describe('emulator URL state', () => {
       dhw: 'none' as const,
       detail: 'full' as const,
       fill: 'none' as const,
+      layout: 'compact' as const,
+      width: 360,
       theme: 'dark' as const,
       cycle: 5,
       features: { active_cooling: 'false', passive_cooling: 'unused', htr: 'true', backup_heater: 'default' } as const,
@@ -28,7 +31,9 @@ describe('emulator URL state', () => {
 
   test('invalid values keep their defaults', () => {
     expect(
-      parseState('?scenario=x&model=Z&variant=9&source=sun&theme=blue&htr=maybe&detail=minimal&fill=solid'),
+      parseState(
+        '?scenario=x&model=Z&variant=9&source=sun&theme=blue&htr=maybe&detail=minimal&fill=solid&layout=portrait&width=abc',
+      ),
     ).toEqual(defaultState());
   });
 
@@ -49,6 +54,33 @@ describe('emulator URL state', () => {
     expect(configOf(defaultState())['exchanger_fill']).toBe('gradient');
     expect(configErrors(configOf(none))).toEqual([]);
     expect(new URLSearchParams(toSearch(defaultState())).has('fill')).toBe(false);
+  });
+
+  test('the card width and layout travel in the URL as width= and layout= and reach the card config', () => {
+    const phone = { ...defaultState(), width: 360, layout: 'full' as const };
+    const params = new URLSearchParams(toSearch(phone));
+    expect(params.get('width')).toBe('360');
+    expect(params.get('layout')).toBe('full');
+    expect(parseState('?width=360&layout=full')).toEqual(phone);
+    expect(configOf(phone)['layout']).toBe('full');
+    expect(configOf(defaultState())['layout']).toBe('auto');
+    expect(configErrors(configOf(phone))).toEqual([]);
+    const defaults = new URLSearchParams(toSearch(defaultState()));
+    expect(defaults.has('width')).toBe(false);
+    expect(defaults.has('layout')).toBe(false);
+    expect(parseState('?width=50').width).toBe(defaultState().width);
+    expect(parseState('?width=340').width).toBe(340);
+  });
+
+  test('Phone width: the captures include every scenario at 360 px in auto and in full at the threshold', () => {
+    const queries = CAPTURES.map((capture) => capture.query);
+    for (const name of SCENARIO_NAMES) {
+      expect(queries).toContain(`scenario=${name}&width=360&theme=light`);
+      expect(queries).toContain(`scenario=${name}&layout=full&width=${String(COMPACT_BELOW)}&theme=light`);
+    }
+    const phone = parseState(`?scenario=heating&width=360`);
+    expect(phone.width).toBe(360);
+    expect(phone.layout).toBe('auto');
   });
 
   test('the config of a state is valid and carries the explicit features only', () => {

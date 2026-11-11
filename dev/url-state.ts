@@ -1,16 +1,18 @@
 // The emulator's state and its URL query string (add-schematic-card D9): scenario, model, variant, source, dhw, every feature,
-// detail, fill, theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
+// detail, fill, layout, width, theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
 // hrv-ventilation dev/preview.ts (state in the query string); the parameters are this card's own.
 import {
   DEFAULT_VARIANT,
   DETAIL_LEVELS,
   DHW_STORAGES,
   EXCHANGER_FILLS,
+  LAYOUTS,
   MODELS,
   SOURCES,
   type Detail,
   type DhwStorage,
   type ExchangerFill,
+  type Layout,
   type Model,
   type Source,
 } from '../src/config/options';
@@ -25,6 +27,12 @@ export type Theme = (typeof THEMES)[number];
 export const FEATURE_CHOICES = ['default', 'true', 'false', 'unused'] as const;
 export type FeatureChoice = (typeof FEATURE_CHOICES)[number];
 
+/** The card widths of the emulator's width control, in px; the URL accepts any whole width from MIN_WIDTH to MAX_WIDTH. */
+export const WIDTHS = [320, 360, 412, 600, 800, 1000] as const;
+export const DEFAULT_WIDTH = 1000;
+export const MIN_WIDTH = 200;
+export const MAX_WIDTH = 2000;
+
 export interface EmulatorState {
   scenario: ScenarioName;
   model: Model;
@@ -37,6 +45,10 @@ export interface EmulatorState {
   detail: Detail;
   /** The card's `exchanger_fill` option (URL `fill=`): `gradient` (the default) or `none`. */
   fill: ExchangerFill;
+  /** The card's `layout` option (URL `layout=`): `auto` (the default), `full` or `compact`. */
+  layout: Layout;
+  /** The width of the card's slot in px (URL `width=`). */
+  width: number;
   theme: Theme;
   /** Seconds per step of the screenshot cycle; undefined when the cycle is off. */
   cycle: number | undefined;
@@ -53,6 +65,8 @@ export const defaultState = (): EmulatorState => ({
   features: { active_cooling: 'default', passive_cooling: 'default', htr: 'default', backup_heater: 'default' },
   detail: 'simplified',
   fill: 'gradient',
+  layout: 'auto',
+  width: DEFAULT_WIDTH,
   theme: 'light',
   cycle: undefined,
 });
@@ -68,6 +82,7 @@ export function parseState(search: string): EmulatorState {
   const scenario = params.get('scenario');
   const variant = Number(params.get('variant'));
   const cycle = params.get('cycle');
+  const width = Number(params.get('width'));
   const cycleSeconds = cycle === null ? undefined : Number(cycle);
   return {
     scenario: isScenarioName(scenario) ? scenario : base.scenario,
@@ -80,6 +95,8 @@ export function parseState(search: string): EmulatorState {
     ) as Record<FeatureKey, FeatureChoice>,
     detail: pick(DETAIL_LEVELS, params.get('detail'), base.detail),
     fill: pick(EXCHANGER_FILLS, params.get('fill'), base.fill),
+    layout: pick(LAYOUTS, params.get('layout'), base.layout),
+    width: Number.isInteger(width) && width >= MIN_WIDTH && width <= MAX_WIDTH ? width : base.width,
     theme: pick(THEMES, params.get('theme'), base.theme),
     cycle:
       cycleSeconds === undefined
@@ -102,6 +119,8 @@ export function toSearch(state: EmulatorState): string {
   if (state.dhw !== 'default') params.set('dhw', state.dhw);
   if (state.detail !== 'simplified') params.set('detail', state.detail);
   if (state.fill !== 'gradient') params.set('fill', state.fill);
+  if (state.layout !== 'auto') params.set('layout', state.layout);
+  if (state.width !== DEFAULT_WIDTH) params.set('width', String(state.width));
   for (const key of FEATURE_KEYS) if (state.features[key] !== 'default') params.set(key, state.features[key]);
   if (state.cycle !== undefined) params.set('cycle', String(state.cycle));
   return `?${params.toString()}`;
@@ -122,6 +141,7 @@ export function configOf(state: EmulatorState): CardConfig {
     source: state.source,
     detail: state.detail,
     exchanger_fill: state.fill,
+    layout: state.layout,
     ...(state.dhw === 'default' ? {} : { dhw: state.dhw }),
     ...(Object.keys(features).length === 0 ? {} : { features }),
   };
