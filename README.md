@@ -26,10 +26,14 @@ for the explanation of what the card shows and where each part comes from.
 
 ## Status
 
-Work in progress. The card validates its configuration, resolves its entities (or shows built-in sample values),
-reads them, derives the operating mode and draws the schematic with coloured, flowing pipes and live values. The
-installation instructions come next, in the last task group of the planned change
-(`openspec/changes/add-schematic-card/`).
+Released and in use. The card validates its configuration, resolves its entities (or shows built-in sample values),
+reads them, derives the operating mode and draws the schematic with coloured, flowing pipes and live values.
+Planned follow-up changes: `add-card-editor`, `add-hacs-release`, `add-browser-tests` and `add-extra-circuits`.
+
+## Installation
+
+Copy `dist/ecogeo-card.js` to the Home Assistant `www` folder, register it as a `module` dashboard resource and add
+the card to a view. The steps are in the Installation section of [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
 ## Configuration
 

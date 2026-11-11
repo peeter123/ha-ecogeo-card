@@ -210,25 +210,25 @@ something visible also ends with emulator screenshots, which an agent inspects a
 
 ## 7. Release and live installation
 
-- [ ] 7.1 Run `npm run release`.
+- [x] 7.1 Run `npm run release`.
   Verify: `dist/ecogeo-card.js` is committed-ready and registers the card (check-release).
-- [ ] 7.2 In the private workspace (path in `private/installation.md`):
+- [x] 7.2 In the private workspace (path in `private/installation.md`):
   - add `$EcogeoRepo` and the mapping `dist/` to `www/custom/ecogeo-card/` to `scripts/deploy.ps1` (design D10)
   - update `docs/deploy.md`
   - run `deploy.ps1 -Status`, then deploy `dist/ecogeo-card.js` explicitly
   Verify: the deploy output shows UPLOAD with no CONFLICT.
-- [ ] 7.3 Add the dashboard resource `/local/custom/ecogeo-card/ecogeo-card.js?v=1` (module) and append the view
+- [x] 7.3 Add the dashboard resource `/local/custom/ecogeo-card/ecogeo-card.js?v=1` (module) and append the view
   `schematic` (panel, the card config from `private/installation.md`) to the heat pump dashboard with a
   python_transform. Existing views stay untouched. Record the resource id, `?v=` and the view path in
   `private/installation.md`.
   Verify: the dashboard config shows the new view, and the other views' config hash is unchanged apart from the
   appended view.
-- [ ] 7.4 Live verification: a subagent takes a dashboard screenshot of the new view, reads the mapped entities'
+- [x] 7.4 Live verification: a subagent takes a dashboard screenshot of the new view, reads the mapped entities'
   states, and checks that the drawn mode, valve 26 position, active circuits and the key labels (production
   out/in, brine out/in, compressor rpm, DHW temperature) match, and that no offline indication shows. Check the HA logs for errors mentioning
   `ecogeo-card`.
   Verify: verdict with no mismatches, and no log errors.
-- [ ] 7.5 Add a topic-index line for the card to the workspace AGENTS.md (source repo, read-only, the doc to read).
+- [x] 7.5 Add a topic-index line for the card to the workspace AGENTS.md (source repo, read-only, the doc to read).
   Update `docs/ecogeo-card.md` with the installation section (generic: how to add the resource and the view).
   Verify: both updated, and no installation ids in tracked files of this repo (grep for the live prefix outside
   `private/`).

@@ -359,4 +359,34 @@ The card formats every number itself (`src/calc/display.ts`), never through `has
 
 ## Installation
 
-To be written.
+The card is one JavaScript module, `ecogeo-card.js`, built from `src/` and committed as `dist/ecogeo-card.js`
+(`npm run release` checks, builds and copies it).
+
+1. Copy `dist/ecogeo-card.js` to `/config/www/custom/ecogeo-card/ecogeo-card.js` on the Home Assistant host. Files
+   under `/config/www/` are served as `/local/`.
+2. Register it as a dashboard resource, type `module`, in Settings, Dashboards, Resources (or with
+   `lovelace/resources/create`):
+   `/local/custom/ecogeo-card/ecogeo-card.js?v=1`.
+3. Add a view and the card. A `panel` view gives the schematic the full width:
+
+   ```yaml
+   title: Schematic
+   path: schematic
+   type: panel
+   cards:
+     - type: custom:ecogeo-card
+       model: B
+       variant: 4
+       source: air
+       dhw: external
+       prefix: ecoforest_ecogeo
+   ```
+
+   The prefix is the firmware default; set `prefix`, or override single entities by role, when the entities are
+   named differently (see the README for every option). The card also works in a `sections` view.
+4. After each new build, copy the file again and change the number after `?v=` on the resource (for example
+   `?v=2`), then hard-refresh the browser: `/local/` is cached for a long time, and only a changed URL makes the
+   browser fetch the new file.
+
+The card is read-only: it calls no service and writes no entity, so it needs no permissions beyond those of the
+dashboard it sits on.

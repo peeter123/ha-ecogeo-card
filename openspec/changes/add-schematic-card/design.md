@@ -351,7 +351,7 @@ Steps in the private workspace (path in `private/installation.md`), following th
 4. Add the resource `ha_config_set_dashboard_resource` with
    `url=/local/custom/ecogeo-card/ecogeo-card.js?v=1` and `resource_type=module`.
 5. Append the view `{ title: Schematic, path: schematic, type: panel, cards: [<card yaml from
-   private/installation.md>] }` to `<dashboard>` with `ha_config_set_dashboard(python_transform=...)`,
+   private/installation.md>] }` to the heat pump dashboard (id in `private/installation.md`) with `ha_config_set_dashboard(python_transform=...)`,
    leaving existing views untouched.
 6. Record the resource id and `?v=` in `private/installation.md`, and add a topic-index line to the workspace's
    AGENTS.md.
