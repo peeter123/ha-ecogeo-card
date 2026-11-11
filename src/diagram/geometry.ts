@@ -13,7 +13,7 @@
 //
 // Pipe points run in the direction of the flow in heating (`direction` 1) so that the renderer can animate them.
 import type { CircuitId, Circuits } from '../calc/circuits';
-import type { DhwStorage, Source } from '../config/options';
+import type { Detail, DhwStorage, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
 
@@ -84,7 +84,8 @@ export type ComponentKind =
  * pipe that passes through the part: drawn unless the feature is `false`, never muted by it. `bypass` (segments
  * only): the pipe that replaces the part, drawn only when the feature is `false`. `dhw`: only for that DHW storage
  * (`any` means external or internal). `source`: only for those outer-loop sources. HTR also needs DHW storage: with
- * `dhw: none` it counts as `false`.
+ * `dhw: none` it counts as `false`. `detail: 'full'` (design D1): a service or safety part, or a stub pipe that only
+ * leads to one, drawn only at the `full` level of detail.
  */
 export interface Visibility {
   feature?: FeatureKey;
@@ -92,12 +93,13 @@ export interface Visibility {
   bypass?: FeatureKey;
   dhw?: 'any' | 'external' | 'internal' | 'none';
   source?: readonly Source[];
+  detail?: 'full';
 }
 
 /** Where an item number is written, relative to the component: dx, dy and the text anchor. */
 export type Tag = readonly [dx: number, dy: number, anchor?: 'start' | 'middle' | 'end'];
 
-export interface Component extends Pick<Visibility, 'feature' | 'dhw'> {
+export interface Component extends Pick<Visibility, 'feature' | 'dhw' | 'detail'> {
   /** The manual's item number, 1-54. */
   item: number;
   kind: ComponentKind;
@@ -143,7 +145,7 @@ const c = (
   y: number,
   rotation: Rotation,
   tag: Tag,
-  extra: Partial<Pick<Component, 'feature' | 'dhw' | 'size'>> = {},
+  extra: Partial<Pick<Component, 'feature' | 'dhw' | 'detail' | 'size'>> = {},
 ): Component => ({ item, kind, x, y, rotation, tag, ...extra });
 
 /** Components. Items 1-6 are the ports on the top edge. */
@@ -171,22 +173,22 @@ export const COMPONENTS: readonly Component[] = [
   c(30, 'probe_t', 430, 234, 0, [0, -14, 'middle']),
   c(35, 'transducer_p', 564, 234, 0, [0, -14, 'middle']),
   c(36, 'transducer_p', 474, 234, 0, [0, -14, 'middle']),
-  c(39, 'pressure_switch', 586, 234, 0, [0, -14, 'middle']),
-  c(40, 'pressure_switch', 452, 234, 0, [0, -14, 'middle']),
-  c(41, 'service_outlet', 464, 406, 0, [0, 28, 'middle']),
-  c(41, 'service_outlet', 620, 270, 90, [0, 14, 'middle']),
+  c(39, 'pressure_switch', 586, 234, 0, [0, -14, 'middle'], { detail: 'full' }),
+  c(40, 'pressure_switch', 452, 234, 0, [0, -14, 'middle'], { detail: 'full' }),
+  c(41, 'service_outlet', 464, 406, 0, [0, 28, 'middle'], { detail: 'full' }),
+  c(41, 'service_outlet', 620, 270, 90, [0, 14, 'middle'], { detail: 'full' }),
   // hydraulic circuits
   c(10, 'exchanger', 520, 470, 0, [28, 4, 'start'], { size: 22, feature: 'passive_cooling' }),
   c(15, 'pump', 385, 416, 0, [0, -19, 'middle']),
   c(16, 'pump', 690, 300, 90, [19, 4, 'start']),
   c(17, 'pump', 340, 226, 90, [-14, 4, 'end'], { feature: 'htr', dhw: 'any' }),
-  c(18, 'vessel', 725, 520, 0, [-16, 4, 'end']),
-  c(19, 'vessel', 368, 556, 0, [-16, 4, 'end']),
-  c(20, 'safety_valve', 741, 440, 90, [0, -14, 'middle']),
-  c(21, 'safety_valve', 384, 520, 90, [0, -14, 'middle']),
+  c(18, 'vessel', 725, 520, 0, [-16, 4, 'end'], { detail: 'full' }),
+  c(19, 'vessel', 368, 556, 0, [-16, 4, 'end'], { detail: 'full' }),
+  c(20, 'safety_valve', 741, 440, 90, [0, -14, 'middle'], { detail: 'full' }),
+  c(21, 'safety_valve', 384, 520, 90, [0, -14, 'middle'], { detail: 'full' }),
   c(22, 'valve', 340, 256, 0, [-10, 4, 'end'], { feature: 'htr', dhw: 'any' }),
-  c(23, 'drain_valve', 630, 572, 0, [14, 4, 'start']),
-  c(24, 'drain_valve', 404, 572, 0, [14, 4, 'start']),
+  c(23, 'drain_valve', 630, 572, 0, [14, 4, 'start'], { detail: 'full' }),
+  c(24, 'drain_valve', 404, 572, 0, [14, 4, 'start'], { detail: 'full' }),
   c(25, 'drain_valve', 340, 318, 0, [-10, 4, 'end'], { feature: 'htr', dhw: 'any' }),
   c(26, 'valve3', 270, 172, 270, [-14, 22, 'end'], { dhw: 'any' }),
   c(27, 'valve3', 350, 416, 0, [0, -24, 'middle'], { feature: 'passive_cooling' }),
@@ -213,8 +215,8 @@ export const COMPONENTS: readonly Component[] = [
     },
   ),
   c(51, 'coil', 495, 185, 0, [0, -25, 'middle'], { dhw: 'internal' }),
-  c(52, 'service_outlet', 395, 162, 0, [-8, 4, 'end'], { dhw: 'internal' }),
-  c(53, 'drain_valve', 599, 196, 270, [0, -12, 'middle'], { dhw: 'internal' }),
+  c(52, 'service_outlet', 395, 162, 0, [-8, 4, 'end'], { dhw: 'internal', detail: 'full' }),
+  c(53, 'drain_valve', 599, 196, 270, [0, -12, 'middle'], { dhw: 'internal', detail: 'full' }),
   c(54, 'probe_t', 574, 171, 270, [0, -14, 'middle'], { dhw: 'internal' }),
 ];
 
@@ -295,8 +297,8 @@ export const SEGMENTS: readonly Segment[] = [
   }),
   // production taps as in the figure: vessel 19, transducer 38 and safety valve 21 on pump 15's suction, drain 24 after it
   seg('prod_tap_a', TRUNK, '368,416 368,520', RET, { stub: true }),
-  seg('prod_tap_b', TRUNK, '368,520 368,544', RET, { stub: true }),
-  seg('prod_drain', TRUNK, '404,416 404,563', RET, { stub: true }),
+  seg('prod_tap_b', TRUNK, '368,520 368,544', RET, { stub: true, detail: 'full' }),
+  seg('prod_drain', TRUNK, '404,416 404,563', RET, { stub: true, detail: 'full' }),
   // DHW lines of valve 26: supply to port 5, return from port 6 (or to and from the integrated tank of model C)
   seg('dhw_sup_a', ['production_dhw'], '282,172 361,172', OUT, { dhw: 'any', speedRole: PP }),
   seg('dhw_sup_b', ['dhw_coil'], '361,172 420,172', OUT, { dhw: 'any', speedRole: PP }),
@@ -403,9 +405,9 @@ export const SEGMENTS: readonly Segment[] = [
     speedRole: BP,
   }),
   // brine taps as in the figure: vessel 18, transducer 37 and safety valve 20 on port 4's line before pump 16; drain 23 on port 3's line
-  seg('brine_tap_a', ['brine'], '690,270 725,270 725,480', BIN, { stub: true }),
-  seg('brine_tap_b', ['brine'], '725,480 725,508', BIN, { stub: true }),
-  seg('brine_drain', ['brine'], '630,416 630,563', BOUT, { stub: true }),
+  seg('brine_tap_a', ['brine'], '690,270 725,270 725,440', BIN, { stub: true }),
+  seg('brine_tap_b', ['brine'], '725,440 725,508', BIN, { stub: true, detail: 'full' }),
+  seg('brine_drain', ['brine'], '630,416 630,563', BOUT, { stub: true, detail: 'full' }),
 ];
 
 /** The most crossings inside the cabinet (design D5): the manual's figure has 15 (14 hops and the return line behind resistor 44). */
@@ -441,11 +443,13 @@ export const CIRCUIT_LABELS: readonly CircuitLabel[] = [
   { key: 'dhw', x: 776, y: 112, dhw: 'external' },
 ];
 
-/** What decides which parts are drawn: the DHW storage and the feature states. */
+/** What decides which parts are drawn: the DHW storage, the source, the feature states and the level of detail. */
 export interface DrawContext {
   dhw: DhwStorage;
   source: Source;
   features: Features;
+  /** `simplified` leaves out the parts and stubs marked `detail: 'full'`. */
+  detail: Detail;
 }
 
 export type PartState = 'normal' | 'muted' | 'hidden';
@@ -459,6 +463,7 @@ const dhwFits = (rule: NonNullable<Visibility['dhw']>, dhw: DhwStorage): boolean
 
 /** Whether a part is drawn normally, drawn muted (feature `unused`) or not drawn (see Visibility). */
 export function partState(part: Visibility, context: DrawContext): PartState {
+  if (part.detail === 'full' && context.detail !== 'full') return 'hidden';
   if (part.source !== undefined && !part.source.includes(context.source)) return 'hidden';
   if (part.dhw !== undefined && !dhwFits(part.dhw, context.dhw)) return 'hidden';
   if (part.bypass !== undefined && effectiveFeature(context, part.bypass) !== false) return 'hidden';

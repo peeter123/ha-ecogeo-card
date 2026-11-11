@@ -10,7 +10,8 @@
 // the right of the collector (x 160-205).
 import { css, svg, type SVGTemplateResult } from 'lit';
 import type { Readings } from '../calc/readings';
-import { SOURCE_LABELS } from '../strings';
+import { AIR_UNIT_FAN_NAME, SOURCE_LABELS } from '../strings';
+import { FAN_ROLE, tapBindings, tapTarget, type Taps } from './component-info';
 import { AIR_UNIT, GROUND_CAPTION, GROUND_LINE_Y, drawnSegments, type DrawContext } from './geometry';
 
 export const sourceStyles = css`
@@ -39,6 +40,14 @@ export const sourceStyles = css`
   .source-caption {
     fill: var(--secondary-text-color);
     font-size: 11px;
+  }
+  .fan-part[role='button'] {
+    cursor: pointer;
+  }
+  .fan-part[role='button']:focus-visible {
+    outline: 2px solid var(--primary-color, currentColor);
+    outline-offset: 2px;
+    filter: drop-shadow(0 0 2px var(--primary-color, currentColor));
   }
   .fan-ring {
     fill: none;
@@ -76,17 +85,22 @@ const BLADES = [0, 90, 180, 270].map(
     svg`<path class="fan-blade" d="M0 0 C6 -8 6 -24 0 -30 C-8 -24 -8 -8 0 0 Z" transform="rotate(${angle})" />`,
 );
 
-function airUnit(speed: number | undefined, muted: boolean): SVGTemplateResult {
+function airUnit(speed: number | undefined, muted: boolean, taps: Taps | undefined): SVGTemplateResult {
   const { x, y, width, height, fanX, fanY, fanRadius } = AIR_UNIT;
   const duration = fanDuration(speed);
   const { fins: fin } = AIR_UNIT;
   const fins = Array.from({ length: fin.count }, (_, index) => fin.x + index * fin.step);
+  const tap = tapBindings(tapTarget(FAN_ROLE, taps), taps?.onTap);
   return svg`<g class="air-unit${muted ? ' muted' : ''}" data-source="air">
     <rect class="source-outline" x=${x} y=${y} width=${width} height=${height} rx="6" />
     ${fins.map((fin) => svg`<path class="source-fin" d="M${fin} ${AIR_UNIT.fins.y0} V${AIR_UNIT.fins.y1}" />`)}
-    <circle class="fan-ring" cx=${fanX} cy=${fanY} r=${fanRadius} />
-    <g class="fan" data-fan transform="translate(${fanX} ${fanY})">
-      <g class=${duration === undefined ? 'fan-rotor still' : 'fan-rotor'} style=${duration === undefined ? '' : `--fan-duration: ${String(duration)}s`}>${BLADES}<circle r="4" fill="var(--primary-text-color)" /></g>
+    <g class="fan-part" aria-label=${AIR_UNIT_FAN_NAME} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>
+      <title>${AIR_UNIT_FAN_NAME}</title>
+      <circle class="fan-ring" cx=${fanX} cy=${fanY} r=${fanRadius} />
+      <circle class="fan-hit" cx=${fanX} cy=${fanY} r=${fanRadius} fill="transparent" stroke="none" />
+      <g class="fan" data-fan transform="translate(${fanX} ${fanY})">
+        <g class=${duration === undefined ? 'fan-rotor still' : 'fan-rotor'} style=${duration === undefined ? '' : `--fan-duration: ${String(duration)}s`}>${BLADES}<circle r="4" fill="var(--primary-text-color)" /></g>
+      </g>
     </g>
     <text class="source-caption" x=${AIR_UNIT.captionX} y=${AIR_UNIT.captionY} text-anchor="middle">${SOURCE_LABELS.air}</text>
   </g>`;
@@ -127,12 +141,13 @@ export function renderSource(
   context: DrawContext,
   readings: Pick<Readings, 'source.fan_speed'>,
   brineActive: boolean,
+  taps?: Taps,
 ): SVGTemplateResult {
   const air = context.source === 'air' || context.source === 'hybrid';
   const ground = context.source === 'ground' || context.source === 'hybrid';
   const kind = context.source === 'hybrid' ? 'hybrid' : 'ground';
   return svg`<g class="source" data-source-kind=${context.source}>
-    ${air ? airUnit(readings['source.fan_speed'], !brineActive) : svg``}
+    ${air ? airUnit(readings['source.fan_speed'], !brineActive, taps) : svg``}
     ${ground ? groundLine(context, kind, GROUND_LINE_Y[kind], !brineActive) : svg``}
   </g>`;
 }

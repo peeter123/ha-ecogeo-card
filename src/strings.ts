@@ -124,3 +124,70 @@ export const ON_OFF_LABELS: Readonly<Record<string, string>> = {
   off: 'Off',
   emergency: 'Emergency',
 };
+
+/**
+ * The names of the drawn components and connections by manual item (manual-figure, section 3.1 component list), the
+ * tooltip and accessible name of each (see `componentLabel`). Items 42, 43 and 46 are not drawn and have no name.
+ */
+export const COMPONENT_NAMES: Readonly<Record<number, string>> = {
+  1: 'Production outlet',
+  2: 'Production return',
+  3: 'Brine outlet',
+  4: 'Brine inlet',
+  5: 'DHW inter-accumulator outlet',
+  6: 'DHW inter-accumulator inlet',
+  7: 'Evaporator',
+  8: 'Condenser',
+  9: 'HTR system exchanger',
+  10: 'Passive cooling / defrosting exchanger',
+  11: 'Compressor',
+  12: 'Electronic expansion valve',
+  13: 'Filter dryer',
+  14: 'Cycle inversion valve',
+  15: 'Production circulator pump',
+  16: 'Brine circulator pump',
+  17: 'HTR circulator pump',
+  18: 'Brine expansion vessel',
+  19: 'Production expansion vessel',
+  20: 'Brine safety valve',
+  21: 'Production safety valve',
+  22: 'HTR system retention valve',
+  23: 'Brine drain valve',
+  24: 'Production discharge valve',
+  25: 'HTR system discharge valve',
+  26: 'DHW valve',
+  27: 'Passive cooling production valve',
+  28: 'Passive cooling brine valve',
+  29: 'Suction temperature probe',
+  30: 'Discharge temperature probe',
+  31: 'Brine outlet temperature probe',
+  32: 'Brine inlet temperature probe',
+  33: 'Production outlet temperature probe',
+  34: 'Production return temperature probe',
+  35: 'Suction pressure transducer',
+  36: 'Discharge pressure transducer',
+  37: 'Brine pressure transducer',
+  38: 'Production pressure transducer',
+  39: 'Suction mini-pressure switch',
+  40: 'Discharge mini-pressure switch',
+  41: 'Service outlet',
+  44: 'Outlet resistor',
+  45: 'Safety thermostat',
+  47: 'Tap water inlet',
+  48: 'DHW outlet',
+  49: 'DHW recirculation',
+  50: 'DHW tank',
+  51: 'DHW coil',
+  52: 'Manual trap',
+  53: 'Tank drain valve',
+  54: 'DHW temperature probe',
+};
+
+/** The tooltip and accessible name of a component: its name with the manual item in parentheses; empty without a name. */
+export const componentLabel = (item: number): string => {
+  const name = COMPONENT_NAMES[item];
+  return name === undefined ? '' : `${name} (${String(item)})`;
+};
+
+/** The tooltip and accessible name of the air unit's fan (not a manual item); the external tank's is `DHW_LABELS.externalTank`. */
+export const AIR_UNIT_FAN_NAME = 'Air unit fan';

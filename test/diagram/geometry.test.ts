@@ -1,6 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import type { CircuitId, Circuits } from '../../src/calc/circuits';
-import { DHW_STORAGES, SOURCES, type DhwStorage, type Source } from '../../src/config/options';
+import {
+  DETAIL_LEVELS,
+  DHW_STORAGES,
+  SOURCES,
+  type Detail,
+  type DhwStorage,
+  type Source,
+} from '../../src/config/options';
 import type { RolePath } from '../../src/config/roles';
 import { FEATURE_KEYS, type FeatureKey, type FeatureState, type Features } from '../../src/config/variants';
 import {
@@ -32,14 +39,16 @@ import {
 
 const STATES: readonly FeatureState[] = [true, false, 'unused'];
 
-/** Every combination of the four features, the three DHW storages and the three sources. */
+/** Every combination of the four features, the three DHW storages, the three sources and the two levels of detail. */
 function contexts(): DrawContext[] {
   const result: DrawContext[] = [];
   const build = (index: number, features: Partial<Record<FeatureKey, FeatureState>>): void => {
     const key = FEATURE_KEYS[index];
     if (key === undefined) {
       for (const dhw of DHW_STORAGES) {
-        for (const source of SOURCES) result.push({ dhw, source, features: features as Features });
+        for (const source of SOURCES) {
+          for (const detail of DETAIL_LEVELS) result.push({ dhw, source, detail, features: features as Features });
+        }
       }
       return;
     }
@@ -50,12 +59,14 @@ function contexts(): DrawContext[] {
 }
 
 const ALL = contexts();
-const full = (dhw: DhwStorage = 'external', source: Source = 'ground'): DrawContext => ({
+const full = (dhw: DhwStorage = 'external', source: Source = 'ground', detail: Detail = 'full'): DrawContext => ({
   dhw,
   source,
+  detail,
   features: { active_cooling: true, passive_cooling: true, htr: true, backup_heater: true },
 });
-const label = (context: DrawContext): string => `${context.dhw} ${context.source} ${JSON.stringify(context.features)}`;
+const label = (context: DrawContext): string =>
+  `${context.detail} ${context.dhw} ${context.source} ${JSON.stringify(context.features)}`;
 const items = (context: DrawContext): number[] => drawnComponents(context).map((entry) => entry.part.item);
 const ids = (context: DrawContext): string[] => drawnSegments(context).map((entry) => entry.part.id);
 const circuits = (valves2728: Circuits['valves2728'], active: readonly CircuitId[]): Circuits => ({
@@ -248,7 +259,10 @@ describe('integrity in every configuration', () => {
     expect(has('tap_'), 'taps').toBe(context.dhw === 'internal');
     const drawnItems = components.map((component) => component.item);
     for (const item of [47, 48, 49, 50, 51, 52, 53, 54]) {
-      expect(drawnItems.includes(item), `item ${String(item)}`).toBe(context.dhw === 'internal');
+      const serviceOnly = item === 52 || item === 53;
+      expect(drawnItems.includes(item), `item ${String(item)}`).toBe(
+        context.dhw === 'internal' && (!serviceOnly || context.detail === 'full'),
+      );
     }
 
     // the source and external DHW pipes stay above y 100 outside the cabinet (the circuit labels' glyphs reach about

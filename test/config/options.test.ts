@@ -10,6 +10,19 @@ describe('card type and options', () => {
     expect(configErrors(config)).toEqual([]);
     const resolved = resolveConfig(config);
     expect([resolved.model, resolved.variant, resolved.source, resolved.dhw]).toEqual(['B', 4, 'ground', 'external']);
+    expect(resolved.detail).toBe('simplified');
+  });
+
+  test('invalid detail names the option and its allowed values', () => {
+    const [message, ...rest] = errors({ detail: 'minimal' });
+    expect(rest).toEqual([]);
+    expect(message).toContain('detail');
+    expect(message).toContain('simplified, full');
+  });
+
+  test('detail full is valid and resolves', () => {
+    expect(errors({ detail: 'full' })).toEqual([]);
+    expect(resolveConfig({ detail: 'full' }).detail).toBe('full');
   });
 
   test('invalid option value names the option and its allowed values', () => {

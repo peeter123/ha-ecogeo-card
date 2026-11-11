@@ -57,16 +57,16 @@ describe('cabinet drawing', () => {
     card.remove();
   });
 
-  test('every component carries its item number as text', async () => {
-    const card = await mount({ variant: 4 });
+  test('with detail full every component carries its item number as text', async () => {
+    const card = await mount({ variant: 4, detail: 'full' });
     for (const group of root(card).querySelectorAll('[data-item]')) {
       expect(group.querySelector('text.item')?.textContent.trim()).toBe(group.getAttribute('data-item'));
     }
     card.remove();
   });
 
-  test('variant 4 with every feature true draws the refrigerant and hydraulic items', async () => {
-    const card = await mount({ variant: 4 });
+  test('variant 4 with every feature true and detail full draws the refrigerant and hydraulic items', async () => {
+    const card = await mount({ variant: 4, detail: 'full' });
     const drawn = new Set(items(card));
     for (const item of [7, 8, 11, 12, 13, 14, 29, 30, 35, 36, 39, 40, 41])
       expect(drawn.has(item), String(item)).toBe(true);
@@ -79,7 +79,7 @@ describe('cabinet drawing', () => {
   });
 
   test('every declared crossing breaks the pipe under it', async () => {
-    const card = await mount({ variant: 4, dhw: 'external' });
+    const card = await mount({ variant: 4, dhw: 'external', detail: 'full' });
     const path = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
     const unders = [...new Set(CROSSINGS.map((crossing) => crossing.under))];
     for (const id of unders) {

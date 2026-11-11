@@ -1,14 +1,31 @@
 // The emulator's state and its URL query string (design D9): scenario, model, variant, source, dhw, every feature,
-// theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
+// detail, fill, theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
 // hrv-ventilation dev/preview.ts (state in the query string); the parameters are this card's own.
-import { DHW_STORAGES, MODELS, SOURCES, type DhwStorage, type Model, type Source } from '../src/config/options';
-import { DEFAULT_VARIANT } from '../src/config/options';
+import {
+  DEFAULT_VARIANT,
+  DETAIL_LEVELS,
+  DHW_STORAGES,
+  MODELS,
+  SOURCES,
+  type Detail,
+  type DhwStorage,
+  type Model,
+  type Source,
+} from '../src/config/options';
 import { FEATURE_KEYS, VARIANTS, type FeatureKey, type Variant } from '../src/config/variants';
 import type { CardConfig } from '../src/lib/config';
 import { DEMO_PREFIX, SCENARIO_NAMES, isScenarioName, type ScenarioName } from './scenarios';
 
 export const THEMES = ['light', 'dark'] as const;
 export type Theme = (typeof THEMES)[number];
+
+/**
+ * The exchanger fill of the emulator's control. The card option `exchanger_fill` arrives with the exchanger fills
+ * (change refine-schematic-drawing, group 2); until then the control only travels in the URL and does not reach the
+ * card's config.
+ */
+export const EXCHANGER_FILLS = ['gradient', 'none'] as const;
+export type ExchangerFill = (typeof EXCHANGER_FILLS)[number];
 
 /** A feature control: the variant's preset, or an explicit state. */
 export const FEATURE_CHOICES = ['default', 'true', 'false', 'unused'] as const;
@@ -22,6 +39,10 @@ export interface EmulatorState {
   /** `default` leaves `dhw` out of the config: external on model B, internal on model C. */
   dhw: 'default' | DhwStorage;
   features: Record<FeatureKey, FeatureChoice>;
+  /** The card's `detail` option: `simplified` (the default) or `full`. */
+  detail: Detail;
+  /** The exchanger fill (URL `fill=`); not yet part of the card's config. */
+  fill: ExchangerFill;
   theme: Theme;
   /** Seconds per step of the screenshot cycle; undefined when the cycle is off. */
   cycle: number | undefined;
@@ -36,6 +57,8 @@ export const defaultState = (): EmulatorState => ({
   source: 'ground',
   dhw: 'default',
   features: { active_cooling: 'default', passive_cooling: 'default', htr: 'default', backup_heater: 'default' },
+  detail: 'simplified',
+  fill: 'gradient',
   theme: 'light',
   cycle: undefined,
 });
@@ -61,6 +84,8 @@ export function parseState(search: string): EmulatorState {
     features: Object.fromEntries(
       FEATURE_KEYS.map((key) => [key, pick(FEATURE_CHOICES, params.get(key), 'default')]),
     ) as Record<FeatureKey, FeatureChoice>,
+    detail: pick(DETAIL_LEVELS, params.get('detail'), base.detail),
+    fill: pick(EXCHANGER_FILLS, params.get('fill'), base.fill),
     theme: pick(THEMES, params.get('theme'), base.theme),
     cycle:
       cycleSeconds === undefined
@@ -81,12 +106,14 @@ export function toSearch(state: EmulatorState): string {
     theme: state.theme,
   });
   if (state.dhw !== 'default') params.set('dhw', state.dhw);
+  if (state.detail !== 'simplified') params.set('detail', state.detail);
+  if (state.fill !== 'gradient') params.set('fill', state.fill);
   for (const key of FEATURE_KEYS) if (state.features[key] !== 'default') params.set(key, state.features[key]);
   if (state.cycle !== undefined) params.set('cycle', String(state.cycle));
   return `?${params.toString()}`;
 }
 
-/** The card config of a state: the demo prefix, the options and the explicit features. */
+/** The card config of a state: the demo prefix, the options (not the exchanger fill yet) and the explicit features. */
 export function configOf(state: EmulatorState): CardConfig {
   const features: Record<string, boolean | 'unused'> = {};
   for (const key of FEATURE_KEYS) {
@@ -99,6 +126,7 @@ export function configOf(state: EmulatorState): CardConfig {
     model: state.model,
     variant: state.variant,
     source: state.source,
+    detail: state.detail,
     ...(state.dhw === 'default' ? {} : { dhw: state.dhw }),
     ...(Object.keys(features).length === 0 ? {} : { features }),
   };

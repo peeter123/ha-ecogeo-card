@@ -3,11 +3,13 @@
 import { stopsOf, type ColorStop } from '../diagram/colors';
 import { entityAt, type CardConfig } from '../lib/config';
 import {
+  detailOf,
   featureOverrides,
   installationOf,
   prefixOf,
   setsAnyEntity,
   variantOf,
+  type Detail,
   type DhwStorage,
   type Model,
   type Source,
@@ -21,6 +23,8 @@ export interface ResolvedConfig {
   variant: Variant;
   source: Source;
   dhw: DhwStorage;
+  /** The level of detail: `simplified` leaves out the service and safety parts and the item numbers. */
+  detail: Detail;
   prefix: string | undefined;
   features: Features;
   /** The entity id of each role, or undefined when the role has no entity (no override and no prefix). */
@@ -53,6 +57,7 @@ export function resolveConfig(config: CardConfig): ResolvedConfig {
   const sample = isSampleMode(config);
   return {
     ...installationOf(config),
+    detail: detailOf(config),
     variant,
     prefix,
     colors: stopsOf(config),

@@ -1,6 +1,6 @@
 // The fixed capture list (design D9): the emulator URLs that `npm run capture` walks and that the cycle mode steps
 // through. Each entry is a name (the PNG file name) and a query string; parameters left out take the defaults of
-// url-state.ts (scenario heating, model B, variant 4, source ground, dhw and features by preset, light theme).
+// url-state.ts (scenario heating, model B, variant 4, source ground, dhw and features by preset, detail simplified, light theme).
 import { SCENARIO_NAMES } from './scenarios';
 import { FEATURE_KEYS } from '../src/config/variants';
 
@@ -39,6 +39,9 @@ export const CAPTURES: readonly CaptureStep[] = [
   ...([1, 2, 3] as const).map((variant) =>
     step(`variant-${String(variant)}-heating`, `scenario=heating&variant=${String(variant)}`),
   ),
+  // full detail: every part of the manual figure with its item number
+  step('detail-full-heating', 'scenario=heating&detail=full'),
+  step('detail-full-modelC', 'scenario=dhw&model=C&dhw=internal&detail=full'),
   // dark theme
   step('theme-dark-heating', 'scenario=heating&theme=dark'),
   step('theme-dark-dhw', 'scenario=dhw&theme=dark'),

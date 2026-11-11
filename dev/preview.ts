@@ -5,7 +5,7 @@
 import './ha-stubs';
 import '../src/index';
 import type { EcogeoCard } from '../src/card/ecogeo-card';
-import { DHW_STORAGES, MODELS, SOURCES } from '../src/config/options';
+import { DETAIL_LEVELS, DHW_STORAGES, MODELS, SOURCES } from '../src/config/options';
 import type { RolePath } from '../src/config/roles';
 import { FEATURE_KEYS, VARIANTS } from '../src/config/variants';
 import { NBSP, NO_VALUE, UNITS } from '../src/strings';
@@ -14,6 +14,7 @@ import { MockHass } from './mock-hass';
 import { SCENARIO_NAMES, SCENARIOS, scenarioStates } from './scenarios';
 import {
   DEFAULT_CYCLE_SECONDS,
+  EXCHANGER_FILLS,
   FEATURE_CHOICES,
   THEMES,
   configOf,
@@ -272,6 +273,24 @@ controlsRoot.append(
       () => state.dhw,
       (value) => {
         state = { ...state, dhw: value };
+      },
+    ),
+    select(
+      'detail',
+      'Detail',
+      DETAIL_LEVELS,
+      () => state.detail,
+      (value) => {
+        state = { ...state, detail: value };
+      },
+    ),
+    select(
+      'fill',
+      'Exchanger fill',
+      EXCHANGER_FILLS,
+      () => state.fill,
+      (value) => {
+        state = { ...state, fill: value };
       },
     ),
     select(

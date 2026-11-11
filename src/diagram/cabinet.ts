@@ -4,7 +4,8 @@
 // pipes outside the cabinet too, coloured by temperature and animated by flow
 // (pipes.ts). Valve positions come from circuits.ts; a feature that is `false` removes its parts (geometry.ts), `unused` draws them muted.
 import { css, nothing, svg, type SVGTemplateResult } from 'lit';
-import { CIRCUIT_LABELS } from '../strings';
+import { CIRCUIT_LABELS, componentLabel } from '../strings';
+import { COMPONENT_ROLES, tapBindings, tapTarget, type Taps } from './component-info';
 import {
   CABINET,
   CIRCUIT_LABELS as LABEL_POSITIONS,
@@ -65,6 +66,15 @@ export const cabinetStyles = css`
   .symbol-group.muted {
     color: var(--disabled-text-color);
   }
+  /* A component with an entity of its own opens its more-info dialog (component-info.ts). */
+  .symbol-group[role='button'] {
+    cursor: pointer;
+  }
+  .symbol-group[role='button']:focus-visible {
+    outline: 2px solid var(--primary-color, currentColor);
+    outline-offset: 2px;
+    filter: drop-shadow(0 0 2px var(--primary-color, currentColor));
+  }
   .item {
     fill: var(--secondary-text-color);
     font-size: 9px;
@@ -82,19 +92,31 @@ function openPorts(item: number, circuits: PipeView['circuits']): readonly Valve
   return circuits.valves2728 === 'exchanger' ? ['d', 'r'] : ['l', 'r'];
 }
 
-function component(entry: { part: Component; state: 'normal' | 'muted' }, view: PipeView): SVGTemplateResult {
+/**
+ * One component: the symbol, its name as `<title>` and `aria-label` (component-info spec), a tap when its role has an
+ * entity, and its item number only at `detail: full`.
+ */
+function component(
+  entry: { part: Component; state: 'normal' | 'muted' },
+  view: PipeView,
+  detail: DrawContext['detail'],
+  taps: Taps | undefined,
+): SVGTemplateResult {
   const { part } = entry;
   const { circuits } = view;
   const state = shownState(part, entry.state, view.mode);
   const [dx, dy, anchor] = part.tag;
-  return svg`<g class="symbol-group ${state}" data-item=${part.item} data-kind=${part.kind} style=${part.kind === 'coil' ? `color: ${coilColor(view)}` : nothing}>
+  const label = componentLabel(part.item);
+  const tap = tapBindings(tapTarget(COMPONENT_ROLES[part.item], taps), taps?.onTap);
+  return svg`<g class="symbol-group ${state}" data-item=${part.item} data-kind=${part.kind} aria-label=${label} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown} style=${part.kind === 'coil' ? `color: ${coilColor(view)}` : nothing}>
+    <title>${label}</title>
     <g transform="translate(${part.x} ${part.y})">${symbol(part.kind, {
       rotation: part.rotation,
       size: part.size,
       open: part.kind === 'valve3' ? openPorts(part.item, circuits) : undefined,
       reversed: part.kind === 'inversion_valve' ? circuits.valve14 === 'reversed' : undefined,
     })}</g>
-    <text class="item" x=${part.x + dx} y=${part.y + dy} text-anchor=${anchor ?? 'start'}>${part.item}</text>
+    ${detail === 'full' ? svg`<text class="item" x=${part.x + dx} y=${part.y + dy} text-anchor=${anchor ?? 'start'}>${part.item}</text>` : nothing}
   </g>`;
 }
 
@@ -115,7 +137,7 @@ function pipe(
 }
 
 /** The cabinet as SVG content for the card's viewBox: no images, only paths, symbols and text. */
-export function renderCabinet(context: DrawContext, view: PipeView): SVGTemplateResult {
+export function renderCabinet(context: DrawContext, view: PipeView, taps?: Taps): SVGTemplateResult {
   const segments = drawnSegments(context);
   const ids = new Set(segments.map((entry) => entry.part.id));
   return svg`<g class="cabinet">
@@ -125,6 +147,6 @@ export function renderCabinet(context: DrawContext, view: PipeView): SVGTemplate
         svg`<text class="circuit-label" x=${label.x} y=${label.y} text-anchor="middle">${CIRCUIT_LABELS[label.key]}</text>`,
     )}
     ${segments.map((entry) => pipe(entry.part, entry.state, view, gapsIn(entry.part.id, ids)))}
-    ${drawnComponents(context).map((entry) => component(entry, view))}
+    ${drawnComponents(context).map((entry) => component(entry, view, context.detail, taps))}
   </g>`;
 }

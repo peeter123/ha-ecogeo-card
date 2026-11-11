@@ -7,27 +7,27 @@ unchanged.
 
 ## 1. Detail level and component info
 
-- [ ] 1.1 Add the `detail` option (`simplified` default, `full`) to `src/config/options.ts` and `resolve.ts`, with
+- [x] 1.1 Add the `detail` option (`simplified` default, `full`) to `src/config/options.ts` and `resolve.ts`, with
   its validation error. Mark the parts and stub pipes of design D1 with `detail: 'full'` in `geometry.ts` and hide
   them in `isDrawn` unless `full`. Render item numbers (components and ports) only with `full`. Run the geometry
   integrity tests at both detail levels.
   Verify: `npm test`, including the card-config "Invalid detail" and schematic-drawing "Simplified refrigerant",
   "Simplified hydraulics", "Default is simplified" and "Full detail" scenarios, and dhw-storage "Simplified model C".
-- [ ] 1.2 Add `COMPONENT_NAMES` to `src/strings.ts` (manual section 3.1 names, plus the six connections) and give
+- [x] 1.2 Add `COMPONENT_NAMES` to `src/strings.ts` (manual section 3.1 names, plus the nine connections 1-6 and 47-49) and give
   every component group a `<title>` and `aria-label` of `name (item)` (design D2). Add the component-to-role table
   and make components with a role tappable (`role="button"`, `tabindex="0"`, click/Enter/Space fire
   `hass-more-info`; not in sample mode).
   Verify: `npm test` covers the component-info scenarios: pump tooltip, every component named (model B and C,
   `detail: full`, every feature `true`), tap a pump, no entity (filter dryer 13), sample mode.
-- [ ] 1.3 Add the detail and exchanger-fill selects to the emulator (the fill select may only be wired in group
+- [x] 1.3 Add the detail and exchanger-fill selects to the emulator (the fill select may only be wired in group
   2), mirrored in the URL (`detail=`, `fill=`), and add `detail=full` captures (heating, model C) to
   `dev/captures.ts`.
   Verify: `npm test` (emulator URL-state tests) and dev-emulator "Switch detail".
-- [ ] 1.4 Emulator verification: `npm run capture`. An agent inspects the default (simplified) heating, DHW,
+- [x] 1.4 Emulator verification: `npm run capture`. An agent inspects the default (simplified) heating, DHW,
   defrost, model C and dark captures and the two full-detail captures: no item numbers in simplified, the D1 parts
   gone without dangling pipe ends, full detail identical in parts to before.
   Verify: verdict with no blocking findings.
-- [ ] 1.5 Update `docs/ecogeo-card.md` (detail levels, the left-out parts table of D1, component tooltips and taps)
+- [x] 1.5 Update `docs/ecogeo-card.md` (detail levels, the left-out parts table of D1, component tooltips and taps)
   and the README (`detail` option with both values).
   Verify: the sections exist and `test/readme.ts` passes.
 
@@ -51,7 +51,8 @@ unchanged.
   lines, hops still visible.
   Verify: verdict with no blocking findings.
 - [ ] 2.5 Update `docs/ecogeo-card.md` (colour scale table with the new stops, exchanger fills, line weights) and
-  the README (`exchanger_fill` option, the default `colors`).
+  the README (`exchanger_fill` option, the default `colors`). Remove the README wording from group 1 that says the
+  emulator's fill select takes effect only once the card has the option.
   Verify: the sections exist and `test/readme.ts` passes.
 
 ## 3. DHW tank and air unit drawing

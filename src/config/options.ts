@@ -15,13 +15,22 @@ export const SOURCES = ['air', 'ground', 'hybrid'] as const;
 export type Source = (typeof SOURCES)[number];
 export const DHW_STORAGES = ['external', 'internal', 'none'] as const;
 export type DhwStorage = (typeof DHW_STORAGES)[number];
+export const DETAIL_LEVELS = ['simplified', 'full'] as const;
+export type Detail = (typeof DETAIL_LEVELS)[number];
 
 export const MODEL_OPTION: ChoiceOption = { kind: 'choice', path: 'model', default: 'B', choices: MODELS };
 export const SOURCE_OPTION: ChoiceOption = { kind: 'choice', path: 'source', default: 'ground', choices: SOURCES };
 // The default of dhw depends on the model (defaultDhw); this default is not used.
 export const DHW_OPTION: ChoiceOption = { kind: 'choice', path: 'dhw', default: 'external', choices: DHW_STORAGES };
+/** The level of detail of the drawing (design D1): without the service and safety parts and the item numbers, or all. */
+export const DETAIL_OPTION: ChoiceOption = {
+  kind: 'choice',
+  path: 'detail',
+  default: 'simplified',
+  choices: DETAIL_LEVELS,
+};
 /** The choice options, checked by lib/options.ts. */
-export const CHOICE_OPTIONS: readonly OptionSpec[] = [MODEL_OPTION, SOURCE_OPTION, DHW_OPTION];
+export const CHOICE_OPTIONS: readonly OptionSpec[] = [MODEL_OPTION, SOURCE_OPTION, DHW_OPTION, DETAIL_OPTION];
 
 export const DEFAULT_VARIANT = 4;
 
@@ -36,6 +45,7 @@ export const TOP_LEVEL_OPTIONS: readonly string[] = [
   'features',
   'entities',
   'colors',
+  'detail',
   'view_layout',
   'layout_options',
   'grid_options',
@@ -78,6 +88,9 @@ export function installationOf(config: CardConfig): { model: Model; source: Sour
     dhw: dhwSet ? (optionValue(config, DHW_OPTION) as DhwStorage) : defaultDhw(model),
   };
 }
+
+/** The level of detail, `simplified` unless set. Call after configErrors found no problem. */
+export const detailOf = (config: CardConfig): Detail => optionValue(config, DETAIL_OPTION) as Detail;
 
 /** The features set in the config (only valid keys and states), without the preset. */
 export function featureOverrides(config: CardConfig): Partial<Record<FeatureKey, FeatureState>> {

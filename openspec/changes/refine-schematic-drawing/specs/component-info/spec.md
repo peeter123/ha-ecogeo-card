@@ -10,7 +10,8 @@ hover, and the more-info dialog of its own entity on a tap.
 ### Requirement: Component name on hover
 Every drawn component SHALL carry a tooltip with its name from the manual's component list and its item number in
 parentheses, for example "Production circulator pump (15)". The tooltip SHALL also be the component's accessible
-name. Connections SHALL carry their name in the same way, for example "Production outlet (1)".
+name. Connections SHALL carry their name in the same way, for example "Production outlet (1)". A drawn part
+without an item number in the manual (the external tank, the air unit's fan) SHALL carry its name alone.
 
 #### Scenario: Pump tooltip
 - **WHEN** the card renders and the user hovers pump 15

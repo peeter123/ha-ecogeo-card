@@ -39,7 +39,7 @@ function scenario(
 ) {
   const features = mergeFeatures(4, options.features ?? {});
   const dhw = options.dhw ?? 'external';
-  const context = { dhw, source: options.source ?? 'air', features };
+  const context = { dhw, source: options.source ?? 'air', features, detail: 'full' } as const;
   const rd = base ?? readings(values);
   const view: PipeView = {
     mode: options.mode,

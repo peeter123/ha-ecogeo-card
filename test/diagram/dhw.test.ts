@@ -38,7 +38,7 @@ describe('DHW storage', () => {
   });
 
   test('internal (model C): tank 50 with coil 51, probe 54, trap 52, drain valve 53 and stubs 47 to 49', async () => {
-    const card = await mount({ model: 'C' });
+    const card = await mount({ model: 'C', detail: 'full' });
     expect(items(card)).toEqual(expect.arrayContaining([47, 48, 49, 50, 51, 52, 53, 54, 26]));
     expect(items(card)).not.toContain(5);
     expect(items(card)).not.toContain(6);

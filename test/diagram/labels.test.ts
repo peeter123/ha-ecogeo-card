@@ -512,7 +512,7 @@ describe('label positions', () => {
     const features = mergeFeatures(4, {});
     const entities = Object.fromEntries(ROLE_PATHS.map((role) => [role, undefined])) as Record<RolePath, undefined>;
     const readings = readRoles({}, entities);
-    const context = { dhw: 'external', source: 'air', features } as const;
+    const context = { dhw: 'external', source: 'air', features, detail: 'simplified' } as const;
     expect(labelsFor(context, readings, entities, { locale: {} })).toEqual(
       labelsFor(context, readings, entities, { locale: {} }),
     );

@@ -11,6 +11,7 @@ import { configErrors } from '../config/options';
 import { resolveConfig, type ResolvedConfig } from '../config/resolve';
 import { SAMPLE_STATES } from '../config/sample';
 import { cabinetStyles, renderCabinet } from '../diagram/cabinet';
+import type { Taps } from '../diagram/component-info';
 import { dhwStyles, renderDhw } from '../diagram/dhw';
 import { viewBox } from '../diagram/geometry';
 import { footerItems, labelsFor, labelStyles, renderFooterItems, renderLabels } from '../diagram/labels';
@@ -122,16 +123,17 @@ export class EcogeoCard extends LitElement {
       : (entityId: string): void => {
           fireMoreInfo(this, entityId);
         };
+    const taps: Taps = { entities: resolved.entities, onTap };
     return html`<ha-card>
       <div class="diagram">
         <svg
           viewBox="0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}"
           preserveAspectRatio="xMidYMid meet"
-          role="img"
+          role="group"
           aria-label=${SCHEMATIC_LABEL}
           style="--dhw-tank-color: ${tankColor(view)}"
         >
-          ${svg`${renderSource(resolved, readings, circuits.active.has('brine'))}${renderDhw(resolved)}${renderCabinet(resolved, view)}`}
+          ${svg`${renderSource(resolved, readings, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps)}`}
         </svg>
         ${renderLabels(labelsFor(resolved, readings, resolved.entities, display), onTap)}
       </div>

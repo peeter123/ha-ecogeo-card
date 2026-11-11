@@ -46,7 +46,9 @@ keeps the manual citation visible on demand.
 
 ### D2. Component names and taps
 - `COMPONENT_NAMES` in `src/strings.ts`, keyed by item number, holds the manual's names (section 3.1 legend,
-  manual-figure), plus the six connection names. The tooltip text is `${name} (${item})`.
+  manual-figure), plus the nine connection names (1-6, and 47-49 on model C). The tooltip text is
+  `${name} (${item})`. The two drawn parts without an item number in the manual, the external tank and the air
+  unit's fan, carry their name alone.
 - Each component group gets an SVG `<title>` (native tooltip in browsers) and the same text as `aria-label`.
 - A component's own entity comes from one table in `src/diagram/` (component item -> role path), filled from the
   role table's `item` field where one role belongs to the item, and chosen by hand where several do:
@@ -57,7 +59,8 @@ keeps the manual citation visible on demand.
   `compressor.suction_pressure`/`discharge_pressure`, 37 -> `brine.pressure`, 38 -> `production.pressure`, 26 ->
   `dhw.demand`, the air unit's fan -> `source.fan_speed`, the tanks (external, and 50/54 on model C) ->
   `dhw.temperature`. Items without a role (9, 10, 13, 14, 17, 22, 25, 27, 28, 44, 45 and the parts of D1) get no
-  entry.
+  entry. Connections (1-6, 47-49) get no entry either: the DG1 setpoint label near port 1 shows a setpoint of the
+  circuit, not a value of the connection, and stays tappable on its own.
 - A component with an entry gets `role="button"`, `tabindex="0"`, pointer cursor, and fires `hass-more-info`
   on click, Enter and Space, through the same helper as the value labels. Not in sample mode.
 Alternative considered: a custom HTML tooltip overlay. Rejected for now: `<title>` is free, accessible and works

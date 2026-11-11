@@ -98,10 +98,39 @@ The cabinet is drawn as inline SVG, in a fixed viewBox of 1000 x 620 units that 
 no image anywhere. Everything below cites the manual (manual-figure, section 3.1, figures B1 to B4 and C, item
 numbers 1 to 54); coordinates are the card's own, the topology is the figure's.
 
+### Detail levels
+
+The option `detail` sets how much of the manual figure is drawn. `simplified` (the default) shows no item numbers
+and leaves out the service and safety parts that have no live value, together with the stub pipes that lead only to
+them. `full` draws every part of the figure and writes its item number beside it. The parts left out in simplified:
+
+| Items | Part | Why left out in simplified |
+|---|---|---|
+| 18, 19 | Brine and production expansion vessels | no live value, service hardware |
+| 20, 21 | Brine and production safety valves | over-pressure protection, no live value |
+| 23, 24 | Brine drain and production discharge valves | service only |
+| 39, 40 | Suction and discharge mini-pressure switches | safety trip, no entity |
+| 41 | Service outlets (both) | service only |
+| 52, 53 | Model C manual trap and tank drain valve | service only |
+
+The transducers 35 to 38 (they carry the pressure values), valves 22 and 25 (they define the HTR loop) and thermostat
+45 (it belongs to resistor 44) stay in both levels.
+
+### Component names and taps
+
+Every drawn component carries its name from the manual's component list and its item number as a tooltip, for example
+"Production circulator pump (15)", and the same text as its accessible name; the connections are named the same way
+("Production outlet (1)"). A component with an entity of its own is a button: a click, Enter or Space opens that
+entity's more-info dialog, as the value labels do. These are the compressor (rpm), expansion valve 12, condenser 8 and
+evaporator 7 (their temperatures), pumps 15 and 16, valve 26 (the DHW demand), probes 29 to 34, transducers 35 to 38,
+the air unit's fan and the tanks (the DHW temperature). The other components have no entity of their own and are
+neither tappable nor focusable. While the card shows its sample values nothing is tappable.
+
 ### Items drawn
 
-Each drawn component carries its item number as small secondary text. Parts in italics depend on a feature or on the
-DHW storage (see below).
+With `detail: full` each drawn component carries its item number as small secondary text. Parts in italics depend on
+a feature or on the DHW storage (see below). Items 18 to 21, 23, 24, 39 to 41, 52 and 53 are drawn only with
+`detail: full`.
 
 | Items | Symbol | Part |
 |---|---|---|

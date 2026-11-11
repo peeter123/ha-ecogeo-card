@@ -13,7 +13,7 @@ for the explanation of what the card shows and where each part comes from.
 ## Features
 
 - The unit's internal schematic drawn as inline SVG after the manual's figures B1 to B4 and C, with the item number of
-  every component, for any model, variant, outer-loop source (air, ground or hybrid) and DHW storage.
+  every component shown only with `detail: full` (components show their name on hover), for any model, variant, outer-loop source (air, ground or hybrid) and DHW storage.
 - Pipes coloured by temperature on an absolute scale (blue at -10 °C, green at 20 °C, orange at 45 °C, red at
   70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe with no probe value is muted.
 - The active circuits move: dashes run in the direction of the flow at a speed that follows the pump or the
@@ -22,7 +22,7 @@ for the explanation of what the card shows and where each part comes from.
 - Live values beside their components (temperatures, pressures, pump and compressor speeds, power, superheat, the
   tank's values) and a footer with the mode, season, outside temperature, COP and capacities. The card formats the
   numbers itself with Home Assistant's locale and keeps every number joined to its unit by a no-break space.
-- Read-only: tapping a value opens the entity's more-info dialog; the card calls no service and writes no entity.
+- Read-only: tapping a value, or a component with an entity of its own, opens the entity's more-info dialog; the card calls no service and writes no entity.
 
 ## Status
 
@@ -73,6 +73,7 @@ fault.
 | `features` | group | from the variant | Feature states that override the variant (see Features). |
 | `entities` | group | from the prefix | Entity id per role, nested by role path (see Roles). |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
+| `detail` | `simplified`, `full` | `simplified` | `simplified` leaves out the service and safety parts with no live value and shows no item numbers; `full` draws every part of the manual figure with its item number. |
 
 ### Source and DHW
 
@@ -228,8 +229,9 @@ no installation data. The mock entities use the demo prefix `demo_ecogeo`.
   recovery, passive cooling, defrost, alarm while heating, bridge offline and sensors unavailable. Each is a complete
   set of states (`dev/scenarios.ts`).
 - **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default,
-  external, internal or none), each feature (the variant's preset, `true`, `false` or `unused`) and the light or dark
-  theme. A combination the card rejects, such as model B with internal DHW, shows the config error under the card.
+  external, internal or none), each feature (the variant's preset, `true`, `false` or `unused`), the detail level
+  (simplified or full), the exchanger fill (gradient or none; it only takes effect once the card has the option) and
+  the light or dark theme. A combination the card rejects, such as model B with internal DHW, shows the config error under the card.
 - **Live values:** sliders for production out and in, brine out and in, DHW temperature, discharge, suction, both
   pumps, the compressor percentage (it moves the speed too), the fan speed and the condensation capacity. Picking a
   scenario resets them. Slider values are not part of the URL state.
@@ -245,6 +247,8 @@ All state is in the URL query string, so every combination is addressable. Param
 | `source`                                                       | `air`, `ground`, `hybrid`                                                    | `ground`   |
 | `dhw`                                                          | `external`, `internal`, `none`                                               | by model   |
 | `active_cooling`, `passive_cooling`, `htr`, `backup_heater`    | `true`, `false`, `unused`                                                    | by variant |
+| `detail`                                                       | `simplified`, `full`                                                         | `simplified` |
+| `fill`                                                         | `gradient`, `none`                                                           | `gradient` |
 | `theme`                                                        | `light`, `dark`                                                              | `light`    |
 | `cycle`                                                        | seconds per step; the cycle runs when it is set                              | off        |
 
@@ -252,7 +256,7 @@ For example `dev/index.html?scenario=passive_cooling&source=ground`.
 
 `npm run capture` starts its own Vite server, opens every URL of the fixed list in `dev/captures.ts` in headless
 Chromium (Playwright, a dev dependency for this script only) and writes one PNG per URL to `build/captures/`. The list
-covers every scenario, each source, each DHW value, model C, each feature `false` and `unused`, the other variants and
-the dark theme. The first run needs the browser: `npx playwright install chromium`.
+covers every scenario, each source, each DHW value, model C, each feature `false` and `unused`, the other variants, the dark
+theme and two full-detail captures (heating and model C). The first run needs the browser: `npx playwright install chromium`.
 
 `dist/ecogeo-card.js` is the committed, deployable bundle. `npm run format` rewrites files with Prettier.
