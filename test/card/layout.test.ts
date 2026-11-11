@@ -3,7 +3,7 @@ import '../../src/index';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import { configErrors } from '../../src/config/options';
 import { resolveConfig } from '../../src/config/resolve';
-import { COMPACT_BELOW, isCompact } from '../../src/lib/layout';
+import { COMPACT_BELOW, COMPACT_HYSTERESIS, isCompact, nextCompact, strokeWidths } from '../../src/lib/layout';
 import type { CardConfig } from '../../src/lib/config';
 
 /** A ResizeObserver whose observations the test triggers. */
@@ -84,6 +84,53 @@ describe('isCompact', () => {
   });
 });
 
+describe('nextCompact (layout hysteresis)', () => {
+  test('forced layouts ignore the width and the current layout', () => {
+    expect(nextCompact('compact', 2000, false)).toBe(true);
+    expect(nextCompact('full', 100, true)).toBe(false);
+  });
+
+  test('a full card goes compact below the threshold, as isCompact does', () => {
+    expect(nextCompact('auto', COMPACT_BELOW - 1, false)).toBe(true);
+    expect(nextCompact('auto', COMPACT_BELOW, false)).toBe(false);
+  });
+
+  test('No flip at the threshold: a compact card stays compact until the threshold plus the hysteresis', () => {
+    expect(COMPACT_HYSTERESIS).toBe(24);
+    expect(nextCompact('auto', COMPACT_BELOW + 10, true)).toBe(true);
+    expect(nextCompact('auto', COMPACT_BELOW + COMPACT_HYSTERESIS - 1, true)).toBe(true);
+    expect(nextCompact('auto', COMPACT_BELOW + COMPACT_HYSTERESIS, true)).toBe(false);
+    expect(nextCompact('auto', COMPACT_BELOW + 100, true)).toBe(false);
+  });
+
+  test('an unknown width gives full, also for a compact card', () => {
+    expect(nextCompact('auto', undefined, true)).toBe(false);
+    expect(nextCompact('auto', 0, true)).toBe(false);
+  });
+});
+
+describe('strokeWidths', () => {
+  test('wide cards and an unknown width keep the designed widths', () => {
+    for (const width of [undefined, 0, 700, 1000, 2000]) {
+      expect(strokeWidths(width), String(width)).toEqual({ pipe: 3, outline: 2 });
+    }
+  });
+
+  test('narrow cards get 2 px pipes and 1.25 px outlines in drawing units, rounded up to 0.1', () => {
+    expect(strokeWidths(360)).toEqual({ pipe: 5.6, outline: 3.5 });
+    expect(strokeWidths(320)).toEqual({ pipe: 6.3, outline: 4 });
+    expect(strokeWidths(300)).toEqual({ pipe: 6.7, outline: 4.2 });
+  });
+
+  test('the rendered minimum holds after rounding at every width', () => {
+    for (let width = 200; width <= 700; width += 1) {
+      const { pipe, outline } = strokeWidths(width);
+      expect(pipe * (width / 1000), String(width)).toBeGreaterThanOrEqual(2 - 1e-9);
+      expect(outline * (width / 1000), String(width)).toBeGreaterThanOrEqual(1.25 - 1e-9);
+    }
+  });
+});
+
 describe('card layout from its width', () => {
   test('unknown width (before the first observation) is full', async () => {
     const card = await mount();
@@ -116,13 +163,24 @@ describe('card layout from its width', () => {
 
   test('a width change that keeps the layout does not render again; one that flips it does', async () => {
     const card = await mount();
+    await resize(card, 1000);
+    const rendered = vi.spyOn(card as unknown as { render(): unknown }, 'render');
+    await resize(card, 1200);
+    expect(rendered).not.toHaveBeenCalled();
+    await resize(card, 360);
+    expect(rendered).toHaveBeenCalledTimes(1);
+    expect(layoutOf(card)).toBe('compact');
+  });
+
+  test('a width change that keeps the layout but changes the stroke widths renders again', async () => {
+    const card = await mount();
     await resize(card, 360);
     const rendered = vi.spyOn(card as unknown as { render(): unknown }, 'render');
     await resize(card, 380);
-    expect(rendered).not.toHaveBeenCalled();
-    await resize(card, 1000);
     expect(rendered).toHaveBeenCalledTimes(1);
-    expect(layoutOf(card)).toBe('full');
+    expect(card.shadowRoot?.querySelector('svg')?.getAttribute('style')).toContain(
+      `--pipe-width: ${String(strokeWidths(380).pipe)}`,
+    );
   });
 
   test('an observation with an unchanged width is ignored', async () => {

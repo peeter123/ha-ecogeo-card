@@ -62,6 +62,11 @@ export const CAPTURES: readonly CaptureStep[] = [
   step('theme-dark-features-unused', 'scenario=active_cooling_htr&theme=dark&passive_cooling=unused&htr=unused'),
   // add-compact-layout: every scenario on a phone (360 px, automatic layout) and in the full layout at the compact
   // threshold (the constant of src/lib/layout.ts), light and dark
+  step('narrow-light-heating', 'scenario=heating&width=320'),
+  step('narrow-hybrid-heating', 'scenario=heating&source=hybrid&width=320'),
+  step('phone-air-heating', `scenario=heating&source=air&width=${String(PHONE_WIDTH)}`),
+  step('phone-hybrid-heating', `scenario=heating&source=hybrid&width=${String(PHONE_WIDTH)}`),
+  step('phone-modelC-dhw', `scenario=dhw&model=C&dhw=internal&width=${String(PHONE_WIDTH)}`),
   ...(['light', 'dark'] as const).flatMap((theme) =>
     SCENARIO_NAMES.flatMap((name) => [
       step(`phone-${theme}-${name}`, `scenario=${name}&width=${String(PHONE_WIDTH)}&theme=${theme}`),

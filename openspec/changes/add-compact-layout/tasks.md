@@ -35,21 +35,21 @@ delta first.
 
 ## 2. Compact content and minimum sizes
 
-- [ ] 2.1 Give every label and footer item a tier (design D2); render only key items in compact; force the
+- [x] 2.1 Give every label and footer item a tier (design D2); render only key items in compact; force the
   simplified detail level in compact (D3). Add the layout hysteresis of D1 (a compact card returns to full only at
   the threshold plus 24 px) and re-render on a stroke-scale change.
   Verify: `npm test` covers responsive-layout "Compact labels", "Compact footer", "Compact ignores full detail" and
   "No flip at the threshold" (unit test of the pure decision, and a browser test widening a compact card).
-- [ ] 2.2 Drive pipe, outline, overlay dash and hop sizes from `--pipe-width` and `--outline-width` (D4), and the
+- [x] 2.2 Drive pipe, outline, overlay dash and hop sizes from `--pipe-width` and `--outline-width` (D4), and the
   compact font floor and wrapping footer (D5).
   Verify: unit tests for the computed custom properties, and browser tests (D7) for "Thin card" (at 360 px every
   pipe's rendered stroke at least 2 px, outlines at least 1.25 px, compact label font at least 10 px, measured in
   Chromium) and "Footer wraps" (at 320 px every footer item inside the card's box).
-- [ ] 2.3 Emulator verification: `npm run capture`. An agent inspects every scenario at 360 px (compact) and at
+- [x] 2.3 Emulator verification: `npm run capture`. An agent inspects every scenario at 360 px (compact) and at
   the threshold width (full), light and dark: no overlaps, legible lines and labels, the footer inside the card,
   and in the threshold captures the compressor's speed, percentage and power rows visibly apart.
   Verify: verdict with no blocking findings.
-- [ ] 2.4 Update `docs/ecogeo-card.md` (compact content, tiers, minimum sizes) and add a phone capture to
+- [x] 2.4 Update `docs/ecogeo-card.md` (compact content, tiers, minimum sizes) and add a phone capture to
   `docs/images/` referenced from the README.
   Verify: the sections and image exist.
 

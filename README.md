@@ -38,12 +38,16 @@ Copy `dist/ecogeo-card.js` to the Home Assistant `www` folder, register it as a 
 the card to a view. The steps are in the Installation section of [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
 The card measures its own width and chooses a layout from it (the `layout` option, see Options). With `layout: auto`
-(the default) it shows the full layout from 700 px wide, which is a panel view or a wide section, and the compact
+(the default) it shows the full layout from 640 px wide, which is a panel view or a wide section, and the compact
 layout below that, which is what a phone gets. The compact layout shows the schematic at the simplified detail
-level with only the key labels (production out and in, brine out and in, compressor speed, the DHW temperature and
-the source's outlet temperature), larger and legible, and a shorter footer (mode, COP, outside temperature and the
-alarm and offline indications). Set `layout: full` or `layout: compact` to force one. How the 700 px was measured
-is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
+level, whatever `detail` says, without the captions inside the drawing and with only the key labels (production out and in, brine out and in, compressor
+speed, the DHW temperature and the source's outlet temperature), at least 10 px high and, for production and brine, captioned In and Out, and a shorter footer (mode,
+COP, outside temperature and the alarm and offline indications). Pipes and outlines never render thinner than 2 px
+and 1.25 px, and the footer wraps. Once compact, the card returns to full only at 664 px (24 px of hysteresis), so a
+scrollbar appearing with the layout cannot make it flip back and forth. Set `layout: full` or `layout: compact` to
+force one. How the 640 px was measured, and what each tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
+
+![The card on a 360 px wide phone: the compact layout with its seven key values](docs/images/phone-heating.png)
 
 ## Configuration
 
@@ -81,7 +85,7 @@ fault.
 | `entities` | group | from the prefix | Entity id per role, nested by role path (see Roles). |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
-| `layout` | `auto`, `full`, `compact` | `auto` | `auto` shows the compact layout while the card is narrower than 700 px and the full layout otherwise (and before the width is known); `full` and `compact` use that layout at any width. |
+| `layout` | `auto`, `full`, `compact` | `auto` | `auto` shows the compact layout while the card is narrower than 640 px and the full layout otherwise (and before the width is known), with 24 px of hysteresis once compact (see Layout in the docs); `full` and `compact` use that layout at any width. |
 | `detail` | `simplified`, `full` | `simplified` | `simplified` leaves out the service and safety parts with no live value and shows no item numbers; `full` draws every part of the manual figure with its item number. |
 
 ### Source and DHW
@@ -224,10 +228,10 @@ Requires Node 22.13 or newer, 24, or 26 and newer.
 
 ```sh
 npm install
-npx playwright install chromium  # the browser for the browser tests and the scripts (once per machine)
+npx playwright install chromium webkit  # the browsers for the browser tests and the scripts (once per machine)
 npm run dev       # the emulator: the card with a mock hass, served by Vite
 npm run capture   # one PNG per emulator URL in build/captures/
-npm test          # both test projects: unit (Vitest, happy-dom) and browser (headless Chromium)
+npm test          # both test projects: unit (Vitest, happy-dom) and browser (headless Chromium and WebKit)
 npm run test:unit     # unit tests only
 npm run test:browser  # browser tests only (layout at real widths, no label overlaps at the threshold)
 npm run measure-layout  # re-measure the compact threshold (see docs/ecogeo-card.md)

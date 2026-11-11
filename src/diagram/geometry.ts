@@ -769,6 +769,8 @@ export interface DrawContext {
   features: Features;
   /** `simplified` leaves out the parts and stubs marked `detail: 'full'`. */
   detail: Detail;
+  /** `false` leaves out the captions inside the drawing (the compact layout, add-compact-layout D2); undefined draws them. */
+  captions?: boolean;
 }
 
 export type PartState = 'normal' | 'muted' | 'hidden';
@@ -1098,10 +1100,10 @@ export function overlap(first: readonly Point[], second: readonly Point[]): bool
 }
 
 /**
- * The SVG path data of a polyline, with a gap of HOP on each side of every given crossing point (the hop of a
- * crossing, drawn in the `under` segment).
+ * The SVG path data of a polyline, with a gap of `hop` (HOP unless a thicker pipe asks for more) on each side of every
+ * given crossing point (the hop of a crossing, drawn in the `under` segment).
  */
-export function pathData(points: readonly Point[], gaps: readonly Point[] = []): string {
+export function pathData(points: readonly Point[], gaps: readonly Point[] = [], hop: number = HOP): string {
   const parts: string[] = [];
   let pen: Point | undefined;
   const lineTo = (target: Point): void => {
@@ -1126,8 +1128,8 @@ export function pathData(points: readonly Point[], gaps: readonly Point[] = []):
       );
     for (const gap of inside) {
       const distance = Math.abs(gap[0] - a[0]) + Math.abs(gap[1] - a[1]);
-      if (distance > HOP) lineTo([gap[0] - dx * HOP, gap[1] - dy * HOP]);
-      moveTo(length - distance > HOP ? [gap[0] + dx * HOP, gap[1] + dy * HOP] : b);
+      if (distance > hop) lineTo([gap[0] - dx * hop, gap[1] - dy * hop]);
+      moveTo(length - distance > hop ? [gap[0] + dx * hop, gap[1] + dy * hop] : b);
     }
     lineTo(b);
   }

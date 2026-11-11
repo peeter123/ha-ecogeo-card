@@ -1,7 +1,7 @@
 // Value labels and the footer values (add-schematic-card D6, live-values spec). The labels are HTML overlaid on the SVG at
 // percentage positions computed from viewBox coordinates (the pattern of hrv-ventilation src/diagram/labels.ts: HTML
 // text over the drawing, so it stays crisp and selectable and taps work). Deviation from hrv: the labels are a fixed table of
-// positions after the drawing's components (this card has no layout switch), not a model derived from the config,
+// positions after the drawing's components (a few key labels have a second place for the compact layout), not a model derived from the config,
 // and a tap opens more-info through `fireMoreInfo` (the callback the card passes in).
 //
 // Positions are viewBox points with an alignment: `start` puts the label's left edge at x, `end` its right edge,
@@ -71,6 +71,16 @@ export const labelStyles = css`
     color: var(--secondary-text-color);
     font-size: 0.85em;
   }
+  /* The compact layout shows few labels, so they can be larger and never drop below 10 px (add-compact-layout D5). */
+  [data-layout='compact'] .label {
+    font-size: max(10px, 1.6cqw);
+  }
+  [data-layout='compact'] .label.emphasis {
+    font-size: max(11px, 1.9cqw);
+  }
+  [data-layout='compact'] .label .caption {
+    font-size: 1em;
+  }
   .value {
     margin: 0;
     padding: 0;
@@ -94,17 +104,26 @@ export const labelStyles = css`
 
 type Align = 'start' | 'middle' | 'end';
 
+/** Whether a label or footer item stays in the compact layout (add-compact-layout D2): `key` stays, `detail` does not. */
+export type Tier = 'key' | 'detail';
+
 export interface LabelSpec extends Pick<Visibility, 'dhw' | 'source'> {
   /** A unique id, also the `data-label` of the element. */
   id: string;
   role: RolePath;
+  /** `key` labels are the only ones the compact layout shows. */
+  tier: Tier;
   /** The manual item the value belongs to; 1 stands for connections 1/2. */
   item?: number;
   x: number;
   y: number;
   align: Align;
+  /** Where the compact layout puts a key label, if not at x, y and align: its labels are larger relative to the drawing. */
+  compact?: Placement;
   /** A small text in front of the value, where its position alone would not say what it is. */
   caption?: string;
+  /** The caption the compact layout shows instead of `caption`: the production and brine values lose their probes' neighbourhood there. */
+  compactCaption?: string;
   /** The label shows "Demand" while the (binary) role is on, and nothing otherwise. */
   demand?: true;
   /** Larger text: the tank temperature. */
@@ -113,14 +132,79 @@ export interface LabelSpec extends Pick<Visibility, 'dhw' | 'source'> {
   bare?: true;
 }
 
+/** A label's place: a viewBox point and the alignment of the label to it. */
+export interface Placement {
+  x: number;
+  y: number;
+  align: Align;
+}
+
+/**
+ * Where the compact layout puts the key labels that cannot stay where the full layout has them. Its labels are at least
+ * 10 px, which on a card as narrow as 320 px is about 2.5 times larger relative to the drawing than at the compact
+ * threshold, so the places beside the probes are too small. Found with a search over the viewBox for the nearest place
+ * with no overlap of another key label or a component and on the side of the cabinet outline where the label's component
+ * is (dev/overlaps.ts LABEL_SIDES), at 320 px, in every emulator scenario and installation; they hold at every wider width.
+ * The search used the widths of the captioned labels (COMPACT_CAPTIONS), the cabinet outline as an obstacle, and preferred
+ * places nearer the label's own probe; the production pair does not fit near its probes (33, 34) at 320 px. A key label
+ * not listed stays where it is.
+ */
+const COMPACT_PLACES: Readonly<Record<string, Placement>> = {
+  production_out: { x: 332, y: 447, align: 'middle' },
+  production_in: { x: 320, y: 367, align: 'middle' },
+  brine_out: { x: 580, y: 255, align: 'start' },
+  brine_in: { x: 740, y: 199, align: 'end' },
+  compressor_speed: { x: 456, y: 307, align: 'start' },
+  air_unit_out: { x: 232, y: 111, align: 'end' },
+  ground_out: { x: 100, y: 155, align: 'middle' },
+  hybrid_ground_out: { x: 100, y: 435, align: 'middle' },
+  tank_internal_temperature: { x: 352, y: 155, align: 'middle' },
+};
+
+/** The short captions of the four production and brine values in the compact layout (add-compact-layout D8), like the source ports'. */
+const COMPACT_CAPTIONS: Readonly<Record<string, string>> = {
+  production_out: VALUE_CAPTIONS.portOut,
+  production_in: VALUE_CAPTIONS.portIn,
+  brine_out: VALUE_CAPTIONS.portOut,
+  brine_in: VALUE_CAPTIONS.portIn,
+};
+
+/** The labels the compact layout shows (add-compact-layout D2): the seven key values. Every other label is detail. */
+const KEY_LABELS: ReadonlySet<string> = new Set([
+  'production_out',
+  'production_in',
+  'brine_out',
+  'brine_in',
+  'compressor_speed',
+  'air_unit_out',
+  'ground_out',
+  'hybrid_ground_out',
+  'tank_external_temperature',
+  'tank_internal_temperature',
+]);
+
 const spec = (
   id: string,
   role: RolePath,
   x: number,
   y: number,
   align: Align,
-  extra: Partial<Omit<LabelSpec, 'id' | 'role' | 'x' | 'y' | 'align'>> = {},
-): LabelSpec => ({ id, role, x, y, align, ...extra });
+  extra: Partial<Omit<LabelSpec, 'id' | 'role' | 'x' | 'y' | 'align' | 'tier'>> = {},
+): LabelSpec => {
+  const compact = COMPACT_PLACES[id];
+  const compactCaption = COMPACT_CAPTIONS[id];
+  return {
+    id,
+    role,
+    tier: KEY_LABELS.has(id) ? 'key' : 'detail',
+    x,
+    y,
+    align,
+    ...(compact === undefined ? {} : { compact }),
+    ...(compactCaption === undefined ? {} : { compactCaption }),
+    ...extra,
+  };
+};
 
 /** The external tank's values: centred under the tank, 22 units below its bottom. */
 const EXT_TANK_X = EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2;
@@ -158,9 +242,9 @@ export const LABEL_SPECS: readonly LabelSpec[] = [
   spec('discharge_pressure', 'compressor.discharge_pressure', 480, 275, 'middle', { item: 36 }),
   spec('suction_temperature', 'compressor.suction_temperature', 528, 262, 'start', { item: 29 }),
   spec('suction_pressure', 'compressor.suction_pressure', 570, 275, 'middle', { item: 35 }),
-  spec('compressor_speed', 'compressor.speed', 503, 308, 'middle', { item: 11 }),
+  spec('compressor_speed', 'compressor.speed', 503, 307, 'middle', { item: 11 }),
   spec('compressor_percentage', 'compressor.percentage', 503, 319, 'middle', { item: 11 }),
-  spec('compressor_power', 'compressor.power', 503, 330, 'middle', { item: 11 }),
+  spec('compressor_power', 'compressor.power', 503, 331, 'middle', { item: 11 }),
   spec('superheat', 'refrigerant.superheat', 527, 376, 'middle', { item: 12 }),
   spec('expansion_valve', 'refrigerant.expansion_valve', 527, 388, 'middle', { item: 12 }),
   spec('condensation_temperature', 'refrigerant.condensation_temperature', 432, 437, 'middle', { item: 8 }),
@@ -294,28 +378,33 @@ type Entities = Readonly<Record<RolePath, string | undefined>>;
 /**
  * The labels to show: those of parts that are drawn (the same rules as geometry.ts `partState`), each with its text
  * from display.ts, or the dash while its value is missing. The "Demand" label is shown only while its role is on.
- * Inputs: the draw context (DHW storage, source, features), the readings, the roles' entity ids and the display context.
+ * Inputs: the draw context (DHW storage, source, features), the readings, the roles' entity ids and the display context;
+ * with `compact` only the key labels (add-compact-layout D2).
  */
 export function labelsFor(
   context: DrawContext,
   readings: Readings,
   entities: Entities,
   display: DisplayContext,
+  compact = false,
 ): ShownLabel[] {
   return LABEL_SPECS.flatMap((label): ShownLabel[] => {
+    if (compact && label.tier !== 'key') return [];
     if (partState(label, context) === 'hidden') return [];
     const entityId = entities[label.role];
+    const compactPlace = compact ? label.compact : undefined;
+    const caption = (compact ? label.compactCaption : undefined) ?? label.caption;
+    const place: Placement = compactPlace ?? { x: label.x, y: label.y, align: label.align };
     const common = {
       id: label.id,
       role: label.role,
-      x: label.x,
-      y: label.y,
-      align: label.align,
+      ...place,
       emphasis: label.emphasis === true,
-      ...(label.bare === true ? { bare: true as const } : {}),
+      // A label moved to its compact place no longer sits on tank 50's body, so it gets its plate back.
+      ...(label.bare === true && compactPlace === undefined ? { bare: true as const } : {}),
       entityId,
       ...(label.item === undefined ? {} : { item: label.item }),
-      ...(label.caption === undefined ? {} : { caption: label.caption }),
+      ...(caption === undefined ? {} : { caption }),
     };
     const value: unknown = readings[label.role];
     if (label.demand === true) {
@@ -330,6 +419,8 @@ export function labelsFor(
 /** One value of the footer. */
 export interface FooterItem {
   id: string;
+  /** `key` items are the only ones the compact layout shows. */
+  tier: Tier;
   /** The small text in front of the value, if any. */
   caption?: string;
   text: string;
@@ -337,13 +428,23 @@ export interface FooterItem {
   entityId: string | undefined;
 }
 
+/** The footer items the compact layout keeps (add-compact-layout D2); the mode, the alarm and the offline indication are card texts that always show. */
+const FOOTER_KEY_ITEMS: ReadonlySet<string> = new Set(['outside_temperature', 'cop']);
+
 /**
  * The footer's values: the on/off state, the season, the outside temperature, the COP and the condensation and
- * evaporation capacity. The mode, the alarm and the offline indication are texts of the card, not values.
+ * evaporation capacity; with `compact` only the key ones (the outside temperature and the COP). The mode, the alarm
+ * and the offline indication are texts of the card, not values.
  */
-export function footerItems(readings: Readings, entities: Entities, display: DisplayContext): FooterItem[] {
+export function footerItems(
+  readings: Readings,
+  entities: Entities,
+  display: DisplayContext,
+  compact = false,
+): FooterItem[] {
   const item = (id: string, role: RolePath, caption: string | undefined, text: string | undefined): FooterItem => ({
     id,
+    tier: FOOTER_KEY_ITEMS.has(id) ? 'key' : 'detail',
     ...(caption === undefined ? {} : { caption }),
     text: text ?? NO_VALUE,
     missing: text === undefined,
@@ -365,7 +466,7 @@ export function footerItems(readings: Readings, entities: Entities, display: Dis
       : readings['unit.winter'] === true
         ? FOOTER_LABELS.winter
         : undefined;
-  return [
+  const items = [
     item(
       'on_off',
       'unit.on_off',
@@ -378,6 +479,7 @@ export function footerItems(readings: Readings, entities: Entities, display: Dis
     number('condensation_capacity', 'heating.capacity', FOOTER_LABELS.condensation),
     number('evaporation_capacity', 'cooling.capacity', FOOTER_LABELS.evaporation),
   ];
+  return compact ? items.filter((entry) => entry.tier === 'key') : items;
 }
 
 /** The position of a label in percent of the drawing's width and height. */

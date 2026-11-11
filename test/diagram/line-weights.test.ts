@@ -5,10 +5,19 @@ import { cabinetStyles } from '../../src/diagram/cabinet';
 import { dhwStyles } from '../../src/diagram/dhw';
 import { sourceStyles } from '../../src/diagram/source';
 
-/** The stroke-width declared for a selector in a stylesheet. */
+/**
+ * The stroke-width a selector renders with while the card's width is unknown: the declared value with the custom
+ * properties (--pipe-width, --outline-width) replaced by their fallbacks (add-compact-layout D4).
+ */
 function widthOf(css: string, selector: string): number {
   const block = new RegExp(`${selector.replace('.', '\\.')}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
-  return Number(/stroke-width:\s*([\d.]+)/.exec(block)?.[1]);
+  const declared = /stroke-width:\s*([^;]+);/.exec(block)?.[1] ?? '';
+  const plain = declared.replaceAll(/var\(--[\w-]+,\s*([\d.]+)\)/g, '$1');
+  const max = /^max\(([\d.]+),\s*([\d.]+)\)$/.exec(plain);
+  if (max !== null) return Math.max(Number(max[1]), Number(max[2]));
+  const product = /^calc\(([\d.]+) \* ([\d.]+)\)$/.exec(plain);
+  if (product !== null) return Number(product[1]) * Number(product[2]);
+  return Number(plain);
 }
 
 describe('line weights (schematic-drawing spec)', () => {
@@ -26,7 +35,7 @@ describe('line weights (schematic-drawing spec)', () => {
     expect(widthOf(cabinetStyles.cssText, '.pipe')).toBeGreaterThanOrEqual(3);
     // the flow overlay is as wide as the pipe, with its dash and gap scaled by 1.5 (2 12 before)
     expect(widthOf(cabinetStyles.cssText, '.flow')).toBeGreaterThanOrEqual(3);
-    expect(cabinetStyles.cssText).toContain('stroke-dasharray: 3 18');
+    expect(cabinetStyles.cssText).toContain('stroke-dasharray: var(--pipe-width, 3) calc(var(--pipe-width, 3) * 6)');
     expect(root.querySelectorAll('path.flow').length).toBeGreaterThan(5);
 
     // every component symbol carries its outline width on the group

@@ -25,9 +25,10 @@ compact threshold and full otherwise; before the card's width is known it SHALL 
 - **THEN** the card shows the full layout
 
 ### Requirement: Layout hysteresis
-With `auto`, a card already in compact SHALL return to full only once it is at least 24 px wider than the compact
-threshold, so a page scrollbar that appears or disappears with the layout's height cannot make the layout flip
-back and forth.
+With `auto`, a card that `auto` put in compact SHALL return to full only once it is at least 24 px wider than the
+compact threshold, so a page scrollbar that appears or disappears with the layout's height cannot make the layout flip
+back and forth. A compact layout forced by `layout: compact` SHALL NOT count: after a switch to `auto` the card
+shows what a newly loaded card of that width shows.
 
 #### Scenario: No flip at the threshold
 - **WHEN** the config sets no `layout`, the card is compact, and it widens to 10 px above the threshold
@@ -61,6 +62,17 @@ footer SHALL show the mode, the COP and the outside temperature, plus the alarm 
 #### Scenario: Compact ignores full detail
 - **WHEN** the config sets `detail: full` and `layout: compact`
 - **THEN** no item number and no safety valve is drawn
+
+### Requirement: Compact captions and label sides
+The compact layout SHALL draw no in-drawing captions (such as "DG1", "Outer loop", "Air unit", "Ground loop" or
+"DHW tank"), every value label SHALL stay on the side of the cabinet outline where its component is, and the
+production and brine values SHALL carry short Out and In captions, like the source ports, so each pair can be told
+apart.
+
+#### Scenario: Compact without captions
+- **WHEN** the card shows the compact layout
+- **THEN** no in-drawing caption is drawn, the production and brine values sit inside the cabinet outline with Out
+  and In captions, and the source's Out value sits outside it
 
 ### Requirement: Minimum rendered sizes
 At any card width, pipes SHALL render at least 2 px wide and component outlines at least 1.25 px wide. Value

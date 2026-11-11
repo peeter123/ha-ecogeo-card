@@ -469,20 +469,78 @@ The card formats every number itself (`src/calc/display.ts`), never through `has
 The card observes its own width (a `ResizeObserver` on the card element) and derives a layout from it and from the
 `layout` option (`auto`, `full` or `compact`, default `auto`). `full` and `compact` force that layout at any width.
 With `auto` the card is compact while it is narrower than the compact threshold and full from the threshold up;
-before the first width is known (or while the card is not displayed, width 0) it is full. The rule is `isCompact` in
-`src/lib/layout.ts`, copied from the hrv-ventilation repo (`src/diagram/labels.ts`); the threshold constant
-`COMPACT_BELOW` is this card's own. A re-render happens only when the derived layout changes, so state updates keep
-their entity-based gating, and an observation whose width did not change is ignored.
+before the first width is known (or while the card is not displayed, width 0) it is full. The rule is `nextCompact` in
+`src/lib/layout.ts` (based on `isCompact`, copied from the hrv-ventilation repo's `src/diagram/labels.ts`; see
+Hysteresis); the threshold constant `COMPACT_BELOW` is this card's own. A re-render happens only when the derived layout changes, so state updates keep
+their entity-based gating, and an observation whose width did not change is ignored. A width change that keeps the
+layout but changes the stroke widths (see Minimum rendered sizes) renders again too.
 
-What the compact layout shows: the schematic at the simplified detail level whatever `detail` says, only the key
-value labels (production outlet and return, brine outlet and inlet, compressor speed, the DHW temperature and the
-source's outlet temperature), and a footer with the mode, the COP, the outside temperature and the alarm and
-offline indications. Lines and text keep a minimum rendered size so that a thin card stays legible. This content
-arrives with the `add-compact-layout` change; the threshold and the `layout` option come first.
+### Hysteresis
+
+Once the compact layout is shorter than the full one, a page scrollbar can appear and disappear as the layout flips,
+which changes the card's width by about 15-17 px near the threshold. So with `auto` a card that is already compact
+returns to full only at the threshold plus 24 px, 664 px (`COMPACT_HYSTERESIS` in `src/lib/layout.ts`); going compact still
+happens below the threshold, at 640 px. The decision is the pure function `nextCompact(layout, width,
+currentlyCompact)`, which the card calls with whether the layout it showed last was compact because `auto` chose it. A compact layout that
+`layout: compact` forced does not count: after a switch to `auto` the card shows what a newly loaded card of that width
+shows. Forced layouts ignore the hysteresis.
+
+### What the compact layout shows
+
+The schematic at the simplified detail level whatever `detail` says (the resolved config keeps the user's `detail`;
+only the drawing is told `simplified`, and its geometry does not change), only the key value labels, and a footer
+with the mode, the COP, the outside temperature and the alarm and offline indications.
+
+Every value label and every footer value has a tier, `key` or `detail` (`tier` in `src/diagram/labels.ts`), and the
+compact layout draws only the key ones:
+
+| Tier | Labels |
+| --- | --- |
+| Key | production outlet and return temperature (probes 33, 34), brine outlet and inlet temperature (31, 32), compressor speed in rpm (11), the DHW temperature, and the source's outlet: the air unit Out (air), the ground loop Out (ground), the ground loop Out in the hybrid (which has no air unit Out) |
+| Detail | pressures, pump speeds, the DG1 setpoint, compressor percentage and power, superheat, expansion valve opening, condensation and evaporation temperatures, the tank setpoint and start delta-T, the fan speed and outside temperature under the air unit, the source's In, every "Demand" caption |
+
+Footer: the COP and the outside temperature are the key items; the capacities, on/off and the season are detail. The
+mode, the alarm and the offline indication are texts of the card, not values, and always show, in both layouts, as
+does the sample-values note.
+
+The compact layout also draws no captions inside the drawing (the circuit names "DG1", "Outer loop" and "DHW", "Air
+unit", "Ground loop" and "DHW tank"): at 360 px they would render at about 4 px. The full layout draws them as before.
+
+The compact labels are at least 10 px and so, on a 320 px card, about 2.5 times larger relative to the drawing than at
+the threshold. The places beside the probes are then too small, so most key labels have a compact place of their own
+(`COMPACT_PLACES` in `labels.ts`): the nearest place, found by a search at 320 px over every emulator scenario and
+installation, where no key label overlaps another or a component and the label stays on the side of the cabinet
+outline where its component is: the production and brine values, the compressor speed and the integrated tank's
+temperature inside it, the source's Out value and the external tank's temperature outside it (`LABEL_SIDES` in
+`dev/overlaps.ts`). The four production and brine values carry a short "Out" or "In" caption in the compact layout (the same strings as
+the source ports' captions; here "Out" is the water or brine leaving the heat pump and "In" the one entering it), because their places are no longer beside their probes: at 320 px the production pair
+has no room near probes 33 and 34 inside the cabinet, so both production values sit in its lower left, the return
+above the outlet, and the brine pair top right, the inlet above the outlet. The full layout has no such captions. A label that has moved to its compact place gets its background plate (the integrated tank's
+temperature leaves tank 50's body). The browser test "No overlaps in the compact layout" checks the overlaps and the
+sides at 320, 360, 480 and 639 px.
+
+### Minimum rendered sizes
+
+At any card width pipes render at least 2 px wide, component outlines at least 1.25 px, value labels at least 10 px in
+the compact layout and at least 8 px in the full one, and the footer wraps onto further lines instead of overflowing.
+
+- Strokes: `scale = width / 1000` (the drawing is 1000 units wide). The card sets `--pipe-width: max(3, 2 / scale)`
+  and `--outline-width: max(2, 1.25 / scale)` on the svg, in drawing units and rounded up to 0.1 (so the rendered
+  minimum still holds after rounding). The stroke rules of the drawing (pipes, outlines, the flow overlay) read them,
+  with 3 and 2 as the fallbacks, so a card of unknown width draws as before. The overlay's dash pattern and the gaps of
+  the hops scale with `--pipe-width`. From 667 px up `scale` is 0.667 or more and the widths stay 3 and 2; between 640 px (the threshold) and
+  667 px the pipes are up to 3.2 units wide, and the threshold measurement below was taken with that. Decorative thin lines (fins, the air unit's divider, the ground
+  hatching, the tank rim) are fractions of `--outline-width`.
+- Fonts: the compact layout's labels are `max(10px, 1.6cqw)` and the external tank's temperature `max(11px, 1.9cqw)`
+  (model C's integrated tank temperature is an ordinary 10 px label); the full layout keeps `max(8px, 0.95cqw)`. The
+  compact layout draws no captions inside the drawing, which would render at about 4 px.
+- Footer: a wrapping flex row with row and column gaps, in both layouts.
+
+Browser tests (`test/card/compact.browser.test.ts`) measure these in Chromium and WebKit at 360 px, and the footer at 320 px.
 
 ### The compact threshold
 
-The threshold is 700 px (measured on 2026-11-11). It is the narrowest card width at which the full layout, at the
+The threshold is 640 px (measured on 2026-11-11, after the compressor rows were spaced further apart). It is the narrowest card width at which the full layout, at the
 simplified detail level, shows no overlapping labels in any emulator scenario, on the 20 px grid from 320 to 800 px with
 every wider grid width also clean.
 
@@ -498,18 +556,19 @@ measured width is also clean. Pipes are not checked by the script; the emulator 
 (`threshold-*` in `npm run capture`) are inspected by eye for those.
 
 The boxes, exclusions, installations and tolerance live in `dev/overlaps.ts`, shared by the script and by the
-browser test `test/card/overlaps.browser.test.ts`, which runs the same check at the threshold in headless Chromium
+browser test `test/card/overlaps.browser.test.ts`, which runs the same check at the threshold in headless Chromium and WebKit
 so that a change to the drawing or the labels that brings overlaps back fails `npm test`. The layout at real widths
 (`test/card/layout.browser.test.ts`) is also a browser test: happy-dom has no layout.
 
 Two choices decide the result. A label's box is its em box, with the half-leading trimmed, because the line boxes of
-the stacked compressor rows overlap at every width. And the tolerance is 0.5 px; with no tolerance the threshold
-would be about 740 px. Measuring in 10 px steps would give 690 px, but there the compressor rows have only about 6 px
-of margin, so the 20 px grid value of 700 px is kept.
+the stacked compressor rows overlap at every width. And the tolerance is 0.5 px; with no tolerance (boxes that merely touch
+count) the threshold would be 680 px, measured with the same script.
 
-Result: below 700 px the stacked compressor values (speed, percentage, power) start to touch because the labels stop
-shrinking at their 8 px minimum while their spacing keeps shrinking; below about 600 px more labels collide with
-each other and with components.
+The compressor rows (speed, percentage, power) were what limited the first measurement, 700 px, at a pitch of 11
+drawing units; their pitch is now 12 units (labels at y 307, 319 and 331), which gives 640 px.
+
+Result: at 620 px and below every case has overlaps (132 at 620 px, 682 at 360 px), because the labels stop shrinking
+at their 8 px minimum while the drawing keeps shrinking.
 
 ## Installation
 

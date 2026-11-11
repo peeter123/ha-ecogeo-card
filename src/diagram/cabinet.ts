@@ -18,6 +18,7 @@ import {
   HELIX_BACK_OPACITY,
   helixDrawOrder,
   helixHalves,
+  HOP,
   partState,
   pathData,
   roundedPathData,
@@ -28,19 +29,25 @@ import {
   type Point,
   type Segment,
 } from './geometry';
+import { DEFAULT_STROKES } from '../lib/layout';
 import { coilColor, pipeState, shownState, type PipeState, type PipeView } from './pipes';
 import { symbol, type ValvePort } from './symbols';
 
 export const cabinetStyles = css`
+  /* The stroke widths follow the card's width (add-compact-layout D4): the card sets --pipe-width and --outline-width on the svg,
+     in drawing units; the fallbacks are the designed widths, used while the width is unknown. */
   .outline {
     fill: none;
     stroke: var(--primary-text-color);
-    stroke-width: 3;
+    stroke-width: max(3, var(--outline-width, 2));
+  }
+  .symbol {
+    stroke-width: var(--outline-width, 2);
   }
   .pipe {
     fill: none;
     stroke: var(--secondary-text-color);
-    stroke-width: 3;
+    stroke-width: var(--pipe-width, 3);
     stroke-linejoin: round;
   }
   .pipe.muted {
@@ -54,7 +61,7 @@ export const cabinetStyles = css`
   .pipe-inside {
     fill: none;
     stroke: var(--ecogeo-coil-muted, var(--disabled-text-color));
-    stroke-width: 3;
+    stroke-width: var(--pipe-width, 3);
     stroke-linejoin: round;
   }
   /* The dash overlay of an active pipe: dashes in the card colour run along it in the direction of the flow. */
@@ -62,9 +69,9 @@ export const cabinetStyles = css`
     fill: none;
     stroke: var(--card-background-color, #fff);
     stroke-opacity: 0.55;
-    stroke-width: 3;
+    stroke-width: var(--pipe-width, 3);
     stroke-linecap: round;
-    stroke-dasharray: 3 18;
+    stroke-dasharray: var(--pipe-width, 3) calc(var(--pipe-width, 3) * 6);
     animation: flow-dash var(--flow-duration, 2s) linear infinite;
   }
   .flow.reversed {
@@ -72,7 +79,7 @@ export const cabinetStyles = css`
   }
   @keyframes flow-dash {
     to {
-      stroke-dashoffset: -21;
+      stroke-dashoffset: calc(var(--pipe-width, 3) * -7);
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -164,9 +171,16 @@ function helix(segment: Segment, shape: HelixShape, state: PipeState): SVGTempla
 }
 
 /** One pipe: the base stroke in its colour (or muted) and, while it flows, the dash overlay. */
-function pipe(segment: Segment, state: PipeState, gaps: readonly Point[], clipId?: string): SVGTemplateResult {
+function pipe(
+  segment: Segment,
+  state: PipeState,
+  gaps: readonly Point[],
+  hop: number,
+  clipId?: string,
+): SVGTemplateResult {
   if (segment.shape !== undefined) return helix(segment, segment.shape, state);
-  const d = segment.bend === undefined ? pathData(segment.points, gaps) : roundedPathData(segment.points, segment.bend);
+  const d =
+    segment.bend === undefined ? pathData(segment.points, gaps, hop) : roundedPathData(segment.points, segment.bend);
   return svg`<path class="pipe ${state.muted ? 'muted' : ''}" data-segment=${segment.id} style=${state.muted ? nothing : `stroke: ${state.color}`} stroke-linecap=${segment.roundEnd === true ? 'round' : nothing} d=${d} />${
     state.muted && clipId !== undefined && COIL_PIPES.has(segment.id)
       ? svg`<path class="pipe-inside" data-inside=${segment.id} clip-path="url(#${clipId})" d=${d} />`
@@ -247,7 +261,10 @@ export function renderCabinet(
   view: PipeView,
   taps?: Taps,
   fill: FillOptions = { mode: 'gradient', idPrefix: 'ecogeo' },
+  pipeWidth: number = DEFAULT_STROKES.pipe,
 ): SVGTemplateResult {
+  // The hop gaps scale with the pipe's width (add-compact-layout D4).
+  const hop = (HOP * pipeWidth) / DEFAULT_STROKES.pipe;
   const segments = drawnSegments(context);
   const ids = new Set(segments.map((entry) => entry.part.id));
   const states = new Map(segments.map((entry) => [entry.part.id, pipeState(entry.part, entry.state, view)] as const));
@@ -272,13 +289,13 @@ export function renderCabinet(
   return svg`<g class="cabinet">
     <defs>${gradients.map(gradientDef)}${clipId === undefined ? nothing : svg`<clipPath id=${clipId} data-tank-clip><path d=${externalTankBody()} /></clipPath>`}</defs>
     <rect class="outline" x=${CABINET.x} y=${CABINET.y} width=${CABINET.width} height=${CABINET.height} rx="6" />
-    ${LABEL_POSITIONS.filter((label) => partState(label, context) !== 'hidden').map(
+    ${LABEL_POSITIONS.filter((label) => context.captions !== false && partState(label, context) !== 'hidden').map(
       (label) =>
         svg`<text class="circuit-label" x=${label.x} y=${label.y} text-anchor="middle">${CIRCUIT_LABELS[label.key]}</text>`,
     )}
     ${segments.map((entry) => {
       const state = states.get(entry.part.id);
-      return state === undefined ? nothing : pipe(entry.part, state, gapsIn(entry.part.id, ids), clipId);
+      return state === undefined ? nothing : pipe(entry.part, state, gapsIn(entry.part.id, ids), hop, clipId);
     })}
     ${components}
   </g>`;

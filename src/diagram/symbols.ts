@@ -68,7 +68,7 @@ function helixCoil(): SVGTemplateResult {
   const supplyY = COIL_LOCAL_PORTS[0][1];
   const returnY = COIL_LOCAL_PORTS[1][1];
   const loopY = rx - cx;
-  return svg`<g transform="matrix(0 -1 1 0 0 0)">${helixDrawOrder(halves).map((half) => svg`<path data-half=${half.front ? 'front' : 'back'} stroke-linecap=${half.front ? 'round' : 'butt'} d=${half.d} opacity=${half.front ? nothing : HELIX_BACK_OPACITY} />`)}</g><path stroke-width="3" d="M${stub} ${supplyY} H${top} M${bottom} ${loopY} V${returnY} H${stub}" />`;
+  return svg`<g transform="matrix(0 -1 1 0 0 0)">${helixDrawOrder(halves).map((half) => svg`<path data-half=${half.front ? 'front' : 'back'} stroke-linecap=${half.front ? 'round' : 'butt'} d=${half.d} opacity=${half.front ? nothing : HELIX_BACK_OPACITY} />`)}</g><path style="stroke-width: var(--pipe-width, 3)" d="M${stub} ${supplyY} H${top} M${bottom} ${loopY} V${returnY} H${stub}" />`;
 }
 
 /** Compressor lines in the symbol's frame: from the circle (r 14) at 50 degrees either side of the suction axis (+x) to the narrow discharge end. */

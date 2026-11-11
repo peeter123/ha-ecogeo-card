@@ -33,6 +33,8 @@ export type PartBox = Box & { id: string; item: string | null };
 export interface Measurement {
   labels: LabelBox[];
   parts: PartBox[];
+  /** The cabinet's outline (its rectangle, without the stroke). */
+  cabinet: Box | undefined;
 }
 
 const box = (element: Element): Box => {
@@ -62,7 +64,8 @@ export function measureCard(root: ParentNode): Measurement {
     item: element.getAttribute('data-item'),
     ...box(element),
   }));
-  return { labels, parts };
+  const outline = root.querySelector('.cabinet > .outline');
+  return { labels, parts, cabinet: outline === null ? undefined : box(outline) };
 }
 
 const overlaps = (a: Box, b: Box): boolean =>
@@ -82,4 +85,38 @@ export function overlapPairs({ labels, parts }: Measurement): string[] {
     }
   });
   return pairs;
+}
+
+/**
+ * The side of the cabinet outline a value label stays on in the compact layout (add-compact-layout D8): the labels of
+ * the production and brine circuits, the compressor and the integrated tank 50 inside it, those of the source and of the
+ * external DHW tank outside it. Only the key labels, which are the ones the compact layout shows.
+ */
+export const LABEL_SIDES: Readonly<Record<string, 'inside' | 'outside'>> = {
+  production_out: 'inside',
+  production_in: 'inside',
+  brine_out: 'inside',
+  brine_in: 'inside',
+  compressor_speed: 'inside',
+  tank_internal_temperature: 'inside',
+  tank_external_temperature: 'outside',
+  air_unit_out: 'outside',
+  ground_out: 'outside',
+  hybrid_ground_out: 'outside',
+};
+
+/** The labels that are not on their side of the cabinet outline, as texts: an inside label must lie within it, an outside one clear of it. */
+export function sidePairs({ labels, cabinet }: Measurement): string[] {
+  if (cabinet === undefined) return ['no cabinet outline'];
+  return labels.flatMap((label) => {
+    const side = LABEL_SIDES[label.id];
+    if (side === undefined) return [];
+    const within =
+      label.left >= cabinet.left - TOLERANCE &&
+      label.right <= cabinet.right + TOLERANCE &&
+      label.top >= cabinet.top - TOLERANCE &&
+      label.bottom <= cabinet.bottom + TOLERANCE;
+    if (side === 'inside') return within ? [] : [`label ${label.id} is not inside the cabinet`];
+    return overlaps(label, cabinet) ? [`label ${label.id} is not outside the cabinet`] : [];
+  });
 }

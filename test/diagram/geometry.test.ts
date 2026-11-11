@@ -499,6 +499,16 @@ describe('pathData', () => {
     ];
     expect(pathData(points, [[10, 0]])).toBe(`M0 0 L${String(10 - HOP)} 0 M${String(10 + HOP)} 0 L20 0`);
   });
+
+  test('a thicker pipe asks for a wider gap (add-compact-layout D4)', () => {
+    const points: Point[] = [
+      [0, 0],
+      [40, 0],
+    ];
+    expect(pathData(points, [[20, 0]], 2 * HOP)).toBe(
+      `M0 0 L${String(20 - 2 * HOP)} 0 M${String(20 + 2 * HOP)} 0 L40 0`,
+    );
+  });
 });
 
 describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {

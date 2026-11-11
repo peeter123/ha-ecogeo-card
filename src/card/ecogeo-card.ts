@@ -13,7 +13,7 @@ import { SAMPLE_STATES } from '../config/sample';
 import { cabinetStyles, renderCabinet } from '../diagram/cabinet';
 import type { Taps } from '../diagram/component-info';
 import { dhwStyles, renderDhw } from '../diagram/dhw';
-import { viewBox } from '../diagram/geometry';
+import { viewBox, type DrawContext } from '../diagram/geometry';
 import { footerItems, labelsFor, labelStyles, renderFooterItems, renderLabels } from '../diagram/labels';
 import { coilMutedColor } from '../diagram/colors';
 import { tankColor, type PipeView } from '../diagram/pipes';
@@ -21,7 +21,7 @@ import { renderSource, sourceStyles } from '../diagram/source';
 import type { CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
-import { isCompact } from '../lib/layout';
+import { nextCompact, strokeWidths, type StrokeWidths } from '../lib/layout';
 import { fireMoreInfo, stateOf, type HassLike } from '../lib/hass';
 import { shouldRender } from '../lib/render';
 import { INDICATIONS, MODE_LABELS, SCHEMATIC_LABEL } from '../strings';
@@ -86,6 +86,9 @@ export class EcogeoCard extends LitElement {
   private resolved?: ResolvedConfig;
   private observer?: ResizeObserver;
   private renderedCompact = false;
+  /** Whether the layout last rendered was compact because `auto` chose it: only that counts for the hysteresis. */
+  private renderedAutoCompact = false;
+  private renderedStroke: StrokeWidths = strokeWidths(undefined);
   private entityIds: string[] = [];
   private renderedHass?: HassLike;
   private readonly idPrefix = `ecogeo${String(++instances)}`;
@@ -95,9 +98,12 @@ export class EcogeoCard extends LitElement {
     this.width = 0;
   }
 
-  /** The layout the card shows now: compact or full, from the `layout` option and the measured width (add-compact-layout D1). */
+  /**
+   * The layout the card shows now: compact or full, from the `layout` option, the measured width and, with `auto`, the
+   * layout it showed so far (the hysteresis of add-compact-layout D1).
+   */
   get layout(): 'compact' | 'full' {
-    return isCompact(this.resolved?.layout ?? 'auto', this.width) ? 'compact' : 'full';
+    return nextCompact(this.resolved?.layout ?? 'auto', this.width, this.renderedAutoCompact) ? 'compact' : 'full';
   }
 
   override connectedCallback(): void {
@@ -136,8 +142,15 @@ export class EcogeoCard extends LitElement {
   }
 
   protected override shouldUpdate(changed: PropertyValues): boolean {
-    // A width change alone renders only when it flips the layout.
-    if (changed.size === 1 && changed.has('width')) return (this.layout === 'compact') !== this.renderedCompact;
+    // A width change alone renders only when it flips the layout or changes the stroke widths (add-compact-layout D1, D4).
+    if (changed.size === 1 && changed.has('width')) {
+      const stroke = strokeWidths(this.width);
+      return (
+        (this.layout === 'compact') !== this.renderedCompact ||
+        stroke.pipe !== this.renderedStroke.pipe ||
+        stroke.outline !== this.renderedStroke.outline
+      );
+    }
     return shouldRender(changed, this.hass, this.renderedHass, this.entityIds);
   }
 
@@ -152,9 +165,19 @@ export class EcogeoCard extends LitElement {
 
   protected override render(): TemplateResult {
     this.renderedHass = this.hass;
-    this.renderedCompact = this.layout === 'compact';
-    const resolved = this.resolved;
-    if (resolved === undefined) return html`<ha-card data-layout=${this.layout}><div class="diagram"></div></ha-card>`;
+    const layout = this.layout;
+    const compact = layout === 'compact';
+    this.renderedCompact = compact;
+    this.renderedAutoCompact = compact && this.resolved?.layout === 'auto';
+    const stroke = strokeWidths(this.width);
+    this.renderedStroke = stroke;
+    const config = this.resolved;
+    if (config === undefined) return html`<ha-card data-layout=${layout}><div class="diagram"></div></ha-card>`;
+    // The compact layout draws the simplified detail level whatever `detail` says; the resolved config keeps the user's (D3).
+    // It also leaves out the captions inside the drawing, which would render at about 4 px.
+    const resolved: ResolvedConfig & Pick<DrawContext, 'captions'> = compact
+      ? { ...config, detail: 'simplified', captions: false }
+      : config;
     const { readings, offline } = this.readings(resolved);
     const mode = deriveMode(readings, resolved.features);
     const circuits = circuitsFor(mode, resolved.features, resolved.dhw, readings);
@@ -168,22 +191,22 @@ export class EcogeoCard extends LitElement {
           fireMoreInfo(this, entityId);
         };
     const taps: Taps = { entities: resolved.entities, onTap };
-    return html`<ha-card data-layout=${this.layout}>
+    return html`<ha-card data-layout=${layout}>
       <div class="diagram">
         <svg
           viewBox="0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}"
           preserveAspectRatio="xMidYMid meet"
           role="group"
           aria-label=${SCHEMATIC_LABEL}
-          style="--dhw-tank-color: ${tankColor(view)}; --ecogeo-coil-muted: ${coilMutedColor(this.hass?.themes?.darkMode === true)}"
+          style="--dhw-tank-color: ${tankColor(view)}; --ecogeo-coil-muted: ${coilMutedColor(this.hass?.themes?.darkMode === true)}; --pipe-width: ${String(stroke.pipe)}; --outline-width: ${String(stroke.outline)}"
         >
-          ${svg`${renderSource(resolved, readings, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix })}`}
+          ${svg`${renderSource(resolved, readings, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix }, stroke.pipe)}`}
         </svg>
-        ${renderLabels(labelsFor(resolved, readings, resolved.entities, display), onTap)}
+        ${renderLabels(labelsFor(resolved, readings, resolved.entities, display, compact), onTap)}
       </div>
       <div class="footer">
         <span class="mode">${MODE_LABELS[mode]}</span>
-        ${renderFooterItems(footerItems(readings, resolved.entities, display), onTap)}
+        ${renderFooterItems(footerItems(readings, resolved.entities, display, compact), onTap)}
         ${isAlarm(readings['unit.alarm']) ? html`<span class="alarm">${INDICATIONS.alarm}</span>` : nothing}
         ${offline ? html`<span class="offline">${INDICATIONS.offline}</span>` : nothing}
         ${resolved.sample ? html`<span class="sample">${INDICATIONS.sampleValues}</span>` : nothing}
