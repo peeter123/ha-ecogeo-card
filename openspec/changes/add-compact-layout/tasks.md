@@ -89,12 +89,12 @@ delta first.
 
 ## 3. Release and live installation
 
-- [ ] 3.1 Run `npm run release`.
+- [x] 3.1 Run `npm run release`.
   Verify: check-release reports `custom:ecogeo-card` registered.
-- [ ] 3.2 Deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource `?v=` and record it in
+- [x] 3.2 Deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource `?v=` and record it in
   `private/installation.md`.
   Verify: UPLOAD with no CONFLICT; the resource reads the new `?v=`.
-- [ ] 3.3 Live verification: an agent takes dashboard screenshots of the schematic view at a phone viewport
+- [x] 3.3 Live verification: an agent takes dashboard screenshots of the schematic view at a phone viewport
   (about 390 x 844) and at desktop width, reads the key entities' states, and checks compact at the phone width,
   full on the desktop, the key labels against the states, and the HA logs for errors mentioning `ecogeo`.
   Verify: verdict with no mismatches and no log errors.
