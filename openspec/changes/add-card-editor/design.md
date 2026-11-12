@@ -71,10 +71,33 @@ The round-trip test opens each emulator scenario's config and a config with ever
 `colors_<i>_temperature` (number selector, °C) and `colors_<i>_color` (color selector, hex), one per stop plus one
 empty row. On change, rows are folded back into `colors` (sorted, empty rows dropped); equal to `DEFAULT_STOPS`
 -> key removed. Validation reuses `src/config/options.ts`; its error message is shown in the editor's hint area.
+- The row logic lives in `src/editor/color-rows.ts` (not `schema.ts`, which stays generic). The colour selector is
+  HA's `color_rgb`; `fields.ts` converts `[r, g, b]` to and from hex.
+- With no `colors`, the rows show `DEFAULT_STOPS`. A row with a temperature but no colour yet is written with a
+  neutral grey (`#9e9e9e`). Colours the selector cannot show (names, `var()`) show an empty field and keep their
+  text while the row's colour is unchanged; hex is kept as written unless the picked colour differs. Rows equal to
+  the config's current list leave `colors` untouched, so round trips are exact.
+- Home Assistant's number selector reports every keystroke, so the rows are an editor-local draft: they keep the
+  order typed and stay in place (a row whose temperature is cleared stays visible with its colour). Only the list
+  written to `colors` is sorted and filtered. The draft is rebuilt from the config when the editor opens or when
+  `colors` arrives from outside (differs from the last list the editor fired). This amends "folded back on every
+  change" above: the fold happens on every change, the rows are not re-laid out from it.
+- HA's colour selector is a native colour input, which shows black when it has no value. The empty row's colour
+  therefore starts at the neutral grey; rows whose colour is a name or `var()` show black in the picker (documented
+  in the README and docs) and keep their text until a colour is picked.
+- A non-array `colors` (e.g. `colors:` with no value) is kept when the rows still equal the defaults.
+- A list the card rejects is still written; the card's error shows above the form. One empty row is shown even at
+  8 stops.
 
 ### D5. Advanced switch state
 As in hrv: the switch is a separate `ha-form` with editor-local state; it starts on when the config has any
-`entities` key. Turning it off hides the pickers but does not remove overrides.
+`entities` key. Turning it off hides the pickers but does not remove overrides. Unlike hrv the switch is not
+locked on by overrides; it turns on again only when `entities` arrives from outside while it is off.
+- `ha-form` nests a section's data under its name, so the pickers sit in an `entities` expandable that wraps one
+  expandable per role group (`entities.<group>.<role>`); the live check (task 3.3) confirms Home Assistant renders
+  nested expandables. An emptied `entities.<group>` is pruned like an emptied `entities`.
+- Picker labels are looked up by the role's leaf name, so roles sharing a leaf name across groups (`pressure`,
+  `pump`, `setpoint`, ...) share one label; the group section's title disambiguates.
 
 ## Risks / Trade-offs
 

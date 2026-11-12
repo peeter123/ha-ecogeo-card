@@ -60,12 +60,32 @@ be left out of the editor. The mechanics are copied from the hrv-ventilation car
 schema helpers and the field builders, each file naming its source in its header). `getStubConfig()` returns an
 empty config, so the card picker's preview shows the sample values.
 
-The sections are Unit (model, variant, source, DHW storage), Entities (the prefix), Features (the four features) and
-Appearance (detail, exchanger fill, layout). The variant is a select of the four variants, and the DHW select offers
+The sections are Unit (model, variant, source, DHW storage), Entities (the prefix), Features (the four features),
+Appearance (detail, exchanger fill, layout, colour stops) and Advanced entities (one picker per role). The variant is a select of the four variants, and the DHW select offers
 only the storages the model allows. The schema is built from the config being edited: the DHW storage's
 default follows the model, and the empty choice of each feature is labelled with the preset of the current variant.
 A feature is a select whose form values are text (`default`, `true`, `false`, `unused`) and whose config values are
 a boolean, `unused` or no key at all.
+
+The advanced entity pickers are built from the role table: an `entities` section with one section per role group (in
+the table's order of first appearance) and one `entity` selector per role, filtered to the role's domain and labelled
+from `src/strings.ts`. Sections nest, so the form data has the config's own shape, `entities.<group>.<role>`. They
+sit behind an "Advanced settings" switch, a separate `ha-form` with editor-local state that starts on when the config
+has an `entities` key and is never written to the config; turning it off hides the pickers and keeps the overrides
+(the editor does not lock the switch on, unlike the hrv-ventilation editor).
+
+The colour stops are flat fields `colors_<i>_temperature` (a number box in °C) and `colors_<i>_color` (Home
+Assistant's `color_rgb` selector, which reports `[r, g, b]`), one row per stop plus an empty row, because `ha-form`
+has no list-of-objects selector. The rows are an editor-local draft, built from the config (the default stops when
+`colors` is absent, plus one empty row whose colour starts at the neutral grey, because the native colour input shows
+black without a value) when the editor opens or when `colors` arrives from outside, meaning it differs from the last
+list the editor fired. Home Assistant's number box reports every keystroke, so the draft keeps the typed order (a row
+whose temperature is cleared stays visible with its colour, and exactly one empty row stays at the end). On every
+change the draft is folded back into `colors` (`src/editor/color-rows.ts`), without re-laying out the rows: the row keys never reach the config, rows
+without a temperature are dropped, stops are sorted by temperature, rows equal to the default stops remove the key,
+and rows equal to what the config already has leave it untouched, so a colour written as `#FFF`, a name or `var()`
+round-trips as written (a name or `var()` shows black in the picker and keeps its text until a colour is picked; a
+non-array `colors` is kept while the rows are still the defaults). Validation is the card's own (`colorsErrors`); its message shows above the form.
 
 What the editor writes follows three rules:
 
@@ -73,10 +93,9 @@ What the editor writes follows three rules:
   form's data with the defaults of unset fields and takes them out again before saving, unless the config already had
   the key.
 - A cleared field removes its key, and stays empty in the form until the config changes from outside, so typing a
-  new value does not append to the refilled default. An emptied `features` group is removed, unless the config had it
-  empty.
-- Keys the editor does not show are passed through unchanged: `type`, `colors`, `entities`, `grid_options`,
-  `view_layout` and any other.
+  new value does not append to the refilled default. An emptied `features` or `entities` group, and an emptied
+  `entities.<group>`, is removed, unless the config had it empty.
+- Keys the editor does not show are passed through unchanged: `type`, `grid_options`, `view_layout` and any other.
 
 The editor shows the card's configuration error (`configErrors`) above the form, for example a DHW storage that does
 not fit the model. It only fires `config-changed`: it calls no service and writes no entity, like the card. It is

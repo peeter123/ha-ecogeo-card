@@ -221,18 +221,33 @@ The colour scale, which pipe takes which probe and the animation are explained i
 
 The card has a visual editor, so it can be added and set up from the dashboard without YAML: choose **Add card**, pick
 **ecoGEO Schematic** (the preview shows the sample values), or open an existing card with **Edit**. The editor is
-Home Assistant's own form and has four sections:
+Home Assistant's own form and has five sections:
 
 - **Unit:** model, variant (a select of the four variants), outer-loop source and DHW storage (the select offers only
   the storages the model allows).
-- **Entities:** the entity prefix (`prefix`). Each role can still be overridden in YAML (`entities`).
+- **Entities:** the entity prefix (`prefix`).
 - **Features:** passive cooling, active cooling, HTR and backup heater, each On, Off, Unused or, left at the first
   choice, the variant's default (the choice names it, for example "Variant default: on").
-- **Appearance:** detail level, exchanger fill and layout.
+- **Appearance:** detail level, exchanger fill, layout and the colour stops (see below).
+- **Advanced entities:** one entity picker per role (the Roles table), in one collapsible group per part of the unit,
+  each picker limited to the role's domain. The groups are shown only while the **Advanced settings** switch above
+  the form is on. The switch starts on when the config has an `entities` key, is never written to the config, and
+  turning it off hides the pickers but keeps the overrides. Picking an entity writes `entities.<group>.<role>`;
+  clearing a picker removes that key, and a group or `entities` left empty is removed.
+
+The colour stops are one row per stop, a temperature (°C) and a colour, plus an empty row to add one. With no
+`colors` key the rows show the default stops. Rows are written to `colors` in ascending temperature order, a row with
+no temperature is dropped, and rows equal to the default stops remove the `colors` key. A stop whose temperature is
+entered before a colour is picked is written grey (`#9e9e9e`; the empty row's colour picker starts at that grey). The
+editor writes a picked colour as hex (`#rrggbb`). The rows stay in the order you type them, even though `colors` is
+written sorted, so a row does not jump while you type; a row whose temperature you clear stays visible with its
+colour. A colour written as a name or `var()` in YAML shows black in the picker and keeps its text until you pick a
+colour for that row. A list the card rejects (fewer than 2 or more than 8
+stops, or equal temperatures) is written and shows the error message above the form.
 
 A field the config leaves out shows its default. The editor writes only what you set: a value equal to its default is
-not written, clearing a field removes its key, and keys it does not show (`colors`, `entities`, `grid_options`,
-`view_layout` and so on) are kept as they are. If the config is invalid, the editor shows the card's error message above the
+not written, clearing a field removes its key, and keys it does not show (`grid_options`, `view_layout` and so on)
+are kept as they are. If the config is invalid, the editor shows the card's error message above the
 form. The editor changes only the card's config; it calls no service and writes no entity.
 
 ### Operating mode

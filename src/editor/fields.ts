@@ -2,7 +2,8 @@
 // color, number); the sensor, stream, list, boolean and section builders of the HRV cards are dropped; `choiceField`
 // takes the choices and the default from this card's option table (src/config/options.ts), with an optional default
 // of its own (the DHW storage's default depends on the model); `entityField` takes the role's domain.
-// `colorField` is hrv's text-selector version; task 2.2 replaces it with the colour selector (hex conversion).
+// `colorField` is Home Assistant's `color_rgb` selector (hrv has a text selector); it reports [r, g, b], so
+// `hexToRgb` and `rgbToHex` convert to and from the hex text the config holds.
 // Editor fields built from the option table and the role table.
 import type { ChoiceOption, NumberOption } from '../lib/options';
 import type { EditorField } from './schema';
@@ -38,12 +39,37 @@ export const numberField = (
   },
 });
 
-/** A colour field with the option's default. */
-export const colorField = (name: string, fallback: string): EditorField => ({
-  name,
-  default: fallback,
-  selector: { text: {} },
-});
+/** A colour as [red, green, blue], each 0 to 255. */
+export type Rgb = readonly [number, number, number];
+
+/** The channels of a hex colour (`#rgb` or `#rrggbb`, any case); undefined for any other text (a name, `var()`). */
+export function hexToRgb(color: string): Rgb | undefined {
+  const digits = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim())?.[1];
+  if (digits === undefined) return undefined;
+  const full = digits.length === 3 ? digits.replace(/./g, '$&$&') : digits;
+  const channel = (at: number): number => Number.parseInt(full.slice(at, at + 2), 16);
+  return [channel(0), channel(2), channel(4)];
+}
+
+/** True for what the colour selector reports: three channels. */
+export const isRgb = (value: unknown): value is Rgb =>
+  Array.isArray(value) &&
+  value.length === 3 &&
+  value.every((channel) => typeof channel === 'number' && Number.isFinite(channel));
+
+/** The hex text (`#rrggbb`, lower case) of three channels, each rounded and held to 0 to 255. */
+export const rgbToHex = (rgb: Rgb): string =>
+  '#' +
+  rgb
+    .map((channel) =>
+      Math.min(255, Math.max(0, Math.round(channel)))
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('');
+
+/** A colour field: Home Assistant's colour selector, whose value is [r, g, b] (the caller converts to and from hex). */
+export const colorField = (name: string): EditorField => ({ name, selector: { color_rgb: {} } });
 
 /** A drop-down for a choice option, with a label per choice; `fallback` replaces the option's default. */
 export const choiceField = (

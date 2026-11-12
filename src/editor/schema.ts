@@ -1,8 +1,10 @@
 // Copied from hrv-ventilation src/editor/schema.ts. Deviations: `EditorField.coded` with `toFormData` and
 // `fromFormData` (a select whose form value is text while the config value is a boolean, such as a feature);
 // `withoutEmptyTexts` and `withoutEmptyGroups` (the minimal writes of add-card-editor D3) take the place of
-// `withoutBlankTexts` (this card has no text lists); `withValueAt` keeps the position of an existing key; the imports
-// are this card's.
+// `withoutBlankTexts` (this card has no text lists); `withValueAt` keeps the position of an existing key; sections
+// can nest (the entity pickers sit in one section per role group inside an `entities` section, so the form data has
+// the config's own shape `entities.<group>.<role>`); `withoutEmptyGroups` also prunes emptied nested groups; the
+// imports are this card's.
 // The editor schema of a card: Home Assistant `ha-form` fields and expandable sections, each field marked basic
 // or advanced. The pure functions here decide what the form shows; the editor element only renders their result.
 import { parseNumericState } from '../lib/availability';
@@ -38,7 +40,7 @@ export interface EditorSection {
   name: string;
   title?: string;
   flatten?: boolean;
-  schema: readonly EditorField[];
+  schema: readonly (EditorField | EditorSection)[];
 }
 
 export type EditorSchema = readonly (EditorField | EditorSection)[];
@@ -47,7 +49,7 @@ export type EditorSchema = readonly (EditorField | EditorSection)[];
 export type FormField = Omit<EditorField, 'advanced'>;
 
 export interface FormSection extends Omit<EditorSection, 'schema'> {
-  schema: readonly FormField[];
+  schema: FormSchema;
 }
 
 export type FormSchema = readonly (FormField | FormSection)[];
@@ -64,12 +66,23 @@ function toFormField(field: EditorField): FormField {
   return formField;
 }
 
+function visibleItems(items: EditorSchema, showAdvanced: boolean): FormSchema {
+  return items.flatMap((item): (FormField | FormSection)[] => {
+    if (!isSection(item)) return showAdvanced || item.advanced !== true ? [toFormField(item)] : [];
+    const inner = visibleItems(item.schema, showAdvanced);
+    return inner.length > 0 ? [{ ...item, schema: inner }] : [];
+  });
+}
+
 /** Every field of the schema with the config path its value lives at ("outdoor.temperature", "min_scale"). */
-export function fieldsWithPaths(schema: EditorSchema): { field: EditorField; path: string }[] {
-  return schema.flatMap((item) =>
+export function fieldsWithPaths(
+  schema: EditorSchema | FormSchema,
+  prefix = '',
+): { field: EditorField; path: string }[] {
+  return (schema as EditorSchema).flatMap((item) =>
     isSection(item)
-      ? item.schema.map((field) => ({ field, path: item.flatten ? field.name : `${item.name}.${field.name}` }))
-      : [{ field: item, path: item.name }],
+      ? fieldsWithPaths(item.schema, item.flatten ? prefix : `${prefix}${item.name}.`)
+      : [{ field: item, path: `${prefix}${item.name}` }],
   );
 }
 
@@ -78,12 +91,7 @@ export function fieldsWithPaths(schema: EditorSchema): { field: EditorField; pat
  * Advanced fields stay in their own section, and a section left without fields is left out.
  */
 export function visibleSchema(schema: EditorSchema, showAdvanced: boolean): FormSchema {
-  const shown = (field: EditorField): boolean => showAdvanced || field.advanced !== true;
-  return schema.flatMap((item): (FormField | FormSection)[] => {
-    if (!isSection(item)) return shown(item) ? [toFormField(item)] : [];
-    const fields = item.schema.filter(shown).map(toFormField);
-    return fields.length > 0 ? [{ ...item, schema: fields }] : [];
-  });
+  return visibleItems(schema, showAdvanced);
 }
 
 /**
@@ -150,7 +158,7 @@ export function withShownDefaults(
   config: CardConfig,
   emptied: ReadonlySet<string> = new Set(),
 ): CardConfig {
-  return fieldsWithPaths(schema as EditorSchema).reduce(
+  return fieldsWithPaths(schema).reduce(
     (shown, { field, path }) =>
       field.default !== undefined && valueAt(config, path) === undefined && !emptied.has(path)
         ? withValueAt(shown, path, field.default)
@@ -164,7 +172,7 @@ export function withShownDefaults(
  * (`changed`, where a cleared field is missing or `undefined`).
  */
 export function clearedPaths(schema: EditorSchema | FormSchema, shown: CardConfig, changed: CardConfig): string[] {
-  return fieldsWithPaths(schema as EditorSchema)
+  return fieldsWithPaths(schema)
     .map(({ path }) => path)
     .filter((path) => valueAt(shown, path) !== undefined && valueAt(changed, path) === undefined);
 }
@@ -182,13 +190,13 @@ export function withoutUndefined<T>(value: T): T {
 }
 
 /**
- * A copy without the text fields (a `text` selector) that are empty: `ha-form` reports a cleared text box as an empty
- * text, which must not reach the config. Other values are kept as they are.
+ * A copy without the text and entity fields (a `text` or `entity` selector) that are empty: `ha-form` reports a cleared
+ * text box or entity picker as an empty text, which must not reach the config. Other values are kept as they are.
  */
 export function withoutEmptyTexts(schema: EditorSchema | FormSchema, config: CardConfig): CardConfig {
-  return fieldsWithPaths(schema as EditorSchema).reduce(
+  return fieldsWithPaths(schema).reduce(
     (cleaned, { field, path }) =>
-      'text' in field.selector && valueAt(cleaned, path) === ''
+      ('text' in field.selector || 'entity' in field.selector) && valueAt(cleaned, path) === ''
         ? withValueAt(cleaned, path, undefined, config)
         : cleaned,
     config,
@@ -197,7 +205,7 @@ export function withoutEmptyTexts(schema: EditorSchema | FormSchema, config: Car
 
 /** The config as `ha-form` displays it: the values of coded fields are replaced by their form values. */
 export function toFormData(schema: EditorSchema | FormSchema, config: CardConfig): CardConfig {
-  return fieldsWithPaths(schema as EditorSchema).reduce((shown, { field, path }) => {
+  return fieldsWithPaths(schema).reduce((shown, { field, path }) => {
     const value = valueAt(shown, path);
     const pair = field.coded?.find(([, configValue]) => configValue !== undefined && configValue === value);
     return pair === undefined ? shown : withValueAt(shown, path, pair[0]);
@@ -213,7 +221,7 @@ export function fromFormData(
   reported: CardConfig,
   original: CardConfig,
 ): CardConfig {
-  return fieldsWithPaths(schema as EditorSchema).reduce((decoded, { field, path }) => {
+  return fieldsWithPaths(schema).reduce((decoded, { field, path }) => {
     const value = valueAt(decoded, path);
     const pair = field.coded?.find(([form]) => form === value);
     return pair === undefined ? decoded : withValueAt(decoded, path, pair[1], original);
@@ -222,14 +230,28 @@ export function fromFormData(
 
 /**
  * A copy without the listed top-level groups that are empty objects, unless `original` already had that group as an
- * empty object (so a config written that way survives a save unchanged).
+ * empty object (so a config written that way survives a save unchanged). In the groups listed in `nested`, an empty
+ * object inside the group (`entities.dhw`) is removed in the same way, before the group itself is judged.
  */
-export function withoutEmptyGroups(config: CardConfig, original: CardConfig, groups: readonly string[]): CardConfig {
+export function withoutEmptyGroups(
+  config: CardConfig,
+  original: CardConfig,
+  groups: readonly string[],
+  nested: readonly string[] = [],
+): CardConfig {
+  const isEmpty = (value: unknown): boolean => isRecord(value) && Object.keys(value).length === 0;
   return Object.fromEntries(
-    Object.entries(config).filter(([key, value]) => {
-      if (!groups.includes(key) || !isRecord(value) || Object.keys(value).length > 0) return true;
+    Object.entries(config).flatMap(([key, value]): [string, unknown][] => {
+      if (!groups.includes(key) || !isRecord(value)) return [[key, value]];
       const before = original[key];
-      return isRecord(before) && Object.keys(before).length === 0;
+      const kept = nested.includes(key)
+        ? Object.fromEntries(
+            Object.entries(value).filter(
+              ([name, child]) => !isEmpty(child) || (isRecord(before) && isEmpty(before[name])),
+            ),
+          )
+        : value;
+      return Object.keys(kept).length > 0 || isEmpty(before) ? [[key, kept]] : [];
     }),
   );
 }
@@ -244,7 +266,7 @@ export function withoutShownDefaults(
   current: CardConfig,
   changed: CardConfig,
 ): CardConfig {
-  return fieldsWithPaths(schema as EditorSchema).reduce(
+  return fieldsWithPaths(schema).reduce(
     (saved, { field, path }) =>
       field.default !== undefined &&
       valueAt(current, path) === undefined &&

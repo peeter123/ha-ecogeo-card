@@ -19,7 +19,7 @@ describe('ecogeo-card-editor without ha-form', () => {
     await customElements.whenDefined('ha-form');
     await new Promise((resolve) => setTimeout(resolve, 0));
     await editor.updateComplete;
-    expect(editor.shadowRoot?.querySelectorAll('ha-form')).toHaveLength(1);
+    expect(editor.shadowRoot?.querySelectorAll('ha-form')).toHaveLength(2);
     expect(editor.shadowRoot?.textContent).not.toContain(EDITOR.noForm);
   });
 });

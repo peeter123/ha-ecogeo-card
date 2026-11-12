@@ -21,15 +21,18 @@ expose `detail`, `exchanger_fill` and `layout`.
 
 ## 2. Advanced pickers and colour rows
 
-- [ ] 2.1 Add the advanced switch and one entity picker per role in grouped expandables, filtered by domain
+- [x] 2.1 Add the advanced switch and one entity picker per role in grouped expandables, filtered by domain
   (design D2, D5); labels for every role in `src/strings.ts`.
   Verify: `npm test` covers "Override a role", "Switch not written", the switch on for a config with `entities`,
   and every role in `roles.ts` having a picker and a label.
-- [ ] 2.2 Add the colour stop rows (design D4).
+- [x] 2.2 Add the colour stop rows (design D4).
   Verify: `npm test` covers "Add a stop", "Back to default", sorting, dropping an empty row, hex conversion, and the
   error message for a list of one stop.
-- [ ] 2.3 Document the advanced pickers and colour rows in the README and docs.
+- [x] 2.3 Document the advanced pickers and colour rows in the README and docs.
   Verify: the sections exist and `test/readme.ts` passes.
+
+Visual verification of the editor: the dev emulator has no editor, so the live check in 3.3 is the editor's
+visual verification (groups 1-2 change nothing in the card's rendering).
 
 ## 3. Release and live installation
 

@@ -39,7 +39,8 @@ describe('visibleSchema', () => {
     const fields = outdoor && 'schema' in outdoor ? outdoor.schema : [];
     expect(fields.every((field) => !('advanced' in field))).toBe(true);
     expect(fields[0]).toEqual({ name: 'temperature', required: true, selector: { entity: { domain: 'sensor' } } });
-    expect(calculation && 'schema' in calculation ? calculation.schema[0]?.default : undefined).toBe(10);
+    const first = calculation && 'schema' in calculation ? calculation.schema[0] : undefined;
+    expect(first && 'default' in first ? first.default : undefined).toBe(10);
   });
 
   test('sections keep their type, name and title', () => {

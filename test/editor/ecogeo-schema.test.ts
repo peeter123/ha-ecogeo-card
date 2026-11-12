@@ -10,10 +10,21 @@ import {
   TOP_LEVEL_OPTIONS,
 } from '../../src/config/options';
 import { FEATURE_KEYS, VARIANTS, variantFeatures } from '../../src/config/variants';
+import { DEFAULT_STOPS } from '../../src/diagram/colors';
+import { ROLES } from '../../src/config/roles';
+import { colorRowOf } from '../../src/editor/color-rows';
 import { editorSchema } from '../../src/editor/ecogeo-schema';
 import { choiceField, colorField, entityField, numberField } from '../../src/editor/fields';
 import { fieldsWithPaths, isSection, type EditorField } from '../../src/editor/schema';
 import { EDITOR } from '../../src/strings';
+
+/** The role paths grouped by role group, the groups in the order of their first role (the order of the sections). */
+const rolePathsByGroup = (): string[] => {
+  const groups = [...new Set(ROLES.map((role) => role.path.split('.')[0]))];
+  return groups.flatMap((group) =>
+    ROLES.filter((role) => role.path.startsWith(`${group ?? ''}.`)).map((role) => `entities.${role.path}`),
+  );
+};
 
 const paths = (config = {}): string[] => fieldsWithPaths(editorSchema(config)).map(({ path }) => path);
 const field = (path: string, config = {}): EditorField | undefined =>
@@ -30,7 +41,7 @@ const optionLabels = (item: EditorField | undefined): string[] => {
 describe('editorSchema', () => {
   test('the sections are Unit, Entities, Features and Appearance, in that order', () => {
     const sections = editorSchema({}).map((item) => (isSection(item) ? item.name : undefined));
-    expect(sections).toEqual(['unit', 'entity_prefix', 'features', 'appearance']);
+    expect(sections).toEqual(['unit', 'entity_prefix', 'features', 'appearance', 'entities']);
     for (const name of sections) expect(EDITOR.sections).toHaveProperty(name ?? '');
   });
 
@@ -48,11 +59,18 @@ describe('editorSchema', () => {
       'detail',
       'exchanger_fill',
       'layout',
+      ...DEFAULT_STOPS.flatMap((_, index) => [`colors_${String(index)}_temperature`, `colors_${String(index)}_color`]),
+      'colors_6_temperature',
+      'colors_6_color',
+      ...rolePathsByGroup(),
     ]);
   });
 
   test('every field has a label in the editor strings', () => {
-    for (const { field: item } of fieldsWithPaths(editorSchema({}))) expect(EDITOR.fields).toHaveProperty(item.name);
+    const labels: Record<string, string> = { ...EDITOR.fields, ...EDITOR.roles };
+    for (const { field: item } of fieldsWithPaths(editorSchema({}))) {
+      if (colorRowOf(item.name) === undefined) expect(labels, item.name).toHaveProperty(item.name);
+    }
   });
 
   test('the choice fields come from the option table: its choices and defaults, labelled from the strings', () => {
@@ -100,9 +118,10 @@ describe('editorSchema', () => {
   });
 
   test('every option of the option table has an editor field, apart from the explicit exceptions', () => {
-    // Not options of the editor: the card type, the keys Home Assistant adds to any card, and the keys of task group 2.
-    const exceptions = ['type', 'view_layout', 'layout_options', 'grid_options', 'visibility', 'entities', 'colors'];
+    // Not options of the editor: the card type and the keys Home Assistant adds to any card. `colors` is edited as rows.
+    const exceptions = ['type', 'view_layout', 'layout_options', 'grid_options', 'visibility'];
     const roots = new Set(paths().map((path) => path.split('.')[0]));
+    if (paths().some((path) => colorRowOf(path) !== undefined)) roots.add('colors');
     for (const option of TOP_LEVEL_OPTIONS.filter((key) => !exceptions.includes(key))) {
       expect(roots.has(option), option).toBe(true);
     }
@@ -169,6 +188,6 @@ describe('field builders', () => {
     });
     expect(entityField('e', 'sensor')).toEqual({ name: 'e', selector: { entity: { domain: 'sensor' } } });
     expect(entityField('e', ['sensor', 'number'], { advanced: true })).toMatchObject({ advanced: true });
-    expect(colorField('c', '#fff')).toEqual({ name: 'c', default: '#fff', selector: { text: {} } });
+    expect(colorField('c')).toEqual({ name: 'c', selector: { color_rgb: {} } });
   });
 });

@@ -10,18 +10,22 @@ import { configOf, defaultState } from '../../dev/url-state';
 import { SCENARIO_NAMES } from '../../dev/scenarios';
 import { DHW_STORAGES, MODELS, SOURCES } from '../../src/config/options';
 import { FEATURE_KEYS, VARIANTS } from '../../src/config/variants';
+import { DEFAULT_STOPS } from '../../src/diagram/colors';
+import { hexToRgb } from '../../src/editor/fields';
 import { CHOICE_SCHEMA } from './fixtures';
+import { StubForm } from './harness';
 
-/** Stands in for Home Assistant's ha-form: keeps what the editor passes and can emit value-changed. */
-class StubForm extends HTMLElement {
-  schema: FormSchema = [];
-  data: Record<string, unknown> = {};
-  computeLabel?: (item: { name: string; type?: string; title?: string; schema?: unknown[] }) => string;
+/** The names of the colour row fields of `count` rows. */
+const rowFields = (count: number): string[] =>
+  Array.from({ length: count }, (_, i) => [`colors_${String(i)}_temperature`, `colors_${String(i)}_color`]).flat();
 
-  change(value: Record<string, unknown>): void {
-    this.dispatchEvent(new CustomEvent('value-changed', { detail: { value }, bubbles: true, composed: true }));
-  }
-}
+/** What the form shows for the default colour stops (the colours as [r, g, b]). */
+const DEFAULT_ROW_DATA: Record<string, unknown> = Object.fromEntries(
+  DEFAULT_STOPS.flatMap((stop, i): [string, unknown][] => [
+    [`colors_${String(i)}_temperature`, stop.temperature],
+    [`colors_${String(i)}_color`, hexToRgb(stop.color)],
+  ]).concat([[`colors_${String(DEFAULT_STOPS.length)}_color`, [158, 158, 158]]]),
+);
 
 beforeAll(async () => {
   customElements.define('ha-form', StubForm);
@@ -41,7 +45,7 @@ async function openEditor(
   editor.setConfig(config);
   document.body.append(editor);
   await editor.updateComplete;
-  const form = editor.shadowRoot?.querySelector<StubForm>('ha-form');
+  const form = editor.shadowRoot?.querySelector<StubForm>('ha-form:not(.switch)');
   if (!form) throw new Error('editor did not render a form');
   return { editor, form };
 }
@@ -108,6 +112,7 @@ describe('ecogeo-card-editor existing config', () => {
       detail: 'simplified',
       exchanger_fill: 'gradient',
       layout: 'auto',
+      ...DEFAULT_ROW_DATA,
     });
     expect(fieldNames(form.schema)).toEqual([
       'model',
@@ -122,6 +127,7 @@ describe('ecogeo-card-editor existing config', () => {
       'detail',
       'exchanger_fill',
       'layout',
+      ...rowFields(DEFAULT_STOPS.length + 1),
     ]);
   });
 
@@ -151,7 +157,8 @@ describe('ecogeo-card-editor existing config', () => {
     const label = (): string | undefined => {
       const group = form.schema.find((item) => item.name === 'features');
       const first = group && 'schema' in group ? group.schema[0] : undefined;
-      const select = first?.selector['select'] as { options: { label: string }[] } | undefined;
+      const select = (first && 'selector' in first ? first.selector['select'] : undefined) as
+        { options: { label: string }[] } | undefined;
       return select?.options[0]?.label;
     };
     expect(label()).toBe(EDITOR.featureChoices.variantDefault(EDITOR.featureChoices.presetOff));

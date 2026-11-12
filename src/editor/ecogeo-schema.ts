@@ -1,7 +1,8 @@
 // The editor's schema (add-card-editor D2): the sections and fields of the card's options, generated from the
 // option table (src/config/options.ts) and the variant presets, for the config being edited (the DHW storage's
 // default follows the model, and the empty choice of a feature names the variant's preset). Pure; the editor
-// element renders it. Colour stop rows (task 2.2) and the advanced entity pickers (task 2.1) are added here later.
+// element renders it. The colour stop rows (color-rows.ts) sit in the appearance section; the advanced entity pickers
+// (one section per role group, built from the role table) are in the `entities` section.
 import {
   DEFAULT_VARIANT,
   defaultDhw,
@@ -17,15 +18,20 @@ import {
   SOURCE_OPTION,
   variantOf,
 } from '../config/options';
+import { ROLES } from '../config/roles';
 import { VARIANTS, variantFeatures, type FeatureKey, type FeatureState } from '../config/variants';
 import type { CardConfig } from '../lib/config';
 import { valueAt } from '../lib/config';
 import { EDITOR } from '../strings';
-import { choiceField } from './fields';
-import type { EditorField, EditorSchema } from './schema';
+import { colorRowFields, draftOf } from './color-rows';
+import { choiceField, entityField } from './fields';
+import type { EditorField, EditorSchema, EditorSection } from './schema';
 
 /** The top-level groups the editor removes when they end up empty. */
 export const EMPTY_GROUPS: readonly string[] = ['features', 'entities'];
+
+/** The groups that hold groups of their own (`entities.<group>`), which are removed when they end up empty. */
+export const NESTED_GROUPS: readonly string[] = ['entities'];
 
 /** The form value of a feature that is left to the variant's preset. */
 const VARIANT_DEFAULT = 'default';
@@ -94,8 +100,32 @@ function dhwField(config: CardConfig, model: Model): EditorField {
   return choiceField('dhw', { ...DHW_OPTION, choices: shown }, EDITOR.choices.dhw, defaultDhw(model));
 }
 
-/** The editor schema for a config: Unit, Entities (the prefix), Features and Appearance. */
-export function editorSchema(config: CardConfig): EditorSchema {
+/**
+ * The advanced entity pickers: an `entities` section with one section per role group (in the role table's order of
+ * first appearance) and one entity picker per role, filtered to the role's domain. The form data thereby has the
+ * config's own shape, `entities.<group>.<role>`.
+ */
+function entitiesSection(): EditorSection {
+  const groups = new Map<string, EditorField[]>();
+  for (const role of ROLES) {
+    const [group = '', name = ''] = role.path.split('.');
+    groups.set(group, [...(groups.get(group) ?? []), entityField(name, role.domain, { advanced: true })]);
+  }
+  return {
+    type: 'expandable',
+    name: 'entities',
+    schema: [...groups].map(([group, schema]): EditorSection => ({
+      type: 'expandable',
+      name: group,
+      title: EDITOR.roleGroups[group as keyof typeof EDITOR.roleGroups],
+      schema,
+    })),
+  };
+}
+
+/** The editor schema for a config: Unit, Entities (the prefix), Features, Appearance (with the colour stop rows)
+ * and the advanced entity pickers. */
+export function editorSchema(config: CardConfig, colorRows: number = draftOf(config).length): EditorSchema {
   const preset = variantFeatures(variantOf(config));
   const model = valueAt(config, 'model') === MODELS[1] ? MODELS[1] : MODELS[0];
   return [
@@ -129,7 +159,9 @@ export function editorSchema(config: CardConfig): EditorSchema {
         choiceField('detail', DETAIL_OPTION, EDITOR.choices.detail),
         choiceField('exchanger_fill', EXCHANGER_FILL_OPTION, EDITOR.choices.exchanger_fill),
         choiceField('layout', LAYOUT_OPTION, EDITOR.choices.layout),
+        ...colorRowFields(colorRows),
       ],
     },
+    entitiesSection(),
   ];
 }
