@@ -22,7 +22,9 @@ its rules are binding. Read it, and the active change in `openspec/changes/`, be
 The first change, `add-schematic-card`, is archived in `openspec/changes/archive/2026-11-11-add-schematic-card/`;
 its capabilities are the accepted specs in `openspec/specs/`. Follow-ups are named in its proposal. The second,
 `refine-schematic-drawing` (detail level, component info, palette, exchanger fills, tank and source drawing), is
-archived in `openspec/changes/archive/2026-11-11-refine-schematic-drawing/`.
+archived in `openspec/changes/archive/2026-11-11-refine-schematic-drawing/`. The third, `add-compact-layout` (the
+`layout` option, compact content for phones, minimum line and font sizes, browser tests), is archived in
+`openspec/changes/archive/2026-11-12-add-compact-layout/`.
 
 ## Rules in short
 

@@ -24,9 +24,10 @@ in the manual's order:
 - 3 brine outlet and 4 brine inlet, labelled as the outer loop.
 - 5 and 6, labelled as DHW.
 Each connection SHALL show its item number with `detail: full`, and SHALL NOT show it with `detail: simplified`.
+In the compact layout (responsive-layout) the connection labels (DG1, outer loop, DHW) SHALL NOT be drawn.
 
 #### Scenario: Port order
-- **WHEN** the card renders model B with `dhw: external`
+- **WHEN** the card renders model B with `dhw: external` in the full layout
 - **THEN** the top edge shows connections 1, 2, 3, 4, 5, 6 left to right, labelled DG1, outer loop and DHW
 
 #### Scenario: No DHW
@@ -149,14 +150,15 @@ legible in both light and dark themes.
 ### Requirement: Detail level
 The card SHALL draw the schematic at the level of detail set by the `detail` option: `simplified` (the default)
 or `full`. Simplified SHALL leave out the service and safety parts that have no live value and SHALL show no item
-numbers; full SHALL draw every part of the manual figure with its item number.
+numbers; full SHALL draw every part of the manual figure with its item number. In the compact layout
+(responsive-layout) the card SHALL draw the simplified level whatever `detail` says.
 
 #### Scenario: Default is simplified
 - **WHEN** the config sets no `detail`
 - **THEN** no item number is shown anywhere on the drawing, and the safety valves 20/21 are not drawn
 
 #### Scenario: Full detail
-- **WHEN** the config sets `detail: full`
+- **WHEN** the config sets `detail: full` and the card shows the full layout
 - **THEN** the drawing shows the same parts and item numbers as before this option existed
 
 ### Requirement: Line weights
