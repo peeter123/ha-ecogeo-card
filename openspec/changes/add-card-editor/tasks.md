@@ -36,9 +36,9 @@ visual verification (groups 1-2 change nothing in the card's rendering).
 
 ## 3. Release and live installation
 
-- [ ] 3.1 Run `npm run release`.
+- [x] 3.1 Run `npm run release`.
   Verify: check-release reports `custom:ecogeo-card` registered.
-- [ ] 3.2 Deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource `?v=` and record it in
+- [x] 3.2 Deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource `?v=` and record it in
   `private/installation.md`.
   Verify: UPLOAD with no CONFLICT; the resource reads the new `?v=`.
 - [ ] 3.3 Live verification: with a browser tool, an agent opens the schematic view's card in Home Assistant's
