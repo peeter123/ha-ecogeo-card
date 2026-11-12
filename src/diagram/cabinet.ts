@@ -77,9 +77,10 @@ export const cabinetStyles = css`
   .flow.reversed {
     animation-direction: reverse;
   }
+  /* One dash period (dash 1 + gap 6 widths). The -7px carries a length: Chromium does not interpolate a unitless calc(), it jumps. */
   @keyframes flow-dash {
     to {
-      stroke-dashoffset: calc(var(--pipe-width, 3) * -7);
+      stroke-dashoffset: calc(var(--pipe-width, 3) * -7px);
     }
   }
   @media (prefers-reduced-motion: reduce) {

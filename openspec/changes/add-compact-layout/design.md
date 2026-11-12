@@ -59,6 +59,9 @@ No geometry change.
 `--outline-width: max(2, 1.25 / scale)` (in drawing units, computed in TypeScript, rounded to 0.1), which the
 stroke rules of `refine-schematic-drawing` read instead of their constants. The dash pattern of the flow overlay
 scales with `--pipe-width`. Hop gaps scale too.
+The dash keyframe's offset is a length (`calc(var(--pipe-width) * -7px)`, px being drawing units inside the svg),
+not a unitless number: Chromium does not interpolate a unitless calc with the start value and switches discretely
+(task 2.7).
 Alternative considered: `vector-effect: non-scaling-stroke` with px widths. Rejected: it also keeps strokes thin on
 large screens, and hop gaps and dash patterns are in drawing units.
 

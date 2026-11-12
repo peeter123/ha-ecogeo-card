@@ -86,6 +86,15 @@ delta first.
   HA's assigned value harmless. Committed on its own, as a group 1 fix.
   Verify: `npm test` covers assigning `card.layout` (for example "panel", "grid", undefined) before and after
   `setConfig` without an error and without changing the layout the card shows; `npm run check` passes.
+- [x] 2.7 Fix the flow animation reported by the user after the live release (added 2026-11-12): in Chromium (desktop
+  Chrome, the Android app) the pipes' dash overlay no longer moves. The `flow-dash` keyframe from 2.2 ends at
+  `calc(var(--pipe-width, 3) * -7)`, a unitless number, which Chromium does not interpolate with the start value:
+  it switches discretely to one full dash period, which looks the same as the start. WebKit interpolates it. Give
+  the keyframe a length (`* -7px`; px equals drawing units in the svg), measured to animate smoothly in both
+  engines. Committed on its own, as a group 2 fix, then released (group 3 steps: release, deploy, `?v=` bump,
+  live check).
+  Verify: a browser test samples `stroke-dashoffset` of an animated flow path over time in Chromium and WebKit and
+  finds intermediate values (not only the start and end of the period); `npm run check` passes.
 
 ## 3. Release and live installation
 
