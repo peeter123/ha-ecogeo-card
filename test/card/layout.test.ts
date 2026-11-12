@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { LitElement } from 'lit';
 import '../../src/index';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import { configErrors } from '../../src/config/options';
@@ -201,5 +202,76 @@ describe('card layout from its width', () => {
     expect(observer?.observed).toEqual([card]);
     card.remove();
     expect(observer?.disconnected).toBe(true);
+  });
+});
+
+// Home Assistant's hui-card assigns `layout` ("panel", "grid") to every card element. A card that defines `layout`
+// without a setter throws on that assignment and cannot be built (add-compact-layout D1, task 2.6).
+describe('the layout property Home Assistant assigns', () => {
+  const assign = (card: EcogeoCard, value: unknown): void => {
+    (card as unknown as { layout: unknown }).layout = value;
+  };
+
+  test('assigning layout before setConfig neither throws nor changes the layout shown', async () => {
+    const card = document.createElement('ecogeo-card') as EcogeoCard;
+    for (const value of ['panel', 'grid', undefined])
+      expect(() => {
+        assign(card, value);
+      }).not.toThrow();
+    card.setConfig({ type: 'custom:ecogeo-card' });
+    document.body.append(card);
+    await card.updateComplete;
+    await resize(card, 360);
+    expect(layoutOf(card)).toBe('compact');
+    expect(card.shownLayout).toBe('compact');
+  });
+
+  test('assigning layout after setConfig neither throws nor changes the layout shown', async () => {
+    for (const [config, width, shown] of [
+      [{}, 360, 'compact'],
+      [{}, 1000, 'full'],
+      [{ layout: 'full' }, 360, 'full'],
+      [{ layout: 'compact' }, 1000, 'compact'],
+    ] as const) {
+      const card = await mount(config);
+      await resize(card, width);
+      for (const value of ['panel', 'grid', undefined]) {
+        expect(() => {
+          assign(card, value);
+        }).not.toThrow();
+        await card.updateComplete;
+        expect(layoutOf(card)).toBe(shown);
+        expect(card.shownLayout).toBe(shown);
+      }
+    }
+  });
+
+  test('no class between the card and LitElement defines a layout property or accessor', () => {
+    const card = document.createElement('ecogeo-card') as EcogeoCard;
+    for (
+      let proto = Object.getPrototypeOf(card) as object | null;
+      proto !== null;
+      proto = Object.getPrototypeOf(proto) as object | null
+    ) {
+      if (proto === LitElement.prototype) break;
+      expect(Object.getOwnPropertyDescriptor(proto, 'layout'), proto.constructor.name).toBeUndefined();
+    }
+    expect(Object.getOwnPropertyDescriptor(card, 'layout')).toBeUndefined();
+    expect((card.constructor as typeof LitElement).elementProperties.has('layout')).toBe(false);
+  });
+
+  // The properties Home Assistant's hui-card assigns to every card element.
+  test.each(['hass', 'layout', 'preview', 'editMode', 'isPanel'])('%s is never a getter without a setter', (name) => {
+    const card = document.createElement('ecogeo-card') as EcogeoCard;
+    const readOnly = (descriptor: PropertyDescriptor | undefined): boolean =>
+      descriptor?.get !== undefined && descriptor.set === undefined;
+    expect(readOnly(Object.getOwnPropertyDescriptor(card, name))).toBe(false);
+    for (
+      let proto = Object.getPrototypeOf(card) as object | null;
+      proto !== null && proto !== LitElement.prototype;
+      proto = Object.getPrototypeOf(proto) as object | null
+    ) {
+      expect(readOnly(Object.getOwnPropertyDescriptor(proto, name)), proto.constructor.name).toBe(false);
+    }
   });
 });

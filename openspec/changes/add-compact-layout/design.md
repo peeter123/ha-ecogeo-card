@@ -35,6 +35,9 @@ takes the current layout as an input and stays a pure, unit-tested function. Onl
 chose counts (group 2 review): after a switch from `layout: compact` to `auto` the card shows what a newly loaded
 card of that width shows. The width-only branch of
 `shouldUpdate` also re-renders when the stroke scale of D4 changes, not only on a layout flip.
+The card defines no property named `layout` (task 2.6): Home Assistant assigns `layout` to every card element
+(hui-card, for example "panel" or "grid"), and a read-only accessor of that name makes the assignment throw, so HA
+cannot build the card. The layout the card shows has another name, and HA's assigned value plays no part in it.
 
 ### D2. Two label tiers
 Each label spec in `labels.ts` gets `tier: 'key' | 'detail'`. Key: `production.outlet_temperature`,

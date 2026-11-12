@@ -78,6 +78,14 @@ delta first.
   there with the margin, it keeps the low place beside pressure 37.
   Verify: `npm run check` passes, including "No overlaps in the compact layout" in Chromium and WebKit for the new
   installation and scenario value.
+- [x] 2.6 Fix the live failure found by group 3's live verification (added 2026-11-12, user decision): Home
+  Assistant assigns a `layout` property to every card element (hui-card), and the card's read-only `layout` getter
+  from 1.1 makes that assignment throw ("Cannot set property layout of [object HTMLElement] which has only a
+  getter", logged by the frontend), so HA cannot build the card: blank on the Android app, "Configuration error" in
+  the screenshot engine. Rename the getter so the card defines no `layout` property of its own (D1), and keep
+  HA's assigned value harmless. Committed on its own, as a group 1 fix.
+  Verify: `npm test` covers assigning `card.layout` (for example "panel", "grid", undefined) before and after
+  `setConfig` without an error and without changing the layout the card shows; `npm run check` passes.
 
 ## 3. Release and live installation
 

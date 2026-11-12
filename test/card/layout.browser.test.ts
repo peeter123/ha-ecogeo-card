@@ -66,3 +66,17 @@ describe('layout at real widths', () => {
     await expectLayout(card, 'compact');
   });
 });
+
+describe('the layout property Home Assistant assigns', () => {
+  test('assigning layout in a real engine neither throws nor changes the layout shown', async () => {
+    const { card } = await show(360);
+    const assign = (value: unknown): void => {
+      (card as unknown as { layout: unknown }).layout = value;
+    };
+    for (const value of ['panel', 'grid', undefined])
+      expect(() => {
+        assign(value);
+      }).not.toThrow();
+    await expectLayout(card, 'compact');
+  });
+});

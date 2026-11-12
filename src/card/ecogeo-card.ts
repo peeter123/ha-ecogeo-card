@@ -102,7 +102,7 @@ export class EcogeoCard extends LitElement {
    * The layout the card shows now: compact or full, from the `layout` option, the measured width and, with `auto`, the
    * layout it showed so far (the hysteresis of add-compact-layout D1).
    */
-  get layout(): 'compact' | 'full' {
+  get shownLayout(): 'compact' | 'full' {
     return nextCompact(this.resolved?.layout ?? 'auto', this.width, this.renderedAutoCompact) ? 'compact' : 'full';
   }
 
@@ -146,7 +146,7 @@ export class EcogeoCard extends LitElement {
     if (changed.size === 1 && changed.has('width')) {
       const stroke = strokeWidths(this.width);
       return (
-        (this.layout === 'compact') !== this.renderedCompact ||
+        (this.shownLayout === 'compact') !== this.renderedCompact ||
         stroke.pipe !== this.renderedStroke.pipe ||
         stroke.outline !== this.renderedStroke.outline
       );
@@ -165,7 +165,7 @@ export class EcogeoCard extends LitElement {
 
   protected override render(): TemplateResult {
     this.renderedHass = this.hass;
-    const layout = this.layout;
+    const layout = this.shownLayout;
     const compact = layout === 'compact';
     this.renderedCompact = compact;
     this.renderedAutoCompact = compact && this.resolved?.layout === 'auto';
