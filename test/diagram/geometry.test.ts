@@ -6,6 +6,7 @@ import {
   SOURCES,
   type Detail,
   type DhwStorage,
+  type Model,
   type Source,
 } from '../../src/config/options';
 import type { RolePath } from '../../src/config/roles';
@@ -28,6 +29,7 @@ import {
   SEGMENTS,
   crossingPoints,
   drawnComponents,
+  drawnStorage,
   drawnSegments,
   gapsIn,
   helixExtent,
@@ -48,15 +50,19 @@ import {
 
 const STATES: readonly FeatureState[] = [true, false, 'unused'];
 
-/** Every combination of the four features, the three DHW storages, the three sources and the two levels of detail. */
+/** Every combination of the four features, the two models, the DHW storages, the three sources and the two levels of detail. */
 function contexts(): DrawContext[] {
   const result: DrawContext[] = [];
   const build = (index: number, features: Partial<Record<FeatureKey, FeatureState>>): void => {
     const key = FEATURE_KEYS[index];
     if (key === undefined) {
-      for (const dhw of DHW_STORAGES) {
-        for (const source of SOURCES) {
-          for (const detail of DETAIL_LEVELS) result.push({ dhw, source, detail, features: features as Features });
+      for (const model of ['B', 'C'] as const) {
+        for (const dhw of DHW_STORAGES) {
+          for (const source of SOURCES) {
+            for (const detail of DETAIL_LEVELS) {
+              result.push({ model, dhw, source, detail, features: features as Features });
+            }
+          }
         }
       }
       return;
@@ -68,14 +74,20 @@ function contexts(): DrawContext[] {
 }
 
 const ALL = contexts();
-const full = (dhw: DhwStorage = 'external', source: Source = 'ground', detail: Detail = 'full'): DrawContext => ({
+const full = (
+  dhw: DhwStorage = 'external',
+  source: Source = 'ground',
+  detail: Detail = 'full',
+  model: Model = dhw === 'internal' ? 'C' : 'B',
+): DrawContext => ({
+  model,
   dhw,
   source,
   detail,
   features: { active_cooling: true, passive_cooling: true, htr: true, backup_heater: true },
 });
 const label = (context: DrawContext): string =>
-  `${context.detail} ${context.dhw} ${context.source} ${JSON.stringify(context.features)}`;
+  `${context.detail} ${context.model} ${context.dhw} ${context.source} ${JSON.stringify(context.features)}`;
 const items = (context: DrawContext): number[] => drawnComponents(context).map((entry) => entry.part.item);
 const ids = (context: DrawContext): string[] => drawnSegments(context).map((entry) => entry.part.id);
 const circuits = (valves2728: Circuits['valves2728'], active: readonly CircuitId[]): Circuits => ({
@@ -270,13 +282,13 @@ describe('integrity in every configuration', () => {
     expect(has('src_gnd_'), 'ground').toBe(context.source === 'ground');
     expect(has('src_hyb_'), 'hybrid').toBe(context.source === 'hybrid');
     expect(idsDrawn.has('src_out') && idsDrawn.has('src_in')).toBe(true);
-    expect(has('dhw_ext_'), 'external').toBe(context.dhw === 'external');
-    expect(has('tap_'), 'taps').toBe(context.dhw === 'internal');
+    expect(has('dhw_ext_'), 'external').toBe(drawnStorage(context) === 'external');
+    expect(has('tap_'), 'taps').toBe(drawnStorage(context) === 'internal');
     const drawnItems = components.map((component) => component.item);
     for (const item of [47, 48, 49, 50, 51, 52, 53, 54]) {
       const serviceOnly = item === 52 || item === 53;
       expect(drawnItems.includes(item), `item ${String(item)}`).toBe(
-        context.dhw === 'internal' && (!serviceOnly || context.detail === 'full'),
+        drawnStorage(context) === 'internal' && (!serviceOnly || context.detail === 'full'),
       );
     }
 
@@ -293,8 +305,9 @@ describe('integrity in every configuration', () => {
     const entering = (rect: { x: number; y: number; width: number; height: number }): string[] =>
       segments.filter((segment) => enters(routePoints(segment), rect)).map((segment) => segment.id);
     // (a tank that is not drawn is not checked)
-    if (context.dhw === 'internal') expect(entering(INTERNAL_TANK).sort()).toEqual(['dhw_ret_b', 'dhw_sup_b']);
-    if (context.dhw === 'external') {
+    if (drawnStorage(context) === 'internal')
+      expect(entering(INTERNAL_TANK).sort()).toEqual(['dhw_ret_b', 'dhw_sup_b']);
+    if (drawnStorage(context) === 'external') {
       expect(entering(EXTERNAL_TANK).sort()).toEqual(['dhw_ext_coil', 'dhw_ext_in', 'dhw_ext_out']);
     }
     if (context.source !== 'ground') {

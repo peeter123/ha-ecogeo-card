@@ -57,6 +57,13 @@ describe('active circuits follow the mode', () => {
     expect(active(circuitsFor('dhw', v4, 'none', running).active)).toEqual(['brine', 'refrigerant']);
   });
 
+  // operating-mode "DHW mode with an unused tank"
+  test('dhw with an unused tank: no circuit to ports 5/6 and no DHW coil, valve 26 still follows the mode', () => {
+    const c = circuitsFor('dhw', v4, 'unused', running);
+    expect(active(c.active)).toEqual(['brine', 'refrigerant']);
+    expect(c.valve26).toBe('dhw');
+  });
+
   test('active cooling: reversed refrigerant, brine and DG1', () => {
     const c = circuitsFor('active_cooling', v4, 'external', readings({ 'brine.pump': 100, 'heating.capacity': 0 }));
     expect(active(c.active)).toEqual(['brine', 'production_dg1', 'refrigerant']);
@@ -131,6 +138,15 @@ describe('HTR recovery in active cooling', () => {
       false,
     );
     expect(circuitsFor('active_cooling', v4, 'none', brineOn(1200)).active.has('htr')).toBe(false);
+  });
+
+  // operating-mode "HTR idle with an unused tank"
+  test('an unused tank: no htr circuit and no DHW coil, even with HTR true and condensation capacity', () => {
+    const c = circuitsFor('active_cooling', v4, 'unused', brineOn(1200));
+    expect(c.active.has('htr')).toBe(false);
+    expect(c.active.has('dhw_coil')).toBe(false);
+    expect(c.valve26).toBe('production');
+    expect(circuitsFor('active_cooling', v4, 'unused', brineOn(3000, 0)).active.has('htr')).toBe(false);
   });
 
   test('HTR idle while heating, in dhw and in the other modes', () => {

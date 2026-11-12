@@ -1,11 +1,19 @@
 import { describe, expect, test } from 'vitest';
 import { CAPTURES } from '../../dev/captures';
 import { SCENARIO_NAMES } from '../../dev/scenarios';
-import { configOf, defaultState, parseState, toSearch } from '../../dev/url-state';
+import { configOf, defaultState, dhwForModel, parseState, toSearch } from '../../dev/url-state';
 import { configErrors } from '../../src/config/options';
 import { COMPACT_BELOW } from '../../src/lib/layout';
 
 describe('emulator URL state', () => {
+  test('a DHW value the model rejects falls back to default', () => {
+    expect(parseState('?model=C&dhw=none').dhw).toBe('default');
+    expect(parseState('?model=B&dhw=internal').dhw).toBe('default');
+    expect(parseState('?model=C&dhw=unused').dhw).toBe('unused');
+    expect(dhwForModel('C', 'none')).toBe('default');
+    expect(dhwForModel('B', 'unused')).toBe('unused');
+  });
+
   test('an empty query is the default state', () => {
     expect(parseState('')).toEqual(defaultState());
   });
@@ -17,7 +25,7 @@ describe('emulator URL state', () => {
       model: 'C' as const,
       variant: 2 as const,
       source: 'hybrid' as const,
-      dhw: 'none' as const,
+      dhw: 'unused' as const,
       detail: 'full' as const,
       fill: 'none' as const,
       layout: 'compact' as const,
@@ -128,7 +136,7 @@ describe('capture list', () => {
     const states = CAPTURES.map(({ query }) => parseState(`?${query}`));
     for (const scenario of SCENARIO_NAMES) expect(states.some((s) => s.scenario === scenario)).toBe(true);
     for (const source of ['air', 'ground', 'hybrid']) expect(states.some((s) => s.source === source)).toBe(true);
-    for (const dhw of ['external', 'internal', 'none']) expect(states.some((s) => s.dhw === dhw)).toBe(true);
+    for (const dhw of ['external', 'internal', 'unused', 'none']) expect(states.some((s) => s.dhw === dhw)).toBe(true);
     expect(states.some((s) => s.model === 'C')).toBe(true);
     expect(states.some((s) => s.theme === 'dark')).toBe(true);
     for (const key of ['active_cooling', 'passive_cooling', 'htr', 'backup_heater'] as const) {

@@ -13,6 +13,7 @@ import {
   CIRCUIT_LABELS as LABEL_POSITIONS,
   drawnComponents,
   drawnSegments,
+  drawnStorage,
   externalTankBody,
   gapsIn,
   HELIX_BACK_OPACITY,
@@ -270,7 +271,7 @@ export function renderCabinet(
   const ids = new Set(segments.map((entry) => entry.part.id));
   const states = new Map(segments.map((entry) => [entry.part.id, pipeState(entry.part, entry.state, view)] as const));
   const gradients: SideGradient[] = [];
-  const clipId = context.dhw === 'external' ? `${fill.idPrefix}-tank-clip` : undefined;
+  const clipId = drawnStorage(context) === 'external' ? `${fill.idPrefix}-tank-clip` : undefined;
   const components = drawnComponents(context).map((entry) => {
     const sides = fill.mode === 'gradient' ? entry.part.sides : undefined;
     if (sides === undefined) return component(entry, view, context.detail, taps);

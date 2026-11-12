@@ -147,6 +147,21 @@ describe('hydraulic labels', () => {
     card.remove();
   });
 
+  // live-values "Unused tank labels": the tank is drawn but shows no values, in the full and the compact layout
+  test('unused tank: no tank labels on either model, in the full and the compact layout', async () => {
+    for (const model of ['B', 'C'] as const) {
+      for (const layout of ['full', 'compact'] as const) {
+        const card = await mount({ model, dhw: 'unused', layout }, hassOf());
+        expect(
+          labelIds(card).filter((id) => id.startsWith('tank_')),
+          `${model} ${layout}`,
+        ).toEqual([]);
+        expect(labelIds(card)).toContain('compressor_speed');
+        card.remove();
+      }
+    }
+  });
+
   test('part not drawn: no tank labels without DHW storage, no fan speed label with a ground source', async () => {
     const noDhw = await mount({ dhw: 'none' }, hassOf());
     expect(labelIds(noDhw).filter((id) => id.startsWith('tank_'))).toEqual([]);
@@ -535,7 +550,7 @@ describe('source labels', () => {
     ]);
 
     test.each(['air', 'ground', 'hybrid'] as const)('%s', (source) => {
-      const context = { dhw: 'external', source, features: mergeFeatures(4, {}), detail } as const;
+      const context = { model: 'B', dhw: 'external', source, features: mergeFeatures(4, {}), detail } as const;
       const shown = LABEL_SPECS.filter((spec) => partState(spec, context) !== 'hidden');
       const mine = shown.filter((spec) => SOURCE_IDS.has(spec.id));
       expect(mine.length).toBeGreaterThanOrEqual(source === 'ground' ? 2 : 3);
@@ -800,7 +815,7 @@ describe('label positions', () => {
     const features = mergeFeatures(4, {});
     const entities = Object.fromEntries(ROLE_PATHS.map((role) => [role, undefined])) as Record<RolePath, undefined>;
     const readings = readRoles({}, entities);
-    const context = { dhw: 'external', source: 'air', features, detail: 'simplified' } as const;
+    const context = { model: 'B', dhw: 'external', source: 'air', features, detail: 'simplified' } as const;
     expect(labelsFor(context, readings, entities, { locale: {} })).toEqual(
       labelsFor(context, readings, entities, { locale: {} }),
     );

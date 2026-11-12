@@ -41,10 +41,40 @@ visual verification (groups 1-2 change nothing in the card's rendering).
 - [x] 3.2 Deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource `?v=` and record it in
   `private/installation.md`.
   Verify: UPLOAD with no CONFLICT; the resource reads the new `?v=`.
-- [ ] 3.3 Live verification: with a browser tool, an agent opens the schematic view's card in Home Assistant's
+The live editor check, first planned as 3.3, moved to group 5 after the user's check of `?v=9` found the model C
+DHW issue (group 4).
+
+## 4. Unused DHW storage (design D6)
+
+Added after the user's live check of `?v=9`: on model C, `dhw: none` also removed HTR, while a model C always has
+its tank.
+
+- [x] 4.1 Add `dhw: unused` to the config (valid on B and C) and reject `dhw: none` on model C; draw the model's
+  tank and DHW parts muted with no tank values, HTR following its own feature, and no DHW circuit or HTR recovery
+  active with an unused tank (design D6).
+  Verify: `npm test` covers card-config "No tank on model C" and "Unused tank on either model", dhw-storage
+  "Unused external tank", "Unused internal tank", "HTR kept with an unused tank" and "DHW mode with an unused
+  tank", operating-mode "DHW mode with an unused tank" and "HTR idle with an unused tank", live-values "Unused tank
+  labels"; the existing `dhw: none` tests on model B still pass.
+- [x] 4.2 Editor and emulator: the DHW select offers B external, unused, none and C internal, unused; the emulator's
+  DHW storage control offers `unused` (`none` only on B). check-release also checks that `ecogeo-card-editor` is
+  registered.
+  Verify: `npm test` covers the DHW choices per model; the emulator renders model C with `dhw: unused` (a subagent
+  screenshots it and returns a verdict: tank 50 muted with no values, HTR drawn).
+- [x] 4.3 Document `dhw: unused` and the model C rule in the README option table and `docs/ecogeo-card.md`.
+  Verify: `test/readme.ts` passes.
+- [x] 4.4 Run `npm run release`, deploy `dist/ecogeo-card.js` explicitly, bump the resource `?v=` and record it in
+  `private/installation.md` (with the approximate local deploy time).
+  Verify: check-release reports both elements registered; UPLOAD with no CONFLICT; the resource reads the new
+  `?v=`; the live dashboard config is unchanged; no new `ecogeo` log errors.
+
+## 5. Live editor check
+
+- [ ] 5.1 Live verification: with a browser tool, an agent opens the schematic view's card in Home Assistant's
   editor, screenshots the visual editor (main sections, then advanced on), and closes it without saving; it then
   confirms through the dashboard config that the view is unchanged. If no browser tool is available, the
-  orchestrator asks the user to open the editor and confirm. Check the HA logs for errors mentioning `ecogeo`.
+  orchestrator asks the user to open the editor and confirm, including model C with `dhw: unused` in the preview.
+  Check the HA logs for errors mentioning `ecogeo`.
   Verify: verdict with the editor showing the live config's values, no config change and no log errors.
 
 ## Workflow follow-up

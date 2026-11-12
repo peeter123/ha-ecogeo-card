@@ -29,10 +29,13 @@ export const CAPTURES: readonly CaptureStep[] = [
   step('dhw-external', 'scenario=dhw&dhw=external'),
   step('dhw-none', 'scenario=heating&dhw=none'),
   step('dhw-none-dhw-mode', 'scenario=dhw&dhw=none'),
+  step('dhw-unused-modelB', 'scenario=heating&dhw=unused'),
+  step('dhw-unused-dhw-mode', 'scenario=dhw&dhw=unused'),
   step('dhw-internal-modelC', 'scenario=dhw&model=C&dhw=internal'),
   // model C
   step('model-C-heating', 'scenario=heating&model=C&dhw=internal'),
-  step('model-C-dhw-none', 'scenario=heating&model=C&dhw=none'),
+  step('model-C-dhw-unused', 'scenario=heating&model=C&dhw=unused'),
+  step('model-C-dhw-unused-htr', 'scenario=active_cooling_htr&model=C&dhw=unused'),
   step('model-C-active_cooling_htr', 'scenario=active_cooling_htr&model=C'),
   // each feature false and unused, in the scenario that uses it
   ...FEATURE_KEYS.flatMap((key) =>

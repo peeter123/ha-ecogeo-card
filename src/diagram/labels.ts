@@ -416,7 +416,8 @@ export function labelsFor(
 ): ShownLabel[] {
   return LABEL_SPECS.flatMap((label): ShownLabel[] => {
     if (compact && label.tier !== 'key') return [];
-    if (partState(label, context) === 'hidden') return [];
+    // An unused tank (dhw: unused) shows no values: its labels are left out, though its parts are drawn.
+    if (partState(label, context) === 'hidden' || (context.dhw === 'unused' && label.dhw !== undefined)) return [];
     const entityId = entities[label.role];
     const compactPlace = compact ? label.compact : undefined;
     const caption = (compact ? label.compactCaption : undefined) ?? label.caption;

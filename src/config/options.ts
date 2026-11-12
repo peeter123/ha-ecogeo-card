@@ -13,7 +13,7 @@ export const MODELS = ['B', 'C'] as const;
 export type Model = (typeof MODELS)[number];
 export const SOURCES = ['air', 'ground', 'hybrid'] as const;
 export type Source = (typeof SOURCES)[number];
-export const DHW_STORAGES = ['external', 'internal', 'none'] as const;
+export const DHW_STORAGES = ['external', 'internal', 'unused', 'none'] as const;
 export type DhwStorage = (typeof DHW_STORAGES)[number];
 export const DETAIL_LEVELS = ['simplified', 'full'] as const;
 export type Detail = (typeof DETAIL_LEVELS)[number];
@@ -206,7 +206,8 @@ export function configErrors(config: CardConfig): string[] {
   // The mismatch is only checked when model and dhw are valid by themselves.
   if (invalidOptions(config, [MODEL_OPTION, DHW_OPTION]).length === 0 && !isLeftOut(valueAt(config, 'dhw'))) {
     const { model, dhw } = installationOf(config);
-    if ((model === 'B' && dhw === 'internal') || (model === 'C' && dhw === 'external')) {
+    // Model C always has its tank, which may be unused but not absent.
+    if ((model === 'B' && dhw === 'internal') || (model === 'C' && (dhw === 'external' || dhw === 'none'))) {
       errors.push(CONFIG_ERRORS.dhwMismatch(dhw, model));
     }
   }

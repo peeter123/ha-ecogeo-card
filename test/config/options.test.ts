@@ -35,7 +35,7 @@ describe('card type and options', () => {
 
   test.each([
     ['source', 'sea', 'air, ground, hybrid'],
-    ['dhw', 'tank', 'external, internal, none'],
+    ['dhw', 'tank', 'external, internal, unused, none'],
   ])('invalid %s', (option, value, allowed) => {
     const [message] = errors({ [option]: value });
     expect(message).toContain(option);
@@ -101,11 +101,29 @@ describe('DHW default follows the model', () => {
     expect(errors({ model: 'C', dhw: 'external' })[0]).toContain('dhw');
   });
 
-  test('none fits both models; the matching storage is valid', () => {
+  test('none fits model B only; the matching storage is valid', () => {
     expect(errors({ model: 'B', dhw: 'none' })).toEqual([]);
-    expect(errors({ model: 'C', dhw: 'none' })).toEqual([]);
     expect(errors({ model: 'C', dhw: 'internal' })).toEqual([]);
     expect(errors({ model: 'B', dhw: 'external' })).toEqual([]);
+  });
+
+  // card-config "No tank on model C"
+  test('model C with dhw none is an error naming dhw (model C always has its tank)', () => {
+    const found = errors({ model: 'C', dhw: 'none' });
+    expect(found).toHaveLength(1);
+    expect(found[0]).toContain('dhw');
+    expect(found[0]).toContain('model C');
+  });
+
+  // card-config "Unused tank on either model"
+  test('dhw unused is valid on both models and keeps the defaults of the others', () => {
+    expect(errors({ model: 'B', dhw: 'unused' })).toEqual([]);
+    expect(errors({ model: 'C', dhw: 'unused' })).toEqual([]);
+    expect(errors({ dhw: 'unused' })).toEqual([]);
+    expect(resolveConfig({ model: 'C', dhw: 'unused' }).dhw).toBe('unused');
+    expect(resolveConfig({ model: 'B', dhw: 'unused' }).dhw).toBe('unused');
+    expect(resolveConfig({ model: 'C' }).dhw).toBe('internal');
+    expect(resolveConfig({ model: 'B' }).dhw).toBe('external');
   });
 
   test('an invalid source does not hide a model/dhw mismatch', () => {

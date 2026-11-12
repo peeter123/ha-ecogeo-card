@@ -62,7 +62,7 @@ empty config, so the card picker's preview shows the sample values.
 
 The sections are Unit (model, variant, source, DHW storage), Entities (the prefix), Features (the four features),
 Appearance (detail, exchanger fill, layout, colour stops) and Advanced entities (one picker per role). The variant is a select of the four variants, and the DHW select offers
-only the storages the model allows. The schema is built from the config being edited: the DHW storage's
+only the storages the model allows (B: external, unused, none; C: internal, unused). The schema is built from the config being edited: the DHW storage's
 default follows the model, and the empty choice of each feature is labelled with the preset of the current variant.
 A feature is a select whose form values are text (`default`, `true`, `false`, `unused`) and whose config values are
 a boolean, `unused` or no key at all.
@@ -137,10 +137,12 @@ Valves and circuits follow the mode (also pure, in `src/calc/circuits.ts`):
 - The brine circuit is active only while the brine pump runs.
 - A circuit whose part is `false` or `unused` is never active, except exchanger 10 with valves 27/28 in a defrost
   (and not at all when `passive_cooling` is `false`).
-- HTR recovery: in active cooling, with `htr` `true`, a DHW storage and `heating.capacity` (the condensation
+- HTR recovery: in active cooling, with `htr` `true`, a DHW storage in use (external or internal) and `heating.capacity` (the condensation
   capacity) above 0 W, the HTR circuit (exchanger 9, pump 17) and the DHW coil are active and valve 26 stays towards
   ports 1/2. In every other mode HTR is drawn idle: its state is not known (coil 210 is not exposed by the firmware).
-- Without DHW storage (`dhw: none`) there is no DHW loop, so the DHW mode has no DHW circuits and HTR is never active.
+- Without DHW storage (`dhw: none`, model B only) or with an unused tank (`dhw: unused`) there is no DHW loop, so the DHW
+  mode has no DHW circuits (no circuit to ports 5/6, no DHW coil) and HTR is never active. The DHW mode is still derived
+  and labelled, and valve 26 follows it.
 
 ## Drawing
 
@@ -227,8 +229,8 @@ the compressor discharge and 29 on the suction line, as in the figure.
   go.
 - `unused`: the part is drawn muted and is never active, except that exchanger 10 with valves 27/28 is drawn active in a defrost. Pipes that only serve it are muted; a pipe that merely
   passes through it (for example the discharge line through exchanger 9) stays normal.
-- Without DHW storage (`dhw: none`) connections 5/6, valve 26 and the whole HTR group (9, 17, 22, 25) are not drawn,
-  because HTR only makes sense with a DHW storage; ports 1/2 connect straight to the production circuit, and the discharge line runs from compressor 11 straight to valve 14.
+- Without DHW storage (`dhw: none`, model B only) connections 5/6, valve 26 and the whole HTR group (9, 17, 22, 25) are
+  not drawn, because HTR only makes sense with a DHW storage; ports 1/2 connect straight to the production circuit, and the discharge line runs from compressor 11 straight to valve 14.
 - Model C draws no connections 5/6. The DHW lines of valve 26 run into the integrated tank (items 47 to 54), drawn
   under the top edge (see Source and DHW).
 
@@ -333,7 +335,13 @@ housing. These are ordinary value labels (see Live values).
   B figures. It differs from the figure in these ways: 47 and 49 are short stubs that end at the tank's top rather
   than dip tubes (the coil fills the tank's height, so a tube would cross it), the trap sits on the supply line
   instead of the coil's high point, and probe 54 and drain valve 53 touch the wall.
-- **None:** no tank, no DHW pipes, no connections 5/6, no valve 26 and no HTR group. The mode label "DHW" can still show when the unit reports DHW mode.
+- **Unused (`dhw: unused`, either model):** the model's tank is drawn as above (on B the external tank and connections 5/6; on C tank 50, coil 51, the stubs 47 to 49 and, at the full detail level,
+  52 and 53; valve 26 on both), but muted: the tank
+  body, outline and rim take the muted colour, the coil and the DHW pipes are muted and never animated, and the tank shows no values.
+  HTR follows its own feature as with a tank in use (exchanger 9, pump 17 and valves 22/25 drawn, idle), and the
+  discharge line routes as with a tank in use. No circuit to ports 5/6, no DHW coil and no HTR circuit is ever active; the
+  mode label "DHW" still shows when the unit reports DHW mode, and valve 26 follows the mode.
+- **None (model B only):** no tank, no DHW pipes, no connections 5/6, no valve 26 and no HTR group. The mode label "DHW" can still show when the unit reports DHW mode. Model C always has its integrated tank, so `dhw: none` there is a configuration error; use `unused`.
 
 The tank body takes the DHW temperature colour through the custom property `--dhw-tank-color` (see Colours). The
 fan speed, outside temperature, the In and Out temperatures of the air unit and of the ground loop and the tank
@@ -466,7 +474,7 @@ but never animated. With `prefers-reduced-motion: reduce` nothing is animated, t
 stay the same.
 
 The tank body colour is the custom property `--dhw-tank-color` on the drawing; the tank takes the muted colour and
-shows no number while the DHW temperature is unavailable.
+shows no number while the DHW temperature is unavailable; with `dhw: unused` it is always the muted colour.
 
 ## Live values
 
@@ -491,7 +499,7 @@ writes no entity.
 
 The labels have a minimum font size, so on a card narrower than about 560 px while the demand line shows (about 510 px for the three values alone) the labels inside tank 50 start to touch; narrower cards are left to the compact layout (`add-compact-layout`).
 
-A value of a part that is not drawn is not shown (no DHW storage, no tank values; a source that is not drawn, no
+A value of a part that is not drawn is not shown (no DHW storage, or an unused tank (`dhw: unused`), no tank values; a source that is not drawn, no
 source values). A drawn value with no value shows a muted dash and keeps its place.
 
 The footer shows the mode, the on/off state, the season, the outside temperature, the COP, the condensation and

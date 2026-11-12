@@ -56,6 +56,17 @@ export interface EmulatorState {
 
 export const DEFAULT_CYCLE_SECONDS = 3;
 
+/**
+ * The DHW choices the card accepts on a model (card-config): B external, unused or none; C internal or unused. The
+ * emulator offers only these and falls back to `default` for any other, so it never produces a rejected config.
+ */
+export const dhwChoicesFor = (model: Model): readonly ('default' | DhwStorage)[] =>
+  model === 'C' ? ['default', 'internal', 'unused'] : ['default', 'external', 'unused', 'none'];
+
+/** The DHW choice kept when the model changes: the same one when the model accepts it, else `default`. */
+export const dhwForModel = (model: Model, dhw: 'default' | DhwStorage): 'default' | DhwStorage =>
+  dhwChoicesFor(model).includes(dhw) ? dhw : 'default';
+
 export const defaultState = (): EmulatorState => ({
   scenario: 'heating',
   model: 'B',
@@ -84,12 +95,13 @@ export function parseState(search: string): EmulatorState {
   const cycle = params.get('cycle');
   const width = Number(params.get('width'));
   const cycleSeconds = cycle === null ? undefined : Number(cycle);
+  const model = pick(MODELS, params.get('model'), base.model);
   return {
     scenario: isScenarioName(scenario) ? scenario : base.scenario,
-    model: pick(MODELS, params.get('model'), base.model),
+    model,
     variant: VARIANTS.find((v) => v === variant) ?? base.variant,
     source: pick(SOURCES, params.get('source'), base.source),
-    dhw: pick(['default', ...DHW_STORAGES] as const, params.get('dhw'), base.dhw),
+    dhw: dhwForModel(model, pick(['default', ...DHW_STORAGES] as const, params.get('dhw'), base.dhw)),
     features: Object.fromEntries(
       FEATURE_KEYS.map((key) => [key, pick(FEATURE_CHOICES, params.get(key), 'default')]),
     ) as Record<FeatureKey, FeatureChoice>,

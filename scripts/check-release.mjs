@@ -1,5 +1,5 @@
 // Last step of `npm run release` (after `npm run check` and `npm run build`): loads the build from build/ in
-// happy-dom, checks that it registers the card, and only then copies that exact file to dist/. So a bundle that
+// happy-dom, checks that it registers the card and its editor, and only then copies that exact file to dist/. So a bundle that
 // does not register the card cannot replace the one that is deployed from dist/; whether the card works is up to
 // the tests that `npm run check` runs first. It refuses a build that is older than src/ (a stale build from an
 // earlier `npm run build`) and a build of more than one file (the bundle must be self-contained).
@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { GlobalRegistrator } from '@happy-dom/global-registrator';
 
-const CARDS = ['ecogeo-card'];
+const CARDS = ['ecogeo-card', 'ecogeo-card-editor'];
 const BUNDLE = 'ecogeo-card.js';
 const buildDir = fileURLToPath(new URL('../build/', import.meta.url));
 const distDir = fileURLToPath(new URL('../dist/', import.meta.url));
@@ -51,11 +51,11 @@ let message;
 if (failure) {
   message = `release: ${failure}; dist/ was not touched.\n`;
 } else if (process.argv.includes('--dry-run')) {
-  message = 'release: custom:ecogeo-card registered (dry run, dist/ not touched).\n';
+  message = 'release: custom:ecogeo-card and ecogeo-card-editor registered (dry run, dist/ not touched).\n';
 } else {
   mkdirSync(distDir, { recursive: true });
   copyFileSync(built, join(distDir, BUNDLE));
-  message = 'release: custom:ecogeo-card registered; copied build/ to dist/.\n';
+  message = 'release: custom:ecogeo-card and ecogeo-card-editor registered; copied build/ to dist/.\n';
 }
 // Exit explicitly (a timer started by the bundle would keep Node alive), after the message is flushed.
 const stream = failure ? process.stderr : process.stdout;

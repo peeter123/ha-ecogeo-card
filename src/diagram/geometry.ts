@@ -13,7 +13,7 @@
 //
 // Pipe points run in the direction of the flow in heating (`direction` 1) so that the renderer can animate them.
 import type { CircuitId, Circuits } from '../calc/circuits';
-import type { Detail, DhwStorage, Source } from '../config/options';
+import type { Detail, DhwStorage, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
 
@@ -141,8 +141,10 @@ export type ComponentKind =
  * When a part is drawn. `feature`: unless that feature is `false`, muted when `unused`. `through` (segments only): a
  * pipe that passes through the part: drawn unless the feature is `false`, never muted by it. `bypass` (segments
  * only): the pipe that replaces the part, drawn only when the feature is `false`. `dhw`: only for that DHW storage
- * (`any` means external or internal). `source`: only for those outer-loop sources. HTR also needs DHW storage: with
- * `dhw: none` it counts as `false`. `detail: 'full'` (refine-schematic-drawing D1): a service or safety part, or a stub pipe that only
+ * (`any` means external or internal, or the model's tank while it is `unused`; with `dhw: unused` the parts that
+ * are specific to the model's tank, and those with `unusedMuted`, are drawn muted). `source`: only for those
+ * outer-loop sources. HTR also needs DHW storage: with `dhw: none` it counts as `false`; with `unused` it follows
+ * its feature. `detail: 'full'` (refine-schematic-drawing D1): a service or safety part, or a stub pipe that only
  * leads to one, drawn only at the `full` level of detail.
  */
 export interface Visibility {
@@ -150,6 +152,8 @@ export interface Visibility {
   through?: FeatureKey;
   bypass?: FeatureKey;
   dhw?: 'any' | 'external' | 'internal' | 'none';
+  /** Drawn muted while `dhw` is `unused`, though it also serves a tank in use (valve 26). */
+  unusedMuted?: true;
   source?: readonly Source[];
   detail?: 'full';
 }
@@ -170,7 +174,7 @@ export interface ExchangerSide {
   reversible?: true;
 }
 
-export interface Component extends Pick<Visibility, 'feature' | 'dhw' | 'detail'> {
+export interface Component extends Pick<Visibility, 'feature' | 'dhw' | 'detail' | 'unusedMuted'> {
   /** The manual's item number, 1-54. */
   item: number;
   kind: ComponentKind;
@@ -238,7 +242,7 @@ const c = (
   y: number,
   rotation: Rotation,
   tag: Tag,
-  extra: Partial<Pick<Component, 'feature' | 'dhw' | 'detail' | 'size' | 'sides'>> = {},
+  extra: Partial<Pick<Component, 'feature' | 'dhw' | 'detail' | 'size' | 'sides' | 'unusedMuted'>> = {},
 ): Component => ({ item, kind, x, y, rotation, tag, ...extra });
 
 /** Components. Items 1-6 are the ports on the top edge. */
@@ -329,7 +333,7 @@ export const COMPONENTS: readonly Component[] = [
   c(23, 'drain_valve', 630, 572, 0, [14, 4, 'start'], { detail: 'full' }),
   c(24, 'drain_valve', 404, 572, 0, [14, 4, 'start'], { detail: 'full' }),
   c(25, 'drain_valve', 340, 318, 0, [-10, 4, 'end'], { feature: 'htr', dhw: 'any' }),
-  c(26, 'valve3', 270, 172, 270, [-14, 22, 'end'], { dhw: 'any' }),
+  c(26, 'valve3', 270, 172, 270, [-14, 22, 'end'], { dhw: 'any', unusedMuted: true }),
   c(27, 'valve3', 350, 416, 0, [0, -24, 'middle'], { feature: 'passive_cooling' }),
   c(28, 'valve3', 610, 416, 0, [0, -24, 'middle'], { feature: 'passive_cooling' }),
   c(31, 'probe_t', 614, 228, 270, [0, -14, 'middle']),
@@ -764,6 +768,8 @@ export const CIRCUIT_LABELS: readonly CircuitLabel[] = [
 
 /** What decides which parts are drawn: the DHW storage, the source, the feature states and the level of detail. */
 export interface DrawContext {
+  /** The model: with `dhw: unused` it decides which tank is drawn (B external, C internal). */
+  model: Model;
   dhw: DhwStorage;
   source: Source;
   features: Features;
@@ -779,20 +785,30 @@ export type PartState = 'normal' | 'muted' | 'hidden';
 export const effectiveFeature = (context: DrawContext, key: FeatureKey): Features[FeatureKey] =>
   key === 'htr' && context.dhw === 'none' ? false : context.features[key];
 
-const dhwFits = (rule: NonNullable<Visibility['dhw']>, dhw: DhwStorage): boolean =>
-  rule === 'any' ? dhw !== 'none' : rule === dhw;
+/** The storage the drawing shows: the configured one, or for `unused` the model's own tank. */
+export const drawnStorage = (context: Pick<DrawContext, 'model' | 'dhw'>): 'external' | 'internal' | 'none' =>
+  context.dhw === 'unused' ? (context.model === 'C' ? 'internal' : 'external') : context.dhw;
+
+const dhwFits = (rule: NonNullable<Visibility['dhw']>, context: Pick<DrawContext, 'model' | 'dhw'>): boolean => {
+  const storage = drawnStorage(context);
+  return rule === 'any' ? storage !== 'none' : rule === storage;
+};
 
 /** Whether a part is drawn normally, drawn muted (feature `unused`) or not drawn (see Visibility). */
 export function partState(part: Visibility, context: DrawContext): PartState {
   if (part.detail === 'full' && context.detail !== 'full') return 'hidden';
   if (part.source !== undefined && !part.source.includes(context.source)) return 'hidden';
-  if (part.dhw !== undefined && !dhwFits(part.dhw, context.dhw)) return 'hidden';
+  if (part.dhw !== undefined && !dhwFits(part.dhw, context)) return 'hidden';
   if (part.bypass !== undefined && effectiveFeature(context, part.bypass) !== false) return 'hidden';
   if (part.through !== undefined && effectiveFeature(context, part.through) === false) return 'hidden';
   if (part.feature !== undefined) {
     const state = effectiveFeature(context, part.feature);
     if (state === false) return 'hidden';
     if (state === 'unused') return 'muted';
+  }
+  // An unused tank (dhw-storage spec): the tank's own parts are muted, whatever the features say.
+  if (context.dhw === 'unused' && part.dhw !== undefined && (part.dhw !== 'any' || part.unusedMuted === true)) {
+    return 'muted';
   }
   return 'normal';
 }

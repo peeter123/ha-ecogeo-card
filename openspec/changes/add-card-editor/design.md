@@ -99,6 +99,32 @@ locked on by overrides; it turns on again only when `entities` arrives from outs
 - Picker labels are looked up by the role's leaf name, so roles sharing a leaf name across groups (`pressure`,
   `pump`, `setpoint`, ...) share one label; the group section's title disambiguates.
 
+### D6. Unused DHW storage
+Found in the live check: model C always has its integrated tank, so `dhw: none` there was wrong, and it also
+removed HTR (the drawing counts HTR as `false` without DHW storage, `effectiveFeature` in
+`src/diagram/geometry.ts`). Decided by the user: a new `dhw` value `unused`, like a feature's `unused`.
+- Config: `DHW_STORAGES` gains `unused`. Valid on B and C; `none` on C is a mismatch error like `internal` on B.
+  Defaults are unchanged (B external, C internal). The live installation (B, external) is unaffected.
+- Drawing: `unused` draws what the model's tank storage draws (B: external tank, connections 5/6, valve 26; C:
+  tank 50, coil 51 and the stubs 47-49), every DHW part in the muted style and never animated; the tank body takes
+  the muted colour and shows no values (full and compact layout). The `dhw` visibility rules treat `unused` as the
+  model's storage for drawing, and as `none` for activity.
+- HTR: `effectiveFeature` forces HTR off only for `none`; with `unused` HTR follows its feature. The HTR circuit and
+  the DHW coil are active only with `external` or `internal` (calc/circuits.ts).
+- Mode: the `dhw` mode is still derived and labelled; valve 26 follows the mode as with `none`.
+- Editor: the DHW select offers B: external, unused, none; C: internal, unused (plus a disallowed current value,
+  as before). Strings in `src/strings.ts`.
+- Emulator: the DHW storage control offers `unused` (with `none` only on B, as the card rejects it on C).
+- Docs: README option table and `docs/ecogeo-card.md` describe `unused` and the model C rule.
+- Settled during implementation: the drawing context carries the model (`DrawContext.model`, required), since
+  `unused` draws the model's tank. The "DHW tank" and "DHW" captions stay (only values are left out), and the
+  tank stays a more-info target for the DHW temperature. The emulator disables the DHW choices the card would
+  reject; a rejected value in the URL falls back to the default.
+- Settled in review: the unused tank's outline and rim are muted too (not only its fill), so it does not read as a
+  tank in use with an unavailable temperature. Valve 26 is the DHW diverter on both models and is muted with an
+  unused tank on B and on C. In the compact layout an unused tank leaves six key values instead of seven; the
+  live-values delta covers this, no responsive-layout delta.
+
 ## Risks / Trade-offs
 
 - [Home Assistant's `ha-form` behaves differently from the stub] -> the stub follows hrv's, which matched HA; a

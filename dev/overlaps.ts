@@ -21,6 +21,8 @@ export const INSTALLATIONS = [
   { name: 'hybrid-B', query: 'source=hybrid' },
   { name: 'ground-C-internal', query: 'source=ground&model=C&dhw=internal' },
   { name: 'air-C-internal', query: 'source=air&model=C&dhw=internal' },
+  { name: 'ground-B-unused', query: 'source=ground&dhw=unused' },
+  { name: 'air-C-unused', query: 'source=air&model=C&dhw=unused' },
 ] as const;
 
 export interface Box {

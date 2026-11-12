@@ -6,6 +6,8 @@
 //   pipes.ts colours and animates them like every other pipe. The tank is not a manual item.
 // - Internal (model C): items 50 (tank), 51 (coil), 52 (manual trap), 53 (drain valve), 54 (DHW probe) and the
 //   connections 47/48/49 are components in geometry.ts, drawn by the cabinet with the symbols of symbols.ts.
+// - Unused (`dhw: unused`): the model's tank (chosen by geometry.ts `drawnStorage`) is drawn as above but muted through
+//   `partState`: the body, outline and rim take the muted colour and no values are shown.
 // - None: nothing is drawn (no tank, no pipes, no ports 5/6, no valve 26).
 //
 // The tank body hook (add-schematic-card D7: the body takes the DHW temperature on the card's colour scale): both
@@ -16,12 +18,18 @@
 import { css, nothing, svg, type SVGTemplateResult } from 'lit';
 import { DHW_LABELS } from '../strings';
 import { EXTERNAL_TANK_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
-import { EXTERNAL_TANK, externalTankBody, type DrawContext } from './geometry';
+import { EXTERNAL_TANK, drawnStorage, externalTankBody, type DrawContext } from './geometry';
 
 export const dhwStyles = css`
   .tank-body {
     stroke: var(--primary-text-color);
     stroke-width: max(2.5, var(--outline-width, 2));
+  }
+  /* An unused tank (dhw: unused): outline and rim muted as well as the fill (tank 50 is a muted symbol group). */
+  .symbol-group.muted .tank-body,
+  .dhw-storage.muted .tank-body,
+  .dhw-storage.muted .tank-rim {
+    stroke: var(--disabled-text-color);
   }
   .tank-rim {
     fill: none;
@@ -46,14 +54,14 @@ export const dhwStyles = css`
  * more-info, with its name as tooltip); the other storages draw nothing here.
  */
 export function renderDhw(context: DrawContext, taps?: Taps): SVGTemplateResult {
-  if (context.dhw !== 'external') return svg``;
+  if (drawnStorage(context) !== 'external') return svg``;
   const { x, y, width, dome } = EXTERNAL_TANK;
   const rx = width / 2;
   // straight walls with elliptical domed caps: the top cap's lower arc is drawn as a rim
   const body = externalTankBody();
   const rim = `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 0 ${String(x + width)} ${String(y + dome)}`;
   const tap = tapBindings(tapTarget(EXTERNAL_TANK_ROLE, taps), taps?.onTap);
-  return svg`<g class="dhw-storage" data-dhw="external" aria-label=${DHW_LABELS.externalTank} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>
+  return svg`<g class=${context.dhw === 'unused' ? 'dhw-storage muted' : 'dhw-storage'} data-dhw="external" aria-label=${DHW_LABELS.externalTank} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>
     <title>${DHW_LABELS.externalTank}</title>
     <path class="tank-body" data-dhw-tank="external" d=${body} fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />
     <path class="tank-rim" d=${rim} />

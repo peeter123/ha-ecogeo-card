@@ -106,15 +106,21 @@ describe('editorSchema', () => {
   });
 
   test('the DHW select offers only the storages the model allows', () => {
-    expect(optionValues(field('dhw', { model: 'B' }))).toEqual(['external', 'none']);
-    expect(optionValues(field('dhw', {}))).toEqual(['external', 'none']);
-    expect(optionValues(field('dhw', { model: 'C' }))).toEqual(['internal', 'none']);
+    expect(optionValues(field('dhw', { model: 'B' }))).toEqual(['external', 'unused', 'none']);
+    expect(optionValues(field('dhw', {}))).toEqual(['external', 'unused', 'none']);
+    expect(optionValues(field('dhw', { model: 'C' }))).toEqual(['internal', 'unused']);
   });
 
   test('a DHW value the model does not allow is still in the select, so it shows', () => {
-    expect(optionValues(field('dhw', { model: 'B', dhw: 'internal' }))).toEqual(['external', 'internal', 'none']);
-    expect(optionValues(field('dhw', { model: 'C', dhw: 'external' }))).toEqual(['external', 'internal', 'none']);
-    expect(optionValues(field('dhw', { model: 'C', dhw: 'bogus' }))).toEqual(['internal', 'none']);
+    expect(optionValues(field('dhw', { model: 'B', dhw: 'internal' }))).toEqual([
+      'external',
+      'internal',
+      'unused',
+      'none',
+    ]);
+    expect(optionValues(field('dhw', { model: 'C', dhw: 'external' }))).toEqual(['external', 'internal', 'unused']);
+    expect(optionValues(field('dhw', { model: 'C', dhw: 'none' }))).toEqual(['internal', 'unused', 'none']);
+    expect(optionValues(field('dhw', { model: 'C', dhw: 'bogus' }))).toEqual(['internal', 'unused']);
   });
 
   test('every option of the option table has an editor field, apart from the explicit exceptions', () => {

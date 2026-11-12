@@ -15,7 +15,7 @@ import type { Taps } from '../diagram/component-info';
 import { dhwStyles, renderDhw } from '../diagram/dhw';
 import { viewBox, type DrawContext } from '../diagram/geometry';
 import { footerItems, labelsFor, labelStyles, renderFooterItems, renderLabels } from '../diagram/labels';
-import { coilMutedColor } from '../diagram/colors';
+import { coilMutedColor, MUTED_COLOR } from '../diagram/colors';
 import { EDITOR_TAG } from '../editor/ecogeo-card-editor';
 import { tankColor, type PipeView } from '../diagram/pipes';
 import { renderSource, sourceStyles } from '../diagram/source';
@@ -209,7 +209,7 @@ export class EcogeoCard extends LitElement {
           preserveAspectRatio="xMidYMid meet"
           role="group"
           aria-label=${SCHEMATIC_LABEL}
-          style="--dhw-tank-color: ${tankColor(view)}; --ecogeo-coil-muted: ${coilMutedColor(this.hass?.themes?.darkMode === true)}; --pipe-width: ${String(stroke.pipe)}; --outline-width: ${String(stroke.outline)}"
+          style="--dhw-tank-color: ${resolved.dhw === 'unused' ? MUTED_COLOR : tankColor(view)}; --ecogeo-coil-muted: ${coilMutedColor(this.hass?.themes?.darkMode === true)}; --pipe-width: ${String(stroke.pipe)}; --outline-width: ${String(stroke.outline)}"
         >
           ${svg`${renderSource(resolved, readings, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix }, stroke.pipe)}`}
         </svg>

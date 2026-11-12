@@ -355,7 +355,7 @@ describe('ecogeo-card-editor round trip', () => {
         }
       }
     }
-    expect(count).toBe(2 * 4 * 4 * 3);
+    expect(count).toBe(2 * 5 * 4 * 3);
   });
 
   test('card-editor "Round trip": every variant is saved unchanged, as a number', async () => {

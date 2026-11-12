@@ -71,7 +71,8 @@ export const CONFIG_ERRORS = {
   prefix: 'a prefix of lowercase letters, digits and underscores',
   colors:
     'Invalid option colors: expected an ascending list of 2 to 8 stops, each { temperature, color } with a number and a CSS colour',
-  dhwMismatch: (dhw: string, model: string): string => `Invalid option dhw: ${dhw} does not fit model ${model}`,
+  dhwMismatch: (dhw: string, model: string): string =>
+    `Invalid option dhw: ${dhw} does not fit model ${model}${dhw === 'none' && model === 'C' ? ' (model C always has its tank; use unused)' : ''}`,
 } as const;
 
 /** The labels of the circuits at the cabinet's top connections (manual items 1/2, 3/4 and 5/6). */
@@ -279,7 +280,7 @@ export const EDITOR = {
     model: { B: 'Model B', C: 'Model C' },
     variant: { '1': 'Variant 1', '2': 'Variant 2', '3': 'Variant 3', '4': 'Variant 4' },
     source: { air: 'Air unit', ground: 'Ground loop', hybrid: 'Air unit and ground loop' },
-    dhw: { external: 'External tank', internal: 'Internal tank', none: 'None' },
+    dhw: { external: 'External tank', internal: 'Internal tank', unused: 'Tank not in use', none: 'None' },
     detail: { simplified: 'Simplified', full: 'Full' },
     exchanger_fill: { gradient: 'Gradient', none: 'None' },
     layout: { auto: 'Auto (by width)', full: 'Full', compact: 'Compact' },

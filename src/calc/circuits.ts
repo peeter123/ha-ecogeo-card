@@ -35,8 +35,8 @@ export type CircuitInputs = Pick<Readings, 'brine.pump' | 'heating.capacity'>;
  * Valve positions and active circuits for a mode. Inputs: the mode, `htr`, `passive_cooling` (exchanger 10 with
  * valves 27/28), the DHW storage, `brine.pump` and `heating.capacity` (the condensation capacity).
  * - heating: refrigerant, brine, production_dg1. dhw: refrigerant, brine, production_dhw, dhw_coil (without DHW
- *   storage there is no DHW loop). active_cooling: the same as heating, plus htr and dhw_coil when HTR is `true`,
- *   there is DHW storage and the condensation capacity is above 0 W. passive_cooling and defrost: brine,
+ *   storage in use there is no DHW loop). active_cooling: the same as heating, plus htr and dhw_coil when HTR is `true`,
+ *   there is DHW storage in use (external or internal; not none or unused) and the condensation capacity is above 0 W. passive_cooling and defrost: brine,
  *   production_dg1 and exchanger_10 (not when passive cooling is `false`; `unused` still takes part in defrost).
  *   off and standby: none.
  * - The brine circuit is active only while the brine pump runs.
@@ -50,7 +50,7 @@ export function circuitsFor(
 ): Circuits {
   const active = new Set<CircuitId>();
   const exchanger10 = features.passive_cooling !== false;
-  const hasDhw = dhw !== 'none';
+  const hasDhw = dhw === 'external' || dhw === 'internal';
   switch (mode) {
     case 'heating':
       active.add('refrigerant').add('brine').add('production_dg1');

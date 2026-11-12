@@ -18,6 +18,8 @@ import {
   THEMES,
   WIDTHS,
   configOf,
+  dhwChoicesFor,
+  dhwForModel,
   parseState,
   toSearch,
   type EmulatorState,
@@ -118,6 +120,7 @@ function select<T extends string>(
   get: () => T,
   set: (value: T) => void,
   labels?: Readonly<Record<string, string>>,
+  allowed?: () => readonly T[],
 ): HTMLLabelElement {
   const element = document.createElement('select');
   element.name = name;
@@ -131,6 +134,9 @@ function select<T extends string>(
     // A value that is not one of the choices (a width written in the URL) gets its own entry.
     if (!choices.some((choice) => choice === get())) element.add(new Option(get(), get()));
     element.value = get();
+    // Choices the card would reject for the current configuration cannot be picked.
+    if (allowed !== undefined)
+      for (const option of element.options) option.disabled = !allowed().some((choice) => choice === option.value);
   });
   return labelled(text, element);
 }
@@ -248,7 +254,7 @@ controlsRoot.append(
       MODELS,
       () => state.model,
       (value) => {
-        state = { ...state, model: value };
+        state = { ...state, model: value, dhw: dhwForModel(value, state.dhw) };
       },
     ),
     select(
@@ -277,6 +283,8 @@ controlsRoot.append(
       (value) => {
         state = { ...state, dhw: value };
       },
+      undefined,
+      () => dhwChoicesFor(state.model),
     ),
     select(
       'detail',

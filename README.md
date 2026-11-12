@@ -81,7 +81,7 @@ fault.
 | `model` | `B`, `C` | `B` | The unit model: B has an external DHW tank, C an internal one. |
 | `variant` | `1` to `4` | `4` | The manual's figure B1 to B4: which cooling parts the unit has (see Features). |
 | `source` | `air`, `ground`, `hybrid` | `ground` | The outer loop joined to ports 3/4. |
-| `dhw` | `external`, `internal`, `none` | `external` on B, `internal` on C | The DHW storage. `internal` on model B, or `external` on model C, is an error. |
+| `dhw` | `external`, `internal`, `unused`, `none` | `external` on B, `internal` on C | The DHW storage. `unused` draws the model's tank muted, with no tank values, for a tank that is there but not in use; it is valid on both models. Model C always has its integrated tank, so `none` on model C is an error, as is `internal` on model B or `external` on model C. |
 | `prefix` | lowercase letters, digits, `_` | none | Entity object id prefix; the firmware default is `ecoforest_ecogeo`. |
 | `features` | group | from the variant | Feature states that override the variant (see Features). |
 | `entities` | group | from the prefix | Entity id per role, nested by role path (see Roles). |
@@ -104,11 +104,19 @@ dhw: external
 ```
 
 ```yaml
-# a ground loop, and no DHW storage: no tank, no ports 5/6, no valve 26, no HTR
+# a ground loop, and no DHW storage (model B only): no tank, no ports 5/6, no valve 26, no HTR
 type: custom:ecogeo-card
 prefix: demo_ecogeo
 source: ground
 dhw: none
+```
+
+```yaml
+# model C with its integrated tank not in use: tank 50 drawn muted without values, HTR still drawn
+type: custom:ecogeo-card
+prefix: demo_ecogeo
+model: C
+dhw: unused
 ```
 
 ```yaml
@@ -132,7 +140,8 @@ The top of the air unit or of the ground line is level with the top of the heat 
 |---|---|
 | `external` | A tank with a coil right of the cabinet, joined to ports 5/6 (model B). |
 | `internal` | The integrated tank 50 with coil 51 inside the cabinet (model C). |
-| `none` | Nothing DHW related. |
+| `unused` | The model's tank (external on B, integrated on C) drawn muted, with no tank values and no DHW circuit active; HTR is drawn if its feature says so. |
+| `none` | Nothing DHW related (model B only). |
 
 ### Features
 
@@ -224,7 +233,7 @@ The card has a visual editor, so it can be added and set up from the dashboard w
 Home Assistant's own form and has five sections:
 
 - **Unit:** model, variant (a select of the four variants), outer-loop source and DHW storage (the select offers only
-  the storages the model allows).
+  the storages the model allows: on B external, unused or none; on C internal or unused).
 - **Entities:** the entity prefix (`prefix`).
 - **Features:** passive cooling, active cooling, HTR and backup heater, each On, Off, Unused or, left at the first
   choice, the variant's default (the choice names it, for example "Variant default: on").
@@ -283,10 +292,10 @@ no installation data. The mock entities use the demo prefix `demo_ecogeo`.
 - **Scenario:** off, standby, heating, DHW, active cooling (all heat to the outer loop), active cooling with HTR
   recovery, passive cooling, defrost, alarm while heating, bridge offline and sensors unavailable. Each is a complete
   set of states (`dev/scenarios.ts`).
-- **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default,
-  external, internal or none), each feature (the variant's preset, `true`, `false` or `unused`), the detail level
+- **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default; on B external, unused or none, on C internal or unused; the other choices are
+  disabled, and a value in the URL that the model rejects falls back to the default), each feature (the variant's preset, `true`, `false` or `unused`), the detail level
   (simplified or full), the exchanger fill (gradient or none, the card's `exchanger_fill` option) and
-  the light or dark theme. A combination the card rejects, such as model B with internal DHW, shows the config error under the card.
+  the light or dark theme.
 - **Live values:** sliders for production out and in, brine out and in, DHW temperature, discharge, suction, both
   pumps, the compressor percentage (it moves the speed too), the fan speed and the condensation capacity. Picking a
   scenario resets them. Slider values are not part of the URL state.
@@ -300,7 +309,7 @@ All state is in the URL query string, so every combination is addressable. Param
 | `model`                                                        | `B`, `C`                                                                     | `B`        |
 | `variant`                                                      | `1` to `4`                                                                   | `4`        |
 | `source`                                                       | `air`, `ground`, `hybrid`                                                    | `ground`   |
-| `dhw`                                                          | `external`, `internal`, `none`                                               | by model   |
+| `dhw`                                                          | `external`, `internal`, `unused`, `none` (`none` on model B only)            | by model   |
 | `active_cooling`, `passive_cooling`, `htr`, `backup_heater`    | `true`, `false`, `unused`                                                    | by variant |
 | `detail`                                                       | `simplified`, `full`                                                         | `simplified` |
 | `fill`                                                         | `gradient`, `none`                                                           | `gradient` |

@@ -310,8 +310,9 @@ describe('DHW storage', () => {
     card.remove();
   });
 
+  // model C always has its tank: dhw none is a configuration error there (card-config), so only model B here
   test('none: no tank, no DHW pipes, no ports 5 and 6, no valve 26 and no tank items', async () => {
-    for (const model of ['B', 'C'] as const) {
+    for (const model of ['B'] as const) {
       const card = await mount({ model, dhw: 'none' });
       expect(tanks(card)).toEqual([]);
       expect(root(card).querySelector('.dhw-storage')).toBeNull();
@@ -327,5 +328,114 @@ describe('DHW storage', () => {
       expect(root(card).querySelector('.tank-body')?.getAttribute('fill')).toContain('--dhw-tank-color');
       card.remove();
     }
+  });
+});
+
+// dhw-storage "Unused DHW storage" (add-card-editor D6): the model's tank drawn muted, with no values.
+describe('unused DHW storage', () => {
+  const symbol = (card: EcogeoCard, item: number): Element | null =>
+    root(card).querySelector(`g.symbol-group[data-item="${String(item)}"]`);
+  const pipe = (card: EcogeoCard, id: string): Element | null =>
+    root(card).querySelector(`path.pipe[data-segment="${id}"]`);
+  const tankStyle = (card: EcogeoCard): string => root(card).querySelector('svg')?.getAttribute('style') ?? '';
+  const hassOfScenario = (name: keyof typeof SCENARIOS): HassLike => ({
+    states: Object.fromEntries(
+      Object.entries(scenarioStates(SCENARIOS[name].states)).map(([id, value]) => [id, { entity_id: id, ...value }]),
+    ),
+  });
+
+  // dhw-storage "Unused external tank"
+  test('model B unused: the external tank, coil, pipes, ports 5 and 6 and valve 26 drawn muted, no values, nothing flows', async () => {
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'B', dhw: 'unused' }, hassOfScenario('dhw'));
+    expect(tanks(card)).toEqual(['external']);
+    expect(root(card).querySelector('.dhw-storage')).not.toBeNull();
+    expect(tankStyle(card)).toContain(`--dhw-tank-color: ${MUTED_COLOR}`);
+    expect(items(card)).toEqual(expect.arrayContaining([5, 6, 26]));
+    for (const item of [5, 6, 26]) expect(symbol(card, item)?.classList.contains('muted'), String(item)).toBe(true);
+    for (const id of ['dhw_ext_in', 'dhw_ext_out']) expect(pipe(card, id)?.classList.contains('muted'), id).toBe(true);
+    expect(root(card).querySelector('[data-segment="dhw_ext_coil"]')?.classList.contains('muted')).toBe(true);
+    expect(root(card).querySelectorAll('[data-flow^="dhw_"], [data-flow^="tap_"]')).toHaveLength(0);
+    expect(root(card).querySelectorAll('.label[data-label^="tank_"], [data-label^="tank_"]')).toHaveLength(0);
+    card.remove();
+  });
+
+  // dhw-storage "Unused internal tank"
+  test('model C unused: tank 50, coil 51 and the stubs drawn muted inside the cabinet, no values', async () => {
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'C', dhw: 'unused', detail: 'full' }, hassOfScenario('dhw'));
+    expect(tanks(card)).toEqual(['internal']);
+    expect(tankStyle(card)).toContain(`--dhw-tank-color: ${MUTED_COLOR}`);
+    for (const item of [26, 47, 48, 49, 50, 51, 52, 53, 54]) {
+      expect(symbol(card, item)?.classList.contains('muted'), String(item)).toBe(true);
+    }
+    for (const id of ['tap_47', 'tap_48', 'tap_49']) expect(pipe(card, id)?.classList.contains('muted'), id).toBe(true);
+    expect(root(card).querySelector('.dhw-storage')).toBeNull();
+    expect(segments(card).some((id) => id.startsWith('dhw_ext_'))).toBe(false);
+    expect(root(card).querySelectorAll('[data-flow^="dhw_"], [data-flow^="tap_"]')).toHaveLength(0);
+    expect(root(card).querySelectorAll('[data-label^="tank_"]')).toHaveLength(0);
+    card.remove();
+  });
+
+  test('the unused tank has the same parts as the tank in use, only muted (both models)', async () => {
+    for (const [model, dhw] of [
+      ['B', 'external'],
+      ['C', 'internal'],
+    ] as const) {
+      const inUse = await mount({ model, dhw, detail: 'full' });
+      const unused = await mount({ model, dhw: 'unused', detail: 'full' });
+      expect(items(unused)).toEqual(items(inUse));
+      expect(segments(unused)).toEqual(segments(inUse));
+      inUse.remove();
+      unused.remove();
+    }
+  });
+
+  // dhw-storage "HTR kept with an unused tank"
+  test('model C unused with HTR true: exchanger 9, pump 17 and valves 22/25 are drawn, as with internal', async () => {
+    const unused = await mount({ model: 'C', dhw: 'unused', features: { htr: true } });
+    const internal = await mount({ model: 'C', dhw: 'internal', features: { htr: true } });
+    for (const item of [9, 17, 22, 25]) expect(items(unused), String(item)).toContain(item);
+    expect(items(unused)).toEqual(items(internal));
+    // the HTR parts follow HTR, not the tank: they are not muted by the unused tank
+    expect(symbol(unused, 9)?.classList.contains('muted')).toBe(false);
+    expect(symbol(unused, 17)?.classList.contains('muted')).toBe(false);
+    unused.remove();
+    internal.remove();
+  });
+
+  test('HTR false or unused is followed with an unused tank; the discharge line routes as with a tank in use', async () => {
+    const off = await mount({ model: 'C', dhw: 'unused', features: { htr: false } });
+    expect(items(off)).not.toContain(17);
+    const muted = await mount({ model: 'C', dhw: 'unused', features: { htr: 'unused' } });
+    expect(symbol(muted, 17)?.classList.contains('muted')).toBe(true);
+    expect(segments(off)).toContain('p1_up');
+    expect(segments(off)).not.toContain('p1_direct');
+    off.remove();
+    muted.remove();
+  });
+
+  // dhw-storage "DHW mode with an unused tank"
+  test('DHW mode with an unused tank: the label says DHW, tank, coil and DHW pipes stay muted', async () => {
+    for (const model of ['B', 'C'] as const) {
+      const card = await mount({ prefix: DEMO_PREFIX, model, dhw: 'unused' }, hassOfScenario('dhw'));
+      expect(root(card).querySelector('.mode')?.textContent.trim()).toBe('DHW');
+      for (const id of segments(card).filter((s) => /^(dhw_|tap_)/.test(s))) {
+        expect(
+          root(card)
+            .querySelector(`path.pipe[data-segment="${id}"], g.helix[data-segment="${id}"]`)
+            ?.classList.contains('muted'),
+          id,
+        ).toBe(true);
+      }
+      expect(root(card).querySelectorAll('[data-flow^="dhw_"], [data-flow^="tap_"]')).toHaveLength(0);
+      card.remove();
+    }
+  });
+
+  test('HTR recovery with an unused tank does not animate the DHW pipes or the coil', async () => {
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'C', dhw: 'unused' }, hassOfScenario('active_cooling_htr'));
+    expect(root(card).querySelectorAll('[data-flow^="dhw_"], [data-flow^="htr_"], [data-flow^="tap_"]')).toHaveLength(
+      0,
+    );
+    card.remove();
   });
 });

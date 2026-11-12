@@ -85,9 +85,12 @@ function variantField(): EditorField {
   };
 }
 
-/** The storages a model allows (the card rejects internal on B and external on C). */
+/**
+ * The storages a model allows (the card rejects internal on B, and external and none on C, which always has its
+ * tank): its own tank, unused, and on B none.
+ */
 const allowedDhw = (model: Model): readonly DhwStorage[] =>
-  DHW_STORAGES.filter((dhw) => dhw === 'none' || dhw === defaultDhw(model));
+  DHW_STORAGES.filter((dhw) => dhw === 'unused' || dhw === defaultDhw(model) || (dhw === 'none' && model === 'B'));
 
 /**
  * The DHW select: the storages the model allows, plus the config's current value when it is a known storage the
