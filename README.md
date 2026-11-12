@@ -24,13 +24,15 @@ for the explanation of what the card shows and where each part comes from.
 - Live values beside their components (temperatures, pressures, pump and compressor speeds, power, superheat, the
   tank's values) and a footer with the mode, season, outside temperature, COP and capacities. The card formats the
   numbers itself with Home Assistant's locale and keeps every number joined to its unit by a no-break space.
+- A visual editor (add the card from the picker, or edit it) for the unit, the entity prefix, the features and the
+  appearance; it writes only what you set and keeps every other key.
 - Read-only: tapping a value, or a component with an entity of its own, opens the entity's more-info dialog; the card calls no service and writes no entity.
 
 ## Status
 
 Released and in use. The card validates its configuration, resolves its entities (or shows built-in sample values),
 reads them, derives the operating mode and draws the schematic with coloured, flowing pipes and live values.
-Planned follow-up changes: `add-card-editor`, `add-hacs-release`, `add-browser-tests` and `add-extra-circuits`.
+The visual editor is built (see Visual editor below). Planned follow-up changes: `add-hacs-release`, `add-browser-tests` and `add-extra-circuits`.
 
 ## Installation
 
@@ -214,6 +216,24 @@ colors:
 
 The colour scale, which pipe takes which probe and the animation are explained in
 [docs/ecogeo-card.md](docs/ecogeo-card.md#colours).
+
+### Visual editor
+
+The card has a visual editor, so it can be added and set up from the dashboard without YAML: choose **Add card**, pick
+**ecoGEO Schematic** (the preview shows the sample values), or open an existing card with **Edit**. The editor is
+Home Assistant's own form and has four sections:
+
+- **Unit:** model, variant (a select of the four variants), outer-loop source and DHW storage (the select offers only
+  the storages the model allows).
+- **Entities:** the entity prefix (`prefix`). Each role can still be overridden in YAML (`entities`).
+- **Features:** passive cooling, active cooling, HTR and backup heater, each On, Off, Unused or, left at the first
+  choice, the variant's default (the choice names it, for example "Variant default: on").
+- **Appearance:** detail level, exchanger fill and layout.
+
+A field the config leaves out shows its default. The editor writes only what you set: a value equal to its default is
+not written, clearing a field removes its key, and keys it does not show (`colors`, `entities`, `grid_options`,
+`view_layout` and so on) are kept as they are. If the config is invalid, the editor shows the card's error message above the
+form. The editor changes only the card's config; it calls no service and writes no entity.
 
 ### Operating mode
 

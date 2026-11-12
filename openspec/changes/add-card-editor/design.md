@@ -39,6 +39,26 @@ Each file starts with a header naming its source and deviations. No import or pa
 - Advanced: one `expandable` section per role group, one `entity` selector per role with
   `{ entity: { domain: <role domain> } }`, labelled from a role-name table in `src/strings.ts`. A unit test asserts
   every role in `roles.ts` has a picker and a label.
+- `ha-form` selects return strings, so a field whose config value is not a string (feature booleans, the numeric
+  variant) is a "coded" field: `toFormData`/`fromFormData` convert between the config value and the select value.
+  Features use the select values `default`, `true`, `false`, `unused`; `default` removes the key. The variant is a
+  select of the allowed variants written back as a number (not a free number box).
+- The schema depends on the config (model-dependent DHW default, variant-dependent feature labels), so the editor
+  builds it per config and replaces it only when it actually changes, keeping open sections open.
+- The prefix section's name is `entity_prefix` (label "Entities"), so it cannot collide with the `entities`
+  pickers. An empty prefix removes the key.
+- Variant select labels come from `src/strings.ts` ("Variant 1" ... "Variant 4"). The DHW select offers only the
+  storages the current model allows; a config whose current value is not allowed still shows it (and the card's
+  error above the form).
+- Field order follows the proposal: passive cooling, active cooling, HTR, backup heater. A changed key keeps its
+  position in `features`, so the YAML is not reordered.
+- Values the editor cannot represent (an invalid `features`, `prefix: ''`, `features:` with no value) are
+  normalised on the first edit; the card's error is shown above the form beforehand. Round trip is guaranteed for
+  valid configs.
+- A test asserts that every option in the option table has an editor field, apart from an explicit list of Home
+  Assistant keys and the group-2 keys handled elsewhere.
+- `getStubConfig()` returns `{}` (no prefix, no entities), which renders the sample-value preview; the card had no
+  `getStubConfig()` before this change.
 
 ### D3. Minimal writes
 hrv's `withShownDefaults` fills the form with defaults; `withoutShownDefaults` strips them again on change, and

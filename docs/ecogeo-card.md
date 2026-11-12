@@ -52,6 +52,37 @@ are in the [README](../README.md#configuration). The role table is the single so
 override in `entities`, then `<domain>.<prefix>_<suffix>` when `prefix` is set, then none. With neither a prefix
 nor an entity the card shows built-in sample values, taken from a heating day of the live unit.
 
+## Visual editor
+
+`getConfigElement()` returns the `ecogeo-card-editor` element: Home Assistant's `ha-form` with a schema generated from
+the option table (`src/config/options.ts`) and the variant presets (`src/config/variants.ts`), so a new option cannot
+be left out of the editor. The mechanics are copied from the hrv-ventilation card editor (the editor element, the
+schema helpers and the field builders, each file naming its source in its header). `getStubConfig()` returns an
+empty config, so the card picker's preview shows the sample values.
+
+The sections are Unit (model, variant, source, DHW storage), Entities (the prefix), Features (the four features) and
+Appearance (detail, exchanger fill, layout). The variant is a select of the four variants, and the DHW select offers
+only the storages the model allows. The schema is built from the config being edited: the DHW storage's
+default follows the model, and the empty choice of each feature is labelled with the preset of the current variant.
+A feature is a select whose form values are text (`default`, `true`, `false`, `unused`) and whose config values are
+a boolean, `unused` or no key at all.
+
+What the editor writes follows three rules:
+
+- Defaults are shown but not written. `ha-form` does not draw the default of a selector, so the editor fills the
+  form's data with the defaults of unset fields and takes them out again before saving, unless the config already had
+  the key.
+- A cleared field removes its key, and stays empty in the form until the config changes from outside, so typing a
+  new value does not append to the refilled default. An emptied `features` group is removed, unless the config had it
+  empty.
+- Keys the editor does not show are passed through unchanged: `type`, `colors`, `entities`, `grid_options`,
+  `view_layout` and any other.
+
+The editor shows the card's configuration error (`configErrors`) above the form, for example a DHW storage that does
+not fit the model. It only fires `config-changed`: it calls no service and writes no entity, like the card. It is
+tested with a stand-in `ha-form` (as in hrv-ventilation), including a round trip of every emulator configuration; the
+real form is checked once on the live installation.
+
 ## Operating mode
 
 The mode is derived (derived), by a pure function that names its inputs: `unit.on_off`, `compressor.mode`,

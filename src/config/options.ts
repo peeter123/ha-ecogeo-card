@@ -80,7 +80,7 @@ export const defaultDhw = (model: Model): DhwStorage => (model === 'C' ? 'intern
 /** A key written without a value in YAML is null; it counts as left out. */
 export const isLeftOut = (value: unknown): value is undefined | null => value === undefined || value === null;
 
-/** A prefix is blank (left out) when it is a string of whitespace only; the editor writes an empty string. */
+/** A prefix is blank (left out) when it is a string of whitespace only; the editor removes the key instead of writing one. */
 const isBlank = (value: unknown): boolean => isLeftOut(value) || (typeof value === 'string' && value.trim() === '');
 
 const isGroup = (value: unknown): value is CardConfig =>

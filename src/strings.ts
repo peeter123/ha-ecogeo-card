@@ -196,3 +196,49 @@ export const componentLabel = (item: number): string => {
 
 /** The tooltip and accessible name of the air unit's fan (not a manual item); the external tank's is `DHW_LABELS.externalTank`. */
 export const AIR_UNIT_FAN_NAME = 'Air unit fan';
+
+/** The visual editor's texts (add-card-editor): section and field labels, choice labels and the notes. */
+export const EDITOR = {
+  noForm: "The editor needs Home Assistant's form element, which is not available yet. Use the code editor instead.",
+  sections: {
+    unit: 'Unit',
+    entity_prefix: 'Entities',
+    features: 'Features',
+    appearance: 'Appearance',
+  },
+  fields: {
+    model: 'Model',
+    variant: 'Variant',
+    source: 'Outer-loop source',
+    dhw: 'DHW storage',
+    prefix: 'Entity prefix',
+    passive_cooling: 'Passive cooling',
+    active_cooling: 'Active cooling',
+    htr: 'HTR',
+    backup_heater: 'Backup heater',
+    detail: 'Detail level',
+    exchanger_fill: 'Exchanger fill',
+    layout: 'Layout',
+  },
+  /** The labels of the choices of each choice option, by the option's value. */
+  choices: {
+    model: { B: 'Model B', C: 'Model C' },
+    variant: { '1': 'Variant 1', '2': 'Variant 2', '3': 'Variant 3', '4': 'Variant 4' },
+    source: { air: 'Air unit', ground: 'Ground loop', hybrid: 'Air unit and ground loop' },
+    dhw: { external: 'External tank', internal: 'Internal tank', none: 'None' },
+    detail: { simplified: 'Simplified', full: 'Full' },
+    exchanger_fill: { gradient: 'Gradient', none: 'None' },
+    layout: { auto: 'Auto (by width)', full: 'Full', compact: 'Compact' },
+  },
+  /** The choices of a feature: the empty one names what the variant does, so leaving it empty is a clear choice. */
+  featureChoices: {
+    on: 'On',
+    off: 'Off',
+    unused: 'Unused (drawn muted)',
+    /** The state of the variant's preset, as it reads after "Variant default:". */
+    presetOn: 'on',
+    presetOff: 'off',
+    presetUnused: 'unused',
+    variantDefault: (state: string): string => `Variant default: ${state}`,
+  },
+} as const;

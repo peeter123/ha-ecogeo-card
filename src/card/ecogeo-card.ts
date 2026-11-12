@@ -16,6 +16,7 @@ import { dhwStyles, renderDhw } from '../diagram/dhw';
 import { viewBox, type DrawContext } from '../diagram/geometry';
 import { footerItems, labelsFor, labelStyles, renderFooterItems, renderLabels } from '../diagram/labels';
 import { coilMutedColor } from '../diagram/colors';
+import { EDITOR_TAG } from '../editor/ecogeo-card-editor';
 import { tankColor, type PipeView } from '../diagram/pipes';
 import { renderSource, sourceStyles } from '../diagram/source';
 import type { CardConfig } from '../lib/config';
@@ -78,6 +79,16 @@ export class EcogeoCard extends LitElement {
     config: { state: true },
     width: { state: true },
   };
+
+  /** The visual editor (add-card-editor): the editor element, which builds its own schema from the config. */
+  static getConfigElement(): HTMLElement {
+    return document.createElement(EDITOR_TAG);
+  }
+
+  /** The card picker's starting config: no prefix and no entities, so the preview shows the sample values. */
+  static getStubConfig(): CardConfig {
+    return {};
+  }
 
   declare hass?: HassLike;
   declare config?: CardConfig;

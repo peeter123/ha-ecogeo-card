@@ -8,15 +8,15 @@ expose `detail`, `exchanger_fill` and `layout`.
 
 ## 1. Editor element and main sections
 
-- [ ] 1.1 Copy hrv-ventilation's editor element, schema helpers and field builders into `src/editor/` with their
+- [x] 1.1 Copy hrv-ventilation's editor element, schema helpers and field builders into `src/editor/` with their
   tests and a stand-in `ha-form` (design D1, headers naming sources and deviations).
   Verify: `npm test` (the copied schema and editor tests, adapted).
-- [ ] 1.2 Build the Unit, Entities, Features and Appearance sections from the option table (design D2), wire
+- [x] 1.2 Build the Unit, Entities, Features and Appearance sections from the option table (design D2), wire
   `getConfigElement()` and keep `getStubConfig()`'s sample preview; editor strings in `src/strings.ts`.
   Verify: `npm test` covers card-editor "Editor element", "Picker preview", "Existing config opens", "Clear the
   variant", "Unshown keys kept", "Round trip" (every emulator scenario config and an all-options config) and "No
   service calls".
-- [ ] 1.3 Document the editor in the README (how to open it, its sections) and in `docs/ecogeo-card.md`.
+- [x] 1.3 Document the editor in the README (how to open it, its sections) and in `docs/ecogeo-card.md`.
   Verify: the sections exist and `test/readme.ts` passes.
 
 ## 2. Advanced pickers and colour rows

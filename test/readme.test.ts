@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { FEATURE_KEYS, variantFeatures, VARIANTS } from '../src/config/variants';
 import { TOP_LEVEL_OPTIONS } from '../src/config/options';
 import { ROLES } from '../src/config/roles';
-import { MODE_LABELS } from '../src/strings';
+import { EDITOR, MODE_LABELS } from '../src/strings';
 import { README, rowCells, section, tableNames } from './readme';
 
 // Options Home Assistant adds to every card, and `type`: not documented as options of this card.
@@ -47,5 +47,11 @@ describe('README configuration reference', () => {
   test('every mode label is named in the operating mode paragraph', () => {
     const text = section('### Operating mode').replace(/\s+/g, ' ');
     for (const label of Object.values(MODE_LABELS)) expect(text, label).toContain(label);
+  });
+
+  test('the visual editor section names every section of the editor', () => {
+    const text = section('### Visual editor').replace(/\s+/g, ' ');
+    for (const title of Object.values(EDITOR.sections)) expect(text, title).toContain(`**${title}:**`);
+    expect(text).toContain('Variant default');
   });
 });
