@@ -11,7 +11,7 @@ its rules are binding. Read it, and the active change in `openspec/changes/`, be
 - `src/`: the card (TypeScript, Lit 3), bundled by Vite into one `ecogeo-card.js`. `npm run build` writes to `build/`
   (git-ignored); `npm run release` checks, builds and copies the bundle to the committed `dist/ecogeo-card.js`,
   which is the file that gets deployed.
-- `test/`: Vitest, two projects: `unit` (happy-dom, `*.test.ts`) and `browser` (headless Chromium through
+- `test/`: Vitest, two projects: `unit` (happy-dom, `*.test.ts`) and `browser` (Chromium and WebKit through
   Playwright, `*.browser.test.ts`) for anything that depends on real layout (widths, rendered sizes, overlaps).
   `npm test` runs both. `dev/`: the emulator (`npm run dev`) with a mock `hass`.
 - `scripts/check-on-edit.mjs`: the quality hook (`.claude/settings.json`), run after every edit of a TypeScript file

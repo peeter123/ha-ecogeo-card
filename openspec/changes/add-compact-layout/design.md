@@ -56,7 +56,7 @@ No geometry change.
 
 ### D4. Stroke scale
 `scale = width / 1000`. The card sets CSS custom properties on the svg: `--pipe-width: max(3, 2 / scale)` and
-`--outline-width: max(2, 1.25 / scale)` (in drawing units, computed in TypeScript, rounded to 0.1), which the
+`--outline-width: max(2, 1.25 / scale)` (in drawing units, computed in TypeScript, rounded up to 0.1), which the
 stroke rules of `refine-schematic-drawing` read instead of their constants. The dash pattern of the flow overlay
 scales with `--pipe-width`. Hop gaps scale too.
 The dash keyframe's offset is a length (`calc(var(--pipe-width) * -7px)`, px being drawing units inside the svg),
@@ -92,7 +92,8 @@ headless Chromium, files `test/**/*.browser.test.ts`) beside the happy-dom `unit
 `npm test` runs both, `test:unit` and `test:browser` run one. The scenarios that depend on layout are browser tests:
 the automatic layout at real widths, no overlaps at the threshold (the measurement script's boxes, as a regression
 guard), the rendered minimum stroke and font sizes, and the wrapping footer. Pure logic (`isCompact`, the stroke
-scale, the tiers) stays in unit tests. Chromium is installed once per machine with `npx playwright install chromium`.
+scale, the tiers) stays in unit tests. The browsers are installed once per machine with
+`npx playwright install chromium webkit`.
 After the group 2 review the browser project runs in WebKit as well as Chromium (the iOS companion app is
 WebKit), because the stroke rules use CSS math in SVG properties and keyframes.
 Alternative considered: mocking ResizeObserver and computed styles in happy-dom. Rejected: it tests the mock, not
@@ -122,9 +123,10 @@ need no extra margin. In compact the tank value (internal and external tank) car
 decision, task 2.5 round 1), since its compact place beside the internal tank sits on the brine pipe above the
 brine inlet value; the internal tank's value sits right of tank 50, beside its probe. Two-line labels (task 2.5
 round 2, user decision): where a captioned compact value does not fit on one line with the margin, its caption
-renders on its own line above the value. This applies to the internal tank's value (beside tank 50) and to the
-brine inlet (near probe 32, with the widest value the scenarios produce, -12.3; if it does not fit there, it sits
-low in the cabinet beside pressure 37). Other compact labels keep one line.
+renders on its own line above the value. Only the internal tank's value (beside tank 50) stacks. The brine inlet
+was tried as a two-line label near probe 32 but does not fit there with the widest value the scenarios produce
+(-12.3) once the tank value is in place, so it keeps one line and sits low in the cabinet beside pressure 37.
+Other compact labels keep one line.
 Alternative considered: fewer key labels in compact. Rejected: the seven key values are the point of compact.
 
 ## Risks / Trade-offs

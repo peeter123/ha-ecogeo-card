@@ -1,5 +1,5 @@
 // The compact layout at real widths (responsive-layout spec: Layout hysteresis, Minimum rendered sizes), measured in
-// Chromium: rendered stroke widths, label font sizes, the wrapping footer and the layout band at the threshold.
+// Chromium and WebKit: rendered stroke widths, label font sizes, the wrapping footer and the layout band at the threshold.
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';

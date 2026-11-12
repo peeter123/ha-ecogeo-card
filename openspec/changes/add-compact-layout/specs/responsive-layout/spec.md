@@ -47,7 +47,8 @@ tolerance the result depends on.
 ### Requirement: Compact content
 The compact layout SHALL draw the schematic at the simplified detail level whatever `detail` says, and SHALL show
 only these value labels: production outlet and return, brine outlet and inlet, compressor speed in rpm, the DHW
-temperature, and the source's outlet temperature (the air unit outlet, or the brine outlet at a ground loop). The
+temperature, and the source's outlet temperature (the air unit's Out, or the ground loop's Out, which is the heat
+pump's brine inlet). The
 footer SHALL show the mode, the COP and the outside temperature, plus the alarm and offline indications.
 
 #### Scenario: Compact labels

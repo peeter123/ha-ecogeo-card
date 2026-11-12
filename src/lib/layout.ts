@@ -1,5 +1,6 @@
 // Copied from the hrv-ventilation repo, src/diagram/labels.ts: `isCompact` (the `LayoutChoice` type is `Layout` in
 // config/options.ts here). Deviation: the threshold constant, `COMPACT_BELOW`, is this card's own (add-compact-layout D1, D6).
+// `nextCompact`, `strokeWidths` and the other constants are this card's own, not from hrv-ventilation.
 import type { Layout } from '../config/options';
 
 /**

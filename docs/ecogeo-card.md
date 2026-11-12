@@ -545,8 +545,8 @@ simplified detail level, shows no overlapping labels in any emulator scenario, o
 every wider grid width also clean.
 
 Method (`npm run measure-layout`, `scripts/measure-layout.mjs`, Playwright): every emulator scenario is opened in
-the forced full layout at the simplified detail level, in four installations (a ground loop on model B, an air unit,
-the hybrid, and model C with its internal tank), and the card is set to every width from 320 to 800 px in 20 px
+the forced full layout at the simplified detail level, in five installations (a ground loop on model B, an air unit,
+the hybrid, and model C with its internal tank on a ground loop and on an air unit), and the card is set to every width from 320 to 800 px in 20 px
 steps. At each width the script compares, in the DOM, the bounding boxes of the value labels with each other and
 with the boxes of the drawing's component groups (the symbol groups, the DHW storage, the air unit and the marks of
 the ground loop). A label's box leaves out the half-leading above and below its text; two boxes overlap when they
@@ -567,7 +567,7 @@ count) the threshold would be 680 px, measured with the same script.
 The compressor rows (speed, percentage, power) were what limited the first measurement, 700 px, at a pitch of 11
 drawing units; their pitch is now 12 units (labels at y 307, 319 and 331), which gives 640 px.
 
-Result: at 620 px and below every case has overlaps (132 at 620 px, 682 at 360 px), because the labels stop shrinking
+Result: at 620 px and below every case has overlaps (165 at 620 px, 877 at 360 px; re-measured 2026-11-12 after task 2.5 of add-compact-layout, which added the air-C-internal installation), because the labels stop shrinking
 at their 8 px minimum while the drawing keeps shrinking.
 
 ## Installation

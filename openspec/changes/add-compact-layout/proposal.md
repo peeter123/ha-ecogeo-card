@@ -32,6 +32,12 @@ it can sit on the mobile dashboard.
 
 - `card-config`: the option `layout` (builds on `refine-schematic-drawing`, which must be archived first).
 - `dev-emulator`: a card-width control and a layout select, and captures at phone widths.
+- `live-values`, `schematic-drawing`, `dhw-storage`, `outer-loop-source`: the requirements that list values,
+  captions or the detail level apply in full to the full layout and name what the compact layout keeps (added
+  before archiving, from the whole-change review).
+
+The layout the card shows is a derived state: its inputs are the `layout` option, the card's measured width and
+the layout shown so far (the hysteresis); it is a pure, unit-tested function (`nextCompact`).
 
 ## Out of scope
 
@@ -44,7 +50,7 @@ it can sit on the mobile dashboard.
 
 - Code: `src/card/ecogeo-card.ts` (ResizeObserver, layout state), `src/diagram/labels.ts` (a tier per label),
   `cabinet.ts`/`source.ts`/`dhw.ts` (stroke width from a CSS variable), `src/config/options.ts`, the emulator
-  (`dev/`), `scripts/capture.mjs` (viewport widths). A copy of hrv-ventilation's compact-layout helper
+  (`dev/`, viewport widths in `dev/captures.ts` and `dev/url-state.ts`). A copy of hrv-ventilation's compact-layout helper
   (`isCompact`, from its `src/diagram/labels.ts`), with a header naming the source.
 - Live installation: yes. Release, explicit deploy, resource `?v=` bump. The existing panel view keeps `full` by
   width; the change is visible on the phone app.
