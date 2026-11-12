@@ -255,6 +255,7 @@ describe('Compact value captions', () => {
     production_in: VALUE_CAPTIONS.portIn,
     brine_out: VALUE_CAPTIONS.portOut,
     brine_in: VALUE_CAPTIONS.portIn,
+    tank_external_temperature: VALUE_CAPTIONS.dhw,
   };
 
   test('compact: the production and brine values carry Out and In captions; full has none', async () => {
@@ -262,6 +263,21 @@ describe('Compact value captions', () => {
     for (const [id, text] of Object.entries(expected)) expect(caption(compact, id), id).toBe(text);
     const full = await show(1000);
     for (const id of Object.keys(expected)) expect(caption(full, id), id).toBeUndefined();
+  });
+
+  test('model C: the internal tank value carries the DHW caption in compact only', async () => {
+    const config = { model: 'C', dhw: 'internal' } as const;
+    expect(caption(await show(360, config), 'tank_internal_temperature')).toBe(VALUE_CAPTIONS.dhw);
+    expect(caption(await show(1000, config), 'tank_internal_temperature')).toBeUndefined();
+  });
+
+  test('only the internal tank value stacks its caption above the value, and only in compact', async () => {
+    const stacked = (card: EcogeoCard): string[] =>
+      [...root(card).querySelectorAll('.label.stacked')].map((element) => element.getAttribute('data-label') ?? '');
+    const config = { model: 'C', dhw: 'internal' } as const;
+    expect(stacked(await show(360, config))).toEqual(['tank_internal_temperature']);
+    expect(stacked(await show(360))).toEqual([]);
+    expect(stacked(await show(1000, config))).toEqual([]);
   });
 
   test('the source and compressor labels keep the captions they had', async () => {

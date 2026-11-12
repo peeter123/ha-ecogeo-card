@@ -52,6 +52,32 @@ delta first.
 - [x] 2.4 Update `docs/ecogeo-card.md` (compact content, tiers, minimum sizes) and add a phone capture to
   `docs/images/` referenced from the README.
   Verify: the sections and image exist.
+- [x] 2.5 Fix the compact overlap found by group 3's release run (added 2026-11-12, user decision): at 320 px in
+  Chromium, in the ground source, model C, internal-tank installation, the compact `tank_internal_temperature`
+  label overlaps the item 50 symbol group in every scenario with a value (9 of 11), and `brine_in` does in the
+  three cooling scenarios, where its value is widest (WebKit passes). Find why the group 2 check did not catch it,
+  and move the colliding compact places (D8: labels move, geometry does not; each value stays on its component's
+  side of the cabinet wall). Committed on its own, as a group 2 fix.
+  Cause (established 2026-11-12): the committed tree passed `npm run check` in Chromium at 2026-11-11 20:51 UTC,
+  just before the group 2 commit, and fails deterministically on 2026-11-12 with the same tree, browser builds and
+  package versions; no font file changed overnight. Chromium rounds label widths to whole pixels and now measures
+  them about 1 px wider than WebKit, and the two places had cleared tank 50 by less than 1 px, so a change in the
+  environment that was not identified decided the result. Hence the margin rule in D8.
+  Round 1 review decisions (2026-11-12, user): add an air source, model C, internal-tank installation to
+  `INSTALLATIONS` and a scenario value with a two-digit negative brine inlet (for example -12.3) so the overlap
+  tests cover the widest brine value, and place `brine_in` to clear tank 50 with it; give the compact tank value
+  (internal and external tank) a short "DHW" caption, like the Out and In captions, and re-place it with the
+  captioned width. The remaining thin compact places are left as they are (their clearance does not depend on text
+  width). The place comment in `src/diagram/labels.ts` and the compact places section in `docs/ecogeo-card.md`
+  state the margin rule.
+  Round 2 decisions (2026-11-12, user): the defrost scenario carries the widest brine value (brine inlet and air
+  unit outlet -12.3, outside -14), and an `air-C-internal` installation is added. The captioned internal tank value
+  fits nowhere in the cabinet on one line at 320 px, and `brine_in` with -12.3 does not fit near probe 32 on one
+  line, so in compact these two labels may render their caption on its own line above the value (a two-line
+  label): the internal tank's beside tank 50, `brine_in` near probe 32 again. If `brine_in` still does not fit
+  there with the margin, it keeps the low place beside pressure 37.
+  Verify: `npm run check` passes, including "No overlaps in the compact layout" in Chromium and WebKit for the new
+  installation and scenario value.
 
 ## 3. Release and live installation
 

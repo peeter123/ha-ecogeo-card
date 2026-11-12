@@ -109,6 +109,8 @@ export const VALUE_CAPTIONS = {
   /** The source ports, from the device's point of view: In where the brine enters it, Out where it leaves. */
   portIn: 'In',
   portOut: 'Out',
+  /** The compact layout's short caption of the DHW tank's temperature (add-compact-layout D8), so it is not read as a brine value. */
+  dhw: 'DHW',
 } as const;
 
 /** The footer's captions and the texts of its season and on/off values. */

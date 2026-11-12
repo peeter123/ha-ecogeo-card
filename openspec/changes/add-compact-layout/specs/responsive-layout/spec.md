@@ -67,12 +67,12 @@ footer SHALL show the mode, the COP and the outside temperature, plus the alarm 
 The compact layout SHALL draw no in-drawing captions (such as "DG1", "Outer loop", "Air unit", "Ground loop" or
 "DHW tank"), every value label SHALL stay on the side of the cabinet outline where its component is, and the
 production and brine values SHALL carry short Out and In captions, like the source ports, so each pair can be told
-apart.
+apart. The DHW tank's value SHALL carry a short "DHW" caption, so it cannot be read as a brine value.
 
 #### Scenario: Compact without captions
 - **WHEN** the card shows the compact layout
 - **THEN** no in-drawing caption is drawn, the production and brine values sit inside the cabinet outline with Out
-  and In captions, and the source's Out value sits outside it
+  and In captions, the DHW tank's value carries a DHW caption, and the source's Out value sits outside it
 
 ### Requirement: Minimum rendered sizes
 At any card width, pipes SHALL render at least 2 px wide and component outlines at least 1.25 px wide. Value

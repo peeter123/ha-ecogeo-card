@@ -81,6 +81,18 @@ export const labelStyles = css`
   [data-layout='compact'] .label .caption {
     font-size: 1em;
   }
+  /* A caption on its own line above the value (STACKED_CAPTIONS): the label is two lines tall and as wide as the value. */
+  .label.stacked {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .label.stacked.start {
+    align-items: flex-start;
+  }
+  .label.stacked.end {
+    align-items: flex-end;
+  }
   .value {
     margin: 0;
     padding: 0;
@@ -146,19 +158,22 @@ export interface Placement {
  * with no overlap of another key label or a component and on the side of the cabinet outline where the label's component
  * is (dev/overlaps.ts LABEL_SIDES), at 320 px, in every emulator scenario and installation; they hold at every wider width.
  * The search used the widths of the captioned labels (COMPACT_CAPTIONS), the cabinet outline as an obstacle, and preferred
- * places nearer the label's own probe; the production pair does not fit near its probes (33, 34) at 320 px. A key label
- * not listed stays where it is.
+ * places nearer the label's own probe; the production pair does not fit near its probes (33, 34) at 320 px, nor the
+ * brine inlet near probe 32 with the widest value (-12.3 in the defrost scenario). The internal tank's value, with its
+ * DHW caption on its own line (STACKED_CAPTIONS), sits right of tank 50 under the strip's top. Margin rule (D8): where a clearance
+ * moves with the text width, the place keeps about 2 px of it at 320 px in Chromium and WebKit, whose text widths differ
+ * by 1-2 px. A key label not listed stays where it is.
  */
 const COMPACT_PLACES: Readonly<Record<string, Placement>> = {
   production_out: { x: 332, y: 447, align: 'middle' },
   production_in: { x: 320, y: 367, align: 'middle' },
   brine_out: { x: 580, y: 255, align: 'start' },
-  brine_in: { x: 740, y: 199, align: 'end' },
+  brine_in: { x: 730, y: 476, align: 'end' },
   compressor_speed: { x: 456, y: 307, align: 'start' },
   air_unit_out: { x: 232, y: 111, align: 'end' },
   ground_out: { x: 100, y: 155, align: 'middle' },
   hybrid_ground_out: { x: 100, y: 435, align: 'middle' },
-  tank_internal_temperature: { x: 352, y: 155, align: 'middle' },
+  tank_internal_temperature: { x: 604, y: 176, align: 'start' },
 };
 
 /** The short captions of the four production and brine values in the compact layout (add-compact-layout D8), like the source ports'. */
@@ -167,7 +182,16 @@ const COMPACT_CAPTIONS: Readonly<Record<string, string>> = {
   production_in: VALUE_CAPTIONS.portIn,
   brine_out: VALUE_CAPTIONS.portOut,
   brine_in: VALUE_CAPTIONS.portIn,
+  tank_internal_temperature: VALUE_CAPTIONS.dhw,
+  tank_external_temperature: VALUE_CAPTIONS.dhw,
 };
+
+/**
+ * The compact labels whose caption sits on its own line above the value (add-compact-layout D8): the strip beside tank
+ * 50 is too narrow for the integrated tank's caption and value on one line. Every other caption stays in front of its
+ * value.
+ */
+const STACKED_CAPTIONS: ReadonlySet<string> = new Set(['tank_internal_temperature']);
 
 /** The labels the compact layout shows (add-compact-layout D2): the seven key values. Every other label is detail. */
 const KEY_LABELS: ReadonlySet<string> = new Set([
@@ -364,6 +388,8 @@ export interface ShownLabel {
   y: number;
   align: Align;
   caption?: string;
+  /** The caption is on its own line above the value (compact only). */
+  stacked?: true;
   emphasis: boolean;
   bare?: true;
   /** The value as text; the dash while the value is missing. */
@@ -405,6 +431,7 @@ export function labelsFor(
       entityId,
       ...(label.item === undefined ? {} : { item: label.item }),
       ...(caption === undefined ? {} : { caption }),
+      ...(compact && caption !== undefined && STACKED_CAPTIONS.has(label.id) ? { stacked: true as const } : {}),
     };
     const value: unknown = readings[label.role];
     if (label.demand === true) {
@@ -517,7 +544,7 @@ export function renderLabels(
   return html`${labels.map((label) => {
     const { left, top } = positionOf(label);
     return html`<span
-      class="label ${label.align}${label.emphasis ? ' emphasis' : ''}${label.bare === true ? ' bare' : ''}"
+      class="label ${label.align}${label.emphasis ? ' emphasis' : ''}${label.bare === true ? ' bare' : ''}${label.stacked === true ? ' stacked' : ''}"
       data-label=${label.id}
       data-role=${label.role}
       data-label-item=${label.item ?? nothing}

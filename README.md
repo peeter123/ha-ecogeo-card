@@ -41,7 +41,7 @@ The card measures its own width and chooses a layout from it (the `layout` optio
 (the default) it shows the full layout from 640 px wide, which is a panel view or a wide section, and the compact
 layout below that, which is what a phone gets. The compact layout shows the schematic at the simplified detail
 level, whatever `detail` says, without the captions inside the drawing and with only the key labels (production out and in, brine out and in, compressor
-speed, the DHW temperature and the source's outlet temperature), at least 10 px high and, for production and brine, captioned In and Out, and a shorter footer (mode,
+speed, the DHW temperature and the source's outlet temperature), at least 10 px high and, for production and brine, captioned In and Out and the DHW temperature captioned DHW, and a shorter footer (mode,
 COP, outside temperature and the alarm and offline indications). Pipes and outlines never render thinner than 2 px
 and 1.25 px, and the footer wraps. Once compact, the card returns to full only at 664 px (24 px of hysteresis), so a
 scrollbar appearing with the layout cannot make it flip back and forth. Set `layout: full` or `layout: compact` to

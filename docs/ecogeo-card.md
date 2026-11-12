@@ -512,11 +512,11 @@ the threshold. The places beside the probes are then too small, so most key labe
 installation, where no key label overlaps another or a component and the label stays on the side of the cabinet
 outline where its component is: the production and brine values, the compressor speed and the integrated tank's
 temperature inside it, the source's Out value and the external tank's temperature outside it (`LABEL_SIDES` in
-`dev/overlaps.ts`). The four production and brine values carry a short "Out" or "In" caption in the compact layout (the same strings as
+`dev/overlaps.ts`). The DHW tank's temperature carries a short "DHW" caption in the compact layout, so that it is not read as a brine value; on the integrated tank it stands on its own line above the value, so the label fits beside tank 50 (right of it, under the cabinet's top edge). The four production and brine values carry a short "Out" or "In" caption in the compact layout (the same strings as
 the source ports' captions; here "Out" is the water or brine leaving the heat pump and "In" the one entering it), because their places are no longer beside their probes: at 320 px the production pair
 has no room near probes 33 and 34 inside the cabinet, so both production values sit in its lower left, the return
-above the outlet, and the brine pair top right, the inlet above the outlet. The full layout has no such captions. A label that has moved to its compact place gets its background plate (the integrated tank's
-temperature leaves tank 50's body). The browser test "No overlaps in the compact layout" checks the overlaps and the
+above the outlet; the brine outlet sits top right, and the brine inlet always sits low in the cabinet, beside pressure 37. The full layout has no such captions. A label that has moved to its compact place gets its background plate (the integrated tank's
+temperature leaves tank 50's body). Where a clearance moves with the text width, a place keeps about 2 px of it at 320 px, because Chromium and WebKit measure the text 1-2 px apart; the widest value the scenarios produce, the brine inlet's -12.3 in the defrost scenario, does not fit near probe 32 with that margin, hence the low place. The browser test "No overlaps in the compact layout" checks the overlaps and the
 sides at 320, 360, 480 and 639 px.
 
 ### Minimum rendered sizes

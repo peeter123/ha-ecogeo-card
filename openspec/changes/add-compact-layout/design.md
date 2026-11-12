@@ -103,9 +103,22 @@ the side of the wall where its component is (production and brine values inside 
 outside it). In compact the production and brine values carry short Out and In captions (the port captions'
 strings), because their compact places do not show which of a pair is which (user decision, group 2 round 2); the
 place search runs with the captioned label widths and prefers a place nearer the label's own probe than its pair's.
-The brine pair gets that; the production pair does not fit near probes 33 and 34 at 320 px (a strip of about 27
+The brine outlet gets that; the brine inlet did too until task 2.5 (see the end of D8: with the widest value it
+sits low beside pressure 37). The production pair does not fit near probes 33 and 34 at 320 px (a strip of about 27
 units against a label about 31 units tall), so both production values sit in the cabinet's lower left and are told
 apart by their captions. The browser test checks the side as well.
+Margin rule (task 2.5, 2026-11-12): where a place's clearance depends on the label's text width (an edge that
+moves with the width: the far edge of a start or end aligned label, either edge of a middle aligned one), the
+place keeps at least about 2 px of clearance at 320 px in both Chromium and WebKit, with the widest value the
+scenarios produce, because Chromium rounds text widths to whole pixels and its widths differ from WebKit's by
+1-2 px and between environments. Clearances set by the em box or an anchored edge are the same in both engines and
+need no extra margin. In compact the tank value (internal and external tank) carries a short "DHW" caption (user
+decision, task 2.5 round 1), since its compact place beside the internal tank sits on the brine pipe above the
+brine inlet value; the internal tank's value sits right of tank 50, beside its probe. Two-line labels (task 2.5
+round 2, user decision): where a captioned compact value does not fit on one line with the margin, its caption
+renders on its own line above the value. This applies to the internal tank's value (beside tank 50) and to the
+brine inlet (near probe 32, with the widest value the scenarios produce, -12.3; if it does not fit there, it sits
+low in the cabinet beside pressure 37). Other compact labels keep one line.
 Alternative considered: fewer key labels in compact. Rejected: the seven key values are the point of compact.
 
 ## Risks / Trade-offs
