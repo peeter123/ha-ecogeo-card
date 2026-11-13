@@ -11,8 +11,8 @@ import { COIL_MUTED_LIGHT, MUTED_COLOR, coilMutedColor } from '../../src/diagram
 import { DHW_LABELS } from '../../src/strings';
 import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 
-// the default config draws the simplified level
-const full = arrangementFor('simplified', 'full');
+// the literal coordinates below are the full arrangement's (the simplified one has its own, test/diagram/simplified.test.ts)
+const full = arrangementFor('full', 'full');
 const CABINET = full.cabinet;
 const COMPONENTS = full.components;
 const EXTERNAL_TANK = full.externalTank;
@@ -22,7 +22,7 @@ const LABEL_SPECS = full.labels.specs;
 
 async function mount(config: CardConfig = {}, hass?: HassLike): Promise<EcogeoCard> {
   const card = document.createElement('ecogeo-card') as EcogeoCard;
-  card.setConfig({ type: 'custom:ecogeo-card', ...config });
+  card.setConfig({ type: 'custom:ecogeo-card', detail: 'full', ...config });
   if (hass !== undefined) card.hass = hass;
   document.body.append(card);
   await card.updateComplete;
@@ -229,7 +229,7 @@ describe('DHW storage', () => {
   });
 
   test('simplified model C: coil 51 is drawn as a helix of the same kind (front solid, back faint)', async () => {
-    const card = await mount({ model: 'C' });
+    const card = await mount({ model: 'C', detail: 'simplified' });
     const coil = root(card).querySelector('[data-item="51"] .symbol.coil');
     const paths = [...(coil?.querySelectorAll('path[data-half]') ?? [])];
     const faint = paths.filter((path) => path.getAttribute('data-half') === 'back');

@@ -24,8 +24,8 @@ import {
 import { cabinetStyles } from '../../src/diagram/cabinet';
 import { readings } from '../helpers';
 
-// the default config draws the simplified level
-const full = arrangementFor('simplified', 'full');
+// the scenarios draw detail full
+const full = arrangementFor('full', 'full');
 const COMPONENTS = full.components;
 const SEGMENTS = full.segments;
 

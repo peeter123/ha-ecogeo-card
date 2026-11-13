@@ -8,8 +8,8 @@ import type { HassLike } from '../../src/lib/hass';
 import { SOURCE_LABELS } from '../../src/strings';
 import { states } from '../helpers';
 
-// the default config draws the simplified level
-const full = arrangementFor('simplified', 'full');
+// the literal coordinates below are the full arrangement's (the simplified one has its own, test/diagram/simplified.test.ts)
+const full = arrangementFor('full', 'full');
 const AIR_PORT_Y = full.airPortY;
 const AIR_UNIT = full.airUnit;
 const CABINET = full.cabinet;
@@ -21,7 +21,7 @@ const P = 'demo_ecogeo';
 
 async function mount(config: CardConfig = {}, hass?: HassLike): Promise<EcogeoCard> {
   const card = document.createElement('ecogeo-card') as EcogeoCard;
-  card.setConfig({ type: 'custom:ecogeo-card', ...config });
+  card.setConfig({ type: 'custom:ecogeo-card', detail: 'full', ...config });
   if (hass !== undefined) card.hass = hass;
   document.body.append(card);
   await card.updateComplete;

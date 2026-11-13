@@ -64,6 +64,11 @@ export interface AirUnitShape {
  */
 export interface ZoneBase {
   readonly viewBox: { readonly width: number; readonly height: number };
+  /**
+   * The uniform scale of the source and the external tank relative to the full arrangement (1 when left out): it sizes
+   * the offsets `deriveZones` adds to them (the external coil, the hybrid's ground line).
+   */
+  readonly scale?: number;
   /** The cabinet's outline and the zones around it. */
   readonly cabinet: Rect;
   /**
@@ -135,10 +140,13 @@ export interface Zones extends ZoneBase {
   readonly joinX: { readonly out: number; readonly in: number };
 }
 
+const round2 = (value: number): number => Math.round(value * 100) / 100;
+
 /** The values that depend on the primary ones: ports, line heights, the external coil, the joins of the pipe run. */
 export function deriveZones(base: ZoneBase): Zones {
   const { airUnit, groundLoop, externalTank, run, cabinet } = base;
-  const groundLineY = { ground: cabinet.y, hybrid: airUnit.y + airUnit.height + 70 };
+  const k = base.scale ?? 1;
+  const groundLineY = { ground: cabinet.y, hybrid: airUnit.y + airUnit.height + Math.round(70 * k) };
   return {
     ...base,
     airUnitWallX: airUnit.x + airUnit.width,
@@ -156,10 +164,10 @@ export function deriveZones(base: ZoneBase): Zones {
     },
     externalCoil: {
       cx: externalTank.x + externalTank.width / 2,
-      top: externalTank.y + 62,
-      bottom: externalTank.y + 146,
-      rx: 50,
-      port6X: externalTank.x + 14,
+      top: externalTank.y + Math.round(62 * k),
+      bottom: externalTank.y + Math.round(146 * k),
+      rx: Math.round(50 * k),
+      port6X: externalTank.x + Math.round(14 * k),
     },
     joinX: { out: run.feedX + 8, in: run.returnX + 8 },
   };
@@ -904,8 +912,206 @@ function buildArrangement(id: ArrangementId, zones: Zones): Arrangement {
 }
 
 const FULL_ARRANGEMENT = buildArrangement('full', FULL_ZONES);
-/** Today the simplified arrangement has the full one's coordinates (refine-simplified-layout group 2); group 3 gives it its own. */
-const SIMPLIFIED_ARRANGEMENT = buildArrangement('simplified', FULL_ZONES);
+
+// The simplified arrangement (refine-simplified-layout D2, D3): the cabinet's contents are the full ones under a pair of
+// monotone piecewise-linear maps, the source and the external tank are the same shapes at a uniform scale.
+
+/** A monotone piecewise-linear map of one axis: breakpoints `[from, to]` in the full arrangement's units, ascending. Beyond the first and the last it keeps their offset (slope 1). */
+export type AxisMap = readonly (readonly [from: number, to: number])[];
+
+export function mapAxis(map: AxisMap, value: number): number {
+  const first = map[0];
+  const last = map[map.length - 1];
+  if (first === undefined || last === undefined) return value;
+  if (value <= first[0]) return round2(value + first[1] - first[0]);
+  if (value >= last[0]) return round2(value + last[1] - last[0]);
+  const index = map.findIndex(([from]) => from > value);
+  const [from0, to0] = map[index - 1] ?? first;
+  const [from1, to1] = map[index] ?? last;
+  return round2(to0 + ((value - from0) / (from1 - from0)) * (to1 - to0));
+}
+
+/**
+ * The simplified cabinet's x map: the cabinet grows from 520 to 620 units (x 240-760 becomes 200-820). Slope 1 over every
+ * span a component's ports cover (a symbol keeps its size, so the pipes that end on its ports must keep their distance):
+ * the probe stems 254-270 and 296-312, valves 27/17/22/25/38/15 (338-397), the refrigerant row and tank 50's coil
+ * (416-539), exchanger 7 with probes 35 and 54 (560-590), valve 28 and probe 31 (598-630), pump 16 and probe 32
+ * (674-690), transducer 37 and port 5 (709-725) and port 6 (748). The 100 extra units go to the gaps between those spans:
+ * the probe lane at the left (240-254 +4, 286-296 +12, 312-338 +10, 397-416 +8), the core (539-560 +10), and the brine
+ * lane at the right (590-598 +4, 630-674 +30, 690-709 +8, 725-748 +6, 748-760 +8). Left of 240 and right of 760 the map
+ * keeps its offset, so the labels outside the outline stay outside, and the source and tank zones are placed from their
+ * own constants.
+ */
+export const SIMPLIFIED_MAP_X: AxisMap = [
+  [240, 200],
+  [254, 218],
+  [286, 250],
+  [296, 272],
+  [312, 288],
+  [338, 324],
+  [397, 383],
+  [416, 410],
+  [539, 533],
+  [560, 564],
+  [590, 594],
+  [598, 606],
+  [630, 638],
+  [674, 712],
+  [690, 728],
+  [709, 755],
+  [725, 771],
+  [748, 800],
+  [760, 820],
+];
+
+/**
+ * The simplified cabinet's y map: the identity from the top line down to the cut. Every drawn part of the full arrangement
+ * lies above y 505 (exchanger 10's body is the lowest, to y 501); the band below it holds only parts the simplified level
+ * leaves out (vessels, safety and drain valves), so the cabinet's bottom edge moves from y 605 up to y 530, and the viewBox
+ * from 620 to 545. The rows inside need no stretch: the maps' room is in x, where the labels sit beside the pipes.
+ */
+export const SIMPLIFIED_MAP_Y: AxisMap = [
+  [130, 130],
+  [505, 505],
+];
+
+const simplifiedX = (x: number): number => mapAxis(SIMPLIFIED_MAP_X, x);
+const simplifiedY = (y: number): number => mapAxis(SIMPLIFIED_MAP_Y, y);
+
+/** The scale of the source and the external tank at the simplified level (refine-simplified-layout D3). */
+export const SIMPLIFIED_ZONE_SCALE = 0.8;
+const K = SIMPLIFIED_ZONE_SCALE;
+/** A source zone value scaled about the viewBox's left edge (x) and about the cabinet's top line (y). */
+const scaleX = (x: number): number => round2(x * K);
+/**
+ * The air unit sits 6 units left of where the scale puts it, so that the brine In and Out labels beside its ports (up to
+ * 64 units wide) fit between its wall and the feed's column (x 187).
+ */
+const AIR_SHIFT = -6;
+const airX = (x: number): number => round2(scaleX(x) + AIR_SHIFT);
+const scaleY = (y: number): number => round2(FULL_CABINET.y + (y - FULL_CABINET.y) * K);
+
+const SIMPLIFIED_CABINET: Rect = { x: 200, y: FULL_CABINET.y, width: 620, height: 400 };
+
+const SIMPLIFIED_ZONES: Zones = deriveZones({
+  viewBox: { width: 1000, height: SIMPLIFIED_CABINET.y + SIMPLIFIED_CABINET.height + 15 },
+  scale: K,
+  cabinet: SIMPLIFIED_CABINET,
+  internalTank: {
+    x: simplifiedX(FULL_ZONES.internalTank.x),
+    y: FULL_ZONES.internalTank.y,
+    width: round2(
+      simplifiedX(FULL_ZONES.internalTank.x + FULL_ZONES.internalTank.width) - simplifiedX(FULL_ZONES.internalTank.x),
+    ),
+    height: FULL_ZONES.internalTank.height,
+  },
+  coil51: { x: simplifiedX(FULL_ZONES.coil51.x), y: FULL_ZONES.coil51.y },
+  // the walls and the dome at the scale; the zone starts at x 840 and the tank is centred in it (to x 1000)
+  externalTank: {
+    x: 853,
+    y: FULL_CABINET.y,
+    width: Math.round(168 * K),
+    height: Math.round(180 * K),
+    dome: Math.round(14 * K),
+  },
+  airUnit: {
+    x: airX(26),
+    y: FULL_CABINET.y,
+    width: scaleX(124),
+    height: round2(210 * K),
+    fanX: airX(88),
+    fanY: scaleY(FULL_CABINET.y + 162),
+    fanRadius: round2(34 * K),
+    coil: { x: airX(36), y: scaleY(FULL_CABINET.y + 16), width: scaleX(104), height: round2(74 * K) },
+    fins: {
+      x: airX(52),
+      step: round2(6 * K),
+      count: 13,
+      y0: scaleY(FULL_CABINET.y + 20),
+      y1: scaleY(FULL_CABINET.y + 86),
+    },
+    slats: { y0: scaleY(FULL_CABINET.y + 134), step: round2(9 * K), count: 8 },
+    dividerY: scaleY(FULL_CABINET.y + 114),
+    captionX: airX(88),
+    captionY: FULL_CABINET.y - 8,
+    passes: { y0: scaleY(FULL_CABINET.y + 30), step: round2(15 * K), count: 4, left: airX(44), right: airX(132) },
+  },
+  // the legs 4.8 units left of the scale's: the In label (up to 64 units wide) right of the down leg ends at the cabinet's edge
+  groundLoop: { downX: 128, upX: 80, depth: round2(140 * K) },
+  groundLineX: { start: scaleX(8), end: scaleX(220) },
+  // the run above the cabinet keeps its heights; its columns sit right of the air unit's wall (x 114) with room for its port labels
+  run: { outY: 85, inY: 50, feedX: 187, returnX: 169, hybridReturnX: 6 },
+});
+
+/**
+ * The places of the simplified arrangement that are not the full arrangement's under the maps (refine-simplified-layout D2),
+ * each with its reason. Pressure transducer 38 and its stub sit in the band the cabinet loses, so they move up, between
+ * exchanger 10's two production lines (y 448 and 492) on pump 15's suction side; with them go the stub's crossing with the
+ * line at y 492 and the label of the pressure.
+ */
+export const SIMPLIFIED_EXCEPTIONS: Readonly<Record<string, string>> = {
+  'component 38':
+    'in the cut band (y 520 of the full cabinet): on the production return side between the two lines of exchanger 10, y 470, stem pointing left',
+  'segment prod_tap_a': 'ends at y 470 where transducer 38 now sits, instead of at y 520',
+  'crossing prod_10_in x prod_tap_a': 'the stub no longer reaches the line at y 492',
+  'label production_pressure': 'follows transducer 38: right of it',
+};
+
+/** Pressure transducer 38 in the simplified arrangement: on the stub's end (y), its stem pointing left. */
+const TRANSDUCER_38_Y = 470;
+
+function buildSimplifiedArrangement(): Arrangement {
+  const zones = SIMPLIFIED_ZONES;
+  const inCabinetX = (x: number): boolean => x >= FULL_CABINET.x && x <= FULL_CABINET.x + FULL_CABINET.width;
+  // a point at the cabinet's columns is a cabinet point (the zones' own points lie left of x 240 and right of x 760)
+  const mapPoint = ([x, y]: Point): Point => (inCabinetX(x) ? [simplifiedX(x), simplifiedY(y)] : [x, y]);
+  const stubX = simplifiedX(368);
+  const components = componentsFor(zones)
+    .filter((part) => part.detail !== 'full')
+    .map((part): Component => {
+      if (part.item === 50 || part.item === 51) return part;
+      if (part.item === 38) return { ...part, x: stubX + 16, y: TRANSDUCER_38_Y, rotation: 90 };
+      return { ...part, x: simplifiedX(part.x), y: simplifiedY(part.y) };
+    });
+  const segments = segmentsFor(zones)
+    .filter((part) => part.detail !== 'full')
+    .map((part): Segment =>
+      part.id === 'prod_tap_a'
+        ? {
+            ...part,
+            points: [
+              [stubX, simplifiedY(416)],
+              [stubX, TRANSDUCER_38_Y],
+            ],
+          }
+        : { ...part, points: part.points.map(mapPoint) },
+    );
+  const left = new Set(segments.map((part) => part.id));
+  const crossings = FULL_CROSSINGS.filter(
+    (crossing) =>
+      left.has(crossing.over) &&
+      left.has(crossing.under) &&
+      !(crossing.over === 'prod_10_in' && crossing.under === 'prod_tap_a'),
+  ).map((crossing): Crossing => ({ ...crossing, at: mapPoint(crossing.at) }));
+  const labels = labelPlacesFor(zones, FULL_COMPACT_PLACES, (x, y) => [simplifiedX(x), simplifiedY(y)]);
+  return {
+    ...zones,
+    id: 'simplified',
+    components,
+    segments,
+    crossings,
+    circuitLabels: FULL_CIRCUIT_LABELS.map((label) => ({ ...label, x: simplifiedX(label.x), y: simplifiedY(label.y) })),
+    labels: {
+      specs: labels.specs.map((spec) =>
+        spec.id === 'production_pressure'
+          ? { ...spec, x: stubX + 32, y: TRANSDUCER_38_Y, align: 'start' as const }
+          : spec,
+      ),
+    },
+  };
+}
+
+const SIMPLIFIED_ARRANGEMENT = buildSimplifiedArrangement();
 
 /**
  * The arrangement of a detail level in a shown layout: a pure function of the two. `full` draws the full arrangement,

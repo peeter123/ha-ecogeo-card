@@ -202,7 +202,8 @@ states:
 
 ## Drawing
 
-The cabinet is drawn as inline SVG, in a fixed viewBox of 1000 x 620 units that scales with the card width. There is
+The cabinet is drawn as inline SVG, in a fixed viewBox that is 1000 units wide and 620 tall at `detail: full`, 545 tall
+at `simplified` (see The simplified arrangement), and scales with the card width. There is
 no image anywhere. Everything below cites the manual (manual-figure, section 3.1, figures B1 to B4 and C, item
 numbers 1 to 54); coordinates are the card's own, the topology is the figure's.
 
@@ -302,12 +303,60 @@ are generated from the arrangement's own zone constants, so they stay connected 
 The card picks the arrangement with `arrangementFor(level, layout)`, a pure function of two inputs: the detail level
 (`simplified` or `full`) and the layout the card shows now (`full` or `compact`). Every consumer (the cabinet, the
 source, the DHW tank, the pipes, the labels and the card's viewBox) reads the arrangement from the draw context the card
-builds, never from a module constant, so one drawing cannot mix two arrangements. Today both levels return the same
-coordinates; the `simplified` arrangement is a separate value so that it can later differ. The compact layout draws
-the full arrangement at either level, with the simplified filter of parts, until its label places are searched
-again for the simplified arrangement. A draw context without an arrangement gets the one `arrangementFor` returns for
-its detail level in the full layout. The label text size relies on the viewBox being 1000 units wide (one unit is a
-tenth of a container-width percent), so every arrangement keeps that width.
+builds, never from a module constant, so one drawing cannot mix two arrangements. `arrangementFor('full', 'full')` is
+the coordinates of the manual figure as laid out here; `arrangementFor('simplified', 'full')` is the simplified
+arrangement below. The compact layout draws the full arrangement at either level, with the simplified filter of
+parts, until its label places are searched again for the simplified arrangement. A draw context without an
+arrangement gets the one `arrangementFor` returns for its detail level in the full layout. The label text size relies
+on the viewBox being 1000 units wide (one unit is a tenth of a container-width percent), so every arrangement keeps
+that width and only the height differs.
+
+### The simplified arrangement
+
+At `detail: simplified` (the default) the card uses an arrangement of its own: a cabinet 620 units wide instead of 520
+and 400 tall instead of 475 (the viewBox is 1000 x 545 instead of 1000 x 620), with the air unit, ground loop and
+external tank drawn smaller beside it. The labels beside the probes and pipes get room, and there is no empty band
+under the lowest part. `detail: full` keeps the arrangement above, unchanged.
+
+**The cabinet.** Its contents are the full arrangement's under two monotone piecewise-linear maps, one per axis, so
+every horizontal pipe stays horizontal, every vertical one vertical, and the order of all parts is kept: the port
+order, the probe placements, the HTR placement and the hops carry over by construction. Symbols keep their size
+(`fx` has slope 1 over every span a component's ports cover, so the pipes that end on its ports keep their distance),
+and the maps only stretch, so no clearance shrinks. The x map (`SIMPLIFIED_MAP_X`, full x to simplified x; between
+breakpoints it is linear, left of 240 and right of 760 it keeps its offset):
+
+| Full x | 240 | 254 | 286 | 296 | 312 | 338 | 397 | 416 | 539 | 560 | 590 | 598 | 630 | 674 | 690 | 709 | 725 | 748 | 760 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Simplified x | 200 | 218 | 250 | 272 | 288 | 324 | 383 | 410 | 533 | 564 | 594 | 606 | 638 | 712 | 728 | 755 | 771 | 800 | 820 |
+
+The 100 extra units go to the gaps between the parts, mostly where the labels are: the probe lane at the left (+4 at
+240-254, +12 at 286-296, +10 at 312-338, +8 at 397-416), the gap between expansion valve 12 and evaporator 7 (+10 at 539-560)
+and the brine lane at the right (+4, +30 at 630-674, +8, +6, +8). The y map (`SIMPLIFIED_MAP_Y`) is the identity: the rows
+inside need no stretch. The cut is the band below y 505 of the full cabinet, which holds only parts the simplified
+level leaves out (vessels, safety and drain valves, items 18-21, 23, 24), so the cabinet's bottom edge moves from y
+605 to y 530, 29 units under exchanger 10, the lowest part, and the viewBox from 620 to 545.
+
+**The source and the external tank.** They are not mapped point by point (their shapes would distort) but placed from
+zone constants at a uniform scale of 0.8: the air unit's housing is 99.2 x 168 units with a fan of radius 27.2 (the
+blades scale with it), the ground loop is 48 units between its legs and 112 deep, the external tank is 134 x 144 with a
+dome of 11 and a coil of half width 40. The top of the air unit's housing, the ground line and the tank's dome stay on
+the cabinet's top line (y 130). The source zone ends at x 187 (the feed's column; its legs at x 80 and 128, the
+housing's wall at x 114; the run above the cabinet joins at x 195), the tank zone starts at x 840 and the tank
+(x 853 to 987) is centred in it. The air unit is 6 units left of where the scale puts it and the ground loop's legs 5
+units, so that the brine In and Out labels (up to 64 units wide at the nominal label size) fit between the housing and the feed's column and
+between the loop and the cabinet. The pipes of the source and of ports 5 and 6 are generated from these constants, so
+they stay connected to the ports, which follow `fx`. With the 8 px label floor on cards of about 640-680 px the air unit's Out label in the defrost scenario still touches the feed pipe; group 4 of refine-simplified-layout handles that pair.
+
+**Exceptions to the maps** (`SIMPLIFIED_EXCEPTIONS`, each with its reason in code): pressure transducer 38 and its
+stub sat in the cut band (y 520), so they move up, between the two production lines of exchanger 10 (y 448 and 492) on
+the production return side: the stub ends at y 470, the transducer sits right of it with its stem pointing left, and
+the stub no longer crosses the line at y 492 (10 crossings remain, at most 15 as in the manual's figure); the
+pressure label follows it, right of the transducer. Parts and pipes marked `detail: full` are left out of the
+simplified arrangement altogether.
+
+The invariants are tested on it for every source, DHW storage and model (`test/diagram/simplified.test.ts`): every part
+inside its zone, no two parts overlap, ports 1-6 in order, every crossing a hop inside the cabinet, and the source and
+tank pipes meeting their ports.
 
 ### How the B4 figure is laid out
 
@@ -333,7 +382,7 @@ tenth of a container-width percent), so every arrangement keeps that width.
   drain 23 hangs on port 3's line.
 - **Crossings inside the cabinet:** the line from port 1 through valve 26 to port 5 separates port 2 from port 6, yet
   the DHW return from 6 has to join port 2's line, so at least one internal crossing is unavoidable. The figure
-  has 15 (14 hops, plus the return line passing behind resistor 44); this layout needs 14. Each is declared as data in `src/diagram/geometry.ts`
+  has 15 (14 hops, plus the return line passing behind resistor 44); this layout needs 14 at `detail: full` (10 in the simplified arrangement, see The simplified arrangement). Each is declared as data in `src/diagram/geometry.ts`
   and drawn as a hop, a small gap in one of the two pipes: the DHW supply and return across the lines of ports 2, 3
   and 4 (5 hops) and across the HTR riser (1), the return trunk across the outlet line (1), the brine feed across
   port 3's line (1), exchanger 10's brine pipes across each other (1) and across port 3's drain line (1), and the
@@ -342,8 +391,8 @@ tenth of a container-width percent), so every arrangement keeps that width.
 
 ## Source and DHW
 
-The outer-loop source and the DHW storage are drawn outside the cabinet, in the zones left (x 0 to 240) and right
-(x 790 to 1000) of it. Their pipes are segments in `src/diagram/geometry.ts`, like the cabinet's, so they take
+The outer-loop source and the DHW storage are drawn outside the cabinet, in the zones left (x 0 to 240 at `detail: full`; see The simplified arrangement for the simplified zones) and right
+(x 790 to 1000 at `detail: full`) of it. Their pipes are segments in `src/diagram/geometry.ts`, like the cabinet's, so they take
 the same colour and animation (see Colours). The air unit, the ground loop and the external tank have no item number in the manual;
 the manual's figures stop at the connections.
 
@@ -361,8 +410,8 @@ keep their places relative to their device: "Air unit" above the housing, "Groun
 - **Air:** a housing with a slatted front (slats left and right of the fan), a coil block with a frame and 13 thin
   vertical fins, and a fan under it. The brine tube winds over the fins in four passes joined by rounded U-bends
   (half circles). It enters and leaves the coil block on its right side, the side facing the cabinet: both pipes
-  leave through the housing's right wall. The feed comes down from port 3's line at x 226 to the bottom pass; the
-  exit leaves the top pass and rises at x 206, left of the feed, so that no pipe crosses another (it is the reason
+  leave through the housing's right wall. The feed comes down from port 3's line at x 226 (at `detail: full`) to the bottom pass; the
+  exit leaves the top pass and rises at x 206 (at `detail: full`), left of the feed, so that no pipe crosses another (it is the reason
   for the order of the ports: the exit on top). The fan is a ring with a hub and five swept blades. It rotates
   while `source.fan_speed` is above 0 % (a full turn takes 120 s divided by the speed in %, between 0.5 and 6 s) and
   stands still at 0 % or without a value. A fan speed in another unit (rpm) above 0 turns it at a fixed medium

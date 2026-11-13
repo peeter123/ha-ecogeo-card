@@ -10,7 +10,6 @@ import { states } from '../helpers';
 // the default config draws the simplified level
 const full = arrangementFor('simplified', 'full');
 const COMPONENTS = full.components;
-const CROSSINGS = full.crossings;
 const SEGMENTS = full.segments;
 
 const P = 'demo_ecogeo';
@@ -152,6 +151,7 @@ describe('cabinet drawing', () => {
   test('every declared crossing breaks the pipe under it', async () => {
     const card = await mount({ variant: 4, dhw: 'external', detail: 'full' });
     const path = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
+    const CROSSINGS = arrangementFor('full', 'full').crossings;
     const unders = [...new Set(CROSSINGS.map((crossing) => crossing.under))];
     for (const id of unders) {
       const wanted = CROSSINGS.filter((crossing) => crossing.under === id).length;

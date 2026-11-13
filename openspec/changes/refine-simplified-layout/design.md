@@ -106,6 +106,18 @@ connected. The source zone ends at about x 190 and the tank zone starts at about
 width. Labels placed from these constants (fan, outside, the air unit's ports, the ground legs, the tank's stack)
 follow them.
 
+Settled in group 3 (D2 and D3): `fx` has slope 1 over every span a component's ports cover (symbols keep their size,
+so the pipes on their ports keep their distance); the extra 100 units go only into the gaps between those spans.
+`fy` is the identity down to y 505 and only cuts below it: rows y 214-428 are covered by ports throughout, and
+stretching the remaining gaps would only make the cabinet taller, against the goal. The cabinet is x 200-820,
+y 130-530 (exchanger 10 ends at y 501, so the bottom edge stays 29 units under it), and the viewBox 1000 x 545.
+Overrides: pressure transducer 38 at y 470 between exchanger 10's production lines, its stub `prod_tap_a` ending
+there, and the crossing of that stub with `prod_10_in` removed since the stub no longer reaches that line. The source
+departs from a pure 0.8 scale (air unit 6 units left, ground legs about 5 left, run columns at x 187 and 169, a few
+units right of their scaled 180.8 and 164.8, and the hybrid return at x 6) so the port labels clear the cabinet and
+the feed pipe; the tank's sizes are rounded to whole units (134 x 144, dome 11) so the
+helix ends stay inside its box.
+
 ### D4. Pipe- and caption-aware overlap check
 
 `dev/overlaps.ts` gains two inputs, read in the page like the label boxes:

@@ -27,13 +27,8 @@ const full = arrangementFor('simplified', 'full');
 const AIR_PORT_Y = full.airPortY;
 const AIR_UNIT = full.airUnit;
 const AIR_UNIT_WALL_X = full.airUnitWallX;
-const CABINET = full.cabinet;
-const COMPONENTS = full.components;
-const GROUND_LINE_X = full.groundLineX;
 const GROUND_LINE_Y = full.groundLineY;
 const GROUND_LOOP = full.groundLoop;
-const INTERNAL_TANK = full.internalTank;
-const SEGMENTS = full.segments;
 const LABEL_SPECS = full.labels.specs;
 
 const P = 'demo_ecogeo';
@@ -631,6 +626,7 @@ describe('source labels', () => {
   });
 
   describe.each(['simplified', 'full'] as const)('port labels touch no pipe or other label (%s)', (detail) => {
+    const arr = arrangementFor(detail, 'full');
     interface Box {
       left: number;
       right: number;
@@ -660,23 +656,23 @@ describe('source labels', () => {
 
     test.each(['air', 'ground', 'hybrid'] as const)('%s', (source) => {
       const context = { model: 'B', dhw: 'external', source, features: mergeFeatures(4, {}), detail } as const;
-      const shown = LABEL_SPECS.filter((spec) => partState(spec, context) !== 'hidden');
+      const shown = arr.labels.specs.filter((spec) => partState(spec, context) !== 'hidden');
       const mine = shown.filter((spec) => SOURCE_IDS.has(spec.id));
       expect(mine.length).toBeGreaterThanOrEqual(source === 'ground' ? 2 : 3);
       const pipes = drawnSegments(context).map(({ part }) => part);
       // the housing, the coil block, the cabinet, and the ground line with its hatching
       const solids: [string, Box][] = [
-        ['cabinet', { left: CABINET.x - 2, right: 1000, top: CABINET.y - 2, bottom: 620 }],
+        ['cabinet', { left: arr.cabinet.x - 2, right: 1000, top: arr.cabinet.y - 2, bottom: arr.viewBox.height }],
       ];
       if (source !== 'ground') {
-        const { x, y, width, height } = AIR_UNIT;
+        const { x, y, width, height } = arr.airUnit;
         solids.push(['housing', { left: x - 2, right: x + width + 2, top: y - 2, bottom: y + height + 2 }]);
       }
       if (source !== 'air') {
-        const lineY = GROUND_LINE_Y[source === 'hybrid' ? 'hybrid' : 'ground'];
+        const lineY = arr.groundLineY[source === 'hybrid' ? 'hybrid' : 'ground'];
         solids.push([
           'ground line',
-          { left: GROUND_LINE_X.start, right: GROUND_LINE_X.end, top: lineY - 2, bottom: lineY + 10 },
+          { left: arr.groundLineX.start, right: arr.groundLineX.end, top: lineY - 2, bottom: lineY + 10 },
         ]);
       }
       for (const spec of mine) {
@@ -700,11 +696,11 @@ describe('source labels', () => {
           });
         }
         // the value text stays on the card: the wide estimate must not reach the cabinet or the left edge
-        expect(box.right, spec.id).toBeLessThan(CABINET.x);
+        expect(box.right, spec.id).toBeLessThan(arr.cabinet.x);
       }
       // every other label below the cabinet's top (the probe labels at the cabinet's left edge, for one) keeps 8 units
       // clear of every pipe of the source (the labels of the pipe run above the cabinet sit by design under the top lines)
-      for (const other of shown.filter((item) => !SOURCE_IDS.has(item.id) && item.y > CABINET.y)) {
+      for (const other of shown.filter((item) => !SOURCE_IDS.has(item.id) && item.y > arr.cabinet.y)) {
         const width = other.caption === undefined ? 40 : WIDTH;
         const left = other.align === 'start' ? other.x : other.align === 'end' ? other.x - width : other.x - width / 2;
         const box: Box = { left, right: left + width, top: other.y - HEIGHT / 2, bottom: other.y + HEIGHT / 2 };
@@ -806,6 +802,7 @@ describe('DHW tank labels', () => {
   });
 
   describe.each(['simplified', 'full'] as const)('model C tank values clear of everything (%s)', (detail) => {
+    const arr = arrangementFor(detail, 'full');
     interface Box {
       left: number;
       right: number;
@@ -822,7 +819,7 @@ describe('DHW tank labels', () => {
       tank_internal_demand: [41, 13],
     };
     const boxOf = (id: string): Box => {
-      const spec = LABEL_SPECS.find((item) => item.id === id);
+      const spec = arr.labels.specs.find((item) => item.id === id);
       const size = SIZE[id];
       if (spec === undefined || size === undefined) throw new Error(id);
       const [width, height] = size;
@@ -832,7 +829,7 @@ describe('DHW tank labels', () => {
     const apart = (u: Box, v: Box): boolean =>
       u.right <= v.left || v.right <= u.left || u.bottom <= v.top || v.bottom <= u.top;
     const ids = Object.keys(SIZE);
-    const coil = COMPONENTS.find((component) => component.item === 51);
+    const coil = arr.components.find((component) => component.item === 51);
     if (coil === undefined) throw new Error('no coil 51');
     // the coil's drawn extent: the supply port stub (stroke 3) runs along the turned helix's top edge, which is the
     // shape's cx + rx above the centre
@@ -840,7 +837,7 @@ describe('DHW tank labels', () => {
     const coilTop = coil.y - (COIL_51_SHAPE.cx + COIL_51_SHAPE.rx) - STUB_STROKE / 2;
 
     test('inside tank 50, above the coil, in one row', () => {
-      const tank = INTERNAL_TANK;
+      const tank = arr.internalTank;
       for (const id of ids) {
         const box = boxOf(id);
         expect(box.left, id).toBeGreaterThan(tank.x + 2);
@@ -849,11 +846,11 @@ describe('DHW tank labels', () => {
         expect(box.bottom, id).toBeLessThan(coilTop);
       }
       const rowY = ['temperature', 'setpoint', 'start_delta'].map(
-        (name) => LABEL_SPECS.find((item) => item.id === 'tank_internal_' + name)?.y,
+        (name) => arr.labels.specs.find((item) => item.id === 'tank_internal_' + name)?.y,
       );
       expect(new Set(rowY).size).toBe(1);
       // the demand text sits under the row
-      expect(LABEL_SPECS.find((item) => item.id === 'tank_internal_demand')?.y).toBeGreaterThan(rowY[0] ?? 0);
+      expect(arr.labels.specs.find((item) => item.id === 'tank_internal_demand')?.y).toBeGreaterThan(rowY[0] ?? 0);
     });
 
     test('no overlap with each other, other labels, item tags, components or pipes', () => {
@@ -862,13 +859,13 @@ describe('DHW tank labels', () => {
         for (const [other, otherBox] of boxes.slice(index + 1))
           expect(apart(box, otherBox), id + ' ' + other).toBe(true);
         // every other value label is outside this box
-        for (const spec of LABEL_SPECS.filter((item) => !ids.includes(item.id))) {
+        for (const spec of arr.labels.specs.filter((item) => !ids.includes(item.id))) {
           const near = { left: spec.x - 30, right: spec.x + 30, top: spec.y - 6, bottom: spec.y + 6 };
           expect(apart(box, near), id + ' ' + spec.id).toBe(true);
         }
         // item tags (full detail): a 14 x 10 box at the tag's anchor
         if (detail === 'full') {
-          for (const part of COMPONENTS.filter((item) => item.dhw === 'internal' || item.item === 26)) {
+          for (const part of arr.components.filter((item) => item.dhw === 'internal' || item.item === 26)) {
             const [dx, dy, anchor] = part.tag;
             const x = part.x + dx;
             const left = anchor === 'start' ? x : anchor === 'end' ? x - 14 : x - 7;
@@ -877,14 +874,14 @@ describe('DHW tank labels', () => {
           }
         }
         // components drawn near (probe 54 and the others): their symbol boxes (radius 14, the largest symbols' half size) stay clear, except tank 50
-        for (const part of COMPONENTS.filter((item) => item.item !== 50 && item.item !== 51)) {
+        for (const part of arr.components.filter((item) => item.item !== 50 && item.item !== 51)) {
           // a port is only a 10 x 6 rectangle on the cabinet's top edge, so a half size of 7 covers it
           const half = part.kind === 'port' ? 7 : 14;
           const symbolBox = { left: part.x - half, right: part.x + half, top: part.y - half, bottom: part.y + half };
           expect(apart(box, symbolBox), id + ' component ' + String(part.item)).toBe(true);
         }
         // no pipe point or run passes through the box (orthogonal runs)
-        for (const segment of SEGMENTS.filter((item) => item.dhw !== 'external' && item.shape === undefined)) {
+        for (const segment of arr.segments.filter((item) => item.dhw !== 'external' && item.shape === undefined)) {
           for (let i = 1; i < segment.points.length; i += 1) {
             const [x0 = 0, y0 = 0] = segment.points[i - 1] ?? [];
             const [x1 = 0, y1 = 0] = segment.points[i] ?? [];
@@ -906,7 +903,7 @@ describe('DHW tank labels', () => {
 
 describe('label positions', () => {
   test('positions are percentages of the viewBox', () => {
-    expect(positionOf({ x: 500, y: 310 }, full.viewBox)).toEqual({ left: '50%', top: '50%' });
+    expect(positionOf({ x: 500, y: full.viewBox.height / 2 }, full.viewBox)).toEqual({ left: '50%', top: '50%' });
   });
 
   test('every label has a unique id and lies inside the viewBox', () => {

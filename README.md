@@ -89,7 +89,7 @@ fault.
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
 | `layout` | `auto`, `full`, `compact` | `auto` | `auto` shows the compact layout while the card is narrower than 640 px and the full layout otherwise (and before the width is known), with 24 px of hysteresis once compact (see Layout in the docs); `full` and `compact` use that layout at any width. |
-| `detail` | `simplified`, `full` | `simplified` | `simplified` leaves out the service and safety parts with no live value and shows no item numbers; `full` draws every part of the manual figure with its item number. |
+| `detail` | `simplified`, `full` | `simplified` | `simplified` leaves out the service and safety parts with no live value, shows no item numbers and draws a wider, shorter cabinet with a smaller outer-loop source and external tank, so the labels get room; `full` draws every part of the manual figure with its item number, in the original, taller cabinet. |
 
 ### Source and DHW
 

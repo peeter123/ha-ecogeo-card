@@ -90,6 +90,9 @@ export const sourceStyles = css`
   }
 `;
 
+/** Rounds to 2 decimals, so the scaled zones of the simplified arrangement leave no float noise in the markup. */
+const round2 = (value: number): number => Math.round(value * 100) / 100;
+
 /** The fan's turn in seconds at the fixed medium speed, for a speed in another unit than % (add-entity-discovery D6). */
 const FAN_MEDIUM_SECONDS = 3;
 
@@ -103,6 +106,9 @@ export const fanDuration = (speed: number | boolean | undefined): number | undef
     : speed === undefined || speed === false || !(speed > 0)
       ? undefined
       : Math.min(6, Math.max(0.5, 120 / speed));
+
+/** The ring radius the blades are drawn for (the full arrangement's). */
+const FAN_RADIUS = 34;
 
 /** The fan's five swept blades around the origin (refine-schematic-drawing D6): each curves away from its root at the hub. */
 const BLADES = [0, 72, 144, 216, 288].map(
@@ -119,14 +125,16 @@ function airUnit(
 ): SVGTemplateResult {
   const { x, y, width, height, fanX, fanY, fanRadius, coil, fins: fin, slats: slat, dividerY } = unit;
   const duration = fanDuration(speed);
-  const fins = Array.from({ length: fin.count }, (_, index) => fin.x + index * fin.step);
-  const slatYs = Array.from({ length: slat.count }, (_, index) => slat.y0 + index * slat.step);
-  const [gutterLeft, gutterRight] = [x + 6, fanX + fanRadius + 6];
-  const gutter = fanX - fanRadius - 6 - gutterLeft;
+  const fins = Array.from({ length: fin.count }, (_, index) => round2(fin.x + index * fin.step));
+  const slatYs = Array.from({ length: slat.count }, (_, index) => round2(slat.y0 + index * slat.step));
+  const [gutterLeft, gutterRight] = [round2(x + 6), round2(fanX + fanRadius + 6)];
+  const gutter = round2(fanX - fanRadius - 6 - gutterLeft);
+  // the blades keep the full arrangement's proportions to the ring: a smaller air unit scales them with it
+  const fanScale = round2(fanRadius / FAN_RADIUS);
   const tap = tapBindings(tapTarget(FAN_ROLE, taps), taps?.onTap);
   return svg`<g class="air-unit${muted ? ' muted' : ''}" data-source="air">
     <rect class="source-outline" x=${x} y=${y} width=${width} height=${height} rx="6" />
-    <path class="source-divider" d="M${x} ${dividerY} H${x + width}" />
+    <path class="source-divider" d="M${x} ${dividerY} H${round2(x + width)}" />
     ${slatYs.map((slatY) => svg`<path class="source-slat" data-slat d="M${gutterLeft} ${slatY} h${gutter} M${gutterRight} ${slatY} h${gutter}" />`)}
     <rect class="source-frame" data-coil-block x=${coil.x} y=${coil.y} width=${coil.width} height=${coil.height} rx="3" />
     ${fins.map((finX) => svg`<path class="source-fin" d="M${finX} ${fin.y0} V${fin.y1}" />`)}
@@ -134,7 +142,7 @@ function airUnit(
       <title>${AIR_UNIT_FAN_NAME}</title>
       <circle class="fan-ring" cx=${fanX} cy=${fanY} r=${fanRadius} />
       <circle class="fan-hit" cx=${fanX} cy=${fanY} r=${fanRadius} fill="transparent" stroke="none" />
-      <g class="fan" data-fan transform="translate(${fanX} ${fanY})">
+      <g class="fan" data-fan transform="translate(${fanX} ${fanY})${fanScale === 1 ? '' : ` scale(${String(fanScale)})`}">
         <g class=${duration === undefined ? 'fan-rotor still' : 'fan-rotor'} style=${duration === undefined ? '' : `--fan-duration: ${String(duration)}s`}>${BLADES}<circle class="fan-hub" r="5" fill="var(--primary-text-color)" /></g>
       </g>
     </g>

@@ -35,12 +35,12 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 
 ## 3. The simplified arrangement
 
-- [ ] 3.1 Give the simplified arrangement its own zone constants for the source (air unit, ground loop, hybrid) and
+- [x] 3.1 Give the simplified arrangement its own zone constants for the source (air unit, ground loop, hybrid) and
   the external tank at a uniform scale of about 0.8, with the housing top, ground line and tank dome on the cabinet's
   top line (design D3), and the source zone ending at about x 190 and the tank zone starting at about x 840.
   Verify: unit tests check the top-line rules of outer-loop-source and dhw-storage for the simplified arrangement,
   and that the source and tank pipes still meet their ports.
-- [ ] 3.2 Build the simplified cabinet contents from the full ones under the monotone maps `fx`, `fy` (design D2):
+- [x] 3.2 Build the simplified cabinet contents from the full ones under the monotone maps `fx`, `fy` (design D2):
   cabinet about 620 wide, the bottom band cut to about 40 units under the lowest drawn part, viewBox height to match;
   pressure transducer 38 and its stub get an explicit place above the new bottom edge on the production return side;
   any other override is a named exception with its reason.
@@ -51,15 +51,15 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
   inside the cabinet". The `detail: full` snapshots pass unchanged, and the simplified snapshots are updated on
   purpose. The compact layout still draws the full arrangement with the simplified filter (design D7), so its
   browser tests pass unchanged.
-- [ ] 3.3 Labels of the simplified arrangement follow the maps and zone constants (design D6, first half).
+- [x] 3.3 Labels of the simplified arrangement follow the maps and zone constants (design D6, first half).
   Verify: the existing label-and-component guard (`test/card/overlaps.browser.test.ts`) passes at the current
   `COMPACT_BELOW`.
-- [ ] 3.4 Emulator check of the drawing: every scenario at 1000 and 640 px in the full layout with no `detail`, for a
+- [x] 3.4 Emulator check of the drawing: every scenario at 1000 and 640 px in the full layout with no `detail`, for a
   ground loop, an air unit and model C.
   Verify: a subagent captures them and returns a verdict that the cabinet is wider and shorter, the source and tank
   smaller, no parts touch and no pipe is broken or detached; and that `detail: full` captures match the previous
   release.
-- [ ] 3.5 Document the simplified arrangement in `docs/ecogeo-card.md` (the maps' breakpoints, the zone scale, the
+- [x] 3.5 Document the simplified arrangement in `docs/ecogeo-card.md` (the maps' breakpoints, the zone scale, the
   overrides and why) and the detail level's effect in `README.md`.
   Verify: the docs state the final numbers used in code; `test/readme.ts` and `test/docs.test.ts` pass.
 

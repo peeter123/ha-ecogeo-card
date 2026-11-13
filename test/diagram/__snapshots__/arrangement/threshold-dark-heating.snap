@@ -1,83 +1,73 @@
 layout: full
 labels:
-production_out | label end | left: 23.7%; top: 36.774193548387096%
-production_in | label middle | left: 29.099999999999998%; top: 39.83870967741935%
-production_pressure | label end | left: 36%; top: 86.61290322580645%
-production_pump | label end | left: 39.6%; top: 61.29032258064516%
-dg1_setpoint | label middle | left: 29.099999999999998%; top: 15.483870967741936%
-dg1_demand | label start | left: 32%; top: 19.838709677419356%
-brine_out | label start | left: 63.3%; top: 39.83870967741935%
-brine_in | label start | left: 69.69999999999999%; top: 39.83870967741935%
-brine_pressure | label start | left: 68.89999999999999%; top: 74.03225806451613%
-brine_pump | label end | left: 67.60000000000001%; top: 48.38709677419355%
-discharge_temperature | label start | left: 43.6%; top: 42.25806451612903%
-discharge_pressure | label middle | left: 48%; top: 44.354838709677416%
-suction_temperature | label start | left: 52.800000000000004%; top: 42.25806451612903%
-suction_pressure | label middle | left: 56.99999999999999%; top: 44.354838709677416%
-compressor_speed | label middle | left: 50.3%; top: 49.516129032258064%
-compressor_percentage | label middle | left: 50.3%; top: 51.45161290322581%
-compressor_power | label middle | left: 50.3%; top: 53.387096774193544%
-superheat | label middle | left: 52.7%; top: 60.64516129032258%
-expansion_valve | label middle | left: 52.7%; top: 62.58064516129033%
-condensation_temperature | label middle | left: 43.2%; top: 70.48387096774194%
-evaporation_temperature | label middle | left: 57.199999999999996%; top: 70.48387096774194%
-ground_in | label start | left: 17.2%; top: 24.193548387096776%
-ground_out | label end | left: 10%; top: 24.193548387096776%
-tank_external_temperature | label middle emphasis | left: 89%; top: 53.5483870967742%
-tank_external_setpoint | label middle | left: 89%; top: 55.96774193548387%
-tank_external_start_delta | label middle | left: 89%; top: 58.225806451612904%
+production_out | label end | left: 19.7%; top: 41.8348623853211%
+production_in | label middle | left: 26.1%; top: 45.321100917431195%
+production_pressure | label start | left: 38.6%; top: 86.23853211009175%
+production_pump | label end | left: 38.2%; top: 69.72477064220183%
+dg1_setpoint | label middle | left: 26.1%; top: 17.61467889908257%
+dg1_demand | label start | left: 29.907999999999994%; top: 22.568807339449542%
+brine_out | label start | left: 64.30499999999999%; top: 45.321100917431195%
+brine_in | label start | left: 73.795%; top: 45.321100917431195%
+brine_pressure | label start | left: 72.7%; top: 84.22018348623853%
+brine_pump | label end | left: 71.39999999999999%; top: 55.04587155963303%
+discharge_temperature | label start | left: 43%; top: 48.07339449541285%
+discharge_pressure | label middle | left: 47.4%; top: 50.45871559633027%
+suction_temperature | label start | left: 52.2%; top: 48.07339449541285%
+suction_pressure | label middle | left: 57.4%; top: 50.45871559633027%
+compressor_speed | label middle | left: 49.7%; top: 56.330275229357795%
+compressor_percentage | label middle | left: 49.7%; top: 58.532110091743114%
+compressor_power | label middle | left: 49.7%; top: 60.73394495412844%
+superheat | label middle | left: 52.1%; top: 68.9908256880734%
+expansion_valve | label middle | left: 52.1%; top: 71.19266055045873%
+condensation_temperature | label middle | left: 42.6%; top: 80.18348623853211%
+evaporation_temperature | label middle | left: 57.599999999999994%; top: 80.18348623853211%
+ground_in | label start | left: 13.4%; top: 27.522935779816514%
+ground_out | label end | left: 7.3999999999999995%; top: 27.522935779816514%
+tank_external_temperature | label middle emphasis | left: 92%; top: 54.31192660550459%
+tank_external_setpoint | label middle | left: 92%; top: 57.064220183486235%
+tank_external_start_delta | label middle | left: 92%; top: 59.63302752293578%
 footer: on_off, season, outside_temperature, cop, condensation_capacity, evaporation_capacity
 svg:
-<svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 620" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #d7263d 10.5%, #f2711c); --ecogeo-coil-muted: var(--disabled-text-color); --pipe-width: 3.2; --outline-width: 2">
+<svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 545" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #d7263d 10.5%, #f2711c); --ecogeo-coil-muted: var(--disabled-text-color); --pipe-width: 3.2; --outline-width: 2">
           <g class="source" data-source-kind="ground">
     
     <g data-source="ground" class="ground-loop">
-    <path class="source-ground" d="M8 130 H220">
+    <path class="source-ground" d="M6.4 130 H176">
 </path>
-    <path class="source-ground" d="M14 130 l-6 8">
+    <path class="source-ground" d="M12.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M24 130 l-6 8">
+<path class="source-ground" d="M22.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M34 130 l-6 8">
+<path class="source-ground" d="M32.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M44 130 l-6 8">
+<path class="source-ground" d="M42.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M54 130 l-6 8">
+<path class="source-ground" d="M52.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M64 130 l-6 8">
+<path class="source-ground" d="M62.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M74 130 l-6 8">
+<path class="source-ground" d="M92.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M84 130 l-6 8">
+<path class="source-ground" d="M102.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M94 130 l-6 8">
+<path class="source-ground" d="M112.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M124 130 l-6 8">
+<path class="source-ground" d="M142.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M134 130 l-6 8">
+<path class="source-ground" d="M152.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M144 130 l-6 8">
+<path class="source-ground" d="M162.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M154 130 l-6 8">
-</path>
-<path class="source-ground" d="M184 130 l-6 8">
-</path>
-<path class="source-ground" d="M194 130 l-6 8">
-</path>
-<path class="source-ground" d="M204 130 l-6 8">
-</path>
-<path class="source-ground" d="M214 130 l-6 8">
-</path>
-    <text class="source-caption" text-anchor="middle" x="136" y="298">Ground loop</text>
+    <text class="source-caption" text-anchor="middle" x="104" y="270">Ground loop</text>
   </g>
   </g>
 <g data-dhw="external" class="dhw-storage" aria-label="DHW tank" role="button" tabindex="0">
     <title>DHW tank</title>
-    <path class="tank-body" data-dhw-tank="external" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" d="M806 144 A84 14 0 0 1 974 144 V296 A84 14 0 0 1 806 296 Z">
+    <path class="tank-body" data-dhw-tank="external" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" d="M853 141 A67 11 0 0 1 987 141 V263 A67 11 0 0 1 853 263 Z">
 </path>
-    <path class="tank-rim" d="M806 144 A84 14 0 0 0 974 144">
+    <path class="tank-rim" d="M853 141 A67 11 0 0 0 987 141">
 </path>
-    <text class="tank-caption" text-anchor="middle" x="890" y="124">DHW tank</text>
+    <text class="tank-caption" text-anchor="middle" x="920" y="124">DHW tank</text>
   </g>
 <g class="cabinet">
     <defs>
@@ -130,197 +120,197 @@ svg:
 </stop>
     </linearGradient>
 <clipPath data-tank-clip="" id="ecogeoN-tank-clip">
-<path d="M806 144 A84 14 0 0 1 974 144 V296 A84 14 0 0 1 806 296 Z">
+<path d="M853 141 A67 11 0 0 1 987 141 V263 A67 11 0 0 1 853 263 Z">
 </path>
 </clipPath>
 </defs>
-    <rect class="outline" rx="6" x="240" y="130" width="520" height="475">
+    <rect class="outline" rx="6" x="200" y="130" width="620" height="400">
 </rect>
-    <text class="circuit-label" text-anchor="middle" x="291" y="112">DG1</text>
-<text class="circuit-label" text-anchor="middle" x="660" y="112">Outer loop</text>
-<text class="circuit-label" text-anchor="middle" x="776" y="112">DHW</text>
-    <path class="pipe " data-segment="p1_stub" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M270 130 L270 118">
+    <text class="circuit-label" text-anchor="middle" x="261" y="112">DG1</text>
+<text class="circuit-label" text-anchor="middle" x="688.45" y="112">Outer loop</text>
+<text class="circuit-label" text-anchor="middle" x="836" y="112">DHW</text>
+    <path class="pipe " data-segment="p1_stub" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M234 130 L234 118">
 </path>
-<path class="pipe " data-segment="p2_stub" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M312 118 L312 130">
+<path class="pipe " data-segment="p2_stub" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M288 118 L288 130">
 </path>
-<path class="pipe " data-segment="p1_up" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M270 160 L270 130">
+<path class="pipe " data-segment="p1_up" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M234 160 L234 130">
 </path>
-<path class="flow " data-flow="p1_up" style="--flow-duration: 1.2012012012012012s" d="M270 160 L270 130">
+<path class="flow " data-flow="p1_up" style="--flow-duration: 1.2012012012012012s" d="M234 160 L234 130">
 </path>
-<path class="pipe " data-segment="p2_in" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M312 130 L312 164.53333333333333 M312 179.46666666666667 L312 198">
+<path class="pipe " data-segment="p2_in" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M288 130 L288 164.53333333333333 M288 179.46666666666667 L288 198">
 </path>
-<path class="flow " data-flow="p2_in" style="--flow-duration: 1.2012012012012012s" d="M312 130 L312 164.53333333333333 M312 179.46666666666667 L312 198">
+<path class="flow " data-flow="p2_in" style="--flow-duration: 1.2012012012012012s" d="M288 130 L288 164.53333333333333 M288 179.46666666666667 L288 198">
 </path>
-<path class="pipe " data-segment="prod_44_26" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M270 292 L270 184">
+<path class="pipe " data-segment="prod_44_26" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M234 292 L234 184">
 </path>
-<path class="flow " data-flow="prod_44_26" style="--flow-duration: 1.2012012012012012s" d="M270 292 L270 184">
+<path class="flow " data-flow="prod_44_26" style="--flow-duration: 1.2012012012012012s" d="M234 292 L234 184">
 </path>
-<path class="pipe " data-segment="prod_8_44" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M420 348 L319.46666666666664 348 M304.53333333333336 348 L270 348">
+<path class="pipe " data-segment="prod_8_44" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M414 348 L295.46666666666664 348 M280.53333333333336 348 L234 348">
 </path>
-<path class="flow " data-flow="prod_8_44" style="--flow-duration: 1.2012012012012012s" d="M420 348 L319.46666666666664 348 M304.53333333333336 348 L270 348">
+<path class="flow " data-flow="prod_8_44" style="--flow-duration: 1.2012012012012012s" d="M414 348 L295.46666666666664 348 M280.53333333333336 348 L234 348">
 </path>
-<path class="pipe " data-segment="prod_15_8" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M397 416 L420 416">
+<path class="pipe " data-segment="prod_15_8" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M383 416 L414 416">
 </path>
-<path class="flow " data-flow="prod_15_8" style="--flow-duration: 1.2012012012012012s" d="M397 416 L420 416">
+<path class="flow " data-flow="prod_15_8" style="--flow-duration: 1.2012012012012012s" d="M383 416 L414 416">
 </path>
-<path class="pipe " data-segment="trunk" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M312 198 L312 416">
+<path class="pipe " data-segment="trunk" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M288 198 L288 416">
 </path>
-<path class="flow " data-flow="trunk" style="--flow-duration: 1.2012012012012012s" d="M312 198 L312 416">
+<path class="flow " data-flow="trunk" style="--flow-duration: 1.2012012012012012s" d="M288 198 L288 416">
 </path>
-<path class="pipe " data-segment="prod_27_in" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M312 416 L338 416">
+<path class="pipe " data-segment="prod_27_in" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M288 416 L324 416">
 </path>
-<path class="flow " data-flow="prod_27_in" style="--flow-duration: 1.2012012012012012s" d="M312 416 L338 416">
+<path class="flow " data-flow="prod_27_in" style="--flow-duration: 1.2012012012012012s" d="M288 416 L324 416">
 </path>
-<path class="pipe " data-segment="prod_27_15" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M362 416 L373 416">
+<path class="pipe " data-segment="prod_27_15" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M348 416 L359 416">
 </path>
-<path class="flow " data-flow="prod_27_15" style="--flow-duration: 1.2012012012012012s" d="M362 416 L373 416">
+<path class="flow " data-flow="prod_27_15" style="--flow-duration: 1.2012012012012012s" d="M348 416 L359 416">
 </path>
-<path class="pipe muted" data-segment="prod_10_in" d="M312 416 L312 492 L508 492">
+<path class="pipe muted" data-segment="prod_10_in" d="M288 416 L288 492 L502 492">
 </path>
-<path class="pipe muted" data-segment="prod_10_out" d="M508 448 L350 448 L350 428">
+<path class="pipe muted" data-segment="prod_10_out" d="M502 448 L336 448 L336 428">
 </path>
-<path class="pipe " data-segment="prod_tap_a" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M368 416 L368 440.53333333333336 M368 455.46666666666664 L368 484.53333333333336 M368 499.46666666666664 L368 520">
+<path class="pipe " data-segment="prod_tap_a" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M354 416 L354 440.53333333333336 M354 455.46666666666664 L354 470">
 </path>
-<path class="pipe muted" data-segment="dhw_sup_a" d="M282 172 L361 172">
+<path class="pipe muted" data-segment="dhw_sup_a" d="M246 172 L347 172">
 </path>
-<path class="pipe muted" data-segment="dhw_sup_b" d="M361 172 L420 172">
+<path class="pipe muted" data-segment="dhw_sup_b" d="M347 172 L414 172">
 </path>
-<path class="pipe muted" data-segment="dhw_sup_c" d="M420 172 L722 172 L722 130">
+<path class="pipe muted" data-segment="dhw_sup_c" d="M414 172 L768 172 L768 130">
 </path>
-<path class="pipe muted" data-segment="dhw_ret_c" d="M748 130 L748 198 L420 198">
+<path class="pipe muted" data-segment="dhw_ret_c" d="M800 130 L800 198 L414 198">
 </path>
-<path class="pipe muted" data-segment="dhw_ret_b" d="M420 198 L340 198">
+<path class="pipe muted" data-segment="dhw_ret_b" d="M414 198 L326 198">
 </path>
-<path class="pipe muted" data-segment="dhw_ret_a" d="M340 198 L312 198">
+<path class="pipe muted" data-segment="dhw_ret_a" d="M326 198 L288 198">
 </path>
-<path class="pipe muted" data-segment="htr_in" d="M340 198 L340 214">
+<path class="pipe muted" data-segment="htr_in" d="M326 198 L326 214">
 </path>
-<path class="pipe muted" data-segment="htr_pump" d="M340 238 L340 247">
+<path class="pipe muted" data-segment="htr_pump" d="M326 238 L326 247">
 </path>
-<path class="pipe muted" data-segment="htr_to_9" d="M340 265 L340 296 L361 296">
+<path class="pipe muted" data-segment="htr_to_9" d="M326 265 L326 296 L347 296">
 </path>
-<path class="pipe muted" data-segment="htr_drain" d="M340 296 L340 309">
+<path class="pipe muted" data-segment="htr_drain" d="M326 296 L326 309">
 </path>
-<path class="pipe muted" data-segment="htr_riser" d="M361 250 L361 205.46666666666667 M361 190.53333333333333 L361 172">
+<path class="pipe muted" data-segment="htr_riser" d="M347 250 L347 205.46666666666667 M347 190.53333333333333 L347 172">
 </path>
-<path class="pipe muted" data-segment="dhw_ext_in" d="M722 130 L722 50 L940 50 L940 192">
+<path class="pipe muted" data-segment="dhw_ext_in" d="M768 130 L768 50 L960 50 L960 180">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M722 130 L722 50 L940 50 L940 192">
+<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M768 130 L768 50 L960 50 L960 180">
 </path>
 <g class="helix muted" data-segment="dhw_ext_coil">
-    <path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M840 201.33 C840 188.89 940 198.22 940 210.67">
+    <path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M880 187.44 C880 177.52 960 184.96 960 194.89">
 </path>
-<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M840 220 C840 207.56 940 216.89 940 229.33">
+<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M880 202.33 C880 192.41 960 199.85 960 209.78">
 </path>
-<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M840 238.67 C840 226.22 940 235.56 940 248">
+<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M880 217.22 C880 207.3 960 214.74 960 224.67">
 </path>
-<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M840 257.33 C840 244.89 940 254.22 940 266.67">
+<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M880 232.11 C880 222.19 960 229.63 960 239.56">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M940 192 C940 204.44 840 213.78 840 201.33">
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M960 180 C960 189.93 880 197.37 880 187.44">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M940 210.67 C940 223.11 840 232.44 840 220">
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M960 194.89 C960 204.81 880 212.26 880 202.33">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M940 229.33 C940 241.78 840 251.11 840 238.67">
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M960 209.78 C960 219.7 880 227.15 880 217.22">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M940 248 C940 260.44 840 269.78 840 257.33">
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M960 224.67 C960 234.59 880 242.04 880 232.11">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M940 266.67 C940 279.11 870 276 840 276">
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M960 239.56 C960 249.48 904 247 880 247">
 </path>
     
   </g>
-<path class="pipe muted" data-segment="dhw_ext_out" d="M840 276 L820 276 L820 85 L748 85 L748 130">
+<path class="pipe muted" data-segment="dhw_ext_out" d="M880 247 L864 247 L864 85 L800 85 L800 130">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M840 276 L820 276 L820 85 L748 85 L748 130">
+<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M880 247 L864 247 L864 85 L800 85 L800 130">
 </path>
-<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M630 130 L630 85 L234 85">
+<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M638 130 L638 85 L195 85">
 </path>
-<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M630 130 L630 85 L234 85">
+<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M638 130 L638 85 L195 85">
 </path>
-<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M214 50 L690 50 L690 130">
+<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M177 50 L728 50 L728 130">
 </path>
-<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M214 50 L690 50 L690 130">
+<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M177 50 L728 50 L728 130">
 </path>
-<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M234 85 L166 85 L166 130">
+<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M195 85 L128 85 L128 130">
 </path>
-<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M234 85 L166 85 L166 130">
+<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M195 85 L128 85 L128 130">
 </path>
-<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M166 130 L166 240 A30 30 0 0 1 136 270 L136 270">
+<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M128 130 L128 218 A24 24 0 0 1 104 242 L104 242">
 </path>
-<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.2s" d="M166 130 L166 240 A30 30 0 0 1 136 270 L136 270">
+<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.2s" d="M128 130 L128 218 A24 24 0 0 1 104 242 L104 242">
 </path>
-<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M136 270 L136 270 A30 30 0 0 1 106 240 L106 130">
+<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M104 242 L104 242 A24 24 0 0 1 80 218 L80 130">
 </path>
-<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M136 270 L136 270 A30 30 0 0 1 106 240 L106 130">
+<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M104 242 L104 242 A24 24 0 0 1 80 218 L80 130">
 </path>
-<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M106 130 L106 50 L214 50">
+<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M80 130 L80 50 L177 50">
 </path>
-<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M106 130 L106 50 L214 50">
+<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M80 130 L80 50 L177 50">
 </path>
-<path class="pipe " data-segment="ref_discharge" style="stroke: color-mix(in srgb, #d7263d 12.5%, #f2711c)" d="M496 250 L385 250">
+<path class="pipe " data-segment="ref_discharge" style="stroke: color-mix(in srgb, #d7263d 12.5%, #f2711c)" d="M490 250 L371 250">
 </path>
-<path class="flow " data-flow="ref_discharge" style="--flow-duration: 3.084832904884319s" d="M496 250 L385 250">
+<path class="flow " data-flow="ref_discharge" style="--flow-duration: 3.084832904884319s" d="M490 250 L371 250">
 </path>
-<path class="pipe " data-segment="ref_9_14" style="stroke: color-mix(in srgb, #d7263d 12.5%, #f2711c)" d="M385 296 L416 296">
+<path class="pipe " data-segment="ref_9_14" style="stroke: color-mix(in srgb, #d7263d 12.5%, #f2711c)" d="M371 296 L410 296">
 </path>
-<path class="flow " data-flow="ref_9_14" style="--flow-duration: 3.084832904884319s" d="M385 296 L416 296">
+<path class="flow " data-flow="ref_9_14" style="--flow-duration: 3.084832904884319s" d="M371 296 L410 296">
 </path>
-<path class="pipe " data-segment="ref_14_8" style="stroke: color-mix(in srgb, #d7263d 12.5%, #f2711c)" d="M444 306 L444 348">
+<path class="pipe " data-segment="ref_14_8" style="stroke: color-mix(in srgb, #d7263d 12.5%, #f2711c)" d="M438 306 L438 348">
 </path>
-<path class="flow " data-flow="ref_14_8" style="--flow-duration: 3.084832904884319s" d="M444 306 L444 348">
+<path class="flow " data-flow="ref_14_8" style="--flow-duration: 3.084832904884319s" d="M438 306 L438 348">
 </path>
-<path class="pipe " data-segment="ref_7_14" style="stroke: color-mix(in srgb, #5fa8e0 55%, #1e5aa8)" d="M560 348 L560 296 L444 296">
+<path class="pipe " data-segment="ref_7_14" style="stroke: color-mix(in srgb, #5fa8e0 55%, #1e5aa8)" d="M564 348 L564 296 L438 296">
 </path>
-<path class="flow " data-flow="ref_7_14" style="--flow-duration: 3.084832904884319s" d="M560 348 L560 296 L444 296">
+<path class="flow " data-flow="ref_7_14" style="--flow-duration: 3.084832904884319s" d="M564 348 L564 296 L438 296">
 </path>
-<path class="pipe " data-segment="ref_suction" style="stroke: color-mix(in srgb, #5fa8e0 55%, #1e5aa8)" d="M444 286 L610 286 L610 250 L524 250">
+<path class="pipe " data-segment="ref_suction" style="stroke: color-mix(in srgb, #5fa8e0 55%, #1e5aa8)" d="M438 286 L618 286 L618 250 L518 250">
 </path>
-<path class="flow " data-flow="ref_suction" style="--flow-duration: 3.084832904884319s" d="M444 286 L610 286 L610 250 L524 250">
+<path class="flow " data-flow="ref_suction" style="--flow-duration: 3.084832904884319s" d="M438 286 L618 286 L618 250 L518 250">
 </path>
-<path class="pipe " data-segment="ref_8_13" style="stroke: color-mix(in srgb, #e8a317 70%, #8ecae6)" d="M444 416 L473 416">
+<path class="pipe " data-segment="ref_8_13" style="stroke: color-mix(in srgb, #e8a317 70%, #8ecae6)" d="M438 416 L467 416">
 </path>
-<path class="flow " data-flow="ref_8_13" style="--flow-duration: 3.084832904884319s" d="M444 416 L473 416">
+<path class="flow " data-flow="ref_8_13" style="--flow-duration: 3.084832904884319s" d="M438 416 L467 416">
 </path>
-<path class="pipe " data-segment="ref_13_12" style="stroke: color-mix(in srgb, #e8a317 70%, #8ecae6)" d="M501 416 L515 416">
+<path class="pipe " data-segment="ref_13_12" style="stroke: color-mix(in srgb, #e8a317 70%, #8ecae6)" d="M495 416 L509 416">
 </path>
-<path class="flow " data-flow="ref_13_12" style="--flow-duration: 3.084832904884319s" d="M501 416 L515 416">
+<path class="flow " data-flow="ref_13_12" style="--flow-duration: 3.084832904884319s" d="M495 416 L509 416">
 </path>
-<path class="pipe " data-segment="ref_12_7" style="stroke: color-mix(in srgb, #5fa8e0 23.5%, #1e5aa8)" d="M539 416 L560 416">
+<path class="pipe " data-segment="ref_12_7" style="stroke: color-mix(in srgb, #5fa8e0 23.5%, #1e5aa8)" d="M533 416 L564 416">
 </path>
-<path class="flow " data-flow="ref_12_7" style="--flow-duration: 3.084832904884319s" d="M539 416 L560 416">
+<path class="flow " data-flow="ref_12_7" style="--flow-duration: 3.084832904884319s" d="M533 416 L564 416">
 </path>
-<path class="pipe " data-segment="ln4_a" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M690 130 L690 164.53333333333333 M690 179.46666666666667 L690 190.53333333333333 M690 205.46666666666667 L690 288">
+<path class="pipe " data-segment="ln4_a" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M728 130 L728 164.53333333333333 M728 179.46666666666667 L728 190.53333333333333 M728 205.46666666666667 L728 288">
 </path>
-<path class="flow " data-flow="ln4_a" style="--flow-duration: 1.2s" d="M690 130 L690 164.53333333333333 M690 179.46666666666667 L690 190.53333333333333 M690 205.46666666666667 L690 288">
+<path class="flow " data-flow="ln4_a" style="--flow-duration: 1.2s" d="M728 130 L728 164.53333333333333 M728 179.46666666666667 L728 190.53333333333333 M728 205.46666666666667 L728 288">
 </path>
-<path class="pipe " data-segment="ln4_b" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M690 312 L690 348">
+<path class="pipe " data-segment="ln4_b" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M728 312 L728 348">
 </path>
-<path class="flow " data-flow="ln4_b" style="--flow-duration: 1.2s" d="M690 312 L690 348">
+<path class="flow " data-flow="ln4_b" style="--flow-duration: 1.2s" d="M728 312 L728 348">
 </path>
-<path class="pipe " data-segment="br_feed7" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M690 348 L637.4666666666667 348 M622.5333333333333 348 L584 348">
+<path class="pipe " data-segment="br_feed7" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M728 348 L645.4666666666667 348 M630.5333333333333 348 L588 348">
 </path>
-<path class="flow " data-flow="br_feed7" style="--flow-duration: 1.2s" d="M690 348 L637.4666666666667 348 M622.5333333333333 348 L584 348">
+<path class="flow " data-flow="br_feed7" style="--flow-duration: 1.2s" d="M728 348 L645.4666666666667 348 M630.5333333333333 348 L588 348">
 </path>
-<path class="pipe " data-segment="brine_7_28" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M584 416 L598 416">
+<path class="pipe " data-segment="brine_7_28" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M588 416 L606 416">
 </path>
-<path class="flow " data-flow="brine_7_28" style="--flow-duration: 1.2s" d="M584 416 L598 416">
+<path class="flow " data-flow="brine_7_28" style="--flow-duration: 1.2s" d="M588 416 L606 416">
 </path>
-<path class="pipe " data-segment="brine_28_ln3" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M622 416 L630 416">
+<path class="pipe " data-segment="brine_28_ln3" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M630 416 L638 416">
 </path>
-<path class="flow " data-flow="brine_28_ln3" style="--flow-duration: 1.2s" d="M622 416 L630 416">
+<path class="flow " data-flow="brine_28_ln3" style="--flow-duration: 1.2s" d="M630 416 L638 416">
 </path>
-<path class="pipe " data-segment="ln3" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M630 416 L630 205.46666666666667 M630 190.53333333333333 L630 179.46666666666667 M630 164.53333333333333 L630 130">
+<path class="pipe " data-segment="ln3" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M638 416 L638 205.46666666666667 M638 190.53333333333333 L638 179.46666666666667 M638 164.53333333333333 L638 130">
 </path>
-<path class="flow " data-flow="ln3" style="--flow-duration: 1.2s" d="M630 416 L630 205.46666666666667 M630 190.53333333333333 L630 179.46666666666667 M630 164.53333333333333 L630 130">
+<path class="flow " data-flow="ln3" style="--flow-duration: 1.2s" d="M638 416 L638 205.46666666666667 M638 190.53333333333333 L638 179.46666666666667 M638 164.53333333333333 L638 130">
 </path>
-<path class="pipe muted" data-segment="br_10_in" d="M690 348 L690 448 L532 448">
+<path class="pipe muted" data-segment="br_10_in" d="M728 348 L728 448 L526 448">
 </path>
-<path class="pipe muted" data-segment="br_10_28" d="M532 492 L610 492 L610 455.46666666666664 M610 440.53333333333336 L610 428">
+<path class="pipe muted" data-segment="br_10_28" d="M526 492 L618 492 L618 455.46666666666664 M618 440.53333333333336 L618 428">
 </path>
-<path class="pipe " data-segment="brine_tap_a" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M690 270 L725 270 L725 440">
+<path class="pipe " data-segment="brine_tap_a" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M728 270 L771 270 L771 440">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>
-    <g transform="translate(270 130)">
+    <g transform="translate(234 130)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
 <rect x="-5" y="-6" width="10" height="6">
 </rect>
@@ -330,7 +320,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="2" data-kind="port" aria-label="Production return (2)">
     <title>Production return (2)</title>
-    <g transform="translate(312 130)">
+    <g transform="translate(288 130)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
 <rect x="-5" y="-6" width="10" height="6">
 </rect>
@@ -340,7 +330,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="3" data-kind="port" aria-label="Brine outlet (3)">
     <title>Brine outlet (3)</title>
-    <g transform="translate(630 130)">
+    <g transform="translate(638 130)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
 <rect x="-5" y="-6" width="10" height="6">
 </rect>
@@ -350,7 +340,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="4" data-kind="port" aria-label="Brine inlet (4)">
     <title>Brine inlet (4)</title>
-    <g transform="translate(690 130)">
+    <g transform="translate(728 130)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
 <rect x="-5" y="-6" width="10" height="6">
 </rect>
@@ -360,7 +350,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="5" data-kind="port" aria-label="DHW inter-accumulator outlet (5)">
     <title>DHW inter-accumulator outlet (5)</title>
-    <g transform="translate(722 130)">
+    <g transform="translate(768 130)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
 <rect x="-5" y="-6" width="10" height="6">
 </rect>
@@ -370,7 +360,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="6" data-kind="port" aria-label="DHW inter-accumulator inlet (6)">
     <title>DHW inter-accumulator inlet (6)</title>
-    <g transform="translate(748 130)">
+    <g transform="translate(800 130)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
 <rect x="-5" y="-6" width="10" height="6">
 </rect>
@@ -380,7 +370,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="7" data-kind="exchanger" aria-label="Evaporator (7)" role="button" tabindex="0">
     <title>Evaporator (7)</title>
-    <g transform="translate(572 382)">
+    <g transform="translate(576 382)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol exchanger" transform="rotate(0)">
 <path class="exchanger-fill" stroke="none" data-half="left" d="M0 -43 H-16 A4 4 0 0 0 -20 -39 V39 A4 4 0 0 0 -16 43 H0 Z" fill="url(#ecogeoN-x7-left)" fill-opacity="0.55">
 </path>
@@ -404,7 +394,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="8" data-kind="exchanger" aria-label="Condenser (8)" role="button" tabindex="0">
     <title>Condenser (8)</title>
-    <g transform="translate(432 382)">
+    <g transform="translate(426 382)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol exchanger" transform="rotate(0)">
 <path class="exchanger-fill" stroke="none" data-half="left" d="M0 -43 H-16 A4 4 0 0 0 -20 -39 V39 A4 4 0 0 0 -16 43 H0 Z" fill="url(#ecogeoN-x8-left)" fill-opacity="0.55">
 </path>
@@ -428,7 +418,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="9" data-kind="exchanger" aria-label="HTR system exchanger (9)">
     <title>HTR system exchanger (9)</title>
-    <g transform="translate(373 273)">
+    <g transform="translate(359 273)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol exchanger" transform="rotate(0)">
 <path class="exchanger-fill" stroke="none" data-half="left" d="M0 -32 H-16 A4 4 0 0 0 -20 -28 V28 A4 4 0 0 0 -16 32 H0 Z" fill="url(#ecogeoN-x9-left)" fill-opacity="0.55">
 </path>
@@ -452,7 +442,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="11" data-kind="compressor" aria-label="Compressor (11)" role="button" tabindex="0">
     <title>Compressor (11)</title>
-    <g transform="translate(510 250)">
+    <g transform="translate(504 250)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol compressor" transform="rotate(0)">
 <circle r="14">
 </circle>
@@ -464,7 +454,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="12" data-kind="expansion_valve" aria-label="Electronic expansion valve (12)" role="button" tabindex="0">
     <title>Electronic expansion valve (12)</title>
-    <g transform="translate(527 416)">
+    <g transform="translate(521 416)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol expansion_valve" transform="rotate(0)">
 <path d="M-12 -6 V6 L0 0 L12 -6 V6 L0 0 Z">
 </path>
@@ -474,7 +464,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="13" data-kind="filter_dryer" aria-label="Filter dryer (13)">
     <title>Filter dryer (13)</title>
-    <g transform="translate(487 416)">
+    <g transform="translate(481 416)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol filter_dryer" transform="rotate(0)">
 <rect x="-14" y="-5" width="28" height="10" rx="5">
 </rect>
@@ -484,7 +474,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="14" data-kind="inversion_valve" aria-label="Cycle inversion valve (14)">
     <title>Cycle inversion valve (14)</title>
-    <g transform="translate(430 296)">
+    <g transform="translate(424 296)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol inversion_valve" transform="rotate(0)">
 <rect x="-10" y="-14" width="20" height="28" rx="3">
 </rect>
@@ -498,7 +488,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="29" data-kind="probe_t" aria-label="Suction temperature probe (29)" role="button" tabindex="0">
     <title>Suction temperature probe (29)</title>
-    <g transform="translate(542 234)">
+    <g transform="translate(537.43 234)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(0)">
 <circle r="9">
 </circle>
@@ -511,7 +501,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="30" data-kind="probe_t" aria-label="Discharge temperature probe (30)" role="button" tabindex="0">
     <title>Discharge temperature probe (30)</title>
-    <g transform="translate(430 234)">
+    <g transform="translate(424 234)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(0)">
 <circle r="9">
 </circle>
@@ -524,7 +514,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="35" data-kind="transducer_p" aria-label="Suction pressure transducer (35)" role="button" tabindex="0">
     <title>Suction pressure transducer (35)</title>
-    <g transform="translate(564 234)">
+    <g transform="translate(568 234)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(0)">
 <circle r="9">
 </circle>
@@ -537,7 +527,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="36" data-kind="transducer_p" aria-label="Discharge pressure transducer (36)" role="button" tabindex="0">
     <title>Discharge pressure transducer (36)</title>
-    <g transform="translate(474 234)">
+    <g transform="translate(468 234)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(0)">
 <circle r="9">
 </circle>
@@ -550,7 +540,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="10" data-kind="exchanger" aria-label="Passive cooling / defrosting exchanger (10)">
     <title>Passive cooling / defrosting exchanger (10)</title>
-    <g transform="translate(520 470)">
+    <g transform="translate(514 470)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol exchanger" transform="rotate(0)">
 <path class="exchanger-fill" stroke="none" data-half="left" d="M0 -31 H-16 A4 4 0 0 0 -20 -27 V27 A4 4 0 0 0 -16 31 H0 Z" fill="url(#ecogeoN-x10-left)" fill-opacity="0.55">
 </path>
@@ -574,7 +564,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="15" data-kind="pump" aria-label="Production circulator pump (15)" role="button" tabindex="0">
     <title>Production circulator pump (15)</title>
-    <g transform="translate(385 416)">
+    <g transform="translate(371 416)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol pump" transform="rotate(0)">
 <circle r="12">
 </circle>
@@ -586,7 +576,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="16" data-kind="pump" aria-label="Brine circulator pump (16)" role="button" tabindex="0">
     <title>Brine circulator pump (16)</title>
-    <g transform="translate(690 300)">
+    <g transform="translate(728 300)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol pump" transform="rotate(90)">
 <circle r="12">
 </circle>
@@ -598,7 +588,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="17" data-kind="pump" aria-label="HTR circulator pump (17)">
     <title>HTR circulator pump (17)</title>
-    <g transform="translate(340 226)">
+    <g transform="translate(326 226)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol pump" transform="rotate(90)">
 <circle r="12">
 </circle>
@@ -610,7 +600,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="22" data-kind="valve" aria-label="HTR system retention valve (22)">
     <title>HTR system retention valve (22)</title>
-    <g transform="translate(340 256)">
+    <g transform="translate(326 256)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol valve" transform="rotate(0)">
 <path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z">
 </path>
@@ -620,7 +610,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="25" data-kind="drain_valve" aria-label="HTR system discharge valve (25)">
     <title>HTR system discharge valve (25)</title>
-    <g transform="translate(340 318)">
+    <g transform="translate(326 318)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol drain_valve" transform="rotate(0)">
 <path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z">
 </path>
@@ -630,7 +620,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="26" data-kind="valve3" aria-label="DHW valve (26)" role="button" tabindex="0">
     <title>DHW valve (26)</title>
-    <g transform="translate(270 172)">
+    <g transform="translate(234 172)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol valve3" transform="rotate(270)">
 <path d="M-12 -6 V6 L0 0 Z" fill="currentColor">
 </path>
@@ -648,7 +638,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="27" data-kind="valve3" aria-label="Passive cooling production valve (27)">
     <title>Passive cooling production valve (27)</title>
-    <g transform="translate(350 416)">
+    <g transform="translate(336 416)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol valve3" transform="rotate(0)">
 <path d="M-12 -6 V6 L0 0 Z" fill="currentColor">
 </path>
@@ -666,7 +656,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="28" data-kind="valve3" aria-label="Passive cooling brine valve (28)">
     <title>Passive cooling brine valve (28)</title>
-    <g transform="translate(610 416)">
+    <g transform="translate(618 416)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol valve3" transform="rotate(0)">
 <path d="M-12 -6 V6 L0 0 Z" fill="currentColor">
 </path>
@@ -684,7 +674,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="31" data-kind="probe_t" aria-label="Brine outlet temperature probe (31)" role="button" tabindex="0">
     <title>Brine outlet temperature probe (31)</title>
-    <g transform="translate(614 228)">
+    <g transform="translate(622 228)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(270)">
 <circle r="9">
 </circle>
@@ -697,7 +687,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="32" data-kind="probe_t" aria-label="Brine inlet temperature probe (32)" role="button" tabindex="0">
     <title>Brine inlet temperature probe (32)</title>
-    <g transform="translate(674 228)">
+    <g transform="translate(712 228)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(270)">
 <circle r="9">
 </circle>
@@ -710,7 +700,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="33" data-kind="probe_t" aria-label="Production outlet temperature probe (33)" role="button" tabindex="0">
     <title>Production outlet temperature probe (33)</title>
-    <g transform="translate(254 228)">
+    <g transform="translate(218 228)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(270)">
 <circle r="9">
 </circle>
@@ -723,7 +713,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="34" data-kind="probe_t" aria-label="Production return temperature probe (34)" role="button" tabindex="0">
     <title>Production return temperature probe (34)</title>
-    <g transform="translate(296 228)">
+    <g transform="translate(272 228)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(270)">
 <circle r="9">
 </circle>
@@ -736,7 +726,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="37" data-kind="transducer_p" aria-label="Brine pressure transducer (37)" role="button" tabindex="0">
     <title>Brine pressure transducer (37)</title>
-    <g transform="translate(709 440)">
+    <g transform="translate(755 440)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(270)">
 <circle r="9">
 </circle>
@@ -749,20 +739,20 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="38" data-kind="transducer_p" aria-label="Production pressure transducer (38)" role="button" tabindex="0">
     <title>Production pressure transducer (38)</title>
-    <g transform="translate(352 520)">
-<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(270)">
+    <g transform="translate(370 470)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(90)">
 <circle r="9">
 </circle>
 <path d="M0 9 V16">
 </path>
-<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">P</text>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-90)">P</text>
 </g>
 </g>
     
   </g>
 <g class="symbol-group normal" data-item="44" data-kind="resistor" aria-label="Outlet resistor (44)">
     <title>Outlet resistor (44)</title>
-    <g transform="translate(270 320)">
+    <g transform="translate(234 320)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol resistor" transform="rotate(90)">
 <rect x="-28" y="-6" width="56" height="12" rx="2">
 </rect>
@@ -774,7 +764,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="45" data-kind="thermostat" aria-label="Safety thermostat (45)">
     <title>Safety thermostat (45)</title>
-    <g transform="translate(286 282)">
+    <g transform="translate(250 282)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol thermostat" transform="rotate(90)">
 <rect x="-7" y="-7" width="14" height="14">
 </rect>

@@ -132,8 +132,16 @@ export interface LabelPlaces {
   specs: readonly LabelSpec[];
 }
 
-/** The placements of an arrangement: each label's place computed from its zones, the compact places given. */
-export function labelPlacesFor(z: Zones, compactPlaces: Readonly<Record<string, Placement>>): LabelPlaces {
+/**
+ * The placements of an arrangement: each label's place computed from its zones, the compact places given. `place` maps a
+ * point of the full arrangement's cabinet to the arrangement's own (the identity for the full one): the labels at the cabinet's
+ * components go through it, the ones placed from the zones (source, external tank, tank 50) do not.
+ */
+export function labelPlacesFor(
+  z: Zones,
+  compactPlaces: Readonly<Record<string, Placement>>,
+  place: (x: number, y: number) => readonly [number, number] = (x, y) => [x, y],
+): LabelPlaces {
   const { externalTank, internalTank, airUnit, airUnitWallX } = z;
   /** The external tank's values: centred under the tank, 22 units below its bottom. */
   const EXT_TANK_X = externalTank.x + externalTank.width / 2;
@@ -147,37 +155,41 @@ export function labelPlacesFor(z: Zones, compactPlaces: Readonly<Record<string, 
   const AIR_LABELS_Y = airUnit.y + airUnit.height + 12;
   /** The air unit's port labels: 6 units right of the housing's wall, 12 units under (top port) or above (bottom port) the port's pipe. */
   const PORT_LABEL_X = airUnitWallX + 6;
-  const PORT_LABEL_DY = 12;
+  const PORT_LABEL_DY = Math.round(12 * (z.scale ?? 1) * 100) / 100;
   /** The ground loop's labels: 20 units under the ground line, clear of its hatching. */
   const GROUND_LABEL_DY = 20;
   /** Every value label of the drawing. */
   const spec = makeSpec(compactPlaces);
+  const cab: typeof spec = (id, role, x, y, align, extra) => {
+    const [px, py] = place(x, y);
+    return spec(id, role, px, py, align, extra);
+  };
   const specs: readonly LabelSpec[] = [
     // production: probes 33 and 34, pressure 38, pump 15, and the DG1 setpoint above connections 1/2
-    spec('production_out', 'production.outlet_temperature', 237, 228, 'end', { item: 33 }),
-    spec('production_in', 'production.return_temperature', 291, 247, 'middle', { item: 34 }),
-    spec('production_pressure', 'production.pressure', 360, 537, 'end', { item: 38 }),
-    spec('production_pump', 'production.pump', 396, 380, 'end', { item: 15 }),
-    spec('dg1_setpoint', 'heating.setpoint', 291, 96, 'middle', { item: 1 }),
-    spec('dg1_demand', 'heating.demand', 320, 123, 'start', { item: 1, demand: true }),
+    cab('production_out', 'production.outlet_temperature', 237, 228, 'end', { item: 33 }),
+    cab('production_in', 'production.return_temperature', 291, 247, 'middle', { item: 34 }),
+    cab('production_pressure', 'production.pressure', 360, 537, 'end', { item: 38 }),
+    cab('production_pump', 'production.pump', 396, 380, 'end', { item: 15 }),
+    cab('dg1_setpoint', 'heating.setpoint', 291, 96, 'middle', { item: 1 }),
+    cab('dg1_demand', 'heating.demand', 320, 123, 'start', { item: 1, demand: true }),
     // brine: probes 31 and 32, pressure 37, pump 16
-    spec('brine_out', 'brine.outlet_temperature', 633, 247, 'start', { item: 31 }),
-    spec('brine_in', 'brine.inlet_temperature', 697, 247, 'start', { item: 32 }),
-    spec('brine_pressure', 'brine.pressure', 689, 459, 'start', { item: 37 }),
-    spec('brine_pump', 'brine.pump', 676, 300, 'end', { item: 16 }),
+    cab('brine_out', 'brine.outlet_temperature', 633, 247, 'start', { item: 31 }),
+    cab('brine_in', 'brine.inlet_temperature', 697, 247, 'start', { item: 32 }),
+    cab('brine_pressure', 'brine.pressure', 689, 459, 'start', { item: 37 }),
+    cab('brine_pump', 'brine.pump', 676, 300, 'end', { item: 16 }),
     // refrigerant: temperatures 30 and 29 and pressures 36 and 35 below the discharge and suction lines, the compressor's
     // three values inside the loop, the expansion valve's, and the condensation (8) and evaporation (7) temperatures
-    spec('discharge_temperature', 'compressor.discharge_temperature', 436, 262, 'start', { item: 30 }),
-    spec('discharge_pressure', 'compressor.discharge_pressure', 480, 275, 'middle', { item: 36 }),
-    spec('suction_temperature', 'compressor.suction_temperature', 528, 262, 'start', { item: 29 }),
-    spec('suction_pressure', 'compressor.suction_pressure', 570, 275, 'middle', { item: 35 }),
-    spec('compressor_speed', 'compressor.speed', 503, 307, 'middle', { item: 11 }),
-    spec('compressor_percentage', 'compressor.percentage', 503, 319, 'middle', { item: 11 }),
-    spec('compressor_power', 'compressor.power', 503, 331, 'middle', { item: 11 }),
-    spec('superheat', 'refrigerant.superheat', 527, 376, 'middle', { item: 12 }),
-    spec('expansion_valve', 'refrigerant.expansion_valve', 527, 388, 'middle', { item: 12 }),
-    spec('condensation_temperature', 'refrigerant.condensation_temperature', 432, 437, 'middle', { item: 8 }),
-    spec('evaporation_temperature', 'refrigerant.evaporation_temperature', 572, 437, 'middle', { item: 7 }),
+    cab('discharge_temperature', 'compressor.discharge_temperature', 436, 262, 'start', { item: 30 }),
+    cab('discharge_pressure', 'compressor.discharge_pressure', 480, 275, 'middle', { item: 36 }),
+    cab('suction_temperature', 'compressor.suction_temperature', 528, 262, 'start', { item: 29 }),
+    cab('suction_pressure', 'compressor.suction_pressure', 570, 275, 'middle', { item: 35 }),
+    cab('compressor_speed', 'compressor.speed', 503, 307, 'middle', { item: 11 }),
+    cab('compressor_percentage', 'compressor.percentage', 503, 319, 'middle', { item: 11 }),
+    cab('compressor_power', 'compressor.power', 503, 331, 'middle', { item: 11 }),
+    cab('superheat', 'refrigerant.superheat', 527, 376, 'middle', { item: 12 }),
+    cab('expansion_valve', 'refrigerant.expansion_valve', 527, 388, 'middle', { item: 12 }),
+    cab('condensation_temperature', 'refrigerant.condensation_temperature', 432, 437, 'middle', { item: 8 }),
+    cab('evaporation_temperature', 'refrigerant.evaporation_temperature', 572, 437, 'middle', { item: 7 }),
     // air unit (also in the hybrid): the fan and the outside air under the housing, the brine In and Out beside the two
     // ports on the housing's right (refine-schematic-drawing D14). The label of the top port hangs under its pipe, that of the bottom port
     // sits on its pipe, so the two stay between the pipes and clear of the production labels at the cabinet. Air: In at the

@@ -181,30 +181,36 @@ describe('geometry data', () => {
     }
   });
 
-  test('every crossing lies strictly inside the cabinet and at least a hop from the corners of the pipe it breaks', () => {
-    for (const { at, under } of CROSSINGS) {
-      expect(at[0] > CABINET.x && at[0] < CABINET.x + CABINET.width, under).toBe(true);
-      expect(at[1] > CABINET.y && at[1] < CABINET.y + CABINET.height, under).toBe(true);
-      const points = segmentPoints(under);
-      points.slice(1).forEach((end, index) => {
-        const start = points[index];
-        if (start === undefined) return;
-        const onPiece =
-          (start[0] === end[0] &&
-            at[0] === start[0] &&
-            at[1] > Math.min(start[1], end[1]) &&
-            at[1] < Math.max(start[1], end[1])) ||
-          (start[1] === end[1] &&
-            at[1] === start[1] &&
-            at[0] > Math.min(start[0], end[0]) &&
-            at[0] < Math.max(start[0], end[0]));
-        if (!onPiece) return;
-        const toStart = Math.abs(at[0] - start[0]) + Math.abs(at[1] - start[1]);
-        const toEnd = Math.abs(at[0] - end[0]) + Math.abs(at[1] - end[1]);
-        expect(Math.min(toStart, toEnd), under).toBeGreaterThanOrEqual(HOP);
-      });
-    }
-  });
+  test.each([fullArr, arrangementFor('simplified', 'full')])(
+    'every crossing lies strictly inside the cabinet and at least a hop from the corners of the pipe it breaks ($id)',
+    (arr) => {
+      const segmentPoints = (id: string): readonly Point[] =>
+        arr.segments.find((segment) => segment.id === id)?.points ?? [];
+      const CABINET = arr.cabinet;
+      for (const { at, under } of arr.crossings) {
+        expect(at[0] > CABINET.x && at[0] < CABINET.x + CABINET.width, under).toBe(true);
+        expect(at[1] > CABINET.y && at[1] < CABINET.y + CABINET.height, under).toBe(true);
+        const points = segmentPoints(under);
+        points.slice(1).forEach((end, index) => {
+          const start = points[index];
+          if (start === undefined) return;
+          const onPiece =
+            (start[0] === end[0] &&
+              at[0] === start[0] &&
+              at[1] > Math.min(start[1], end[1]) &&
+              at[1] < Math.max(start[1], end[1])) ||
+            (start[1] === end[1] &&
+              at[1] === start[1] &&
+              at[0] > Math.min(start[0], end[0]) &&
+              at[0] < Math.max(start[0], end[0]));
+          if (!onPiece) return;
+          const toStart = Math.abs(at[0] - start[0]) + Math.abs(at[1] - start[1]);
+          const toEnd = Math.abs(at[0] - end[0]) + Math.abs(at[1] - end[1]);
+          expect(Math.min(toStart, toEnd), under).toBeGreaterThanOrEqual(HOP);
+        });
+      }
+    },
+  );
 
   test('gapsIn: no gap when the pipe on top is not drawn', () => {
     const idsOf = (context: DrawContext): Set<string> => new Set(ids(context));
@@ -233,7 +239,9 @@ describe('integrity in every configuration', () => {
               : other.points.some((p) => p[0] === end[0] && p[1] === end[1])),
         );
         // a stub may end free above the top edge (DG1, the taps of model C) or on the integrated tank
-        const stub = segment.stub === true && (end[1] < CABINET.y || onInternalTank(end, fullArr));
+        const stub =
+          segment.stub === true &&
+          (end[1] < arrangementOf(context).cabinet.y || onInternalTank(end, arrangementOf(context)));
         expect(atPort || onOther || stub, `${segment.id} at ${end.join(',')}`).toBe(true);
       }
     }
@@ -243,7 +251,7 @@ describe('integrity in every configuration', () => {
       for (const port of portsOf(component)) {
         const touched =
           segments.some((segment) => onPolyline(port, segment.points)) ||
-          ([53, 54].includes(component.item) && onInternalTank(port, fullArr));
+          ([53, 54].includes(component.item) && onInternalTank(port, arrangementOf(context)));
         expect(touched, `item ${String(component.item)} port ${port.join(',')}`).toBe(true);
       }
     }
@@ -310,12 +318,16 @@ describe('integrity in every configuration', () => {
       segments.filter((segment) => enters(routePoints(segment), rect)).map((segment) => segment.id);
     // (a tank that is not drawn is not checked)
     if (drawnStorage(context) === 'internal')
-      expect(entering(INTERNAL_TANK).sort()).toEqual(['dhw_ret_b', 'dhw_sup_b']);
+      expect(entering(arrangementOf(context).internalTank).sort()).toEqual(['dhw_ret_b', 'dhw_sup_b']);
     if (drawnStorage(context) === 'external') {
-      expect(entering(EXTERNAL_TANK).sort()).toEqual(['dhw_ext_coil', 'dhw_ext_in', 'dhw_ext_out']);
+      expect(entering(arrangementOf(context).externalTank).sort()).toEqual([
+        'dhw_ext_coil',
+        'dhw_ext_in',
+        'dhw_ext_out',
+      ]);
     }
     if (context.source !== 'ground') {
-      expect(entering(AIR_UNIT).sort()).toEqual(
+      expect(entering(arrangementOf(context).airUnit).sort()).toEqual(
         context.source === 'air'
           ? ['src_air_coil', 'src_air_exit', 'src_air_feed']
           : ['src_hyb_coil', 'src_hyb_feed', 'src_hyb_link'],
