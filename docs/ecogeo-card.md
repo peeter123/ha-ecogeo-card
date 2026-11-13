@@ -668,14 +668,14 @@ simplified detail level, shows no overlapping labels in any emulator scenario, o
 every wider grid width also clean.
 
 Method (`npm run measure-layout`, `scripts/measure-layout.mjs`, Playwright): every emulator scenario is opened in
-the forced full layout at the simplified detail level, in five installations (a ground loop on model B, an air unit,
-the hybrid, and model C with its internal tank on a ground loop and on an air unit), and the card is set to every width from 320 to 800 px in 20 px
+the forced full layout at the simplified detail level, in seven installations (a ground loop on model B, an air unit,
+the hybrid, model C with its internal tank on a ground loop and on an air unit, and the unused-tank cases: a ground loop on model B and an air unit on model C), and the card is set to every width from 320 to 800 px in 20 px
 steps. At each width the script compares, in the DOM, the bounding boxes of the value labels with each other and
 with the boxes of the drawing's component groups (the symbol groups, the DHW storage, the air unit and the marks of
 the ground loop). A label's box leaves out the half-leading above and below its text; two boxes overlap when they
 share more than 0.5 px in both directions. The labels inside tank 50 on model C are not compared with tank 50, which
 they sit on by design. The threshold is the narrowest width with zero overlaps in every case, provided every wider
-measured width is also clean. Pipes are not checked by the script; the emulator captures at the threshold
+measured width is also clean. Without `--pipes` the script does not check pipes; the emulator captures at the threshold
 (`threshold-*` in `npm run capture`) are inspected by eye for those.
 
 The boxes, exclusions, installations and tolerance live in `dev/overlaps.ts`, shared by the script and by the
@@ -692,6 +692,25 @@ drawing units; their pitch is now 12 units (labels at y 307, 319 and 331), which
 
 Result: at 620 px and below every case has overlaps (165 at 620 px, 877 at 360 px; re-measured 2026-11-12 after task 2.5 of add-compact-layout, which added the air-C-internal installation), because the labels stop shrinking
 at their 8 px minimum while the drawing keeps shrinking.
+
+Pipes and captions (refine-simplified-layout D4, `npm run measure-layout -- --pipes`): the same script can also count
+pipes and captions, which the browser guard does not do yet (it stays label-and-component only until the group that
+switches it). Every `path.pipe` is sampled along its rendered length at 1 px steps, each sample a square of the pipe's
+rendered stroke width, and a label overlaps the pipe when a sample shares more than 0.5 px with its box in both
+directions. A hop is a gap in the path data, so each subpath is sampled on its own and a label over a hop's gap does not
+count; the halves of a helix share their segment's name. The captions (`text.circuit-label`, `text.source-caption`,
+`text.tank-caption`) are boxed like labels, as the em box of their text, and a caption overlapping a label or a pipe
+counts (captions inside a part's group, such as the ground loop's, are checked against pipes only; as that part they are already checked against labels). The `bare` labels inside tank 50 ignore pipe samples inside tank 50's box. Pairs read `label X x pipe:<segment>`,
+`caption:<text> x label X` and `caption:<text> x pipe:<segment>`.
+
+Baseline with pipes counted (measured 2026-11-13, before refine-simplified-layout changes any drawing; 7 installations
+by 11 scenarios, 77 cases per width): the threshold would be 700 px, not 640 px (171 overlaps at 640 px and at 660 px,
+126 at 680 px, none from 700 px; 3242 at 320 px). The most frequent pairs over every width and case are the compressor
+rows against each other (1232 each), superheat against the expansion valve opening (1232), the production inlet
+against pipes `prod_44_26` and `trunk` (1197 each), the brine pump against pipe `ln3` (959), the discharge and suction
+temperatures against their pressures (819 each), the DG1 caption against the DG1 setpoint (693), the fan speed
+against the outside temperature (572) and the brine outlet against pipe `ln4_a` (546). `COMPACT_BELOW` stays 640 px
+until the drawing is refined.
 
 ## Installation
 

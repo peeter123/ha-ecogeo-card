@@ -6,7 +6,12 @@
 // loop's group box spans the empty ground below its line, where the labels of its legs sit on purpose, so its own
 // marks (the line with its hatching, and the caption) are checked one by one. The values inside tank 50 on model C
 // (`bare` labels) sit on its body by design and are not compared with tank 50. Two boxes overlap when they share more
-// than TOLERANCE px in both directions. Pipes are not checked.
+// than TOLERANCE px in both directions. Pipes and captions are opt-in (refine-simplified-layout D4): measureCard with
+// `{ pipes: true }` also samples every `path.pipe` along its rendered length at 1 px steps, each sample a square of the
+// rendered stroke width, and boxes the `text.circuit-label`, `text.source-caption` and `text.tank-caption` elements like
+// labels; overlapPairs then reports `label <id> x pipe:<segment>`, `caption:<text> x label <id>` and
+// `caption:<text> x pipe:<segment>`. A hop is a gap in the path data (a moveto), so each subpath is sampled on its own
+// and the gap yields no samples. The `bare` labels inside tank 50 ignore pipe samples that lie within tank 50's box.
 
 /** Boxes that overlap by less than this many px in either direction only touch. */
 export const TOLERANCE = 0.5;
@@ -33,8 +38,19 @@ export interface Box {
 }
 export type LabelBox = Box & { id: string; bare: boolean };
 export type PartBox = Box & { id: string; item: string | null };
+/** The samples of one pipe: squares of the rendered stroke width, in px, along its rendered length. */
+export interface PipeSamples {
+  /** `pipe:<segment id>`; the halves of a helix share their segment's id. */
+  id: string;
+  squares: Box[];
+}
+export type Caption = Box & { id: string; grouped: boolean };
 export interface Measurement {
   labels: LabelBox[];
+  /** Present when measured with `pipes: true`. */
+  pipes?: PipeSamples[];
+  /** The captions inside the drawing, boxed like labels; present when measured with `pipes: true`. */
+  captions?: Caption[];
   parts: PartBox[];
   /** The cabinet's outline (its rectangle, without the stroke). */
   cabinet: Box | undefined;
@@ -45,8 +61,65 @@ const box = (element: Element): Box => {
   return { left, top, right, bottom };
 };
 
-/** The label boxes and the component boxes of a card's shadow root, in px. */
-export function measureCard(root: ParentNode): Measurement {
+/** The sampling step along a pipe, in px of rendered length. */
+const PIPE_STEP = 1;
+
+/** The samples of one `path.pipe`, one subpath at a time so that a hop's gap is not sampled. */
+function samplePipe(path: SVGPathElement): Box[] {
+  const matrix = path.getScreenCTM();
+  if (matrix === null) return [];
+  const scale = Math.sqrt(Math.abs(matrix.a * matrix.d - matrix.b * matrix.c));
+  if (scale === 0) return [];
+  // The square reaches half a stroke width past a butt cap at a pipe's end; that overshoot is accepted (D4).
+  const half = (Number.parseFloat(getComputedStyle(path).strokeWidth) * scale) / 2;
+  const subpaths = (path.getAttribute('d') ?? '').split(/(?=M)/).filter((part) => part.trim() !== '');
+  const squares: Box[] = [];
+  for (const d of subpaths) {
+    const part = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    part.setAttribute('d', d);
+    path.parentNode?.append(part);
+    const length = part.getTotalLength();
+    const step = PIPE_STEP / scale;
+    for (let at = 0; at < length + step / 2; at += step) {
+      const point = part.getPointAtLength(Math.min(at, length)).matrixTransform(matrix);
+      squares.push({ left: point.x - half, right: point.x + half, top: point.y - half, bottom: point.y + half });
+    }
+    part.remove();
+  }
+  return squares;
+}
+
+/** The pipe samples of a card, one entry per `path.pipe`. */
+function measurePipes(root: ParentNode): PipeSamples[] {
+  return [...root.querySelectorAll<SVGPathElement>('path.pipe')].map((path) => ({
+    id: `pipe:${path.closest('[data-segment]')?.getAttribute('data-segment') ?? '?'}`,
+    squares: samplePipe(path),
+  }));
+}
+
+/** The captions, boxed like labels: the em box of the text, centred on its rendered box. */
+function measureCaptions(root: ParentNode): Caption[] {
+  return [...root.querySelectorAll('text.circuit-label, text.source-caption, text.tank-caption')].map((element) => {
+    const { left, right, top, bottom } = box(element);
+    // The computed font size is in user units: scale it to drawn px.
+    const matrix = (element as SVGGraphicsElement).getScreenCTM();
+    const scale = matrix === null ? 1 : Math.sqrt(Math.abs(matrix.a * matrix.d - matrix.b * matrix.c));
+    const size = Number.parseFloat(getComputedStyle(element).fontSize) * scale;
+    const middle = (top + bottom) / 2;
+    return {
+      id: `caption:${element.textContent.trim()}`,
+      // Inside a part's group (ground loop, air unit, tank): already checked against labels as that part.
+      grouped: element.closest('g.ground-loop, g.air-unit, g.dhw-storage') !== null,
+      left,
+      right,
+      top: middle - size / 2,
+      bottom: middle + size / 2,
+    };
+  });
+}
+
+/** The label and component boxes of a card's shadow root, in px; with `pipes`, also the pipe samples and the captions. */
+export function measureCard(root: ParentNode, options: { pipes?: boolean } = {}): Measurement {
   const labels = [...root.querySelectorAll('.label')].map((element) => {
     const style = getComputedStyle(element);
     const leading = (Number.parseFloat(style.lineHeight) - Number.parseFloat(style.fontSize)) / 2;
@@ -68,7 +141,9 @@ export function measureCard(root: ParentNode): Measurement {
     ...box(element),
   }));
   const outline = root.querySelector('.cabinet > .outline');
-  return { labels, parts, cabinet: outline === null ? undefined : box(outline) };
+  const cabinet = outline === null ? undefined : box(outline);
+  if (options.pipes !== true) return { labels, parts, cabinet };
+  return { labels, parts, cabinet, pipes: measurePipes(root), captions: measureCaptions(root) };
 }
 
 const overlaps = (a: Box, b: Box): boolean =>
@@ -76,8 +151,30 @@ const overlaps = (a: Box, b: Box): boolean =>
   Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > TOLERANCE;
 
 /** The overlapping pairs of a measurement, as texts. */
-export function overlapPairs({ labels, parts }: Measurement): string[] {
+export function overlapPairs({ labels, parts, pipes = [], captions = [] }: Measurement): string[] {
   const pairs: string[] = [];
+  const tank50 = parts.find((part) => part.item === '50');
+  const inside = (square: Box, outer: Box): boolean =>
+    square.left >= outer.left &&
+    square.right <= outer.right &&
+    square.top >= outer.top &&
+    square.bottom <= outer.bottom;
+  const add = (pair: string): void => {
+    if (!pairs.includes(pair)) pairs.push(pair);
+  };
+  for (const label of labels) {
+    for (const pipe of pipes) {
+      const ignored = label.bare && tank50 !== undefined ? tank50 : undefined;
+      if (pipe.squares.some((s) => overlaps(s, label) && !(ignored !== undefined && inside(s, ignored)))) {
+        add(`label ${label.id} x ${pipe.id}`);
+      }
+    }
+  }
+  for (const caption of captions) {
+    if (!caption.grouped)
+      for (const label of labels) if (overlaps(caption, label)) add(`${caption.id} x label ${label.id}`);
+    for (const pipe of pipes) if (pipe.squares.some((s) => overlaps(s, caption))) add(`${caption.id} x ${pipe.id}`);
+  }
   labels.forEach((label, index) => {
     for (const other of labels.slice(index + 1)) {
       if (overlaps(label, other)) pairs.push(`label ${label.id} x label ${other.id}`);

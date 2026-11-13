@@ -5,6 +5,9 @@
 // `g.air-unit`, and the marks of `g.ground-loop`). The threshold is the narrowest width at which every case has zero overlaps and
 // every wider measured width does too (a width of the 20 px grid). Paste it into COMPACT_BELOW in src/lib/layout.ts.
 //
+// With `--pipes` the check also counts pipes and captions (dev/overlaps.ts) and prints the most frequent pairs; do not
+// paste that threshold into COMPACT_BELOW until group 4 of refine-simplified-layout switches the guard.
+//
 // The boxes, the exclusions, the installations and the tolerance are in dev/overlaps.ts, shared with the browser
 // test that guards the threshold (test/card/overlaps.browser.test.ts). Starts and stops its own Vite server, like
 // capture.mjs.
@@ -16,14 +19,15 @@ import { createServer } from 'vite';
 
 const WIDTHS = Array.from({ length: 25 }, (_, index) => 320 + index * 20);
 const quiet = process.argv.includes('--quiet');
+const pipes = process.argv.includes('--pipes');
 
 /** Runs in the page: the shared check of dev/overlaps.ts, served by the Vite dev server. */
-async function measureInPage() {
+async function measureInPage(/** @type {boolean} */ withPipes) {
   const path = '/dev/overlaps.ts';
   const shared = await import(path);
   const root = document.querySelector('ecogeo-card')?.shadowRoot;
   if (!root) throw new Error('the card has no shadow root');
-  return shared.overlapPairs(shared.measureCard(root));
+  return shared.overlapPairs(shared.measureCard(root, { pipes: withPipes }));
 }
 
 const server = await createServer({
@@ -65,7 +69,7 @@ try {
         }, width);
         // Let the layout settle: two frames.
         await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
-        const pairs = await page.evaluate(measureInPage);
+        const pairs = await page.evaluate(measureInPage, pipes);
         results.get(width)?.set(`${name} / ${installation.name}`, pairs);
       }
     }
@@ -98,4 +102,16 @@ if (cleanFrom === undefined) {
   console.log(
     `\nThreshold: ${String(threshold)} px (zero overlaps in every case from ${String(cleanFrom)} px up to ${String(WIDTHS[WIDTHS.length - 1])} px)`,
   );
+}
+
+if (pipes) {
+  // The most frequent pairs over every measured width and case, to show what the drawing collides on.
+  /** @type {Map<string, number>} */
+  const tally = new Map();
+  for (const cases of results.values()) {
+    for (const pairs of cases.values()) for (const pair of pairs) tally.set(pair, (tally.get(pair) ?? 0) + 1);
+  }
+  const top = [...tally].sort((a, b) => b[1] - a[1]).slice(0, 15);
+  console.log('\nMost frequent pairs (over every width and case):');
+  for (const [pair, count] of top) console.log(`  ${String(count)} x ${pair}`);
 }

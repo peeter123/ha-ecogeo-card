@@ -6,13 +6,13 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 
 ## 1. Pipe- and caption-aware overlap check
 
-- [ ] 1.1 Extend `dev/overlaps.ts` with pipe samples and caption boxes (design D4): sample every `path.pipe` at 1 px
+- [x] 1.1 Extend `dev/overlaps.ts` with pipe samples and caption boxes (design D4): sample every `path.pipe` at 1 px
   steps of rendered length, inflated to its rendered stroke width; box `text.circuit-label`, `text.source-caption`
   and `text.tank-caption` like labels; report `label x pipe:<segment>`, `caption x label` and `caption x pipe`
   pairs; keep the `bare` exclusion for tank 50 and coil 51.
   Verify: a new browser test renders a card with a label moved onto a pipe, and one onto a caption, and the check
   reports exactly those pairs in Chromium and WebKit; a card with no such overlap reports none.
-- [ ] 1.2 Give `scripts/measure-layout.mjs` a `--pipes` flag that counts the new pairs (the guard in
+- [x] 1.2 Give `scripts/measure-layout.mjs` a `--pipes` flag that counts the new pairs (the guard in
   `test/card/overlaps.browser.test.ts` stays label-and-component only until group 4), and run it once on today's
   drawing.
   Verify: `npm run measure-layout -- --pipes` runs and prints the threshold with pipes counted and the most frequent

@@ -109,7 +109,12 @@ follow them.
 
 `overlapPairs` reports `label x pipe:<segment id>`, `caption:<text> x label` and so on, so failures name the pipe.
 The labels inside tank 50 (`bare`) stay excluded from tank 50 and also from coil 51's pipes, which they sit above by
-design.
+design. Coil 51 is a symbol, not a `path.pipe`, so the rule is by place: a `bare` label ignores pipe samples that lie
+wholly inside tank 50's box (settled in group 1). The helix halves (`path.pipe[data-half]`) take the segment id of
+their `g.helix[data-segment]`. A caption inside a part's group (ground loop, air unit, tank) is already checked
+against labels as that part, so it is checked only against pipes, not again against labels. Samples at a pipe's ends
+reach half a stroke width past a butt cap; that overshoot is accepted as part of the measure. Measured in group 1 on today's drawing, the threshold with pipes and captions counted
+is 700 px (640 px without them).
 
 Alternative: compute pipe rectangles from the geometry data. Rejected: the check would have to rebuild the card's
 draw context from the URL, and would test the data instead of what renders (stroke widths grow on small cards).
