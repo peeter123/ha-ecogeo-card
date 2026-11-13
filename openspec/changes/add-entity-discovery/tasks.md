@@ -85,13 +85,13 @@ Each group is implemented by one Sonnet subagent, reviewed by Opus and committed
 
 ## 6. Release and live installation
 
-- [ ] 6.1 Run `npm run release`, deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource `?v=` and
+- [x] 6.1 Run `npm run release`, deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource `?v=` and
   record it in `private/installation.md`.
   Verify: check-release reports both elements registered; UPLOAD with no CONFLICT; the resource reads the new `?v=`.
-- [ ] 6.2 Live check of the card: the live view (prefix only) renders as before.
+- [x] 6.2 Live check of the card: the live view (prefix only) renders as before.
   Verify: an agent screenshot of the live dashboard plus a state check (mode matches the live values); the dashboard
   config is unchanged; no `ecogeo` errors in the system log.
-- [ ] 6.3 Live check of the editor: the user opens the card's editor, picks the heat pump's device, presses
+- [x] 6.3 Live check of the editor: the user opens the card's editor, picks the heat pump's device, presses
   "Suggest entities" and checks the report and bindings, then closes without saving; the user also adds a new card
   from the picker and checks that the stub sets the prefix (no browser tool is available to the agent).
   Verify: the user's confirmation; the dashboard config is unchanged afterwards.
