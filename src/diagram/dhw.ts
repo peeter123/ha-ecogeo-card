@@ -14,11 +14,11 @@
 // tank bodies are a `.tank-body` shape (a path for the external cylinder, a rect for tank 50) with a `data-dhw-tank` attribute, filled from the custom property
 // `--dhw-tank-color` (no fill while it is not set). A muted body (DHW temperature unavailable) gets the muted colour
 // through the same property. The values (temperature, setpoint, start delta-T, demand) go under the external tank
-// (centred on it, below its bottom edge: EXTERNAL_TANK) for the external one, and inside tank 50, one row above coil 51 (refine-schematic-drawing D8b), for the internal one (labels.ts).
+// (centred on it, below its bottom edge: the arrangement's `externalTank`) for the external one, and inside tank 50, one row above coil 51 (refine-schematic-drawing D8b), for the internal one (labels.ts).
 import { css, nothing, svg, type SVGTemplateResult } from 'lit';
 import { DHW_LABELS } from '../strings';
 import { EXTERNAL_TANK_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
-import { EXTERNAL_TANK, drawnStorage, externalTankBody, type DrawContext } from './geometry';
+import { arrangementOf, drawnStorage, externalTankBody, type DrawContext } from './geometry';
 
 export const dhwStyles = css`
   .tank-body {
@@ -55,10 +55,11 @@ export const dhwStyles = css`
  */
 export function renderDhw(context: DrawContext, taps?: Taps): SVGTemplateResult {
   if (drawnStorage(context) !== 'external') return svg``;
-  const { x, y, width, dome } = EXTERNAL_TANK;
+  const arrangement = arrangementOf(context);
+  const { x, y, width, dome } = arrangement.externalTank;
   const rx = width / 2;
   // straight walls with elliptical domed caps: the top cap's lower arc is drawn as a rim
-  const body = externalTankBody();
+  const body = externalTankBody(arrangement);
   const rim = `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 0 ${String(x + width)} ${String(y + dome)}`;
   const tap = tapBindings(tapTarget(EXTERNAL_TANK_ROLE, taps), taps?.onTap);
   return svg`<g class=${context.dhw === 'unused' ? 'dhw-storage muted' : 'dhw-storage'} data-dhw="external" aria-label=${DHW_LABELS.externalTank} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>

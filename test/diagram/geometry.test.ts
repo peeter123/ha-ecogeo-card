@@ -12,21 +12,9 @@ import {
 import type { RolePath } from '../../src/config/roles';
 import { FEATURE_KEYS, type FeatureKey, type FeatureState, type Features } from '../../src/config/variants';
 import {
-  AIR_PORT_Y,
-  AIR_UNIT_WALL_X,
-  CABINET,
-  GROUND_CAPTION,
-  GROUND_LINE_Y,
-  GROUND_LOOP,
-  COMPONENTS,
-  AIR_UNIT,
-  CROSSINGS,
-  EXTERNAL_TANK,
   HOP,
   HTR_WATER_SEGMENT_IDS,
-  INTERNAL_TANK,
   MAX_CROSSINGS,
-  SEGMENTS,
   crossingPoints,
   drawnComponents,
   drawnStorage,
@@ -43,10 +31,26 @@ import {
   portsOf,
   roundedPathData,
   routePoints,
-  viewBox,
   type DrawContext,
   type Point,
+  arrangementFor,
+  arrangementOf,
 } from '../../src/diagram/geometry';
+
+const fullArr = arrangementFor('full', 'full');
+const AIR_PORT_Y = fullArr.airPortY;
+const AIR_UNIT_WALL_X = fullArr.airUnitWallX;
+const CABINET = fullArr.cabinet;
+const GROUND_CAPTION = fullArr.groundCaption;
+const GROUND_LINE_Y = fullArr.groundLineY;
+const GROUND_LOOP = fullArr.groundLoop;
+const COMPONENTS = fullArr.components;
+const AIR_UNIT = fullArr.airUnit;
+const CROSSINGS = fullArr.crossings;
+const EXTERNAL_TANK = fullArr.externalTank;
+const INTERNAL_TANK = fullArr.internalTank;
+const SEGMENTS = fullArr.segments;
+const viewBox = fullArr.viewBox;
 
 const STATES: readonly FeatureState[] = [true, false, 'unused'];
 
@@ -204,9 +208,9 @@ describe('geometry data', () => {
 
   test('gapsIn: no gap when the pipe on top is not drawn', () => {
     const idsOf = (context: DrawContext): Set<string> => new Set(ids(context));
-    expect(gapsIn('p2_in', idsOf(full('external')))).toContainEqual([312, 172]);
-    expect(gapsIn('p2_in', idsOf(full('none')))).toEqual([]);
-    expect(pathData(segmentPoints('p2_in'), gapsIn('p2_in', idsOf(full('none'))))).toBe('M312 130 L312 198');
+    expect(gapsIn(fullArr, 'p2_in', idsOf(full('external')))).toContainEqual([312, 172]);
+    expect(gapsIn(fullArr, 'p2_in', idsOf(full('none')))).toEqual([]);
+    expect(pathData(segmentPoints('p2_in'), gapsIn(fullArr, 'p2_in', idsOf(full('none'))))).toBe('M312 130 L312 198');
   });
 });
 
@@ -229,7 +233,7 @@ describe('integrity in every configuration', () => {
               : other.points.some((p) => p[0] === end[0] && p[1] === end[1])),
         );
         // a stub may end free above the top edge (DG1, the taps of model C) or on the integrated tank
-        const stub = segment.stub === true && (end[1] < CABINET.y || onInternalTank(end));
+        const stub = segment.stub === true && (end[1] < CABINET.y || onInternalTank(end, fullArr));
         expect(atPort || onOther || stub, `${segment.id} at ${end.join(',')}`).toBe(true);
       }
     }
@@ -239,7 +243,7 @@ describe('integrity in every configuration', () => {
       for (const port of portsOf(component)) {
         const touched =
           segments.some((segment) => onPolyline(port, segment.points)) ||
-          ([53, 54].includes(component.item) && onInternalTank(port));
+          ([53, 54].includes(component.item) && onInternalTank(port, fullArr));
         expect(touched, `item ${String(component.item)} port ${port.join(',')}`).toBe(true);
       }
     }
@@ -296,7 +300,7 @@ describe('integrity in every configuration', () => {
     // y 104)
     for (const segment of segments.filter((s) => s.id.startsWith('src_') || s.id.startsWith('dhw_ext_'))) {
       for (const point of segment.points) {
-        if (point[1] < CABINET.y) expect(point[1], segment.id).toBeLessThanOrEqual(100);
+        if (point[1] < arrangementOf(context).cabinet.y) expect(point[1], segment.id).toBeLessThanOrEqual(100);
       }
     }
 
@@ -321,7 +325,7 @@ describe('integrity in every configuration', () => {
     // no segments cross unless the crossing is declared (and every crossing lies inside the cabinet), and none run
     // along each other
     const declared = new Set(
-      CROSSINGS.map((crossing) => `${crossing.over}|${crossing.under}|${crossing.at.join(',')}`),
+      arrangementOf(context).crossings.map((crossing) => `${crossing.over}|${crossing.under}|${crossing.at.join(',')}`),
     );
     segments.forEach((first, index) => {
       for (const second of segments.slice(index + 1)) {
@@ -331,7 +335,9 @@ describe('integrity in every configuration', () => {
             declared.has(`${second.id}|${first.id}|${at.join(',')}`);
           expect(found, `${first.id} x ${second.id} at ${at.join(',')}`).toBe(true);
           expect(
-            at[0] > CABINET.x && at[0] < CABINET.x + CABINET.width && at[1] > CABINET.y,
+            at[0] > arrangementOf(context).cabinet.x &&
+              at[0] < arrangementOf(context).cabinet.x + arrangementOf(context).cabinet.width &&
+              at[1] > arrangementOf(context).cabinet.y,
             `${first.id} x ${second.id} outside the cabinet`,
           ).toBe(true);
         }
@@ -861,4 +867,37 @@ describe('exchanger sides in every configuration', () => {
       }
     },
   );
+});
+
+describe('arrangementFor (refine-simplified-layout D1, D7)', () => {
+  test('the compact layout draws the full arrangement at either level', () => {
+    const full = arrangementFor('full', 'full');
+    expect(full.id).toBe('full');
+    expect(arrangementFor('simplified', 'compact')).toBe(full);
+    expect(arrangementFor('full', 'compact')).toBe(full);
+  });
+
+  test('the simplified level in the full layout has its own arrangement', () => {
+    expect(arrangementFor('simplified', 'full').id).toBe('simplified');
+    expect(arrangementFor('simplified', 'full')).not.toBe(arrangementFor('full', 'full'));
+  });
+
+  test('it is a pure function: the same inputs give the same value', () => {
+    for (const level of DETAIL_LEVELS) {
+      for (const layout of ['full', 'compact'] as const) {
+        expect(arrangementFor(level, layout)).toBe(arrangementFor(level, layout));
+      }
+    }
+  });
+
+  test('a draw context without an arrangement gets the full layout one of its detail level', () => {
+    for (const detail of DETAIL_LEVELS) {
+      expect(arrangementOf({ detail })).toBe(arrangementFor(detail, 'full'));
+    }
+  });
+
+  test('a draw context with an arrangement keeps it', () => {
+    const arrangement = arrangementFor('full', 'full');
+    expect(arrangementOf({ detail: 'simplified', arrangement })).toBe(arrangement);
+  });
 });

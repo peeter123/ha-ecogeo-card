@@ -5,11 +5,15 @@ import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
 import { ROLE_BY_PATH, ROLES } from '../../src/config/roles';
 import { COMPONENT_ROLES, EXTERNAL_TANK_ROLE, FAN_ROLE } from '../../src/diagram/component-info';
-import { COMPONENTS } from '../../src/diagram/geometry';
+import { arrangementFor } from '../../src/diagram/geometry';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
 import { AIR_UNIT_FAN_NAME, COMPONENT_NAMES, DHW_LABELS, componentLabel } from '../../src/strings';
 import { states } from '../helpers';
+
+// the default config draws the simplified level
+const full = arrangementFor('simplified', 'full');
+const COMPONENTS = full.components;
 
 const P = 'demo_ecogeo';
 const ALL_TRUE = { active_cooling: true, passive_cooling: true, htr: true, backup_heater: true };

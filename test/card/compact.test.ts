@@ -1,11 +1,15 @@
 // The compact layout's content (responsive-layout spec: Compact content, Layout hysteresis), with a mocked width.
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { arrangementFor } from '../../src/diagram/geometry';
 import '../../src/index';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import type { CardConfig } from '../../src/lib/config';
 import { COMPACT_BELOW, COMPACT_HYSTERESIS } from '../../src/lib/layout';
-import { LABEL_SPECS } from '../../src/diagram/labels';
 import { VALUE_CAPTIONS } from '../../src/strings';
+
+// the default config draws the simplified level
+const simplified = arrangementFor('simplified', 'full');
+const LABEL_SPECS = simplified.labels.specs;
 
 class FakeObserver {
   static instances: FakeObserver[] = [];
@@ -284,5 +288,21 @@ describe('Compact value captions', () => {
     const compact = await show(360, { source: 'air' });
     expect(caption(compact, 'air_unit_out')).toBe(VALUE_CAPTIONS.portOut);
     expect(caption(compact, 'compressor_speed')).toBeUndefined();
+  });
+});
+
+describe('the arrangement of the shown layout (refine-simplified-layout D1)', () => {
+  test.each([
+    ['simplified', 1000, 'full'],
+    ['full', 1000, 'full'],
+    ['simplified', 320, 'compact'],
+    ['full', 320, 'compact'],
+  ] as const)("detail %s at %i px (%s layout): the viewBox is the arrangement's", async (detail, width, layout) => {
+    const card = await show(width, { detail });
+    const { viewBox } = arrangementFor(detail, layout);
+    expect(root(card).querySelector('ha-card')?.getAttribute('data-layout')).toBe(layout);
+    expect(root(card).querySelector('svg')?.getAttribute('viewBox')).toBe(
+      `0 0 ${String(viewBox.width)} ${String(viewBox.height)}`,
+    );
   });
 });

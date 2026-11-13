@@ -1,6 +1,6 @@
 import { render, svg } from 'lit';
 import { describe, expect, test } from 'vitest';
-import type { ComponentKind } from '../../src/diagram/geometry';
+import { arrangementFor, type ComponentKind } from '../../src/diagram/geometry';
 import { symbol } from '../../src/diagram/symbols';
 
 const KINDS: readonly ComponentKind[] = [
@@ -28,7 +28,7 @@ const KINDS: readonly ComponentKind[] = [
 
 function mount(kind: ComponentKind, rotation: 0 | 90 | 180 | 270 = 0): SVGElement {
   const host = document.createElement('div');
-  render(svg`<svg>${symbol(kind, { rotation })}</svg>`, host);
+  render(svg`<svg>${symbol(kind, { rotation, arrangement: arrangementFor('full', 'full') })}</svg>`, host);
   const group = host.querySelector('svg > g');
   if (group === null) throw new Error('no group');
   return group as unknown as SVGElement;

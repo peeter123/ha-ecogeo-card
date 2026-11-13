@@ -1,11 +1,17 @@
 import { describe, expect, test } from 'vitest';
 import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
-import { COMPONENTS, CROSSINGS, SEGMENTS, type Point } from '../../src/diagram/geometry';
+import { type Point, arrangementFor } from '../../src/diagram/geometry';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
 import { CIRCUIT_LABELS, MODE_LABELS } from '../../src/strings';
 import { states } from '../helpers';
+
+// the default config draws the simplified level
+const full = arrangementFor('simplified', 'full');
+const COMPONENTS = full.components;
+const CROSSINGS = full.crossings;
+const SEGMENTS = full.segments;
 
 const P = 'demo_ecogeo';
 

@@ -9,8 +9,7 @@ import { CIRCUIT_LABELS, componentLabel } from '../strings';
 import { COIL_MUTED_VAR, MUTED_COLOR } from './colors';
 import { componentRole, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
 import {
-  CABINET,
-  CIRCUIT_LABELS as LABEL_POSITIONS,
+  arrangementOf,
   drawnComponents,
   drawnSegments,
   drawnStorage,
@@ -23,6 +22,7 @@ import {
   partState,
   pathData,
   roundedPathData,
+  type Arrangement,
   type Component,
   type DrawContext,
   type ExchangerSide,
@@ -128,6 +128,7 @@ function component(
   view: PipeView,
   detail: DrawContext['detail'],
   taps: Taps | undefined,
+  arrangement: Arrangement,
   fills?: { left: string; right: string },
 ): SVGTemplateResult {
   const { part } = entry;
@@ -144,6 +145,7 @@ function component(
       open: part.kind === 'valve3' ? openPorts(part.item, circuits) : undefined,
       reversed: part.kind === 'inversion_valve' ? circuits.valve14 === 'reversed' : undefined,
       fills,
+      arrangement,
     })}</g>
     ${detail === 'full' ? svg`<text class="item" x=${part.x + dx} y=${part.y + dy} text-anchor=${anchor ?? 'start'}>${part.item}</text>` : nothing}
   </g>`;
@@ -267,6 +269,8 @@ export function renderCabinet(
 ): SVGTemplateResult {
   // The hop gaps scale with the pipe's width (add-compact-layout D4).
   const hop = (HOP * pipeWidth) / DEFAULT_STROKES.pipe;
+  const arrangement = arrangementOf(context);
+  const { cabinet } = arrangement;
   const segments = drawnSegments(context);
   const ids = new Set(segments.map((entry) => entry.part.id));
   const states = new Map(segments.map((entry) => [entry.part.id, pipeState(entry.part, entry.state, view)] as const));
@@ -274,7 +278,7 @@ export function renderCabinet(
   const clipId = drawnStorage(context) === 'external' ? `${fill.idPrefix}-tank-clip` : undefined;
   const components = drawnComponents(context).map((entry) => {
     const sides = fill.mode === 'gradient' ? entry.part.sides : undefined;
-    if (sides === undefined) return component(entry, view, context.detail, taps);
+    if (sides === undefined) return component(entry, view, context.detail, taps, arrangement);
     const paints = { left: 'none', right: 'none' };
     for (const side of sides) {
       const gradient = sideGradient(
@@ -286,18 +290,22 @@ export function renderCabinet(
       gradients.push(gradient);
       paints[side.half] = `url(#${gradient.id})`;
     }
-    return component(entry, view, context.detail, taps, paints);
+    return component(entry, view, context.detail, taps, arrangement, paints);
   });
   return svg`<g class="cabinet">
-    <defs>${gradients.map(gradientDef)}${clipId === undefined ? nothing : svg`<clipPath id=${clipId} data-tank-clip><path d=${externalTankBody()} /></clipPath>`}</defs>
-    <rect class="outline" x=${CABINET.x} y=${CABINET.y} width=${CABINET.width} height=${CABINET.height} rx="6" />
-    ${LABEL_POSITIONS.filter((label) => context.captions !== false && partState(label, context) !== 'hidden').map(
-      (label) =>
-        svg`<text class="circuit-label" x=${label.x} y=${label.y} text-anchor="middle">${CIRCUIT_LABELS[label.key]}</text>`,
-    )}
+    <defs>${gradients.map(gradientDef)}${clipId === undefined ? nothing : svg`<clipPath id=${clipId} data-tank-clip><path d=${externalTankBody(arrangement)} /></clipPath>`}</defs>
+    <rect class="outline" x=${cabinet.x} y=${cabinet.y} width=${cabinet.width} height=${cabinet.height} rx="6" />
+    ${arrangement.circuitLabels
+      .filter((label) => context.captions !== false && partState(label, context) !== 'hidden')
+      .map(
+        (label) =>
+          svg`<text class="circuit-label" x=${label.x} y=${label.y} text-anchor="middle">${CIRCUIT_LABELS[label.key]}</text>`,
+      )}
     ${segments.map((entry) => {
       const state = states.get(entry.part.id);
-      return state === undefined ? nothing : pipe(entry.part, state, gapsIn(entry.part.id, ids), hop, clipId);
+      return state === undefined
+        ? nothing
+        : pipe(entry.part, state, gapsIn(arrangement, entry.part.id, ids), hop, clipId);
     })}
     ${components}
   </g>`;

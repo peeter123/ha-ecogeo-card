@@ -5,7 +5,8 @@
 // zone) and of the external DHW tank (right zone), and the stubs of connections 47-49. No Lit here: this file is
 // data plus small pure helpers that the renderer and the integrity tests share.
 //
-// Layout in viewBox units (1000 x 620): source zone x 0-240, cabinet x 240-760, DHW zone x 790-1000, the pipe run
+// An `Arrangement` (arrangementFor) holds all of it for one detail level and layout; the numbers below describe the full
+// arrangement. Layout in viewBox units (1000 x 620): source zone x 0-240, cabinet x 240-760, DHW zone x 790-1000, the pipe run
 // above the cabinet y 0-110, the cabinet's top edge at y 130. Ports 1-6 sit on the top edge in the manual's order.
 // Inside, from the top: the DHW supply (y 172) and return (y 198) lines of valve 26, the probe row, the discharge
 // line of compressor 11 (y 250) through HTR exchanger 9 to inversion valve 14, condenser 8 and evaporator 7, the
@@ -16,102 +17,201 @@ import type { CircuitId, Circuits } from '../calc/circuits';
 import type { Detail, DhwStorage, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
+import { FULL_COMPACT_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
 
-export const viewBox = { width: 1000, height: 620 } as const;
+/** A rectangle in viewBox units. */
+export interface Rect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
 
-/** The cabinet's outline and the zones around it. */
-export const CABINET = { x: 240, y: 130, width: 520, height: 475 } as const;
+/** The air unit's housing, fan, coil block, fins, slats and serpentine (see `FULL_ZONES`). */
+export interface AirUnitShape {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly fanX: number;
+  readonly fanY: number;
+  readonly fanRadius: number;
+  readonly coil: Rect;
+  readonly fins: {
+    readonly x: number;
+    readonly step: number;
+    readonly count: number;
+    readonly y0: number;
+    readonly y1: number;
+  };
+  readonly slats: { readonly y0: number; readonly step: number; readonly count: number };
+  readonly dividerY: number;
+  readonly captionX: number;
+  readonly captionY: number;
+  readonly passes: {
+    readonly y0: number;
+    readonly step: number;
+    readonly count: number;
+    readonly left: number;
+    readonly right: number;
+  };
+}
 
 /**
- * The integrated tank of model C (item 50), inside the cabinet under the top edge: coil 51 (its ports are where the DHW
- * lines of valve 26 end), probe 54 and drain valve 53 sit on or in it. The figure's tank is tall; this one is squat so
- * that it fits above the probe row.
+ * The primary values of an arrangement's zones: the viewBox, the cabinet's outline, the integrated tank and its coil
+ * (inside the cabinet), the external tank, the air unit, the ground loop and the pipe run above the cabinet.
+ * `deriveZones` computes everything else that depends on them.
  */
-export const INTERNAL_TANK = { x: 408, y: 138, width: 182, height: 66 } as const;
+export interface ZoneBase {
+  readonly viewBox: { readonly width: number; readonly height: number };
+  /** The cabinet's outline and the zones around it. */
+  readonly cabinet: Rect;
+  /**
+   * The integrated tank of model C (item 50), inside the cabinet under the top edge: coil 51 (its ports are where the DHW
+   * lines of valve 26 end), probe 54 and drain valve 53 sit on or in it. The figure's tank is tall; this one is squat so
+   * that it fits above the probe row.
+   */
+  readonly internalTank: Rect;
+  /** Coil 51's centre (model C), inside tank 50; its port stubs reach back to the tank wall (symbols.ts). */
+  readonly coil51: { readonly x: number; readonly y: number };
+  /** The external tank right of the cabinet (not a manual item: the "DHW inter-accumulator" of ports 5/6). */
+  readonly externalTank: Rect & { readonly dome: number };
+  /**
+   * The air unit's housing and the fan in it, left of the cabinet (not manual items). The housing's top is the
+   * cabinet's top line (refine-schematic-drawing D11); everything else is placed from it. Both brine pipes leave through the housing's
+   * right wall, the side facing the cabinet (refine-schematic-drawing D13).
+   */
+  readonly airUnit: AirUnitShape;
+  /**
+   * The ground loop (refine-schematic-drawing D12): a single vertical U. One leg goes down from the ground line (at `downX`), a half circle
+   * forms the bottom and one leg comes back up (at `upX`), `depth` below the line at its lowest. The legs' spacing is the
+   * bottom's diameter.
+   */
+  readonly groundLoop: { readonly downX: number; readonly upX: number; readonly depth: number };
+  /** The ground line's horizontal extent in the source zone (the hatching ticks sit 6 units inside each end). */
+  readonly groundLineX: { readonly start: number; readonly end: number };
+  /** The pipe run above the cabinet: the y of port 3's and port 4's pipes, the x where they turn down or up to the source, and the column of the hybrid's return pipe. */
+  readonly run: {
+    readonly outY: number;
+    readonly inY: number;
+    readonly feedX: number;
+    readonly returnX: number;
+    readonly hybridReturnX: number;
+  };
+}
 
-/** Coil 51's centre (model C), inside tank 50; its port stubs reach back to the tank wall (symbols.ts). */
-export const COIL_51 = { x: 495, y: 185 } as const;
+/** What `deriveZones` computes from a `ZoneBase`. */
+export interface Zones extends ZoneBase {
+  /** The housing's right wall, where both brine pipes leave the air unit. */
+  readonly airUnitWallX: number;
+  /** The y of the air unit's top and bottom brine ports (the first and last pass), on the coil block's right side. */
+  readonly airPortY: { readonly top: number; readonly bottom: number };
+  /** The x where the brine pipes meet the coil block's right edge (the ports of the first and last pass). */
+  readonly coilPortX: number;
+  /** The serpentine's U-bends: half the distance between two passes, so each bend is a half circle. */
+  readonly airCoilBend: number;
+  /** The ground loop's bottom: half the legs' spacing, so the bottom is a half circle. */
+  readonly loopBend: number;
+  /** The ground line (the surface) of the ground loop: on the cabinet's top line, or in the hybrid under the air unit. */
+  readonly groundLineY: { readonly ground: number; readonly hybrid: number };
+  /** Where the ground loop's caption sits (under the bottom of the loop). */
+  readonly groundCaption: { readonly x: number; readonly y: { readonly ground: number; readonly hybrid: number } };
+  /**
+   * The external coil: its centre line is the tank's, and it sits in the lower part of the tank (the tank's top plus 62
+   * and 146). `rx` is its half width, `port6X` the x of port 6's vertical inside the tank (14 units inside the left wall).
+   */
+  readonly externalCoil: {
+    readonly cx: number;
+    readonly top: number;
+    readonly bottom: number;
+    readonly rx: number;
+    readonly port6X: number;
+  };
+  /**
+   * Where port 3's line (`src_out`) hands over to the source, and where the exits hand over to port 4's line (`src_in`):
+   * a few units along the straight run past the turn, so that no corner is a boundary between two segments (a butt-capped
+   * boundary would show a square notch where the pipe turns).
+   */
+  readonly joinX: { readonly out: number; readonly in: number };
+}
 
-/** Coil 51's ports in its local frame: supply first, return second. The symbol's port stubs end on their y values. */
+/** The values that depend on the primary ones: ports, line heights, the external coil, the joins of the pipe run. */
+export function deriveZones(base: ZoneBase): Zones {
+  const { airUnit, groundLoop, externalTank, run, cabinet } = base;
+  const groundLineY = { ground: cabinet.y, hybrid: airUnit.y + airUnit.height + 70 };
+  return {
+    ...base,
+    airUnitWallX: airUnit.x + airUnit.width,
+    airPortY: {
+      top: airUnit.passes.y0,
+      bottom: airUnit.passes.y0 + (airUnit.passes.count - 1) * airUnit.passes.step,
+    },
+    coilPortX: airUnit.coil.x + airUnit.coil.width,
+    airCoilBend: airUnit.passes.step / 2,
+    loopBend: (groundLoop.downX - groundLoop.upX) / 2,
+    groundLineY,
+    groundCaption: {
+      x: (groundLoop.downX + groundLoop.upX) / 2,
+      y: { ground: groundLineY.ground + groundLoop.depth + 28, hybrid: groundLineY.hybrid + groundLoop.depth + 28 },
+    },
+    externalCoil: {
+      cx: externalTank.x + externalTank.width / 2,
+      top: externalTank.y + 62,
+      bottom: externalTank.y + 146,
+      rx: 50,
+      port6X: externalTank.x + 14,
+    },
+    joinX: { out: run.feedX + 8, in: run.returnX + 8 },
+  };
+}
+
+/** Coil 51's ports in its local frame: supply first, return second. The symbol's port stubs end on their y values; the symbol keeps this size in every arrangement. */
 export const COIL_LOCAL_PORTS: readonly [readonly [number, number], readonly [number, number]] = [
   [-75, -13],
   [-75, 13],
 ];
 
-/** The external tank right of the cabinet (not a manual item: the "DHW inter-accumulator" of ports 5/6). */
-export const EXTERNAL_TANK = { x: 806, y: CABINET.y, width: 168, height: 180, dome: 14 } as const;
-
-/** The external coil: its centre line is the tank's, and it sits in the lower part of the tank (the tank's top plus 62 and 146). */
-const COIL_CX = EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2;
-const COIL_TOP = EXTERNAL_TANK.y + 62;
-const COIL_BOTTOM = EXTERNAL_TANK.y + 146;
-/** The coil's half width, and the x of port 6's vertical inside the tank (14 units inside the left wall). */
-const COIL_RX = 50;
-const PORT6_X = EXTERNAL_TANK.x + 14;
-
 /** The outline of the external tank's body (straight walls, elliptical domed caps), as path data. */
-export function externalTankBody(): string {
-  const { x, y, width, height, dome } = EXTERNAL_TANK;
+export function externalTankBody({ externalTank }: Pick<ZoneBase, 'externalTank'>): string {
+  const { x, y, width, height, dome } = externalTank;
   const rx = width / 2;
   return `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x + width)} ${String(y + dome)} V${String(y + height - dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x)} ${String(y + height - dome)} Z`;
 }
 
-/**
- * The air unit's housing and the fan in it, left of the cabinet (not manual items). The housing's top is the
- * cabinet's top line (refine-schematic-drawing D11); everything else is placed from it. Both brine pipes leave through the housing's
- * right wall, the side facing the cabinet (refine-schematic-drawing D13).
- */
-export const AIR_UNIT = {
-  x: 26,
-  y: CABINET.y,
-  width: 124,
-  height: 210,
-  fanX: 88,
-  fanY: CABINET.y + 162,
-  fanRadius: 34,
-  /** The coil block's frame (the brine serpentine runs inside it, over the fins). */
-  coil: { x: 36, y: CABINET.y + 16, width: 104, height: 74 },
-  /** The coil's fins: the first x, the step, how many, and where they start and end. */
-  fins: { x: 52, step: 6, count: 13, y0: CABINET.y + 20, y1: CABINET.y + 86 },
-  /** The slats of the housing's front, in the gutters left and right of the fan: the first y, the step and how many. */
-  slats: { y0: CABINET.y + 134, step: 9, count: 8 },
-  /** Where the fan section starts (a divider under the coil block). */
-  dividerY: CABINET.y + 114,
-  /** Where the caption sits. */
-  captionX: 88,
-  captionY: CABINET.y - 8,
-  /** The serpentine: four passes (an even number, so that it enters and leaves on the right), 15 apart, bending at x `left` and `right`. */
-  passes: { y0: CABINET.y + 30, step: 15, count: 4, left: 44, right: 132 },
-} as const;
+const FULL_CABINET = { x: 240, y: 130, width: 520, height: 475 } as const;
 
-/** The housing's right wall, where both brine pipes leave the air unit. */
-export const AIR_UNIT_WALL_X = AIR_UNIT.x + AIR_UNIT.width;
-
-/** The y of the air unit's top and bottom brine ports (the first and last pass), on the coil block's right side. */
-export const AIR_PORT_Y = {
-  top: AIR_UNIT.passes.y0,
-  bottom: AIR_UNIT.passes.y0 + (AIR_UNIT.passes.count - 1) * AIR_UNIT.passes.step,
-} as const;
-
-/**
- * The ground loop (refine-schematic-drawing D12): a single vertical U. One leg goes down from the ground line (at `downX`), a half circle
- * forms the bottom and one leg comes back up (at `upX`), `depth` below the line at its lowest. The legs' spacing is the
- * bottom's diameter.
- */
-export const GROUND_LOOP = { downX: 166, upX: 106, depth: 140 } as const;
-
-/** The ground line's horizontal extent in the source zone (the hatching ticks sit 6 units inside each end). */
-export const GROUND_LINE_X = { start: 8, end: 220 } as const;
-
-/** The ground line (the surface) of the ground loop: on the cabinet's top line, or in the hybrid under the air unit. */
-export const GROUND_LINE_Y = { ground: CABINET.y, hybrid: AIR_UNIT.y + AIR_UNIT.height + 70 } as const;
-
-/** Where the ground loop's caption sits (under the bottom of the loop). */
-export const GROUND_CAPTION = {
-  x: (GROUND_LOOP.downX + GROUND_LOOP.upX) / 2,
-  y: { ground: GROUND_LINE_Y.ground + GROUND_LOOP.depth + 28, hybrid: GROUND_LINE_Y.hybrid + GROUND_LOOP.depth + 28 },
-} as const;
-
+/** The full arrangement's zones: the coordinates of the drawing since add-schematic-card. */
+const FULL_ZONES: Zones = deriveZones({
+  viewBox: { width: 1000, height: 620 },
+  cabinet: FULL_CABINET,
+  internalTank: { x: 408, y: 138, width: 182, height: 66 },
+  coil51: { x: 495, y: 185 },
+  externalTank: { x: 806, y: FULL_CABINET.y, width: 168, height: 180, dome: 14 },
+  airUnit: {
+    x: 26,
+    y: FULL_CABINET.y,
+    width: 124,
+    height: 210,
+    fanX: 88,
+    fanY: FULL_CABINET.y + 162,
+    fanRadius: 34,
+    // the coil block's frame (the brine serpentine runs inside it, over the fins)
+    coil: { x: 36, y: FULL_CABINET.y + 16, width: 104, height: 74 },
+    // the coil's fins: the first x, the step, how many, and where they start and end
+    fins: { x: 52, step: 6, count: 13, y0: FULL_CABINET.y + 20, y1: FULL_CABINET.y + 86 },
+    // the slats of the housing's front, in the gutters left and right of the fan: the first y, the step and how many
+    slats: { y0: FULL_CABINET.y + 134, step: 9, count: 8 },
+    // where the fan section starts (a divider under the coil block) and where the caption sits
+    dividerY: FULL_CABINET.y + 114,
+    captionX: 88,
+    captionY: FULL_CABINET.y - 8,
+    // the serpentine: four passes (an even number, so that it enters and leaves on the right), 15 apart, bending at x `left` and `right`
+    passes: { y0: FULL_CABINET.y + 30, step: 15, count: 4, left: 44, right: 132 },
+  },
+  groundLoop: { downX: 166, upX: 106, depth: 140 },
+  groundLineX: { start: 8, end: 220 },
+  run: { outY: 85, inY: 50, feedX: 226, returnX: 206, hybridReturnX: 12 },
+});
 export type Point = readonly [x: number, y: number];
 export type Rotation = 0 | 90 | 180 | 270;
 
@@ -246,7 +346,7 @@ const c = (
 ): Component => ({ item, kind, x, y, rotation, tag, ...extra });
 
 /** Components. Items 1-6 are the ports on the top edge. */
-export const COMPONENTS: readonly Component[] = [
+const componentsFor = (z: Zones): readonly Component[] => [
   // ports, left to right in the manual's order
   c(1, 'port', 270, 130, 0, [-7, -8, 'end']),
   c(2, 'port', 312, 130, 0, [-7, -8, 'end']),
@@ -349,15 +449,15 @@ export const COMPONENTS: readonly Component[] = [
   c(
     50,
     'tank',
-    INTERNAL_TANK.x + INTERNAL_TANK.width / 2,
-    INTERNAL_TANK.y + INTERNAL_TANK.height / 2,
+    z.internalTank.x + z.internalTank.width / 2,
+    z.internalTank.y + z.internalTank.height / 2,
     0,
     [-96, -26, 'end'],
     {
       dhw: 'internal',
     },
   ),
-  c(51, 'coil', COIL_51.x, COIL_51.y, 0, [-74, 3, 'middle'], { dhw: 'internal' }),
+  c(51, 'coil', z.coil51.x, z.coil51.y, 0, [-74, 3, 'middle'], { dhw: 'internal' }),
   c(52, 'service_outlet', 395, 162, 0, [-8, 4, 'end'], { dhw: 'internal', detail: 'full' }),
   c(53, 'drain_valve', 599, 196, 270, [0, -12, 'middle'], { dhw: 'internal', detail: 'full' }),
   c(54, 'probe_t', 574, 171, 270, [26, -11, 'start'], { dhw: 'internal' }),
@@ -370,42 +470,21 @@ const parsePoints = (path: string): Point[] =>
     return [x ?? 0, y ?? 0];
   });
 
-/** The y of the port 3 and 4 pipes above the cabinet, and the x where they turn down or up to the source. */
-const SRC_OUT_Y = 85;
-const SRC_IN_Y = 50;
-const SRC_FEED_X = 226;
-const SRC_RETURN_X = 206;
 /**
- * Where port 3's line (`src_out`) hands over to the source, and where the exits hand over to port 4's line (`src_in`):
- * a few units along the straight run past the turn, so that no corner is a boundary between two segments (a butt-capped
- * boundary would show a square notch where the pipe turns).
- */
-const SRC_OUT_JOIN_X = SRC_FEED_X + 8;
-const SRC_IN_JOIN_X = SRC_RETURN_X + 8;
-/** The column of the hybrid's return pipe, left of the air unit's housing. */
-const HYB_RETURN_X = 12;
-/** The x where the brine pipes meet the coil block's right edge (the ports of the first and last pass). */
-const COIL_PORT_X = AIR_UNIT.coil.x + AIR_UNIT.coil.width;
-/** The serpentine's U-bends: half the distance between two passes, so each bend is a half circle. */
-const AIR_COIL_BEND = AIR_UNIT.passes.step / 2;
-/** The ground loop's bottom: half the legs' spacing, so the bottom is a half circle. */
-const LOOP_BEND = (GROUND_LOOP.downX - GROUND_LOOP.upX) / 2;
-
-/**
- * The air coil's points (refine-schematic-drawing D13): a serpentine of the passes of `AIR_UNIT.passes`. It starts at the right of the
+ * The air coil's points (refine-schematic-drawing D13): a serpentine of the passes of the arrangement's `airUnit.passes`. It starts at the right of the
  * top pass and, the number of passes being even, ends at the right of the bottom pass. `reverse` gives the other
  * direction: the air source is entered at the bottom, so that its exit on the top pass rises left of the feed.
  */
-function coilPath(reverse: boolean): string {
-  const { y0, step, count, left, right } = AIR_UNIT.passes;
-  const points: Point[] = [[COIL_PORT_X, y0]];
+function coilPath(z: Zones, reverse: boolean): string {
+  const { y0, step, count, left, right } = z.airUnit.passes;
+  const points: Point[] = [[z.coilPortX, y0]];
   for (let index = 0; index < count; index += 1) {
     const y = y0 + index * step;
     if (index % 2 === 0) {
       if (index > 0) points.push([right, y]);
       points.push([left, y]);
     } else {
-      points.push([left, y], index === count - 1 ? [COIL_PORT_X, y] : [right, y]);
+      points.push([left, y], index === count - 1 ? [z.coilPortX, y] : [right, y]);
     }
   }
   return (reverse ? points.reverse() : points).map(([x, y]) => `${String(x)},${String(y)}`).join(' ');
@@ -415,8 +494,8 @@ function coilPath(reverse: boolean): string {
  * One half of the ground loop's U from the ground line at `lineY` (refine-schematic-drawing D12): `down` is the leg down and the bottom's
  * first quarter circle, `up` the second quarter circle and the leg up. They meet in the middle of the bottom.
  */
-function loopHalf(lineY: number, half: 'down' | 'up'): string {
-  const { downX, upX, depth } = GROUND_LOOP;
+function loopHalf(z: Zones, lineY: number, half: 'down' | 'up'): string {
+  const { downX, upX, depth } = z.groundLoop;
   const [middleX, bottom] = [(downX + upX) / 2, lineY + depth];
   return half === 'down'
     ? `${String(downX)},${String(lineY)} ${String(downX)},${String(bottom)} ${String(middleX)},${String(bottom)}`
@@ -466,7 +545,7 @@ export const HTR_WATER_SEGMENT_IDS: readonly string[] = [
 ];
 
 /** Pipe segments. The production trunk (return from ports 2/6 through 27, 15, 8, 44, 33 and 26) serves DG1 and DHW. */
-export const SEGMENTS: readonly Segment[] = [
+const segmentsFor = (z: Zones): readonly Segment[] => [
   // production: ports 1 and 2 (the DG1 stubs end below the pipe run, y > 110)
   seg('p1_stub', DG1, '270,130 270,118', OUT, { stub: true }),
   seg('p2_stub', DG1, '312,118 312,130', RET, { stub: true }),
@@ -516,25 +595,32 @@ export const SEGMENTS: readonly Segment[] = [
   seg(
     'dhw_ext_in',
     ['dhw_coil'],
-    `722,130 722,50 ${String(COIL_CX + COIL_RX)},50 ${String(COIL_CX + COIL_RX)},${String(COIL_TOP)}`,
+    `722,130 722,${String(z.run.inY)} ${String(z.externalCoil.cx + z.externalCoil.rx)},${String(z.run.inY)} ${String(z.externalCoil.cx + z.externalCoil.rx)},${String(z.externalCoil.top)}`,
     OUT,
     { dhw: 'external', speedRole: PP },
   ),
   seg(
     'dhw_ext_coil',
     ['dhw_coil'],
-    `${String(COIL_CX + COIL_RX)},${String(COIL_TOP)} ${String(COIL_CX - COIL_RX)},${String(COIL_BOTTOM)}`,
+    `${String(z.externalCoil.cx + z.externalCoil.rx)},${String(z.externalCoil.top)} ${String(z.externalCoil.cx - z.externalCoil.rx)},${String(z.externalCoil.bottom)}`,
     OUT,
     {
       dhw: 'external',
       speedRole: PP,
-      shape: { kind: 'helix', cx: COIL_CX, top: COIL_TOP, bottom: COIL_BOTTOM, rx: COIL_RX, turns: 4.5 },
+      shape: {
+        kind: 'helix',
+        cx: z.externalCoil.cx,
+        top: z.externalCoil.top,
+        bottom: z.externalCoil.bottom,
+        rx: z.externalCoil.rx,
+        turns: 4.5,
+      },
     },
   ),
   seg(
     'dhw_ext_out',
     ['dhw_coil'],
-    `${String(COIL_CX - COIL_RX)},${String(COIL_BOTTOM)} ${String(PORT6_X)},${String(COIL_BOTTOM)} ${String(PORT6_X)},85 748,85 748,130`,
+    `${String(z.externalCoil.cx - z.externalCoil.rx)},${String(z.externalCoil.bottom)} ${String(z.externalCoil.port6X)},${String(z.externalCoil.bottom)} ${String(z.externalCoil.port6X)},${String(z.run.outY)} 748,${String(z.run.outY)} 748,130`,
     RET,
     {
       dhw: 'external',
@@ -553,16 +639,16 @@ export const SEGMENTS: readonly Segment[] = [
   // circle, the other quarter circle and the leg up, exit. Hybrid: the air unit is entered at its top pass, so that
   // the link to the ground loop can leave from the bottom pass without crossing the feed; the ground loop's exit
   // returns up along the housing's left side.
-  seg('src_out', ['brine'], line([630, 130], [630, SRC_OUT_Y], [SRC_OUT_JOIN_X, SRC_OUT_Y]), BOUT, { speedRole: BP }),
-  seg('src_in', ['brine'], line([SRC_IN_JOIN_X, SRC_IN_Y], [690, SRC_IN_Y], [690, 130]), BIN, { speedRole: BP }),
+  seg('src_out', ['brine'], line([630, 130], [630, z.run.outY], [z.joinX.out, z.run.outY]), BOUT, { speedRole: BP }),
+  seg('src_in', ['brine'], line([z.joinX.in, z.run.inY], [690, z.run.inY], [690, 130]), BIN, { speedRole: BP }),
   seg(
     'src_air_feed',
     ['brine'],
     line(
-      [SRC_OUT_JOIN_X, SRC_OUT_Y],
-      [SRC_FEED_X, SRC_OUT_Y],
-      [SRC_FEED_X, AIR_PORT_Y.bottom],
-      [COIL_PORT_X, AIR_PORT_Y.bottom],
+      [z.joinX.out, z.run.outY],
+      [z.run.feedX, z.run.outY],
+      [z.run.feedX, z.airPortY.bottom],
+      [z.coilPortX, z.airPortY.bottom],
     ),
     BOUT,
     {
@@ -570,15 +656,15 @@ export const SEGMENTS: readonly Segment[] = [
       speedRole: BP,
     },
   ),
-  seg('src_air_coil', ['brine'], coilPath(true), BOUT, { source: ['air'], speedRole: BP, bend: AIR_COIL_BEND }),
+  seg('src_air_coil', ['brine'], coilPath(z, true), BOUT, { source: ['air'], speedRole: BP, bend: z.airCoilBend }),
   seg(
     'src_air_exit',
     ['brine'],
     line(
-      [COIL_PORT_X, AIR_PORT_Y.top],
-      [SRC_RETURN_X, AIR_PORT_Y.top],
-      [SRC_RETURN_X, SRC_IN_Y],
-      [SRC_IN_JOIN_X, SRC_IN_Y],
+      [z.coilPortX, z.airPortY.top],
+      [z.run.returnX, z.airPortY.top],
+      [z.run.returnX, z.run.inY],
+      [z.joinX.in, z.run.inY],
     ),
     AIRO,
     {
@@ -589,28 +675,28 @@ export const SEGMENTS: readonly Segment[] = [
   seg(
     'src_gnd_feed',
     ['brine'],
-    line([SRC_OUT_JOIN_X, SRC_OUT_Y], [GROUND_LOOP.downX, SRC_OUT_Y], [GROUND_LOOP.downX, GROUND_LINE_Y.ground]),
+    line([z.joinX.out, z.run.outY], [z.groundLoop.downX, z.run.outY], [z.groundLoop.downX, z.groundLineY.ground]),
     BOUT,
     {
       source: ['ground'],
       speedRole: BP,
     },
   ),
-  seg('src_gnd_down', ['brine'], loopHalf(GROUND_LINE_Y.ground, 'down'), BOUT, {
+  seg('src_gnd_down', ['brine'], loopHalf(z, z.groundLineY.ground, 'down'), BOUT, {
     source: ['ground'],
     speedRole: BP,
     roundEnd: true,
-    bend: LOOP_BEND,
+    bend: z.loopBend,
   }),
-  seg('src_gnd_up', ['brine'], loopHalf(GROUND_LINE_Y.ground, 'up'), BIN, {
+  seg('src_gnd_up', ['brine'], loopHalf(z, z.groundLineY.ground, 'up'), BIN, {
     source: ['ground'],
     speedRole: BP,
-    bend: LOOP_BEND,
+    bend: z.loopBend,
   }),
   seg(
     'src_gnd_exit',
     ['brine'],
-    line([GROUND_LOOP.upX, GROUND_LINE_Y.ground], [GROUND_LOOP.upX, SRC_IN_Y], [SRC_IN_JOIN_X, SRC_IN_Y]),
+    line([z.groundLoop.upX, z.groundLineY.ground], [z.groundLoop.upX, z.run.inY], [z.joinX.in, z.run.inY]),
     BIN,
     {
       source: ['ground'],
@@ -621,10 +707,10 @@ export const SEGMENTS: readonly Segment[] = [
     'src_hyb_feed',
     ['brine'],
     line(
-      [SRC_OUT_JOIN_X, SRC_OUT_Y],
-      [SRC_FEED_X, SRC_OUT_Y],
-      [SRC_FEED_X, AIR_PORT_Y.top],
-      [COIL_PORT_X, AIR_PORT_Y.top],
+      [z.joinX.out, z.run.outY],
+      [z.run.feedX, z.run.outY],
+      [z.run.feedX, z.airPortY.top],
+      [z.coilPortX, z.airPortY.top],
     ),
     BOUT,
     {
@@ -632,14 +718,14 @@ export const SEGMENTS: readonly Segment[] = [
       speedRole: BP,
     },
   ),
-  seg('src_hyb_coil', ['brine'], coilPath(false), BOUT, { source: ['hybrid'], speedRole: BP, bend: AIR_COIL_BEND }),
+  seg('src_hyb_coil', ['brine'], coilPath(z, false), BOUT, { source: ['hybrid'], speedRole: BP, bend: z.airCoilBend }),
   seg(
     'src_hyb_link',
     ['brine'],
     line(
-      [COIL_PORT_X, AIR_PORT_Y.bottom],
-      [GROUND_LOOP.downX, AIR_PORT_Y.bottom],
-      [GROUND_LOOP.downX, GROUND_LINE_Y.hybrid],
+      [z.coilPortX, z.airPortY.bottom],
+      [z.groundLoop.downX, z.airPortY.bottom],
+      [z.groundLoop.downX, z.groundLineY.hybrid],
     ),
     AIRO,
     {
@@ -647,26 +733,26 @@ export const SEGMENTS: readonly Segment[] = [
       speedRole: BP,
     },
   ),
-  seg('src_hyb_down', ['brine'], loopHalf(GROUND_LINE_Y.hybrid, 'down'), AIRO, {
+  seg('src_hyb_down', ['brine'], loopHalf(z, z.groundLineY.hybrid, 'down'), AIRO, {
     source: ['hybrid'],
     speedRole: BP,
     roundEnd: true,
-    bend: LOOP_BEND,
+    bend: z.loopBend,
   }),
-  seg('src_hyb_up', ['brine'], loopHalf(GROUND_LINE_Y.hybrid, 'up'), BIN, {
+  seg('src_hyb_up', ['brine'], loopHalf(z, z.groundLineY.hybrid, 'up'), BIN, {
     source: ['hybrid'],
     speedRole: BP,
-    bend: LOOP_BEND,
+    bend: z.loopBend,
   }),
   seg(
     'src_hyb_exit',
     ['brine'],
     line(
-      [GROUND_LOOP.upX, GROUND_LINE_Y.hybrid],
-      [GROUND_LOOP.upX, GROUND_LINE_Y.hybrid - 15],
-      [HYB_RETURN_X, GROUND_LINE_Y.hybrid - 15],
-      [HYB_RETURN_X, SRC_IN_Y],
-      [SRC_IN_JOIN_X, SRC_IN_Y],
+      [z.groundLoop.upX, z.groundLineY.hybrid],
+      [z.groundLoop.upX, z.groundLineY.hybrid - 15],
+      [z.run.hybridReturnX, z.groundLineY.hybrid - 15],
+      [z.run.hybridReturnX, z.run.inY],
+      [z.joinX.in, z.run.inY],
     ),
     BIN,
     {
@@ -737,7 +823,7 @@ export const SEGMENTS: readonly Segment[] = [
 export const MAX_CROSSINGS = 15;
 
 /** The crossings inside the cabinet (add-schematic-card D5): this layout needs 14. */
-export const CROSSINGS: readonly Crossing[] = [
+const FULL_CROSSINGS: readonly Crossing[] = [
   { over: 'dhw_sup_a', under: 'p2_in', at: [312, 172] },
   { over: 'dhw_sup_c', under: 'ln3', at: [630, 172] },
   { over: 'dhw_sup_c', under: 'ln4_a', at: [690, 172] },
@@ -760,7 +846,7 @@ export interface CircuitLabel extends Pick<Visibility, 'dhw'> {
   x: number;
   y: number;
 }
-export const CIRCUIT_LABELS: readonly CircuitLabel[] = [
+const FULL_CIRCUIT_LABELS: readonly CircuitLabel[] = [
   { key: 'dg1', x: 291, y: 112 },
   { key: 'outerLoop', x: 660, y: 112 },
   { key: 'dhw', x: 776, y: 112, dhw: 'external' },
@@ -777,7 +863,63 @@ export interface DrawContext {
   detail: Detail;
   /** `false` leaves out the captions inside the drawing (the compact layout, add-compact-layout D2); undefined draws them. */
   captions?: boolean;
+  /**
+   * The arrangement drawn (refine-simplified-layout D1): every consumer reads the coordinates from it. The card sets it
+   * from `arrangementFor`; left out, it is the one `arrangementFor(detail, 'full')` gives.
+   */
+  arrangement?: Arrangement;
 }
+
+/** Which arrangement a card shows. */
+export type ArrangementId = 'full' | 'simplified';
+
+/** The layout the card shows now (card-config `layout`, resolved): compact or full. */
+export type ShownLayout = 'compact' | 'full';
+
+/**
+ * One complete arrangement of the drawing (refine-simplified-layout D1): the viewBox, the cabinet and the zone constants
+ * (`Zones`), the components, segments, crossings and circuit labels, and the value labels' placements with the
+ * compact layout's places. Every consumer reads it from the draw context; none reads a module constant.
+ */
+export interface Arrangement extends Zones {
+  readonly id: ArrangementId;
+  readonly components: readonly Component[];
+  readonly segments: readonly Segment[];
+  readonly crossings: readonly Crossing[];
+  readonly circuitLabels: readonly CircuitLabel[];
+  readonly labels: LabelPlaces;
+}
+
+/** The source and tank pipes and the labels placed from the zones are generated from `zones`, so they follow its constants. */
+function buildArrangement(id: ArrangementId, zones: Zones): Arrangement {
+  return {
+    ...zones,
+    id,
+    components: componentsFor(zones),
+    segments: segmentsFor(zones),
+    crossings: FULL_CROSSINGS,
+    circuitLabels: FULL_CIRCUIT_LABELS,
+    labels: labelPlacesFor(zones, FULL_COMPACT_PLACES),
+  };
+}
+
+const FULL_ARRANGEMENT = buildArrangement('full', FULL_ZONES);
+/** Today the simplified arrangement has the full one's coordinates (refine-simplified-layout group 2); group 3 gives it its own. */
+const SIMPLIFIED_ARRANGEMENT = buildArrangement('simplified', FULL_ZONES);
+
+/**
+ * The arrangement of a detail level in a shown layout: a pure function of the two. `full` draws the full arrangement,
+ * `simplified` the simplified one. The compact layout keeps drawing the full arrangement with the simplified filter
+ * until its places are searched again (refine-simplified-layout D7), so it gets the full arrangement at either level.
+ */
+export function arrangementFor(level: Detail, layout: ShownLayout): Arrangement {
+  if (layout === 'compact') return FULL_ARRANGEMENT;
+  return level === 'full' ? FULL_ARRANGEMENT : SIMPLIFIED_ARRANGEMENT;
+}
+
+/** The arrangement a draw context carries (or, without one, the full layout's arrangement of its detail level). */
+export const arrangementOf = (context: Pick<DrawContext, 'arrangement' | 'detail'>): Arrangement =>
+  context.arrangement ?? arrangementFor(context.detail, 'full');
 
 export type PartState = 'normal' | 'muted' | 'hidden';
 
@@ -825,8 +967,10 @@ function drawn<T extends Visibility>(parts: readonly T[], context: DrawContext):
   });
 }
 
-export const drawnComponents = (context: DrawContext): Drawn<Component>[] => drawn(COMPONENTS, context);
-export const drawnSegments = (context: DrawContext): Drawn<Segment>[] => drawn(SEGMENTS, context);
+export const drawnComponents = (context: DrawContext): Drawn<Component>[] =>
+  drawn(arrangementOf(context).components, context);
+export const drawnSegments = (context: DrawContext): Drawn<Segment>[] =>
+  drawn(arrangementOf(context).segments, context);
 
 /** A segment is active when any of its circuits is and, if it has one, its valve position holds. */
 export const isSegmentActive = (segment: Pick<Segment, 'circuit' | 'onlyWhen'>, circuits: Circuits): boolean =>
@@ -1157,16 +1301,20 @@ const onPiece = (point: Point, a: Point, b: Point): boolean =>
   (a[1] === b[1] && point[1] === a[1] && between(point[0], a[0], b[0]));
 
 /** Whether a point lies on the outline of the integrated tank (where its drain valve and probe connect). */
-export const onInternalTank = ([x, y]: Point): boolean => {
-  const { x: x0, y: y0, width, height } = INTERNAL_TANK;
+export const onInternalTank = ([x, y]: Point, { internalTank }: Pick<Zones, 'internalTank'>): boolean => {
+  const { x: x0, y: y0, width, height } = internalTank;
   const inX = x >= x0 && x <= x0 + width;
   const inY = y >= y0 && y <= y0 + height;
   return (inY && (x === x0 || x === x0 + width)) || (inX && (y === y0 || y === y0 + height));
 };
 
 /** The crossing points that are drawn as a gap in this segment, given the segments that are drawn. */
-export function gapsIn(segmentId: string, drawnIds: ReadonlySet<string>): Point[] {
-  return CROSSINGS.filter(
-    (crossing) => crossing.under === segmentId && drawnIds.has(crossing.over) && drawnIds.has(crossing.under),
-  ).map((crossing) => crossing.at);
+export function gapsIn(
+  arrangement: Pick<Arrangement, 'crossings'>,
+  segmentId: string,
+  drawnIds: ReadonlySet<string>,
+): Point[] {
+  return arrangement.crossings
+    .filter((crossing) => crossing.under === segmentId && drawnIds.has(crossing.over) && drawnIds.has(crossing.under))
+    .map((crossing) => crossing.at);
 }

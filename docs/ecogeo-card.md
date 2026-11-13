@@ -290,6 +290,25 @@ the compressor discharge and 29 on the suction line, as in the figure.
 - Model C draws no connections 5/6. The DHW lines of valve 26 run into the integrated tank (items 47 to 54), drawn
   under the top edge (see Source and DHW).
 
+### The arrangement
+
+All coordinates of the drawing live in one value, an `Arrangement` (`src/diagram/geometry.ts`). It holds the viewBox,
+the cabinet's outline, the zone constants (the air unit, the ground loop, the external tank, the integrated tank 50
+with coil 51, and the pipe run above the cabinet), every component and pipe segment, the crossings, the circuit labels
+and the value labels' placements with the compact layout's places. The source and tank pipes (the air coil, the
+ground loop's U, the run above the cabinet, the coil pipes of ports 5 and 6) and the labels placed from the zones
+are generated from the arrangement's own zone constants, so they stay connected to their ports when a zone moves.
+
+The card picks the arrangement with `arrangementFor(level, layout)`, a pure function of two inputs: the detail level
+(`simplified` or `full`) and the layout the card shows now (`full` or `compact`). Every consumer (the cabinet, the
+source, the DHW tank, the pipes, the labels and the card's viewBox) reads the arrangement from the draw context the card
+builds, never from a module constant, so one drawing cannot mix two arrangements. Today both levels return the same
+coordinates; the `simplified` arrangement is a separate value so that it can later differ. The compact layout draws
+the full arrangement at either level, with the simplified filter of parts, until its label places are searched
+again for the simplified arrangement. A draw context without an arrangement gets the one `arrangementFor` returns for
+its detail level in the full layout. The label text size relies on the viewBox being 1000 units wide (one unit is a
+tenth of a container-width percent), so every arrangement keeps that width.
+
 ### How the B4 figure is laid out
 
 - **Top edge:** ports 1 and 2 are left, 3 and 4 right of centre, 5 and 6 far right. The DG1 stubs of ports 1/2 end

@@ -57,6 +57,10 @@ export const CAPTURES: readonly CaptureStep[] = [
   // full detail: every part of the manual figure with its item number
   step('detail-full-heating', 'scenario=heating&detail=full'),
   step('detail-full-modelC', 'scenario=dhw&model=C&dhw=internal&detail=full'),
+  step('detail-full-air', 'scenario=heating&source=air&detail=full'),
+  step('detail-full-hybrid', 'scenario=heating&source=hybrid&detail=full'),
+  step('detail-full-dhw-none', 'scenario=heating&dhw=none&detail=full'),
+  step('detail-full-variant-1', 'scenario=heating&variant=1&detail=full'),
   // dark theme
   step('theme-dark-heating', 'scenario=heating&theme=dark'),
   step('theme-dark-dhw', 'scenario=dhw&theme=dark'),

@@ -6,7 +6,7 @@ import type { DhwStorage, Source } from '../../src/config/options';
 import { ROLE_BY_PATH, ROLE_PATHS, type RolePath } from '../../src/config/roles';
 import { mergeFeatures, type FeatureKey, type FeatureState } from '../../src/config/variants';
 import { DEFAULT_STOPS, MUTED_COLOR, temperatureColor } from '../../src/diagram/colors';
-import { COMPONENTS, SEGMENTS, drawnComponents, drawnSegments } from '../../src/diagram/geometry';
+import { drawnComponents, drawnSegments, arrangementFor } from '../../src/diagram/geometry';
 import {
   FLOW_SECONDS_MAX,
   FLOW_SECONDS_MIN,
@@ -23,6 +23,11 @@ import {
 } from '../../src/diagram/pipes';
 import { cabinetStyles } from '../../src/diagram/cabinet';
 import { readings } from '../helpers';
+
+// the default config draws the simplified level
+const full = arrangementFor('simplified', 'full');
+const COMPONENTS = full.components;
+const SEGMENTS = full.segments;
 
 interface Options {
   mode: Mode;

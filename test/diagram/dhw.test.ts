@@ -5,12 +5,20 @@ import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
 import { COIL_51_SHAPE } from '../../src/diagram/symbols';
 import { helixHalves } from '../../src/diagram/geometry';
-import { CABINET, COMPONENTS, EXTERNAL_TANK, INTERNAL_TANK, SEGMENTS, helixExtent } from '../../src/diagram/geometry';
-import { LABEL_SPECS } from '../../src/diagram/labels';
+import { helixExtent, arrangementFor } from '../../src/diagram/geometry';
 import { cabinetStyles } from '../../src/diagram/cabinet';
 import { COIL_MUTED_LIGHT, MUTED_COLOR, coilMutedColor } from '../../src/diagram/colors';
 import { DHW_LABELS } from '../../src/strings';
 import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
+
+// the default config draws the simplified level
+const full = arrangementFor('simplified', 'full');
+const CABINET = full.cabinet;
+const COMPONENTS = full.components;
+const EXTERNAL_TANK = full.externalTank;
+const INTERNAL_TANK = full.internalTank;
+const SEGMENTS = full.segments;
+const LABEL_SPECS = full.labels.specs;
 
 async function mount(config: CardConfig = {}, hass?: HassLike): Promise<EcogeoCard> {
   const card = document.createElement('ecogeo-card') as EcogeoCard;

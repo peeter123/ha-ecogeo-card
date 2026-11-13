@@ -13,7 +13,7 @@ import { SAMPLE_STATES } from '../config/sample';
 import { cabinetStyles, renderCabinet } from '../diagram/cabinet';
 import type { Taps } from '../diagram/component-info';
 import { dhwStyles, renderDhw } from '../diagram/dhw';
-import { viewBox, type DrawContext } from '../diagram/geometry';
+import { arrangementFor, type DrawContext } from '../diagram/geometry';
 import { footerItems, labelsFor, labelStyles, renderFooterItems, renderLabels } from '../diagram/labels';
 import { coilMutedColor, MUTED_COLOR } from '../diagram/colors';
 import { EDITOR_TAG } from '../editor/ecogeo-card-editor';
@@ -29,10 +29,6 @@ import { stubConfig } from '../suggest/stub';
 import { INDICATIONS, MODE_LABELS, SCHEMATIC_LABEL } from '../strings';
 
 export const CARD_TAG = 'ecogeo-card';
-
-/** The drawing's coordinate system (add-schematic-card D5). */
-export const VIEWBOX_WIDTH = viewBox.width;
-export const VIEWBOX_HEIGHT = viewBox.height;
 
 /** Home Assistant's grid options for a card (add-schematic-card D6). */
 export interface GridOptions {
@@ -191,9 +187,12 @@ export class EcogeoCard extends LitElement {
     if (config === undefined) return html`<ha-card data-layout=${layout}><div class="diagram"></div></ha-card>`;
     // The compact layout draws the simplified detail level whatever `detail` says; the resolved config keeps the user's (D3).
     // It also leaves out the captions inside the drawing, which would render at about 4 px.
-    const resolved: ResolvedConfig & Pick<DrawContext, 'captions'> = compact
-      ? { ...config, detail: 'simplified', captions: false }
-      : config;
+    const detail = compact ? 'simplified' : config.detail;
+    const arrangement = arrangementFor(detail, layout);
+    const { viewBox } = arrangement;
+    const resolved: ResolvedConfig & Pick<DrawContext, 'captions' | 'arrangement'> = compact
+      ? { ...config, detail, captions: false, arrangement }
+      : { ...config, arrangement };
     const { readings, offline } = this.readings(resolved);
     const mode = deriveMode(readings, resolved.features, resolved.states);
     const circuits = circuitsFor(
@@ -217,7 +216,7 @@ export class EcogeoCard extends LitElement {
     return html`<ha-card data-layout=${layout}>
       <div class="diagram">
         <svg
-          viewBox="0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}"
+          viewBox="0 0 ${viewBox.width} ${viewBox.height}"
           preserveAspectRatio="xMidYMid meet"
           role="group"
           aria-label=${SCHEMATIC_LABEL}
@@ -225,7 +224,7 @@ export class EcogeoCard extends LitElement {
         >
           ${svg`${renderSource(resolved, moving, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix }, stroke.pipe)}`}
         </svg>
-        ${renderLabels(labelsFor(resolved, readings, resolved.entities, display, compact, resolved.notPresent), onTap)}
+        ${renderLabels(labelsFor(resolved, readings, resolved.entities, display, compact, resolved.notPresent), onTap, viewBox)}
       </div>
       <div class="footer">
         <span class="mode">${MODE_LABELS[mode]}</span>

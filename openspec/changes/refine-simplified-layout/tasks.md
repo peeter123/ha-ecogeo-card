@@ -21,15 +21,15 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 
 ## 2. The arrangement as a value (no visible change)
 
-- [ ] 2.1 Add the markup snapshot test before any refactor (design D8): render every configuration of
+- [x] 2.1 Add the markup snapshot test before any refactor (design D8): render every configuration of
   `dev/captures.ts` with sample states in happy-dom and snapshot the SVG markup and the label positions.
   Verify: `npm test` records and passes the snapshot on the unchanged code.
-- [ ] 2.2 Introduce `Arrangement` and `arrangementFor(level, layout)` in `src/diagram/geometry.ts` (design D1) and move
+- [x] 2.2 Introduce `Arrangement` and `arrangementFor(level, layout)` in `src/diagram/geometry.ts` (design D1) and move
   every consumer (`cabinet.ts`, `source.ts`, `dhw.ts`, `pipes.ts`, `labels.ts`, `component-info.ts`, the card's viewBox,
   `dev/` and `scripts/`) to read it from the draw context; both levels return today's coordinates.
   Verify: the snapshot of 2.1 passes unchanged, `npm run check` is green, and no module outside `geometry.ts` imports
   a coordinate constant directly (a grep in the review).
-- [ ] 2.3 Update the geometry section of `docs/ecogeo-card.md` to describe the arrangement value and how a level picks
+- [x] 2.3 Update the geometry section of `docs/ecogeo-card.md` to describe the arrangement value and how a level picks
   it.
   Verify: the section names `arrangementFor` and its inputs; `test/docs.test.ts` passes.
 

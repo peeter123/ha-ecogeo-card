@@ -54,6 +54,16 @@ stops a consumer from mixing the two arrangements.
 The refactor lands first with both levels returning today's coordinates, guarded by a markup snapshot test (D8), so
 it is provably a no-op before any coordinate changes.
 
+Settled in group 2: the zones are a `ZoneBase` of primary values from which `deriveZones` computes the dependent
+ones; components and segments are factories of the zones. The label placements live in `src/diagram/label-places.ts`
+(imported by `geometry.ts`, which avoids a cycle with `labels.ts`), and the arrangement carries their result as
+`labels`. `DrawContext.arrangement` is optional, with `arrangementOf(context)` falling back to
+`arrangementFor(context.detail, 'full')`. Coil 51's local port frame (`COIL_LOCAL_PORTS`) stays a shared constant,
+since symbols keep their size. Every arrangement keeps the viewBox 1000 wide (label text is sized in cqw); only the
+height changes. The run's y values (85, 50) in the paths of ports 5/6 (`dhw_ext_in`, `dhw_ext_out`) are taken from
+the zones' `run`, like the source's run, so the two cannot diverge. `arrangementFor` has direct unit tests (the
+compact rule of D7, purity, the context fallback).
+
 ### D2. The simplified cabinet is the full one under a monotone map
 
 The simplified arrangement's cabinet contents (component anchor points of items 7-17, 22, 25-38, 44, 45, the
@@ -150,6 +160,11 @@ A unit test renders the card (happy-dom) for every capture configuration in `dev
 compares the SVG markup and the label positions with a stored snapshot. Recorded before the refactor of D1, it must
 pass unchanged after it. When the simplified arrangement lands, only the simplified snapshots are updated, on
 purpose; the `detail: full` snapshots must still pass, which is the "full level unchanged" scenario.
+
+Settled in group 2: one snapshot file per capture (`toMatchFileSnapshot`), so `git diff --stat` shows which captures
+changed and that the `detail: full` ones did not. Since only two captures used `detail: full`, the capture list gains
+`detail: full` captures for an air unit, a hybrid source, `dhw: none` and variant 1, recorded on the code before the
+D1 refactor.
 
 ### D9. Panel fit
 

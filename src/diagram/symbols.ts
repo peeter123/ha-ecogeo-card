@@ -4,12 +4,11 @@
 // simplified form. The letters of probes and switches stay upright whatever the rotation.
 import { nothing, svg, type SVGTemplateResult } from 'lit';
 import {
-  COIL_51,
   COIL_LOCAL_PORTS,
   HELIX_BACK_OPACITY,
-  INTERNAL_TANK,
   helixDrawOrder,
   helixHalves,
+  type Arrangement,
   type HelixShape,
   type ComponentKind,
   type Rotation,
@@ -28,6 +27,8 @@ export interface SymbolOptions {
   reversed?: boolean;
   /** An exchanger: the paint of its left and right half (a `url(#gradient)` or a colour), drawn under the plates and ports. */
   fills?: { left: string; right: string };
+  /** Tank 50's size and coil 51's place come from it (required for the tank and the coil). */
+  arrangement?: Arrangement;
 }
 
 /** The opacity of an exchanger's side fill: low enough that the plate lines and ports stay readable (refine-schematic-drawing D4). */
@@ -60,8 +61,8 @@ export const COIL_51_SHAPE: HelixShape = { kind: 'helix', cx: 2, top: -60, botto
  * The two port stubs run back to just inside tank 50's wall (2 units), so the pipes from the ports (which end at the
  * ports, 12 units inside the wall) change tone only at the wall.
  */
-function helixCoil(): SVGTemplateResult {
-  const stub = INTERNAL_TANK.x + 2 - COIL_51.x;
+function helixCoil({ internalTank, coil51 }: Arrangement): SVGTemplateResult {
+  const stub = internalTank.x + 2 - coil51.x;
   const halves = helixHalves(COIL_51_SHAPE);
   // the stubs end on coil 51's ports; the loop drop (shape x = cx - rx becomes y = rx - cx) and the helix ends (shape y)
   const { cx, rx, top, bottom } = COIL_51_SHAPE;
@@ -82,6 +83,10 @@ const arm = (points: string, filled: boolean): SVGTemplateResult =>
 
 function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
   const rotation = options.rotation ?? 0;
+  const arrangement = (): Arrangement => {
+    if (options.arrangement === undefined) throw new Error(`the ${kind} symbol needs the arrangement it is drawn in`);
+    return options.arrangement;
+  };
   switch (kind) {
     case 'pump':
       return svg`<circle r="12" /><path d="M-5 -7 V7 L8 0 Z" fill="currentColor" />`;
@@ -132,10 +137,10 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
       return svg`<rect x="-5" y="-6" width="10" height="6" />`;
     case 'tank':
       // the integrated tank (50): its body takes the DHW temperature colour through --dhw-tank-color
-      return svg`<rect class="tank-body" data-dhw-tank="internal" x=${-INTERNAL_TANK.width / 2} y=${-INTERNAL_TANK.height / 2} width=${INTERNAL_TANK.width} height=${INTERNAL_TANK.height} rx="14" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />`;
+      return svg`<rect class="tank-body" data-dhw-tank="internal" x=${-arrangement().internalTank.width / 2} y=${-arrangement().internalTank.height / 2} width=${arrangement().internalTank.width} height=${arrangement().internalTank.height} rx="14" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />`;
     case 'coil':
       // the coil (51): a helix on its side with both ports at its left end
-      return helixCoil();
+      return helixCoil(arrangement());
   }
 }
 

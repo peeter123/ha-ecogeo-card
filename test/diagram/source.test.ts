@@ -1,12 +1,21 @@
 import { describe, expect, test } from 'vitest';
 import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
-import { AIR_PORT_Y, AIR_UNIT, CABINET, GROUND_CAPTION, GROUND_LINE_Y, GROUND_LOOP } from '../../src/diagram/geometry';
+import { arrangementFor } from '../../src/diagram/geometry';
 import { fanDuration } from '../../src/diagram/source';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
 import { SOURCE_LABELS } from '../../src/strings';
 import { states } from '../helpers';
+
+// the default config draws the simplified level
+const full = arrangementFor('simplified', 'full');
+const AIR_PORT_Y = full.airPortY;
+const AIR_UNIT = full.airUnit;
+const CABINET = full.cabinet;
+const GROUND_CAPTION = full.groundCaption;
+const GROUND_LINE_Y = full.groundLineY;
+const GROUND_LOOP = full.groundLoop;
 
 const P = 'demo_ecogeo';
 

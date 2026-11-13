@@ -6,22 +6,9 @@ import { EcogeoCard } from '../../src/card/ecogeo-card';
 import { SAMPLE_STATES, sampleEntityId } from '../../src/config/sample';
 import { ROLE_BY_PATH, ROLE_PATHS, defaultEntityId, type RolePath } from '../../src/config/roles';
 import { mergeFeatures } from '../../src/config/variants';
-import {
-  AIR_PORT_Y,
-  AIR_UNIT,
-  AIR_UNIT_WALL_X,
-  CABINET,
-  COMPONENTS,
-  GROUND_LINE_X,
-  GROUND_LINE_Y,
-  GROUND_LOOP,
-  INTERNAL_TANK,
-  SEGMENTS,
-  drawnSegments,
-  partState,
-} from '../../src/diagram/geometry';
+import { drawnSegments, partState, arrangementFor } from '../../src/diagram/geometry';
 import { COIL_51_SHAPE } from '../../src/diagram/symbols';
-import { LABEL_SPECS, footerItems, labelsFor, positionOf, type LabelSpec } from '../../src/diagram/labels';
+import { footerItems, labelsFor, positionOf, type LabelSpec } from '../../src/diagram/labels';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
 import {
@@ -34,6 +21,20 @@ import {
   NO_VALUE,
   VALUE_CAPTIONS,
 } from '../../src/strings';
+
+// the default config draws the simplified level
+const full = arrangementFor('simplified', 'full');
+const AIR_PORT_Y = full.airPortY;
+const AIR_UNIT = full.airUnit;
+const AIR_UNIT_WALL_X = full.airUnitWallX;
+const CABINET = full.cabinet;
+const COMPONENTS = full.components;
+const GROUND_LINE_X = full.groundLineX;
+const GROUND_LINE_Y = full.groundLineY;
+const GROUND_LOOP = full.groundLoop;
+const INTERNAL_TANK = full.internalTank;
+const SEGMENTS = full.segments;
+const LABEL_SPECS = full.labels.specs;
 
 const P = 'demo_ecogeo';
 const nb = (text: string): string => text.replaceAll(' ', NBSP);
@@ -905,7 +906,7 @@ describe('DHW tank labels', () => {
 
 describe('label positions', () => {
   test('positions are percentages of the viewBox', () => {
-    expect(positionOf({ x: 500, y: 310 })).toEqual({ left: '50%', top: '50%' });
+    expect(positionOf({ x: 500, y: 310 }, full.viewBox)).toEqual({ left: '50%', top: '50%' });
   });
 
   test('every label has a unique id and lies inside the viewBox', () => {

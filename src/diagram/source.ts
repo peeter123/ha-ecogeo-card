@@ -11,7 +11,7 @@ import { css, nothing, svg, type SVGTemplateResult } from 'lit';
 import type { AnimationReadings } from '../calc/readings';
 import { AIR_UNIT_FAN_NAME, SOURCE_LABELS } from '../strings';
 import { FAN_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
-import { AIR_UNIT, GROUND_CAPTION, GROUND_LINE_X, GROUND_LINE_Y, drawnSegments, type DrawContext } from './geometry';
+import { arrangementOf, drawnSegments, type AirUnitShape, type DrawContext } from './geometry';
 
 export const sourceStyles = css`
   .source-outline {
@@ -111,12 +111,13 @@ const BLADES = [0, 72, 144, 216, 288].map(
 );
 
 function airUnit(
+  unit: AirUnitShape,
   speed: number | boolean | undefined,
   muted: boolean,
   taps: Taps | undefined,
   captions: boolean,
 ): SVGTemplateResult {
-  const { x, y, width, height, fanX, fanY, fanRadius, coil, fins: fin, slats: slat, dividerY } = AIR_UNIT;
+  const { x, y, width, height, fanX, fanY, fanRadius, coil, fins: fin, slats: slat, dividerY } = unit;
   const duration = fanDuration(speed);
   const fins = Array.from({ length: fin.count }, (_, index) => fin.x + index * fin.step);
   const slatYs = Array.from({ length: slat.count }, (_, index) => slat.y0 + index * slat.step);
@@ -137,7 +138,7 @@ function airUnit(
         <g class=${duration === undefined ? 'fan-rotor still' : 'fan-rotor'} style=${duration === undefined ? '' : `--fan-duration: ${String(duration)}s`}>${BLADES}<circle class="fan-hub" r="5" fill="var(--primary-text-color)" /></g>
       </g>
     </g>
-    ${captions ? svg`<text class="source-caption" x=${AIR_UNIT.captionX} y=${AIR_UNIT.captionY} text-anchor="middle">${SOURCE_LABELS.air}</text>` : nothing}
+    ${captions ? svg`<text class="source-caption" x=${unit.captionX} y=${unit.captionY} text-anchor="middle">${SOURCE_LABELS.air}</text>` : nothing}
   </g>`;
 }
 
@@ -156,16 +157,17 @@ function pipesAcross(context: DrawContext, lineY: number): number[] {
 
 /** The ground line with its hatching, at `lineY`, leaving out the places where the source pipes pass. */
 function groundLine(context: DrawContext, kind: 'ground' | 'hybrid', lineY: number, muted: boolean): SVGTemplateResult {
+  const { groundLineX, groundCaption } = arrangementOf(context);
   const skip = pipesAcross(context, lineY);
   const ticks = Array.from(
-    { length: Math.floor((GROUND_LINE_X.end - GROUND_LINE_X.start - 12) / 10) + 1 },
-    (_, index) => GROUND_LINE_X.start + 6 + index * 10,
+    { length: Math.floor((groundLineX.end - groundLineX.start - 12) / 10) + 1 },
+    (_, index) => groundLineX.start + 6 + index * 10,
   ).filter((tick) => !skip.some((pipe) => Math.abs(pipe - tick) < 10));
-  const captionY = GROUND_CAPTION.y[kind];
+  const captionY = groundCaption.y[kind];
   return svg`<g class="ground-loop${muted ? ' muted' : ''}" data-source="ground">
-    <path class="source-ground" d="M${GROUND_LINE_X.start} ${lineY} H${GROUND_LINE_X.end}" />
+    <path class="source-ground" d="M${groundLineX.start} ${lineY} H${groundLineX.end}" />
     ${ticks.map((tick) => svg`<path class="source-ground" d="M${tick} ${lineY} l-6 8" />`)}
-    ${context.captions === false ? nothing : svg`<text class="source-caption" x=${GROUND_CAPTION.x} y=${captionY} text-anchor="middle">${SOURCE_LABELS.ground}</text>`}
+    ${context.captions === false ? nothing : svg`<text class="source-caption" x=${groundCaption.x} y=${captionY} text-anchor="middle">${SOURCE_LABELS.ground}</text>`}
   </g>`;
 }
 
@@ -179,11 +181,12 @@ export function renderSource(
   brineActive: boolean,
   taps?: Taps,
 ): SVGTemplateResult {
+  const { airUnit: unit, groundLineY } = arrangementOf(context);
   const air = context.source === 'air' || context.source === 'hybrid';
   const ground = context.source === 'ground' || context.source === 'hybrid';
   const kind = context.source === 'hybrid' ? 'hybrid' : 'ground';
   return svg`<g class="source" data-source-kind=${context.source}>
-    ${air ? airUnit(readings['source.fan_speed'], !brineActive, taps, context.captions !== false) : svg``}
-    ${ground ? groundLine(context, kind, GROUND_LINE_Y[kind], !brineActive) : svg``}
+    ${air ? airUnit(unit, readings['source.fan_speed'], !brineActive, taps, context.captions !== false) : svg``}
+    ${ground ? groundLine(context, kind, groundLineY[kind], !brineActive) : svg``}
   </g>`;
 }

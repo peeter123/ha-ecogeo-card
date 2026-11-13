@@ -3,8 +3,12 @@
 import { describe, expect, test } from 'vitest';
 import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
-import { COMPONENTS, SEGMENTS } from '../../src/diagram/geometry';
+import { arrangementFor } from '../../src/diagram/geometry';
 import type { CardConfig } from '../../src/lib/config';
+
+const full = arrangementFor('full', 'full');
+const COMPONENTS = full.components;
+const SEGMENTS = full.segments;
 
 const ALL_TRUE = { active_cooling: true, passive_cooling: true, htr: true, backup_heater: true };
 
