@@ -94,13 +94,14 @@ describe('ecogeo-card-editor existing config', () => {
     const config = {
       type: 'custom:ecogeo-card',
       model: 'B',
-      variant: '4',
+      variant: 4,
       source: 'air',
       dhw: 'external',
       prefix: 'demo_ecogeo',
       features: { passive_cooling: 'unused' },
     };
-    const { form } = await openEditor(config);
+    const { editor, form } = await openEditor(config);
+    expect(editor.shadowRoot?.querySelector('.error')).toBeNull();
     expect(form.data).toEqual({
       type: 'custom:ecogeo-card',
       model: 'B',

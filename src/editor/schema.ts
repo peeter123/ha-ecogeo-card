@@ -4,7 +4,7 @@
 // `withoutBlankTexts` (this card has no text lists); `withValueAt` keeps the position of an existing key; sections
 // can nest (the entity pickers sit in one section per role group inside an `entities` section, so the form data has
 // the config's own shape `entities.<group>.<role>`); `withoutEmptyGroups` also prunes emptied nested groups; the
-// imports are this card's.
+// imports are this card's. `hasAdvancedValue` is kept unused: this card's switch follows `entities` (design D5).
 // The editor schema of a card: Home Assistant `ha-form` fields and expandable sections, each field marked basic
 // or advanced. The pure functions here decide what the form shows; the editor element only renders their result.
 import { parseNumericState } from '../lib/availability';
@@ -19,8 +19,9 @@ export interface EditorField {
   /** Hidden while the "Advanced settings" switch is off. */
   advanced?: boolean;
   /**
-   * The value the card uses when the field is not set. An advanced field set to anything else turns the switch
-   * on, so every advanced field that is not an entity picker should declare it.
+   * The value the card uses when the field is not set. Only `hasAdvancedValue` reads it, which is kept unused: this
+   * card's "Advanced settings" switch starts on when the config has an `entities` override (design D5), not when an
+   * advanced field differs from its default.
    */
   default?: unknown;
   /**

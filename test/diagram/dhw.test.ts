@@ -312,14 +312,12 @@ describe('DHW storage', () => {
 
   // model C always has its tank: dhw none is a configuration error there (card-config), so only model B here
   test('none: no tank, no DHW pipes, no ports 5 and 6, no valve 26 and no tank items', async () => {
-    for (const model of ['B'] as const) {
-      const card = await mount({ model, dhw: 'none' });
-      expect(tanks(card)).toEqual([]);
-      expect(root(card).querySelector('.dhw-storage')).toBeNull();
-      for (const item of [5, 6, 26, 47, 48, 49, 50, 51, 52, 53, 54]) expect(items(card)).not.toContain(item);
-      expect(segments(card).filter((id) => /^(dhw_|tap_)/.test(id))).toEqual([]);
-      card.remove();
-    }
+    const card = await mount({ model: 'B', dhw: 'none' });
+    expect(tanks(card)).toEqual([]);
+    expect(root(card).querySelector('.dhw-storage')).toBeNull();
+    for (const item of [5, 6, 26, 47, 48, 49, 50, 51, 52, 53, 54]) expect(items(card)).not.toContain(item);
+    expect(segments(card).filter((id) => /^(dhw_|tap_)/.test(id))).toEqual([]);
+    card.remove();
   });
 
   test('both tank bodies carry the hook for the DHW temperature colour', async () => {

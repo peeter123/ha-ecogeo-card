@@ -70,12 +70,15 @@ its tank.
 
 ## 5. Live editor check
 
-- [ ] 5.1 Live verification: with a browser tool, an agent opens the schematic view's card in Home Assistant's
+- [x] 5.1 Live verification: with a browser tool, an agent opens the schematic view's card in Home Assistant's
   editor, screenshots the visual editor (main sections, then advanced on), and closes it without saving; it then
   confirms through the dashboard config that the view is unchanged. If no browser tool is available, the
   orchestrator asks the user to open the editor and confirm, including model C with `dhw: unused` in the preview.
   Check the HA logs for errors mentioning `ecogeo`.
   Verify: verdict with the editor showing the live config's values, no config change and no log errors.
+  Done 2026-11-13: no browser tool was available; the user opened the editor on `?v=10` and confirmed it. The
+  dashboard config hash is unchanged, and the system_log has no `ecogeo` entries and no new frontend errors (only
+  the two known layout-getter errors from `?v=6`).
 
 ## Workflow follow-up
 

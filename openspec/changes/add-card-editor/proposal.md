@@ -36,9 +36,10 @@ added and tuned from the dashboard UI and, later, published for others.
 ### Modified Capabilities
 
 Added after the live check of group 3 (the user found that on model C, `dhw: none` also removed HTR, while a
-model C always has its tank, which may only be unused): `dhw` gains the value `unused` (the model's tank drawn
-muted, no tank values, HTR following its own feature, no DHW circuit active), and `dhw: none` becomes a
-configuration error on model C.
+model C always has its tank, which may only be unused [manual-figure: C figure, tank 50 and coil 51]): `dhw` gains
+the value `unused` (the model's tank drawn muted, no tank values, HTR following its own feature, no DHW circuit and
+no HTR recovery active [derived: circuitsFor from the mode, `htr`, `dhw` and `heating.capacity`]), and
+`dhw: none` becomes a configuration error on model C.
 
 - `card-config`: `dhw` accepts `unused`; `none` is rejected on model C.
 - `dhw-storage`: the unused tank.

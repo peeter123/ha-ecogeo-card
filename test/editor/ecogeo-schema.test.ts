@@ -39,7 +39,7 @@ const optionLabels = (item: EditorField | undefined): string[] => {
 };
 
 describe('editorSchema', () => {
-  test('the sections are Unit, Entities, Features and Appearance, in that order', () => {
+  test('the sections are Unit, Entity prefix, Features, Appearance and the advanced Entities, in that order', () => {
     const sections = editorSchema({}).map((item) => (isSection(item) ? item.name : undefined));
     expect(sections).toEqual(['unit', 'entity_prefix', 'features', 'appearance', 'entities']);
     for (const name of sections) expect(EDITOR.sections).toHaveProperty(name ?? '');

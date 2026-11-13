@@ -26,9 +26,9 @@ hrv-ventilation (local path in `private/installation.md`) has a visual editor in
 | This card | Copied from (hrv-ventilation) | Deviation |
 |---|---|---|
 | `src/editor/ecogeo-card-editor.ts` | `src/editor/hrv-card-editor.ts` | tag name, strings, shows the card's config error above the form |
-| `src/editor/schema.ts` | `src/editor/schema.ts` | unchanged apart from types, plus the colour-row helpers (D4) |
-| `src/editor/fields.ts` | `src/editor/fields.ts` | only the builders this card needs: choice, entity, color, number |
-| `test/editor/*` | `test/editor/hrv-card-editor.test.ts`, `schema.test.ts`, `fixtures.ts` | this card's schema |
+| `src/editor/schema.ts` | `src/editor/schema.ts` | unchanged apart from types (`hasAdvancedValue` kept unused; the switch follows `entities`, D5) |
+| `src/editor/fields.ts` | `src/editor/fields.ts` | only the builders this card needs: choice, entity, color (plus `numberField`, kept unused) |
+| `test/editor/*` | `test/editor/hrv-card-editor.test.ts`, `schema.test.ts`, `fixtures.ts`, `no-form.test.ts` | this card's schema |
 Each file starts with a header naming its source and deviations. No import or path reference to hrv.
 
 ### D2. Schema generated from the tables
@@ -70,7 +70,7 @@ The round-trip test opens each emulator scenario's config and a config with ever
 `ha-form` has no list-of-objects selector, so the schema is built from the current config: rows
 `colors_<i>_temperature` (number selector, °C) and `colors_<i>_color` (color selector, hex), one per stop plus one
 empty row. On change, rows are folded back into `colors` (sorted, empty rows dropped); equal to `DEFAULT_STOPS`
--> key removed. Validation reuses `src/config/options.ts`; its error message is shown in the editor's hint area.
+-> key removed. Validation reuses `src/config/options.ts`; its error message is shown above the form.
 - The row logic lives in `src/editor/color-rows.ts` (not `schema.ts`, which stays generic). The colour selector is
   HA's `color_rgb`; `fields.ts` converts `[r, g, b]` to and from hex.
 - With no `colors`, the rows show `DEFAULT_STOPS`. A row with a temperature but no colour yet is written with a

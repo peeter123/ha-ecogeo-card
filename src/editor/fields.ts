@@ -3,7 +3,7 @@
 // takes the choices and the default from this card's option table (src/config/options.ts), with an optional default
 // of its own (the DHW storage's default depends on the model); `entityField` takes the role's domain.
 // `colorField` is Home Assistant's `color_rgb` selector (hrv has a text selector); it reports [r, g, b], so
-// `hexToRgb` and `rgbToHex` convert to and from the hex text the config holds.
+// `hexToRgb` and `rgbToHex` convert to and from the hex text the config holds. `numberField` is kept unused.
 // Editor fields built from the option table and the role table.
 import type { ChoiceOption, NumberOption } from '../lib/options';
 import type { EditorField } from './schema';
