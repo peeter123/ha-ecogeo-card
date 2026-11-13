@@ -84,17 +84,29 @@ the COP, and the alarm and offline indications when they apply.
 ### Requirement: The card's own units
 The card SHALL format every number itself, not through Home Assistant's state formatting. Every value SHALL be
 shown with the card's own unit for its role, joined by a no-break space: rpm, %, W, bar, °C for temperatures, and
-K for temperature differences (superheat, start delta-T). The COP has no unit.
+K for temperature differences (superheat, start delta-T). The COP has no unit. A value whose entity reports a unit
+the card cannot convert to the role's unit SHALL instead be shown as the entity's number with the entity's own unit,
+joined by a no-break space.
 
 #### Scenario: Percent keeps its space
 - **WHEN** Home Assistant's language is English and pump 16 runs at 100 %
 - **THEN** the label reads "100.0 %" with a no-break space, not "100%"
 
+#### Scenario: Compressor speed in Hz
+- **WHEN** the compressor speed entity reports 45 with the unit Hz
+- **THEN** the label near item 11 reads "45 Hz", not "45 rpm"
+
+#### Scenario: Pump speed in rpm
+- **WHEN** the pump 15 entity reports 2400 with the unit rpm
+- **THEN** the label at pump 15 reads "2400 rpm", not "2400 %"
+
 ### Requirement: Locale and precision
 Numbers SHALL use Home Assistant's locale and number format setting. The decimals SHALL come from the entity's
 display precision when Home Assistant has one and the entity's unit is the card's unit for the role, and from the
 card's default for the role otherwise (a converted value, such as kW shown in W, uses the role default). A
-temperature difference reported in °C counts as the card's unit K, since the number is unchanged.
+temperature difference reported in °C counts as the card's unit K, since the number is unchanged. A value shown with
+the entity's own unit (see "The card's own units") SHALL take its decimals from the entity's display precision, or
+else keep the decimals of its state.
 
 #### Scenario: Locale
 - **WHEN** Home Assistant's number format uses a decimal comma
@@ -104,9 +116,14 @@ temperature difference reported in °C counts as the card's unit K, since the nu
 - **WHEN** the production outlet entity has a display precision of 0 and reads 25.2 °C
 - **THEN** the label reads "25 °C"
 
+#### Scenario: Passed-through decimals
+- **WHEN** the compressor speed entity reports 45.6 Hz without a display precision
+- **THEN** the label reads "45.6 Hz"
+
 ### Requirement: Unit conversion
-Units SHALL be converted where needed: °F to °C, and kW to W. A temperature difference reported in °F SHALL be
-converted back with the same absolute formula, because Home Assistant converted it as an absolute temperature.
+Units SHALL be converted where needed: °F to °C, kW to W, and kPa, MPa, Pa, mbar and psi to bar. A temperature
+difference reported in °F SHALL be converted back with the same absolute formula, because Home Assistant converted
+it as an absolute temperature.
 
 #### Scenario: Fahrenheit sensor
 - **WHEN** a probe reports 77 °F
@@ -115,6 +132,10 @@ converted back with the same absolute formula, because Home Assistant converted 
 #### Scenario: Fahrenheit superheat
 - **WHEN** the superheat entity reports 43.2 °F
 - **THEN** the label reads "6.2 K"
+
+#### Scenario: Pressure in kPa
+- **WHEN** the production pressure entity reports 150 kPa, in the full layout
+- **THEN** the label at item 38 reads "1.5 bar"
 
 ### Requirement: Missing and sentinel values
 An `unavailable` or `unknown` state, a non-numeric state, or the firmware sentinel -999.9 (any value at or below
@@ -140,3 +161,36 @@ language, the registry entries of its entities, or the configuration changes.
 #### Scenario: Unrelated entity
 - **WHEN** a light elsewhere in Home Assistant changes state
 - **THEN** the card does not re-render
+
+### Requirement: On/off states from any domain
+A binary role SHALL read `on`, `true`, `yes` and `1` as on and `off`, `false`, `no` and `0` as off, case-insensitive
+and from any domain. Any other state SHALL count as no value. The compressor speed and pump roles SHALL accept such
+an on/off entity too: its label SHALL read "On" or "Off" instead of a number.
+
+#### Scenario: Demand as a number
+- **WHEN** the DHW demand role is bound to a sensor that reads `1`
+- **THEN** the DHW demand counts as on
+
+#### Scenario: Summer from a switch
+- **WHEN** the summer role is bound to `switch.summer_mode`, which reads `on`
+- **THEN** summer counts as on
+
+#### Scenario: Pump as on/off
+- **WHEN** the pump 15 role is bound to a binary sensor that reads `on`, in the full layout
+- **THEN** the label at pump 15 reads "On"
+
+### Requirement: Roles not present are hidden
+A role set to `none` (card-config) SHALL show nothing: no label, no dash and no footer item. Its component SHALL
+still be drawn. A role bound to an entity Home Assistant does not know SHALL still show a muted dash.
+
+#### Scenario: No pressure sensors
+- **WHEN** the config sets both pressure roles of the production and brine groups to `none`, in the full layout
+- **THEN** no label is shown at items 37 and 38, and both pressure probes are still drawn
+
+#### Scenario: No COP
+- **WHEN** the config sets `entities: { unit: { cop: none } }`
+- **THEN** the footer shows no COP item
+
+#### Scenario: Unknown entity keeps its dash
+- **WHEN** the production outlet role is bound to an entity Home Assistant does not know
+- **THEN** the label at probe 33 shows a muted dash

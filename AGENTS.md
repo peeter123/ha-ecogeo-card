@@ -26,7 +26,10 @@ archived in `openspec/changes/archive/2026-11-11-refine-schematic-drawing/`. The
 `layout` option, compact content for phones, minimum line and font sizes, browser tests), is archived in
 `openspec/changes/archive/2026-11-12-add-compact-layout/`. The fourth, `add-card-editor` (the visual editor with
 advanced entity pickers and colour stop rows, and `dhw: unused` with no `none` on model C), is archived in
-`openspec/changes/archive/2026-11-13-add-card-editor/`.
+`openspec/changes/archive/2026-11-13-add-card-editor/`. The fifth, `add-entity-discovery` (the `states` option,
+on/off entities and pass-through units from any source, `none` roles, the emulator's foreign naming, and the
+editor's entity suggestions from a device, binding check and filled stub config), is archived in
+`openspec/changes/archive/2026-11-13-add-entity-discovery/`.
 
 ## Rules in short
 

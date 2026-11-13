@@ -18,16 +18,24 @@ order:
 6. `passive_cooling`
 7. `standby`
 
-The compressor counts as running when its speed is above 0 rpm. The production and brine pumps count as running
-when their speed is above 0 %.
+The compressor counts as running when its speed is above 0, or its speed entity reads on (see "Compressor running
+from what exists"). The production and brine pumps count as running when their speed is above 0, or their entity
+reads on.
 
 #### Scenario: Off wins
 - **WHEN** the on/off state reads `OFF` while the compressor still reports 1500 rpm
 - **THEN** the mode is `off`
 
+#### Scenario: Pump on/off
+- **WHEN** the compressor is stopped, summer is on, the production pump entity is a binary sensor that reads `on` and
+  passive cooling is `true`
+- **THEN** the mode is `passive_cooling`
+
 ### Requirement: Off mode
-The mode SHALL be `off` when the heat pump's on/off state reads `OFF` (case-insensitive), whatever the other
-values are. Any other on/off state, including `EMERGENCY`, SHALL NOT make the mode `off`.
+The mode SHALL be `off` when the heat pump's on/off state matches one of the `states.off` values (card-config;
+default `OFF`, case-insensitive), whatever the other values are. When the on/off role is bound to an on/off entity
+(live-values), the mode SHALL be `off` when that entity reads off. Any other on/off state, including `EMERGENCY`,
+SHALL NOT make the mode `off`.
 
 #### Scenario: Off
 - **WHEN** the heat pump's on/off state reads `OFF`
@@ -37,10 +45,19 @@ values are. Any other on/off state, including `EMERGENCY`, SHALL NOT make the mo
 - **WHEN** the on/off state reads `EMERGENCY` and the compressor runs with DG1 demand in winter
 - **THEN** the mode is `heating`
 
+#### Scenario: Off from a switch
+- **WHEN** the on/off role is bound to `switch.heat_pump`, which reads `off`
+- **THEN** the mode is `off`
+
+#### Scenario: On from a switch
+- **WHEN** the on/off role is bound to `switch.heat_pump`, which reads `on`, and the compressor runs in winter
+- **THEN** the mode is `heating`
+
 ### Requirement: Defrost mode
-The mode SHALL be `defrost` when the compressor operation mode reads `Defrost` (case-insensitive), whatever the
-compressor speed and demands are. Every other value (`None`, `Time-Out`, `Balance`, `Cycle Inversion`, unknown)
-SHALL NOT make the mode `defrost`.
+The mode SHALL be `defrost` when the compressor operation mode matches one of the `states.defrost` values
+(card-config; default `Defrost`, case-insensitive), whatever the compressor speed and demands are. When the
+compressor mode role is bound to an on/off entity (live-values), the mode SHALL be `defrost` when that entity reads
+on. Every other value (`None`, `Time-Out`, `Balance`, `Cycle Inversion`, unknown) SHALL NOT make the mode `defrost`.
 
 #### Scenario: Defrost
 - **WHEN** the compressor operation mode reads `Defrost`, the compressor is at 0 rpm and DG1 demand is on
@@ -49,6 +66,14 @@ SHALL NOT make the mode `defrost`.
 #### Scenario: Balance is not defrost
 - **WHEN** the compressor operation mode reads `Balance` and the compressor runs at 2803 rpm in winter
 - **THEN** the mode is `heating`
+
+#### Scenario: Own defrost value
+- **WHEN** the config sets `states: { defrost: [Abtauen] }` and the compressor operation mode reads `abtauen`
+- **THEN** the mode is `defrost`
+
+#### Scenario: Defrost from a binary sensor
+- **WHEN** the compressor mode role is bound to a binary sensor that reads `on`
+- **THEN** the mode is `defrost`
 
 ### Requirement: Modes while the compressor runs
 While the compressor runs, the mode SHALL be `dhw` when DHW demand is on, otherwise `active_cooling` when summer is
@@ -79,11 +104,12 @@ and passive cooling is `true`, otherwise `standby`.
 - **THEN** the mode is `standby`
 
 ### Requirement: Missing inputs fall back safely
-An unavailable or unknown input SHALL count as not running or not active. If the compressor speed is unknown,
-the mode SHALL be `standby` unless it is `off` or `defrost`.
+An unavailable or unknown input, and a role set to `none`, SHALL count as not running or not active. If whether
+the compressor runs is unknown (none of its running inputs has a value), the mode SHALL be `standby` unless it is
+`off` or `defrost`.
 
 #### Scenario: Compressor speed unavailable
-- **WHEN** the compressor rpm is `unavailable` and DHW demand is on
+- **WHEN** the compressor rpm, percentage and power are `unavailable` and DHW demand is on
 - **THEN** the mode is `standby`
 
 #### Scenario: Every input unavailable
@@ -91,10 +117,10 @@ the mode SHALL be `standby` unless it is `off` or `defrost`.
 - **THEN** the mode is `standby`
 
 ### Requirement: Offline indication
-The card SHALL show an offline indication when the bridge connection entity (`unit.connection`) reads `off`,
-`unavailable` or `unknown`. The connection SHALL NOT change the mode. Without a connection entity, the card
-SHALL show no offline indication. A configured connection entity that Home Assistant does not know counts as no
-connection entity.
+The card SHALL show an offline indication when the bridge connection entity (`unit.connection`) reads off (any off
+value of an on/off state, live-values: `off`, `false`, `no`, `0`), `unavailable` or `unknown`. The connection SHALL
+NOT change the mode. Without a connection entity, the card SHALL show no offline indication. A configured
+connection entity that Home Assistant does not know counts as no connection entity.
 
 #### Scenario: Bridge offline
 - **WHEN** the connection entity reads `off` and every other heat pump entity is `unavailable`
@@ -103,6 +129,10 @@ connection entity.
 #### Scenario: Bridge online
 - **WHEN** the connection entity reads `on`
 - **THEN** the card shows no offline indication
+
+#### Scenario: Offline from false
+- **WHEN** the connection entity is a sensor that reads `false`
+- **THEN** the card shows the offline indication
 
 ### Requirement: Alarm overlay
 When the alarm is on, the card SHALL show an alarm indication in addition to the derived mode. The alarm SHALL
@@ -155,12 +185,17 @@ when that part is drawn (`true` or `unused`). The exchanger 10 circuit does not 
 - **THEN** no circuit to ports 5/6 and no DHW coil is active
 
 ### Requirement: Circuits limited by pumps and feature states
-The brine circuit SHALL be active only while the brine pump runs. A circuit whose part is `false` SHALL never be
-active. A circuit whose part is `unused` SHALL never be active, except exchanger 10 in `defrost`.
+The brine circuit SHALL be active only while the brine pump runs. When the brine pump role is `none` (card-config),
+the brine circuit SHALL follow the mode alone. A circuit whose part is `false` SHALL never be active. A circuit whose
+part is `unused` SHALL never be active, except exchanger 10 in `defrost`.
 
 #### Scenario: Brine pump stopped
 - **WHEN** the mode is `active_cooling` and the brine pump is at 0 %
 - **THEN** the brine circuit is muted, and the refrigerant and production circuits are active
+
+#### Scenario: Brine pump not present
+- **WHEN** the brine pump role is `none` and the mode is `heating`
+- **THEN** the brine circuit is active
 
 #### Scenario: Defrost with passive cooling unused
 - **WHEN** the mode is `defrost`, the brine pump runs and passive cooling is `unused`
@@ -192,3 +227,24 @@ drawn idle.
 #### Scenario: HTR idle with an unused tank
 - **WHEN** the mode is `active_cooling`, HTR is `true`, `dhw` is `unused` and the condensation capacity is 1200 W
 - **THEN** exchanger 9 and pump 17 are drawn without flow, and the DHW coil is muted
+
+### Requirement: Compressor running from what exists
+Whether the compressor runs SHALL come from the first of these roles that has a value: the speed (above 0, or on),
+the percentage (above 0), the power (above 100 W). A role with no value (unavailable, unknown, unknown to Home
+Assistant, or `none`) SHALL be skipped.
+
+#### Scenario: No speed entity
+- **WHEN** the speed role is `none`, the percentage reads 38.9 %, DHW demand is off and winter is on
+- **THEN** the mode is `heating`
+
+#### Scenario: Power only
+- **WHEN** the speed and percentage roles are `none`, the power reads 786 W and DHW demand is on
+- **THEN** the mode is `dhw`
+
+#### Scenario: Standby power
+- **WHEN** the speed and percentage roles are `none`, the power reads 15 W and DHW demand is on
+- **THEN** the mode is `standby`
+
+#### Scenario: Speed wins
+- **WHEN** the speed reads 0 rpm and the power reads 300 W
+- **THEN** the compressor counts as stopped
