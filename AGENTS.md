@@ -24,7 +24,9 @@ its capabilities are the accepted specs in `openspec/specs/`. Follow-ups are nam
 `refine-schematic-drawing` (detail level, component info, palette, exchanger fills, tank and source drawing), is
 archived in `openspec/changes/archive/2026-11-11-refine-schematic-drawing/`. The third, `add-compact-layout` (the
 `layout` option, compact content for phones, minimum line and font sizes, browser tests), is archived in
-`openspec/changes/archive/2026-11-12-add-compact-layout/`.
+`openspec/changes/archive/2026-11-12-add-compact-layout/`. The fourth, `add-card-editor` (the visual editor with
+advanced entity pickers and colour stop rows, and `dhw: unused` with no `none` on model C), is archived in
+`openspec/changes/archive/2026-11-13-add-card-editor/`.
 
 ## Rules in short
 

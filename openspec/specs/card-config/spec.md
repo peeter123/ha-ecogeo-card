@@ -10,11 +10,11 @@ invalid or empty configuration is handled.
 ### Requirement: Card type and options
 The card SHALL register as `custom:ecogeo-card` and accept the options `model` (`B` or `C`, default `B`),
 `variant` (1-4, default 4), `source` (`air`, `ground` or `hybrid`, default `ground`), `dhw` (`external`,
-`internal` or `none`), `prefix` (an entity object-id prefix), `features`, `entities`, `colors` (temperature colour
-stops), `detail` (`simplified` or `full`, default `simplified`), `exchanger_fill` (`gradient` or `none`, default
-`gradient`) and `layout` (`auto`, `full` or `compact`, default `auto`). Unknown top-level options SHALL be rejected,
-except the keys Home Assistant itself adds to a card config (`view_layout`, `layout_options`, `grid_options`,
-`visibility`), which SHALL be accepted and ignored.
+`internal`, `unused` or `none`), `prefix` (an entity object-id prefix), `features`, `entities`, `colors`
+(temperature colour stops), `detail` (`simplified` or `full`, default `simplified`), `exchanger_fill` (`gradient`
+or `none`, default `gradient`) and `layout` (`auto`, `full` or `compact`, default `auto`). Unknown top-level options
+SHALL be rejected, except the keys Home Assistant itself adds to a card config (`view_layout`, `layout_options`,
+`grid_options`, `visibility`), which SHALL be accepted and ignored.
 
 #### Scenario: Minimal valid config
 - **WHEN** the config is `type: custom:ecogeo-card` with `prefix: ecoforest_ecogeo`
@@ -39,7 +39,8 @@ except the keys Home Assistant itself adds to a card config (`view_layout`, `lay
 
 ### Requirement: DHW default follows the model
 When `dhw` is not set, it SHALL default to `external` for model B and `internal` for model C. Setting `dhw: internal`
-on model B, or `dhw: external` on model C, SHALL be a configuration error.
+on model B, or `dhw: external` on model C, SHALL be a configuration error. Model C always has its integrated tank,
+so `dhw: none` on model C SHALL be a configuration error; `dhw: unused` SHALL be valid on both models.
 
 #### Scenario: Model C default
 - **WHEN** the config sets `model: C` and no `dhw`
@@ -48,6 +49,14 @@ on model B, or `dhw: external` on model C, SHALL be a configuration error.
 #### Scenario: Mismatch
 - **WHEN** the config sets `model: B` and `dhw: internal`
 - **THEN** the card shows a configuration error that names `dhw`
+
+#### Scenario: No tank on model C
+- **WHEN** the config sets `model: C` and `dhw: none`
+- **THEN** the card shows a configuration error that names `dhw`
+
+#### Scenario: Unused tank on either model
+- **WHEN** the config sets `dhw: unused` with `model: B`, or with `model: C`
+- **THEN** the card raises no configuration error
 
 ### Requirement: Variant presets
 Each variant SHALL set a default state for the cooling parts, following the B1-B4 figures of the service manual:

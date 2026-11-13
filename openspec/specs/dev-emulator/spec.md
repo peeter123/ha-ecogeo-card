@@ -57,7 +57,7 @@ The emulator SHALL let the developer switch:
 - the model (B or C)
 - the variant (1-4)
 - the source (air, ground or hybrid)
-- the DHW storage (external, internal or none)
+- the DHW storage (external, internal, unused or none, as the model allows)
 - each feature (`true`, `false` or `unused`)
 - the detail level (simplified or full)
 - the exchanger fill (gradient or none)
