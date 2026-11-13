@@ -19,8 +19,11 @@ was measured, including the label box and tolerance the result depends on.
 The compact layout SHALL draw no in-drawing captions (such as "DG1", "Outer loop", "Air unit", "Ground loop" or
 "DHW tank"), every value label SHALL stay on the side of the cabinet outline where its component is, and the
 production and brine values SHALL carry short Out and In captions, like the source ports, so each pair can be told
-apart. The DHW tank's value SHALL carry a short "DHW" caption, so it cannot be read as a brine value. No compact
-label SHALL overlap another label, a component or a pipe.
+apart. The DHW tank's value SHALL carry a short "DHW" caption, so it cannot be read as a brine value. The compact
+layout SHALL draw the simplified arrangement. No compact label SHALL overlap another label, a component or the
+drawing's edge, and no compact label SHALL overlap a pipe, except the production and brine values (Out and In) and
+the compressor speed: the cabinet at phone width has no room between its pipes for them, so they may lie on a pipe,
+over their background plate.
 
 #### Scenario: Compact without captions
 - **WHEN** the card shows the compact layout
@@ -30,7 +33,8 @@ label SHALL overlap another label, a component or a pipe.
 #### Scenario: Compact labels clear of pipes
 - **WHEN** the card shows the compact layout at 320, 360, 480 px or just under the threshold, in any emulator
   scenario
-- **THEN** no label overlaps another label, a component or a pipe
+- **THEN** no label overlaps another label, a component or the drawing's edge, and no label other than the
+  production and brine values and the compressor speed overlaps a pipe
 
 ## ADDED Requirements
 

@@ -47,28 +47,41 @@ export interface Placement {
 }
 
 /**
- * Where the compact layout puts the key labels that cannot stay where the full layout has them. Its labels are at least
- * 10 px, which on a card as narrow as 320 px is about 2.5 times larger relative to the drawing than at the compact
- * threshold, so the places beside the probes are too small. Found with a search over the viewBox for the nearest place
- * with no overlap of another key label or a component and on the side of the cabinet outline where the label's component
- * is (dev/overlaps.ts LABEL_SIDES), at 320 px, in every emulator scenario and installation; they hold at every wider width.
- * The search used the widths of the captioned labels (COMPACT_CAPTIONS), the cabinet outline as an obstacle, and preferred
- * places nearer the label's own probe; the production pair does not fit near its probes (33, 34) at 320 px, nor the
- * brine inlet near probe 32 with the widest value (-12.3 in the defrost scenario). The internal tank's value, with its
- * DHW caption on its own line (STACKED_CAPTIONS), sits right of tank 50 under the strip's top. Margin rule (D8): where a clearance
- * moves with the text width, the place keeps about 2 px of it at 320 px in Chromium and WebKit, whose text widths differ
- * by 1-2 px. A key label not listed stays where it is.
+ * The compact labels that may lie on a pipe, over their background plate (refine-simplified-layout D7, settled in group 5):
+ * at 320 px the cabinet's free spots between the pipes hold one label, so the production and brine values and the
+ * compressor speed, which sit inside it, cannot all be clear of pipes. The search (scripts/search-places.mjs) places them with
+ * pipes ignored; every other compact label is placed, and guarded, clear of pipes.
  */
-export const FULL_COMPACT_PLACES: Readonly<Record<string, Placement>> = {
-  production_out: { x: 332, y: 447, align: 'middle' },
-  production_in: { x: 320, y: 367, align: 'middle' },
-  brine_out: { x: 580, y: 255, align: 'start' },
-  brine_in: { x: 730, y: 476, align: 'end' },
-  compressor_speed: { x: 456, y: 307, align: 'start' },
-  air_unit_out: { x: 232, y: 111, align: 'end' },
-  ground_out: { x: 100, y: 155, align: 'middle' },
-  hybrid_ground_out: { x: 100, y: 435, align: 'middle' },
-  tank_internal_temperature: { x: 604, y: 176, align: 'start' },
+export const ON_PIPE_COMPACT: ReadonlySet<string> = new Set([
+  'production_out',
+  'production_in',
+  'brine_out',
+  'brine_in',
+  'compressor_speed',
+]);
+
+/**
+ * Where the compact layout puts the key labels, in the units of the simplified arrangement (the compact layout draws it, D7).
+ * Its labels are at least 10 px, which on a card as narrow as 320 px is about 2.5 times larger relative to the drawing than
+ * at the compact threshold, so the places beside the probes are too small. Found with `npm run search-places`: the nearest
+ * place to the label's own with no overlap of another label, a component or a caption, on the side of the cabinet outline
+ * where the label's component is (dev/overlaps.ts LABEL_SIDES) and inside the drawing, at 320 px, in every emulator scenario,
+ * installation and naming; they hold at every wider width. Every label except those of ON_PIPE_COMPACT is also clear of
+ * pipes. The search uses the widths of the captioned labels (COMPACT_CAPTIONS). Margin rule (D8): where a clearance moves
+ * with the text width, the place keeps about 2 px of it at 320 px in Chromium and WebKit, whose text widths differ by
+ * 1-2 px. A key label not listed stays where it is.
+ */
+export const COMPACT_PLACES: Readonly<Record<string, Placement>> = {
+  production_out: { x: 376, y: 372, align: 'end' },
+  production_in: { x: 320, y: 500, align: 'middle' },
+  brine_out: { x: 604, y: 196, align: 'start' },
+  brine_in: { x: 644, y: 260, align: 'start' },
+  compressor_speed: { x: 444, y: 308, align: 'start' },
+  tank_internal_temperature: { x: 628, y: 488, align: 'start' },
+  tank_external_temperature: { x: 780, y: 24, align: 'start' },
+  air_unit_out: { x: 204, y: 28, align: 'end' },
+  ground_out: { x: 100, y: 264, align: 'middle' },
+  hybrid_ground_out: { x: 100, y: 488, align: 'middle' },
 };
 
 /** Maps a point of the full arrangement's cabinet to the arrangement's own. */

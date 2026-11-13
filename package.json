@@ -20,6 +20,7 @@
     "format:check": "prettier --check .",
     "capture": "node scripts/capture.mjs",
     "measure-layout": "node scripts/measure-layout.mjs",
+    "search-places": "node scripts/search-places.mjs",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
   },
   "dependencies": {

@@ -242,3 +242,31 @@ export function sidePairs({ labels, cabinet }: Measurement): string[] {
     return overlaps(label, cabinet) ? [`label ${label.id} is not outside the cabinet`] : [];
   });
 }
+
+/**
+ * The Out and In values that read as a pair in the compact layout (refine-simplified-layout D7, group 5), production and brine.
+ */
+export const OUT_IN_PAIRS: readonly (readonly [string, string])[] = [
+  ['production_out', 'production_in'],
+  ['brine_out', 'brine_in'],
+];
+
+/**
+ * Whether an Out value and its In value read in order: the Out box lies left of the In box or, where the two overlap
+ * horizontally (a column), above it. The Out probe is left of the In probe in both circuits, so left is the order of their
+ * probes; a column keeps the pair together where there is no room beside it.
+ */
+export function inOrder(out: Box, inn: Box): boolean {
+  if (out.right <= inn.left) return true;
+  return Math.min(out.right, inn.right) - Math.max(out.left, inn.left) > 0 && out.bottom <= inn.top;
+}
+
+/** The Out and In pairs that are not in order (see inOrder), as texts. */
+export function pairOrderPairs({ labels }: Measurement): string[] {
+  return OUT_IN_PAIRS.flatMap(([outId, inId]) => {
+    const out = labels.find((label) => label.id === outId);
+    const inn = labels.find((label) => label.id === inId);
+    if (out === undefined || inn === undefined) return [];
+    return inOrder(out, inn) ? [] : [`${outId} is not left of or above ${inId}`];
+  });
+}

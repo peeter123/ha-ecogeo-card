@@ -2,6 +2,7 @@
 import { describe, expect, test } from 'vitest';
 import { configErrors } from '../src/config/options';
 import { resolveConfig } from '../src/config/resolve';
+import { COMPACT_PLACES, ON_PIPE_COMPACT } from '../src/diagram/label-places';
 import { COMPACT_BELOW, COMPACT_HYSTERESIS } from '../src/lib/layout';
 
 const files = import.meta.glob<string>('../docs/ecogeo-card.md', { query: '?raw', import: 'default', eager: true });
@@ -61,5 +62,23 @@ describe('the compact threshold in the docs', () => {
     expect(text).toContain(`The threshold is ${String(COMPACT_BELOW)} px`);
     expect(text).toContain(`the threshold plus 24 px, ${String(COMPACT_BELOW + COMPACT_HYSTERESIS)} px`);
     expect(COMPACT_HYSTERESIS).toBe(24);
+  });
+});
+
+describe('the compact places in the docs', () => {
+  test('the table lists the places COMPACT_PLACES holds, and the on-pipe labels are named', () => {
+    const rows = [...DOCS.matchAll(/^\| `(\w+)` \| (\d+) \| (\d+) \| (start|middle|end) \|$/gm)].map((row) => ({
+      id: row[1],
+      x: Number(row[2]),
+      y: Number(row[3]),
+      align: row[4],
+    }));
+    const code = Object.entries(COMPACT_PLACES).map(([id, place]) => ({ id, ...place }));
+    expect(rows).toEqual(code);
+    const paragraph = /Five labels may lie on a pipe[\s\S]*?\n\n/.exec(DOCS)?.[0] ?? '';
+    const named = [...paragraph.slice(0, paragraph.indexOf('With the pipes')).matchAll(/`([a-z_]+)`/g)].map(
+      (match) => match[1],
+    );
+    expect(named.sort()).toEqual([...ON_PIPE_COMPACT].sort());
   });
 });

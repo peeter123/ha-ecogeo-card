@@ -305,8 +305,8 @@ The card picks the arrangement with `arrangementFor(level, layout)`, a pure func
 source, the DHW tank, the pipes, the labels and the card's viewBox) reads the arrangement from the draw context the card
 builds, never from a module constant, so one drawing cannot mix two arrangements. `arrangementFor('full', 'full')` is
 the coordinates of the manual figure as laid out here; `arrangementFor('simplified', 'full')` is the simplified
-arrangement below. The compact layout draws the full arrangement at either level, with the simplified filter of
-parts, until its label places are searched again for the simplified arrangement. A draw context without an
+arrangement below. The compact layout draws the simplified arrangement at either level (it always shows the simplified
+detail level), with its own label places (`COMPACT_PLACES`, in that arrangement's units). A draw context without an
 arrangement gets the one `arrangementFor` returns for its detail level in the full layout. The label text size relies
 on the viewBox being 1000 units wide (one unit is a tenth of a container-width percent), so every arrangement keeps
 that width and only the height differs.
@@ -698,17 +698,50 @@ The compact layout also draws no captions inside the drawing (the circuit names 
 unit", "Ground loop" and "DHW tank"): at 360 px they would render at about 4 px. The full layout draws them as before.
 
 The compact labels are at least 10 px and so, on a 320 px card, about 2.5 times larger relative to the drawing than at
-the threshold. The places beside the probes are then too small, so most key labels have a compact place of their own
-(`COMPACT_PLACES` in `labels.ts`): the nearest place, found by a search at 320 px over every emulator scenario and
-installation, where no key label overlaps another or a component and the label stays on the side of the cabinet
-outline where its component is: the production and brine values, the compressor speed and the integrated tank's
-temperature inside it, the source's Out value and the external tank's temperature outside it (`LABEL_SIDES` in
-`dev/overlaps.ts`). The DHW tank's temperature carries a short "DHW" caption in the compact layout, so that it is not read as a brine value; on the integrated tank it stands on its own line above the value, so the label fits beside tank 50 (right of it, under the cabinet's top edge). The four production and brine values carry a short "Out" or "In" caption in the compact layout (the same strings as
-the source ports' captions; here "Out" is the water or brine leaving the heat pump and "In" the one entering it), because their places are no longer beside their probes: at 320 px the production pair
-has no room near probes 33 and 34 inside the cabinet, so both production values sit in its lower left, the return
-above the outlet; the brine outlet sits top right, and the brine inlet always sits low in the cabinet, beside pressure 37. The full layout has no such captions. A label that has moved to its compact place gets its background plate (the integrated tank's
-temperature leaves tank 50's body). Where a clearance moves with the text width, a place keeps about 2 px of it at 320 px, because Chromium and WebKit measure the text 1-2 px apart; the widest value the scenarios produce, the brine inlet's -12.3 in the defrost scenario, does not fit near probe 32 with that margin, hence the low place. The browser test "No overlaps in the compact layout" checks the overlaps and the
-sides at 320, 360, 480 and 639 px.
+the threshold. The places beside the probes are then too small, so every key label has a compact place of its own
+(`COMPACT_PLACES` in `src/diagram/label-places.ts`, in the units of the simplified arrangement, which the compact layout
+draws: viewBox 1000 x 545). A place is where `npm run search-places` found the free spot nearest the label's own place,
+at 320 px over every emulator scenario, installation and naming, where the label overlaps no other label, component or
+caption, stays inside the drawing and stays on the side of the cabinet outline where its component is (`LABEL_SIDES` in
+`dev/overlaps.ts`): the production and brine values, the compressor speed and the integrated tank's temperature inside
+it, the source's Out value and the external tank's temperature outside it.
+
+| Label | x | y | Alignment |
+| --- | --- | --- | --- |
+| `production_out` | 376 | 372 | end |
+| `production_in` | 320 | 500 | middle |
+| `brine_out` | 604 | 196 | start |
+| `brine_in` | 644 | 260 | start |
+| `compressor_speed` | 444 | 308 | start |
+| `tank_internal_temperature` | 628 | 488 | start |
+| `tank_external_temperature` | 780 | 24 | start |
+| `air_unit_out` | 204 | 28 | end |
+| `ground_out` | 100 | 264 | middle |
+| `hybrid_ground_out` | 100 | 488 | middle |
+
+Five labels may lie on a pipe, over their background plate (the set `ON_PIPE_COMPACT` in the same file): the production and
+brine values (`production_out`, `production_in`, `brine_out`, `brine_in`) and the compressor speed (`compressor_speed`). With the pipes counted
+as obstacles they have no joint place at 320 px, since the cabinet's free spots between the pipes hold one label (a
+54 px wide label with its caption in a cabinet 198 px wide), so the search places them with pipes ignored, and the
+browser test lets them overlap pipes (and only them). Every other compact label is clear of pipes. The plate is the
+label's own background (the card's background colour at 80 % opacity), drawn in the compact layout like in the full one.
+
+The DHW tank's temperature carries a short "DHW" caption in the compact layout, so that it is not read as a brine value; on the integrated tank it stands on its own line above the value. The four production and brine values carry a short "Out" or "In" caption in the compact layout (the same strings as the source ports' captions; here "Out" is the water or brine leaving the heat pump and "In" the one entering it), because their places are no longer beside their probes. The full layout has no such captions. A label that has moved to its compact place gets its background plate (the integrated tank's temperature leaves tank 50's body). Where a clearance moves with the text width, a place keeps about 2 px of it at 320 px, because Chromium and WebKit measure the text 1-2 px apart.
+
+The browser test "No overlaps in the compact layout" checks the overlaps (labels, components, the drawing's edge, and pipes for every label but the five) and the sides at 320, 360, 480 and 599 px.
+
+#### Searching the places again
+
+Rerun `npm run search-places` after any change of the simplified arrangement or of the compact label texts. It opens
+every scenario, installation and naming in the emulator at 320 px in the compact layout, measures the card with the shared
+check of `dev/overlaps.ts`, and prints a table to paste into `COMPACT_PLACES` (then update the table above; the docs
+test compares it with the code). A label with no place is reported and the exit code is 1: that is a design decision
+(move it to the footer, or add it to `ON_PIPE_COMPACT`), not something the script loosens. Options: `--width=320` (the
+search width), `--step=4` (the grid in viewBox units), `--margin=2` (px of horizontal clearance; 1 px is kept
+vertically, 2 px for the labels of `ON_PIPE_COMPACT`), `--no-pipes` (labels, components and the cabinet only, the first search's obstacles) and `--map` (where each
+label can go). The search places the Out and In pairs first, each pair together, then the other labels one by one, most constrained first, so a rerun can move more than one label.
+
+An Out and In pair reads in order at every compact width: each value keeps the alignment of its place in the full drawing, and the Out box lies left of the In box (the Out probe is left of the In probe in both circuits: probes 33 and 34, 31 and 32 lie on one row) or, where the two overlap horizontally (a column), above it. The search checks this at every case's real widths at 320 px, about 460 px and 599 px; the browser test "No overlaps in the compact layout" checks it at 320, 360, 480 and 599 px with the same predicate (`inOrder` and `OUT_IN_PAIRS` in `dev/overlaps.ts`). The production pair therefore sits as a column in the cabinet's lower left, the Out value above the In value.
 
 ### Minimum rendered sizes
 
@@ -755,8 +788,8 @@ count; the halves of a helix share their segment's name. The captions (`text.cir
 `text.tank-caption`) are boxed like labels, as the em box of their text, and a caption overlapping a label or a pipe
 counts (captions inside a part's group, such as the ground loop's, are checked against pipes only; as that part they are already checked against labels). The `bare` labels inside tank 50 ignore pipe samples inside tank 50's box. Pairs read `label X x pipe:<segment>`,
 `caption:<text> x label X` and `caption:<text> x pipe:<segment>`. The check is about the full layout at the simplified level; the full detail level, which keeps today's
-arrangement, is not measured against pipes. The compact layout below the threshold still counts labels and components only, until
-refine-simplified-layout group 5 puts it on the simplified arrangement.
+arrangement, is not measured against pipes. The compact layout below the threshold is checked with pipes and the drawing's edge too,
+with the five `ON_PIPE_COMPACT` labels exempt from pipes only (see "What the compact layout shows").
 
 The boxes, exclusions, installations and tolerance live in `dev/overlaps.ts`, shared by the script and by the
 browser test `test/card/overlaps.browser.test.ts`, which runs the same check (with pipes) at the threshold in headless Chromium and WebKit

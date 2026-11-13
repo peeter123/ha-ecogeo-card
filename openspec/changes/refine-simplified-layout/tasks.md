@@ -89,19 +89,21 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 
 ## 5. The compact layout on the simplified arrangement
 
-- [ ] 5.1 Add `scripts/search-places.mjs` (`npm run search-places`) on top of `dev/overlaps.ts` (design D7): searches
+- [x] 5.1 Add `scripts/search-places.mjs` (`npm run search-places`) on top of `dev/overlaps.ts` (design D7): searches
   the nearest place per key label at 320 px across every scenario and installation, with labels, components, pipes
   and the cabinet outline as obstacles, the `LABEL_SIDES` rule and about 2 px of margin.
   Verify: run on the current compact drawing, it finds places that pass the current compact browser test.
-- [ ] 5.2 Switch the compact layout to the simplified arrangement and set `COMPACT_PLACES` from the search; add pipes
+- [x] 5.2 Switch the compact layout to the simplified arrangement and set `COMPACT_PLACES` from the search; add pipes
   to the compact browser guard (responsive-layout "Compact labels clear of pipes").
   Verify: `test/card/overlaps.browser.test.ts` "No overlaps in the compact layout" passes with pipes at 320, 360, 480
   px and just under `COMPACT_BELOW`, and the side check passes; if a label has no place, stop and put the options of
   the design's risks to the user.
-- [ ] 5.3 Emulator check on phone widths: the `narrow-*` and `phone-*` captures and every scenario at 360 px.
-  Verify: a subagent returns a verdict that the compact drawing uses the wider cabinet, no value sits on a pipe, and
-  each Out/In pair reads clearly.
-- [ ] 5.4 Update "Compact content" in `docs/ecogeo-card.md` (the new places, the search script and how to rerun it).
+  Note: five labels had no place clear of pipes; the user chose to let them lie on a pipe over their plate (design
+  D7, settled in group 5; responsive-layout "Compact labels clear of pipes" names them).
+- [x] 5.3 Emulator check on phone widths: the `narrow-*` and `phone-*` captures and every scenario at 360 px.
+  Verify: a subagent returns a verdict that the compact drawing uses the wider cabinet, no value other than the five
+  of `ON_PIPE_COMPACT` sits on a pipe and those read cleanly over their plates, and each Out/In pair reads clearly.
+- [x] 5.4 Update "Compact content" in `docs/ecogeo-card.md` (the new places, the search script and how to rerun it).
   Verify: the docs list the places used in code; `test/docs.test.ts` passes.
 
 ## 6. Panel view fits the screen
@@ -120,8 +122,10 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
   Verify: a subagent returns a verdict that the footer is on screen and the drawing centred.
 - [ ] 6.4 Document the panel fit in `docs/ecogeo-card.md` and `README.md` (panel views fit the screen); in the README's
   planned follow-ups, drop `add-extra-circuits` and note extra circuits (DG2, DG3, pool) as a long-term idea, since
-  they are external and need their own valves.
-  Verify: `test/readme.ts` and `test/docs.test.ts` pass; the README no longer lists `add-extra-circuits` as planned.
+  they are external and need their own valves. Refresh the README's images (`docs/images/heating.png`,
+  `docs/images/phone-heating.png`) from the emulator, since both show the drawing from before this change.
+  Verify: `test/readme.ts` and `test/docs.test.ts` pass; the README no longer lists `add-extra-circuits` as planned;
+  the images show the simplified arrangement and the new compact places.
 
 ## 7. Release and live check
 
@@ -132,7 +136,7 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 - [ ] 7.2 Live check: light screenshots of the Schematic view at desktop (1280 x 800), tablet (768) and phone (390)
   width, and a state check.
   Verify: a subagent returns a verdict that the footer is on screen at desktop width, no value sits on a pipe at any
-  width, the superheat and expansion valve opening are not shown; no new ecogeo or frontend errors in the system log;
+  width (except, in the compact layout, the five of `ON_PIPE_COMPACT` over their plates), the superheat and expansion valve opening are not shown; no new ecogeo or frontend errors in the system log;
   the dashboard config is unchanged (its hash in `private/installation.md`).
 
 ## Workflow follow-up

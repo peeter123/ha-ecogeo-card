@@ -882,11 +882,11 @@ describe('exchanger sides in every configuration', () => {
 });
 
 describe('arrangementFor (refine-simplified-layout D1, D7)', () => {
-  test('the compact layout draws the full arrangement at either level', () => {
-    const full = arrangementFor('full', 'full');
-    expect(full.id).toBe('full');
-    expect(arrangementFor('simplified', 'compact')).toBe(full);
-    expect(arrangementFor('full', 'compact')).toBe(full);
+  test('the compact layout draws the simplified arrangement at either level', () => {
+    const simplified = arrangementFor('simplified', 'full');
+    expect(simplified.id).toBe('simplified');
+    expect(arrangementFor('simplified', 'compact')).toBe(simplified);
+    expect(arrangementFor('full', 'compact')).toBe(simplified);
   });
 
   test('the simplified level in the full layout has its own arrangement', () => {

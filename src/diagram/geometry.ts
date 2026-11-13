@@ -17,7 +17,7 @@ import type { CircuitId, Circuits } from '../calc/circuits';
 import type { Detail, DhwStorage, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
-import { FULL_COMPACT_PLACES, SIMPLIFIED_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
+import { COMPACT_PLACES, SIMPLIFIED_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
 
 /** A rectangle in viewBox units. */
 export interface Rect {
@@ -907,7 +907,8 @@ function buildArrangement(id: ArrangementId, zones: Zones): Arrangement {
     segments: segmentsFor(zones),
     crossings: FULL_CROSSINGS,
     circuitLabels: FULL_CIRCUIT_LABELS,
-    labels: labelPlacesFor(zones, FULL_COMPACT_PLACES),
+    // the full arrangement is never drawn compact (D7): its labels have no compact places
+    labels: labelPlacesFor(zones, {}),
   };
 }
 
@@ -1093,7 +1094,7 @@ function buildSimplifiedArrangement(): Arrangement {
       left.has(crossing.under) &&
       !(crossing.over === 'prod_10_in' && crossing.under === 'prod_tap_a'),
   ).map((crossing): Crossing => ({ ...crossing, at: mapPoint(crossing.at) }));
-  const labels = labelPlacesFor(zones, FULL_COMPACT_PLACES, (x, y) => [simplifiedX(x), simplifiedY(y)]);
+  const labels = labelPlacesFor(zones, COMPACT_PLACES, (x, y) => [simplifiedX(x), simplifiedY(y)]);
   return {
     ...zones,
     id: 'simplified',
@@ -1117,15 +1118,18 @@ const SIMPLIFIED_ARRANGEMENT = buildSimplifiedArrangement();
 
 /**
  * The arrangement of a detail level in a shown layout: a pure function of the two. `full` draws the full arrangement,
- * `simplified` the simplified one. The compact layout keeps drawing the full arrangement with the simplified filter
- * until its places are searched again (refine-simplified-layout D7), so it gets the full arrangement at either level.
+ * `simplified` the simplified one. The compact layout draws the simplified detail level whatever `detail` says (add-compact-layout D3),
+ * so it gets the simplified arrangement at either level (refine-simplified-layout D7); its places are COMPACT_PLACES.
  */
 export function arrangementFor(level: Detail, layout: ShownLayout): Arrangement {
-  if (layout === 'compact') return FULL_ARRANGEMENT;
+  if (layout === 'compact') return SIMPLIFIED_ARRANGEMENT;
   return level === 'full' ? FULL_ARRANGEMENT : SIMPLIFIED_ARRANGEMENT;
 }
 
-/** The arrangement a draw context carries (or, without one, the full layout's arrangement of its detail level). */
+/**
+ * The arrangement a draw context carries (or, without one, the full layout's arrangement of its detail level). A compact
+ * render must pass its arrangement in the context (the card always does), since this fallback is a full layout's.
+ */
 export const arrangementOf = (context: Pick<DrawContext, 'arrangement' | 'detail'>): Arrangement =>
   context.arrangement ?? arrangementFor(context.detail, 'full');
 

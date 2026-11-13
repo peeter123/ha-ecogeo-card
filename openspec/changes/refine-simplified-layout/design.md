@@ -180,6 +180,22 @@ script (`scripts/search-places.mjs`, `npm run search-places`) built on `dev/over
 repeated. The rules of the first search stay: the label stays on its side of the cabinet outline (`LABEL_SIDES`), a
 place nearer its own probe wins, and about 2 px of margin at 320 px for the Chromium-WebKit text-width difference.
 
+Settled in group 5 (the user's choice): with pipes as obstacles, five compact labels have no joint place at 320 px on
+the simplified arrangement (production Out and In, brine Out and In, the compressor speed). Every free spot for them
+lies in one pocket at the cabinet's bottom right, one label wide; the full arrangement already failed for three of
+them. These five may lie on a pipe, over their background plate (`ON_PIPE_COMPACT`, a named set): the search places
+them with pipes ignored for them, and the compact guard checks them against labels, components and the drawing edge,
+and every other compact label against pipes too. The compact layout draws the simplified arrangement. The DHW
+values keep clear of pipes, so the nearest free places are some way from their tanks (the external tank's value
+above the run at the top right, tank 50's at the cabinet's bottom right on model C); their "DHW" caption is what
+names them, so they stay out of `ON_PIPE_COMPACT`. A pair of Out and In values must read in probe order at every
+compact width, not only at 320 px: the search keeps each Out and In label's home alignment, and requires, for both
+pairs, that the Out box lies left of the In box or, where the two boxes overlap horizontally (they form a column),
+that the Out box lies above the In box. Both pairs' probes sit side by side (Out on the left), but at phone width the
+production values only fit in the free rows well below their probes, where a column reads naturally; a plain
+left-right rule pulled production In next to the compressor. A browser test checks the order at the guard widths.
+The five on-pipe labels search with a 2 px vertical margin, so their plates clear the probes.
+
 ### D8. Markup snapshot as the no-change guard
 
 A unit test renders the card (happy-dom) for every capture configuration in `dev/captures.ts` with sample states and

@@ -36,7 +36,7 @@ async function measureInPage(/** @type {boolean} */ withPipes) {
 
 const server = await createServer({
   root: fileURLToPath(new URL('..', import.meta.url)),
-  logLevel: 'warn',
+  logLevel: 'error',
   server: { port: 5311, strictPort: false },
 });
 await server.listen();
