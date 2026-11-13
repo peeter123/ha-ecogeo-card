@@ -84,7 +84,7 @@ fault.
 | `dhw` | `external`, `internal`, `unused`, `none` | `external` on B, `internal` on C | The DHW storage. `unused` draws the model's tank muted, with no tank values, for a tank that is there but not in use; it is valid on both models. Model C always has its integrated tank, so `none` on model C is an error, as is `internal` on model B or `external` on model C. |
 | `prefix` | lowercase letters, digits, `_` | none | Entity object id prefix; the firmware default is `ecoforest_ecogeo`. |
 | `features` | group | from the variant | Feature states that override the variant (see Features). |
-| `entities` | group | from the prefix | Entity id per role, nested by role path (see Roles). |
+| `entities` | group | from the prefix | Entity id per role, nested by role path, or `none` for a role the unit does not have (see Roles). |
 | `states` | group | `off: [OFF]`, `defrost: [Defrost]` | The state texts that mean off (the on/off entity) and defrost (the compressor mode entity); a list replaces its default, case-insensitive. See Using another source in the docs. |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
@@ -166,6 +166,11 @@ firmware entity naming); `entities` overrides single roles, nested by path: `ent
 sensor.boiler_top } }`. The card shows its own unit for every role (°F, kW and kPa, MPa, Pa, mbar and psi are
 converted; a difference is shown in K). A number in a unit it cannot convert keeps the entity's unit, except
 temperatures, differences and power, which then have no value.
+
+A role the installation does not have (no pressure sensors, no COP) is set to `none`: `entities: { brine: { pressure:
+none } }`. It gets no default entity, its label or footer item is not drawn (the component stays), and it counts as
+no value. A role bound to an entity that is unknown or unavailable keeps its label with a dash. `none` alone is
+still an entity setting, so the card does not show sample values.
 
 | Role | Default entity | Shown as | Manual item |
 |---|---|---|---|

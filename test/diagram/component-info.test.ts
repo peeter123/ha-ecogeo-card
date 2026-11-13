@@ -151,6 +151,19 @@ describe('tap a component', () => {
     card.remove();
   });
 
+  test('Compressor without a speed role: item 11 opens the percentage, else the power entity', async () => {
+    const percentage = await mount({ prefix: P, entities: { compressor: { speed: 'none' } } }, hass);
+    const seen = listen(percentage);
+    group(percentage, 11).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(seen).toEqual([`sensor.${P}_compressor_percentage`]);
+    percentage.remove();
+    const power = await mount({ prefix: P, entities: { compressor: { speed: 'none', percentage: 'none' } } }, hass);
+    const seenPower = listen(power);
+    group(power, 11).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(seenPower).toEqual([`sensor.${P}_power_consumption`]);
+    power.remove();
+  });
+
   test('Enter and Space open it too, other keys do not', async () => {
     const card = await mount(live, hass);
     const seen = listen(card);

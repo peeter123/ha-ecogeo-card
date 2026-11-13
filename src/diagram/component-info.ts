@@ -33,6 +33,15 @@ export const COMPONENT_ROLES: Readonly<Record<number, RolePath>> = {
   54: 'dhw.temperature',
 };
 
+/** The roles compressor 11 can open, in order: the first one with an entity (the speed role may be `none`). */
+export const COMPRESSOR_ROLES: readonly RolePath[] = ['compressor.speed', 'compressor.percentage', 'compressor.power'];
+
+/** The role a component opens: the table's, and for compressor 11 the first of its roles that has an entity. */
+export function componentRole(item: number, taps: Taps | undefined): RolePath | undefined {
+  if (item === 11) return COMPRESSOR_ROLES.find((role) => taps?.entities[role] !== undefined) ?? COMPRESSOR_ROLES[0];
+  return COMPONENT_ROLES[item];
+}
+
 /** The role of the air unit's fan. */
 export const FAN_ROLE: RolePath = 'source.fan_speed';
 /** The role of the external DHW tank. */

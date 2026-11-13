@@ -68,7 +68,8 @@ export const CONFIG_ERRORS = {
   unknownFeature: (feature: string, known: readonly string[]): string =>
     `Unknown feature ${feature}: expected one of ${known.join(', ')}`,
   unknownRole: (role: string): string => `Unknown entity role ${role}`,
-  notEntityId: (role: string): string => `Invalid entity for ${role}: expected an entity id such as sensor.name`,
+  notEntityId: (role: string): string =>
+    `Invalid entity for ${role}: expected an entity id such as sensor.name, or none`,
   statesKey: (key: string): string => `Unknown option states.${key}: expected off or defrost`,
   statesList: (key: string): string => `Invalid option states.${key}: expected a list of one or more texts`,
   featureState: (feature: string): string => `Invalid option features.${feature}: expected true, false or unused`,

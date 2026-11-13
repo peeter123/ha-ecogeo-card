@@ -192,3 +192,24 @@ describe('round trip with overrides', () => {
     expect(JSON.stringify(saved)).toBe(JSON.stringify(config));
   });
 });
+
+describe('roles not present (none)', () => {
+  const WITH_NONE = {
+    ...BASE,
+    prefix: 'p',
+    entities: { unit: { cop: 'none' }, dhw: { temperature: 'sensor.boiler_top' } },
+  };
+
+  test('a none value is passed to the picker and written back unchanged by another edit', async () => {
+    const { form, saved } = await openEditor(WITH_NONE);
+    expect(form.data['entities']).toStrictEqual(WITH_NONE.entities);
+    form.change({ ...form.data, source: 'air' });
+    expect(saved).toStrictEqual([{ ...WITH_NONE, source: 'air' }]);
+  });
+
+  test('editing the none role itself writes what the picker reports', async () => {
+    const { form, saved } = await openEditor(WITH_NONE);
+    form.change({ ...form.data, entities: { ...(form.data['entities'] as object), unit: { cop: 'sensor.cop' } } });
+    expect(saved).toStrictEqual([{ ...WITH_NONE, entities: { ...WITH_NONE.entities, unit: { cop: 'sensor.cop' } } }]);
+  });
+});

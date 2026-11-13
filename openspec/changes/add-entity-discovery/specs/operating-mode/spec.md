@@ -83,6 +83,28 @@ the compressor runs is unknown (none of its running inputs has a value), the mod
 - **WHEN** every heat pump entity is `unavailable`
 - **THEN** the mode is `standby`
 
+### Requirement: Circuits limited by pumps and feature states
+The brine circuit SHALL be active only while the brine pump runs. When the brine pump role is `none` (card-config),
+the brine circuit SHALL follow the mode alone. A circuit whose part is `false` SHALL never be active. A circuit whose
+part is `unused` SHALL never be active, except exchanger 10 in `defrost`.
+
+#### Scenario: Brine pump stopped
+- **WHEN** the mode is `active_cooling` and the brine pump is at 0 %
+- **THEN** the brine circuit is muted, and the refrigerant and production circuits are active
+
+#### Scenario: Brine pump not present
+- **WHEN** the brine pump role is `none` and the mode is `heating`
+- **THEN** the brine circuit is active
+
+#### Scenario: Defrost with passive cooling unused
+- **WHEN** the mode is `defrost`, the brine pump runs and passive cooling is `unused`
+- **THEN** exchanger 10, valves 27/28, the brine circuit and the production circuit are active, and the
+  refrigerant is muted
+
+#### Scenario: Defrost without exchanger 10
+- **WHEN** the mode is `defrost` and passive cooling is `false`
+- **THEN** the card shows the mode "Defrost", and no exchanger 10 circuit is drawn
+
 ## ADDED Requirements
 
 ### Requirement: Compressor running from what exists

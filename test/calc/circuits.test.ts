@@ -91,6 +91,13 @@ describe('circuits limited by pumps and feature states', () => {
     expect(active(c.active)).toEqual(['production_dg1', 'refrigerant']);
   });
 
+  test('Brine pump not present: the brine circuit is not limited by the pump', () => {
+    const none = readings({ 'heating.capacity': 4712 });
+    expect(circuitsFor('heating', v4, 'external', none, false).active.has('brine')).toBe(true);
+    expect(circuitsFor('heating', v4, 'external', none, true).active.has('brine')).toBe(false);
+    expect(circuitsFor('standby', v4, 'external', none, false).active.has('brine')).toBe(false);
+  });
+
   test('brine pump without a value is not running', () => {
     expect(circuitsFor('heating', v4, 'external', readings()).active.has('brine')).toBe(false);
   });

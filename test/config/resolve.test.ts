@@ -47,6 +47,32 @@ describe('per-role overrides', () => {
   });
 });
 
+describe('roles not present (none)', () => {
+  const config = { prefix: 'ecoforest_ecogeo', entities: { source: { fan_speed: 'none' } } };
+
+  test('Fan speed not present: no entity, no prefix default, the other roles keep theirs', () => {
+    const resolved = resolveConfig(config);
+    expect(resolved.entities['source.fan_speed']).toBeUndefined();
+    expect(resolved.notPresent).toEqual(new Set(['source.fan_speed']));
+    expect(resolved.entities['unit.cop']).toBe('sensor.ecoforest_ecogeo_cop');
+    expect(resolved.sample).toBe(false);
+  });
+
+  test('None is not a sample config: it is an entity setting', () => {
+    const config = { entities: { unit: { cop: 'none' } } };
+    expect(isSampleMode(config)).toBe(false);
+    const resolved = resolveConfig(config);
+    expect(resolved.sample).toBe(false);
+    expect(resolved.entities['unit.cop']).toBeUndefined();
+    expect(resolved.entities['production.outlet_temperature']).toBeUndefined();
+  });
+
+  test('without none nothing is not present', () => {
+    expect(resolveConfig({ prefix: 'p' }).notPresent.size).toBe(0);
+    expect(resolveConfig({}).notPresent.size).toBe(0);
+  });
+});
+
 describe('sample mode detection', () => {
   test('neither prefix nor entities: sample', () => {
     expect(isSampleMode({})).toBe(true);

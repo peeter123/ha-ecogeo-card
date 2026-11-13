@@ -191,7 +191,13 @@ export class EcogeoCard extends LitElement {
       : config;
     const { readings, offline } = this.readings(resolved);
     const mode = deriveMode(readings, resolved.features, resolved.states);
-    const circuits = circuitsFor(mode, resolved.features, resolved.dhw, readings);
+    const circuits = circuitsFor(
+      mode,
+      resolved.features,
+      resolved.dhw,
+      readings,
+      !resolved.notPresent.has('brine.pump'),
+    );
     const states = resolved.sample ? SAMPLE_STATES : (this.hass?.states ?? {});
     const moving = animationReadings(readings, resolved.entities, states);
     const view: PipeView = { mode, circuits, readings: moving, stops: resolved.colors };
@@ -214,11 +220,11 @@ export class EcogeoCard extends LitElement {
         >
           ${svg`${renderSource(resolved, moving, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix }, stroke.pipe)}`}
         </svg>
-        ${renderLabels(labelsFor(resolved, readings, resolved.entities, display, compact), onTap)}
+        ${renderLabels(labelsFor(resolved, readings, resolved.entities, display, compact, resolved.notPresent), onTap)}
       </div>
       <div class="footer">
         <span class="mode">${MODE_LABELS[mode]}</span>
-        ${renderFooterItems(footerItems(readings, resolved.entities, display, compact), onTap)}
+        ${renderFooterItems(footerItems(readings, resolved.entities, display, compact, resolved.notPresent), onTap)}
         ${isAlarm(readings['unit.alarm']) ? html`<span class="alarm">${INDICATIONS.alarm}</span>` : nothing}
         ${offline ? html`<span class="offline">${INDICATIONS.offline}</span>` : nothing}
         ${resolved.sample ? html`<span class="sample">${INDICATIONS.sampleValues}</span>` : nothing}

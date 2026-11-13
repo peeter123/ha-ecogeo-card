@@ -7,7 +7,7 @@ import { DEFAULT_STATES, type StateLists } from './states';
 import { asEntityId, valueAt, type CardConfig } from '../lib/config';
 import { invalidOptions, optionValue, type ChoiceOption, type OptionSpec } from '../lib/options';
 import { CONFIG_ERRORS, OPTIONS } from '../strings';
-import { ROLE_BY_PATH } from './roles';
+import { ROLE_BY_PATH, type RolePath } from './roles';
 import { FEATURE_KEYS, VARIANTS, type FeatureKey, type FeatureState } from './variants';
 
 export const MODELS = ['B', 'C'] as const;
@@ -90,6 +90,12 @@ const isGroup = (value: unknown): value is CardConfig =>
 
 const PREFIX = /^[a-z0-9_]+$/;
 
+/** The value of an `entities` role that means the role is not present: no entity, no default, no label (add-entity-discovery D1). */
+export const NONE = 'none';
+
+/** True for the `none` value of an `entities` role: exactly `none` after trimming, lower case. */
+export const isNone = (value: unknown): boolean => typeof value === 'string' && value.trim() === NONE;
+
 /** The option's prefix, trimmed, or undefined when it is not set. Call after configErrors found no problem. */
 export function prefixOf(config: CardConfig): string | undefined {
   const value = valueAt(config, 'prefix');
@@ -156,6 +162,17 @@ export function featureOverrides(config: CardConfig): Partial<Record<FeatureKey,
 const isFeatureState = (value: unknown): value is FeatureState =>
   value === true || value === false || value === 'unused';
 
+/** The roles whose `entities` value is `none`: not present, so they get no label, footer item or default entity. */
+export function notPresentRoles(config: CardConfig): ReadonlySet<RolePath> {
+  const entities = valueAt(config, 'entities');
+  if (!isGroup(entities)) return new Set();
+  return new Set(
+    entityLeaves(entities)
+      .filter(([path, value]) => ROLE_BY_PATH.has(path) && isNone(value))
+      .map(([path]) => path as RolePath),
+  );
+}
+
 /** Every leaf of the `entities` option as a dotted role path with its value. */
 export function entityLeaves(entities: CardConfig, parent = ''): [path: string, value: unknown][] {
   return Object.entries(entities).flatMap(([key, value]): [string, unknown][] => {
@@ -205,7 +222,7 @@ function entityErrors(config: CardConfig): string[] {
   return entityLeaves(entities).flatMap(([path, value]) => {
     if (isBlank(value)) return [];
     if (!ROLE_BY_PATH.has(path)) return [CONFIG_ERRORS.unknownRole(path)];
-    return asEntityId(value) !== undefined ? [] : [CONFIG_ERRORS.notEntityId(path)];
+    return asEntityId(value) !== undefined || isNone(value) ? [] : [CONFIG_ERRORS.notEntityId(path)];
   });
 }
 

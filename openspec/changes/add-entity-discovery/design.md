@@ -94,7 +94,13 @@ running is unknown and the mode is `standby` (as today with an unknown speed). P
 
 ### D7. Hidden roles
 Labels and footer items look up whether their role is not present (D1) and render nothing. Components stay drawn
-(their presence follows `features`, `source` and `dhw`). In the compact layout the same rule holds.
+(their presence follows `features`, `source` and `dhw`). In the compact layout the same rule holds. An item fed
+by two roles (the footer's season item: `unit.summer`, `unit.winter`) is hidden only when both are `none`; otherwise
+the present role drives it; a lone season role that reads off shows a dash (both flags off is a real firmware state).
+- Pumps: a brine pump set to `none` does not gate the brine circuit (operating-mode "Circuits limited by pumps and
+  feature states"). A production pump set to `none` counts as not running, so passive cooling is never shown without
+  it: without the pump the card cannot tell passive cooling from standby. Documented in "Using another source".
+- Compressor 11 taps the first present of speed, percentage, power (component-info "Tap a component").
 
 ### D8. Suggestion module (`src/suggest/`)
 A pure function: input `hass.states`, `hass.entities`, `hass.devices`, the device id and the current config; output

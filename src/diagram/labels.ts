@@ -401,6 +401,8 @@ export interface ShownLabel {
 
 type Entities = Readonly<Record<RolePath, string | undefined>>;
 
+const ALL_PRESENT: ReadonlySet<RolePath> = new Set();
+
 /**
  * The labels to show: those of parts that are drawn (the same rules as geometry.ts `partState`), each with its text
  * from display.ts, or the dash while its value is missing. The "Demand" label is shown only while its role is on.
@@ -413,9 +415,12 @@ export function labelsFor(
   entities: Entities,
   display: DisplayContext,
   compact = false,
+  notPresent: ReadonlySet<RolePath> = ALL_PRESENT,
 ): ShownLabel[] {
   return LABEL_SPECS.flatMap((label): ShownLabel[] => {
     if (compact && label.tier !== 'key') return [];
+    // A role set to `none` is not present: no label at all, not even the dash (add-entity-discovery D7).
+    if (notPresent.has(label.role)) return [];
     // An unused tank (dhw: unused) shows no values: its labels are left out, though its parts are drawn.
     if (partState(label, context) === 'hidden' || (context.dhw === 'unused' && label.dhw !== undefined)) return [];
     const entityId = entities[label.role];
@@ -474,20 +479,31 @@ export function footerItems(
   entities: Entities,
   display: DisplayContext,
   compact = false,
+  notPresent: ReadonlySet<RolePath> = ALL_PRESENT,
 ): FooterItem[] {
-  const item = (id: string, role: RolePath, caption: string | undefined, text: string | undefined): FooterItem => ({
-    id,
-    tier: FOOTER_KEY_ITEMS.has(id) ? 'key' : 'detail',
-    ...(caption === undefined ? {} : { caption }),
-    text: text ?? NO_VALUE,
-    missing: text === undefined,
-    entityId: entities[role],
-  });
-  const number = (id: string, role: RolePath, caption?: string): FooterItem => {
+  // An item is built from its roles and left out (undefined) when every one of them is not present (`none`); the roles
+  // are given here only, so a new footer item cannot escape the hiding. The tap opens the first role's entity.
+  const item = (
+    id: string,
+    roles: readonly [RolePath, ...RolePath[]],
+    caption: string | undefined,
+    text: string | undefined,
+  ): FooterItem | undefined =>
+    roles.every((role) => notPresent.has(role))
+      ? undefined
+      : {
+          id,
+          tier: FOOTER_KEY_ITEMS.has(id) ? 'key' : 'detail',
+          ...(caption === undefined ? {} : { caption }),
+          text: text ?? NO_VALUE,
+          missing: text === undefined,
+          entityId: entities[roles[0]],
+        };
+  const number = (id: string, role: RolePath, caption?: string): FooterItem | undefined => {
     const value: unknown = readings[role];
     return item(
       id,
-      role,
+      [role],
       caption,
       formatReading(
         role,
@@ -507,7 +523,7 @@ export function footerItems(
   const items = [
     item(
       'on_off',
-      'unit.on_off',
+      ['unit.on_off'],
       undefined,
       onOff === undefined
         ? undefined
@@ -515,13 +531,22 @@ export function footerItems(
           ? ON_OFF_LABELS[onOff ? 'on' : 'off']
           : (ON_OFF_LABELS[onOff.toLowerCase()] ?? onOff),
     ),
-    item('season', readings['unit.summer'] === true ? 'unit.summer' : 'unit.winter', undefined, season),
+    item(
+      'season',
+      // The tap opens the summer entity while it reads on or the winter role is not present, else the winter one.
+      readings['unit.summer'] === true || notPresent.has('unit.winter')
+        ? ['unit.summer', 'unit.winter']
+        : ['unit.winter', 'unit.summer'],
+      undefined,
+      season,
+    ),
     number('outside_temperature', 'source.outside_temperature', FOOTER_LABELS.outside),
     number('cop', 'unit.cop', FOOTER_LABELS.cop),
     number('condensation_capacity', 'heating.capacity', FOOTER_LABELS.condensation),
     number('evaporation_capacity', 'cooling.capacity', FOOTER_LABELS.evaporation),
   ];
-  return compact ? items.filter((entry) => entry.tier === 'key') : items;
+  const present = items.filter((entry) => entry !== undefined);
+  return compact ? present.filter((entry) => entry.tier === 'key') : present;
 }
 
 /** The position of a label in percent of the drawing's width and height. */

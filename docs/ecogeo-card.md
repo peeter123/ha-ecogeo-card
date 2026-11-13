@@ -170,6 +170,11 @@ states:
   defrost: [Ontdooien]
 ```
 
+- A role the unit does not have is set to `none` (`entities: { brine: { pressure: none } }`): no default entity, no
+  label or footer item, and no value for the mode. Its component stays drawn. An unknown or unavailable entity
+  keeps its label with a dash instead. `none` counts as an entity setting, so it does not give the sample.
+- A brine pump set to `none` does not limit the brine circuit: the mode alone decides whether it is active. Without a
+  production pump role the card cannot tell passive cooling from standby, so passive cooling is never shown.
 - Without a compressor speed, the card takes the percentage, then the power (above 100 W, so the standby draw does
   not count). With none of the three the mode is Standby.
 - A pump or fan that runs without a percentage (an on/off entity that reads on, or a speed above 0 in rpm) animates
@@ -534,10 +539,12 @@ writes no entity.
 The labels have a minimum font size, so on a card narrower than about 560 px while the demand line shows (about 510 px for the three values alone) the labels inside tank 50 start to touch; narrower cards are left to the compact layout (`add-compact-layout`).
 
 A value of a part that is not drawn is not shown (no DHW storage, or an unused tank (`dhw: unused`), no tank values; a source that is not drawn, no
-source values). A drawn value with no value shows a muted dash and keeps its place.
+source values). A drawn value with no value shows a muted dash and keeps its place. A role set to `none` shows nothing
+(see Using another source).
 
 The footer shows the mode, the on/off state, the season, the outside temperature, the COP, the condensation and
-evaporation capacity, and the alarm and offline indications.
+evaporation capacity, and the alarm and offline indications. An item whose role is `none` is left out; the season only
+when both summer and winter are `none`.
 
 ### Formatting
 

@@ -202,6 +202,17 @@ describe('outer-loop source', () => {
     quick.remove();
   });
 
+  test('Fan speed not present: no fan speed label and the fan does not rotate, though the default entity reads 34.5', async () => {
+    const card = await mount(
+      { prefix: P, source: 'air', entities: { source: { fan_speed: 'none' } } },
+      withFan('34.5'),
+    );
+    expect(root(card).querySelector('[data-label="fan_speed"]')).toBeNull();
+    expect(fan(card)?.classList.contains('still')).toBe(true);
+    expect(fan(card)?.getAttribute('style') ?? '').not.toContain('--fan-duration');
+    card.remove();
+  });
+
   test('the fan is drawn still at 0 % and when the speed is unavailable', async () => {
     const zero = await mount({ prefix: P, source: 'air' }, withFan('0'));
     const unavailable = await mount({ prefix: P, source: 'air' }, withFan('unavailable'));

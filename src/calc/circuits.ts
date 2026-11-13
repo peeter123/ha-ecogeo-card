@@ -39,7 +39,8 @@ export type CircuitInputs = Pick<Readings, 'brine.pump' | 'heating.capacity'>;
  *   there is DHW storage in use (external or internal; not none or unused) and the condensation capacity is above 0 W. passive_cooling and defrost: brine,
  *   production_dg1 and exchanger_10 (not when passive cooling is `false`; `unused` still takes part in defrost).
  *   off and standby: none.
- * - The brine circuit is active only while the brine pump runs.
+ * - The brine circuit is active only while the brine pump runs, unless the brine pump role is `none` (`brinePumpPresent`
+ *   false): then the mode alone decides.
  * - Valve 26 points to ports 1/2 in every mode but dhw (also in defrost and HTR recovery).
  */
 export function circuitsFor(
@@ -47,6 +48,8 @@ export function circuitsFor(
   features: Pick<Features, 'htr' | 'passive_cooling'>,
   dhw: DhwStorage,
   readings: CircuitInputs,
+  /** False when the brine pump role is `none`: with no pump to read, the brine circuit is not limited by it. */
+  brinePumpPresent = true,
 ): Circuits {
   const active = new Set<CircuitId>();
   const exchanger10 = features.passive_cooling !== false;
@@ -74,7 +77,7 @@ export function circuitsFor(
     case 'standby':
       break;
   }
-  if (!runs(readings['brine.pump'])) active.delete('brine');
+  if (brinePumpPresent && !runs(readings['brine.pump'])) active.delete('brine');
   const viaExchanger = (mode === 'passive_cooling' || mode === 'defrost') && exchanger10;
   return {
     valve26: mode === 'dhw' ? 'dhw' : 'production',

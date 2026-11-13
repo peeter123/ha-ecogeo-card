@@ -55,12 +55,13 @@ No breaking change: every default reproduces today's behaviour, and the prefix s
 - `card-config`: the `states` option, `none` for a role, roles not present.
 - `live-values`: on/off states from any domain, pressure conversion, the entity's own unit, hidden roles.
 - `operating-mode`: `off` and `defrost` from the value lists or an on/off entity, compressor and pumps running from
-  what exists.
+  what exists, a brine pump set to `none` does not gate the brine circuit.
 - `card-editor`: device picker and suggestions, roles not present, binding check, state value choices, the stub
   config from the device.
 - `dev-emulator`: the foreign naming.
 - `temperature-coloring`: a pump on without a percentage animates at the fixed medium speed.
 - `outer-loop-source`: a fan speed in another unit rotates the fan at a fixed medium speed.
+- `component-info`: compressor 11 taps its percentage or power when its speed role is `none`.
 
 ## Out of scope
 

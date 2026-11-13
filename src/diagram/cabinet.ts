@@ -7,7 +7,7 @@ import { css, nothing, svg, type SVGTemplateResult } from 'lit';
 import type { ExchangerFill } from '../config/options';
 import { CIRCUIT_LABELS, componentLabel } from '../strings';
 import { COIL_MUTED_VAR, MUTED_COLOR } from './colors';
-import { COMPONENT_ROLES, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
+import { componentRole, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
 import {
   CABINET,
   CIRCUIT_LABELS as LABEL_POSITIONS,
@@ -135,7 +135,7 @@ function component(
   const state = shownState(part, entry.state, view.mode);
   const [dx, dy, anchor] = part.tag;
   const label = componentLabel(part.item);
-  const tap = tapBindings(tapTarget(COMPONENT_ROLES[part.item], taps), taps?.onTap);
+  const tap = tapBindings(tapTarget(componentRole(part.item, taps), taps), taps?.onTap);
   return svg`<g class="symbol-group ${state}" data-item=${part.item} data-kind=${part.kind} aria-label=${label} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown} style=${part.kind === 'coil' ? `color: ${coilStyleColor(view)}` : nothing}>
     <title>${label}</title>
     <g transform="translate(${part.x} ${part.y})">${symbol(part.kind, {

@@ -8,6 +8,7 @@ import {
   featureOverrides,
   installationOf,
   layoutOf,
+  notPresentRoles,
   prefixOf,
   setsAnyEntity,
   statesOf,
@@ -39,6 +40,8 @@ export interface ResolvedConfig {
   features: Features;
   /** The entity id of each role, or undefined when the role has no entity (no override and no prefix). */
   entities: Readonly<Record<RolePath, string | undefined>>;
+  /** The roles set to `none` in `entities`: not present, so no label or footer item (a role with no entity shows a dash). */
+  notPresent: ReadonlySet<RolePath>;
   /** The state values that mean off and defrost (the `states` option). */
   states: StateLists;
   /** The temperature colour stops: the `colors` option or the default scale. */
@@ -49,13 +52,18 @@ export interface ResolvedConfig {
 
 /**
  * The entity id of every role: an explicit `entities` override, then `<domain>.<prefix>_<suffix>` when a prefix is
- * set, then nothing.
+ * set and the role is not `none`, then nothing.
  */
-export function resolveEntities(config: CardConfig, prefix: string | undefined): Record<RolePath, string | undefined> {
+export function resolveEntities(
+  config: CardConfig,
+  prefix: string | undefined,
+  notPresent: ReadonlySet<RolePath> = notPresentRoles(config),
+): Record<RolePath, string | undefined> {
   return Object.fromEntries(
     ROLES.map((role) => [
       role.path,
-      entityAt(config, `entities.${role.path}`) ?? (prefix === undefined ? undefined : defaultEntityId(role, prefix)),
+      entityAt(config, `entities.${role.path}`) ??
+        (prefix === undefined || notPresent.has(role.path) ? undefined : defaultEntityId(role, prefix)),
     ]),
   ) as Record<RolePath, string | undefined>;
 }
@@ -67,6 +75,8 @@ export function resolveConfig(config: CardConfig): ResolvedConfig {
   const prefix = prefixOf(config);
   const variant = variantOf(config);
   const sample = isSampleMode(config);
+  // A `none` role is an entity setting, so it never occurs in sample mode.
+  const notPresent = notPresentRoles(config);
   return {
     ...installationOf(config),
     detail: detailOf(config),
@@ -77,7 +87,8 @@ export function resolveConfig(config: CardConfig): ResolvedConfig {
     states: statesOf(config),
     colors: stopsOf(config),
     features: mergeFeatures(variant, featureOverrides(config)),
-    entities: sample ? SAMPLE_ENTITIES : resolveEntities(config, prefix),
+    entities: sample ? SAMPLE_ENTITIES : resolveEntities(config, prefix, notPresent),
+    notPresent,
     sample,
   };
 }

@@ -29,6 +29,7 @@ import {
   FOOTER_LABELS,
   HEATING_LABELS,
   INDICATIONS,
+  MODE_LABELS,
   NBSP,
   NO_VALUE,
   VALUE_CAPTIONS,
@@ -304,6 +305,113 @@ describe('missing values', () => {
     const card = await mount({}, { states: {} });
     expect(valueOf(card, 'production_out')).toBe(NO_VALUE);
     expect(footer(card, 'cop')).toBe(NO_VALUE);
+    card.remove();
+  });
+});
+
+describe('roles not present', () => {
+  const NO_PRESSURE = {
+    entities: { production: { pressure: 'none' }, brine: { pressure: 'none' } },
+  };
+
+  test('No pressure sensors: no label at items 37 and 38, the probes stay drawn', async () => {
+    const card = await mount({ ...NO_PRESSURE, detail: 'full', layout: 'full' }, hassOf());
+    expect(label(card, 'production_pressure')).toBeNull();
+    expect(label(card, 'brine_pressure')).toBeNull();
+    expect(root(card).querySelector('[data-label-item="37"], [data-label-item="38"]')).toBeNull();
+    expect(root(card).querySelector('g[data-item="37"]')).not.toBeNull();
+    expect(root(card).querySelector('g[data-item="38"]')).not.toBeNull();
+    expect(label(card, 'production_out')).not.toBeNull();
+    card.remove();
+  });
+
+  test('a hidden label stays hidden in the compact layout', async () => {
+    const card = await mount({ entities: { production: { outlet_temperature: 'none' } }, layout: 'compact' }, hassOf());
+    expect(label(card, 'production_out')).toBeNull();
+    expect(label(card, 'production_in')).not.toBeNull();
+    card.remove();
+  });
+
+  test('No COP: the footer shows no COP item, the others stay', async () => {
+    for (const layout of ['full', 'compact']) {
+      const card = await mount({ entities: { unit: { cop: 'none' } }, layout }, hassOf());
+      expect(root(card).querySelector('[data-footer="cop"]')).toBeNull();
+      expect(root(card).querySelector('[data-footer="outside_temperature"]')).not.toBeNull();
+      card.remove();
+    }
+  });
+
+  test('a lone season role: its text, its tap entity, and a dash while it reads off', async () => {
+    const winter = await mount({ entities: { unit: { summer: 'none' } } }, hassOf());
+    expect(footer(winter, 'season')).toBe(FOOTER_LABELS.winter);
+    const events: string[] = [];
+    winter.addEventListener('hass-more-info', (event) =>
+      events.push((event as CustomEvent<{ entityId: string }>).detail.entityId),
+    );
+    root(winter).querySelector<HTMLButtonElement>('[data-footer="season"] button')?.click();
+    expect(events).toEqual([idOf('unit.winter')]);
+    winter.remove();
+    const summer = await mount(
+      { entities: { unit: { winter: 'none' } } },
+      hassOf({ 'unit.summer': 'on', 'unit.winter': 'off' }),
+    );
+    expect(footer(summer, 'season')).toBe(FOOTER_LABELS.summer);
+    const summerEvents: string[] = [];
+    summer.addEventListener('hass-more-info', (event) =>
+      summerEvents.push((event as CustomEvent<{ entityId: string }>).detail.entityId),
+    );
+    root(summer).querySelector<HTMLButtonElement>('[data-footer="season"] button')?.click();
+    expect(summerEvents).toEqual([idOf('unit.summer')]);
+    summer.remove();
+    const off = await mount({ entities: { unit: { winter: 'none' } } }, hassOf({ 'unit.summer': 'off' }));
+    expect(footer(off, 'season')).toBe(NO_VALUE);
+    off.remove();
+  });
+
+  test('the season item goes only when both its roles are not present', async () => {
+    const one = await mount({ entities: { unit: { summer: 'none' } } }, hassOf());
+    expect(root(one).querySelector('[data-footer="season"]')).not.toBeNull();
+    one.remove();
+    const both = await mount({ entities: { unit: { summer: 'none', winter: 'none' } } }, hassOf());
+    expect(root(both).querySelector('[data-footer="season"]')).toBeNull();
+    both.remove();
+  });
+
+  test('Unknown entity keeps its dash: the label of a bound but unknown entity stays', async () => {
+    const card = await mount({ entities: { production: { outlet_temperature: 'sensor.does_not_exist' } } }, hassOf());
+    const value = label(card, 'production_out')?.querySelector('.value');
+    expect(value?.textContent.trim()).toBe(NO_VALUE);
+    expect(value?.classList.contains('missing')).toBe(true);
+    card.remove();
+  });
+
+  test('Power only: speed and percentage none, the power decides (DHW demand on)', async () => {
+    const card = await mount(
+      { entities: { compressor: { speed: 'none', percentage: 'none' } } },
+      hassOf({
+        'compressor.speed': '0',
+        'compressor.percentage': '0',
+        'compressor.power': '786',
+        'dhw.demand': 'on',
+      }),
+    );
+    expect(root(card).querySelector('.mode')?.textContent.trim()).toBe(MODE_LABELS.dhw);
+    card.remove();
+  });
+
+  test('Standby power: a speed entity set to none is not read, the power is below 100 W', async () => {
+    const card = await mount(
+      { entities: { compressor: { speed: 'none', percentage: 'none' } } },
+      hassOf({ 'compressor.speed': '2803', 'compressor.power': '15', 'dhw.demand': 'on' }),
+    );
+    expect(root(card).querySelector('.mode')?.textContent.trim()).toBe(MODE_LABELS.standby);
+    card.remove();
+  });
+
+  test('unit.on_off none hides the on/off footer item', async () => {
+    const card = await mount({ entities: { unit: { on_off: 'none' } } }, hassOf());
+    expect(root(card).querySelector('[data-footer="on_off"]')).toBeNull();
+    expect(root(card).querySelector('[data-footer="cop"]')).not.toBeNull();
     card.remove();
   });
 });

@@ -166,6 +166,13 @@ describe('entity roles', () => {
     expect(errors({ entities: { dhw: { temperature: 'boiler top' } } })[0]).toContain('dhw.temperature');
   });
 
+  test('none is accepted for a role, trimmed and lower case; other words are not', () => {
+    expect(errors({ prefix: 'x', entities: { unit: { cop: 'none' } } })).toEqual([]);
+    expect(errors({ prefix: 'x', entities: { unit: { cop: ' none ' } } })).toEqual([]);
+    expect(errors({ prefix: 'x', entities: { unit: { cop: 'None' } } })[0]).toContain('unit.cop');
+    expect(errors({ entities: { unit: { cop: 'nothing' } } })[0]).toContain('unit.cop');
+  });
+
   test('a valid override and a blank value are accepted', () => {
     expect(errors({ prefix: 'x', entities: { dhw: { temperature: 'sensor.boiler_top', setpoint: null } } })).toEqual(
       [],

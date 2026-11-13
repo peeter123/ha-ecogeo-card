@@ -83,6 +83,39 @@ describe('sample mode', () => {
   });
 });
 
+describe('none is not a sample config', () => {
+  test('only unit.cop none: no sample values and no Sample values note', async () => {
+    const card = await mount({ type: 'custom:ecogeo-card', entities: { unit: { cop: 'none' } } }, { states: {} });
+    expect(card.shadowRoot?.querySelector('.sample')).toBeNull();
+    expect(text(card, '.mode')).toBe(MODE_LABELS.standby);
+    card.remove();
+  });
+});
+
+describe('brine pump not present', () => {
+  const heating = [
+    [`sensor.${P}_compressor_rpm`, '2803', 'RPM'],
+    [`binary_sensor.${P}_winter`, 'on'],
+    [`sensor.${P}_heatpump_on_off`, 'ON'],
+    [`sensor.${P}_brine_out`, '8.0', '°C'],
+  ] as const;
+  const brinePipe = (card: EcogeoCard): Element | null | undefined =>
+    card.shadowRoot?.querySelector('[data-segment="src_out"]');
+
+  test('a prefix-only heating snapshot with brine.pump none has an active brine circuit; with the default pump entity it is muted', async () => {
+    const without = await mount(
+      { type: 'custom:ecogeo-card', prefix: P, entities: { brine: { pump: 'none' } } },
+      hassWith(...heating),
+    );
+    expect(text(without, '.mode')).toBe(MODE_LABELS.heating);
+    expect(brinePipe(without)?.classList.contains('muted')).toBe(false);
+    without.remove();
+    const gated = await mount({ type: 'custom:ecogeo-card', prefix: P }, hassWith(...heating));
+    expect(brinePipe(gated)?.classList.contains('muted')).toBe(true);
+    gated.remove();
+  });
+});
+
 describe('mode, alarm and offline indications', () => {
   const heating = [
     [`sensor.${P}_compressor_rpm`, '2803', 'RPM'],

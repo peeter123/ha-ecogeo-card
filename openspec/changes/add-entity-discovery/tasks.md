@@ -33,15 +33,16 @@ Each group is implemented by one Sonnet subagent, reviewed by Opus and committed
 
 ## 2. Roles not present
 
-- [ ] 2.1 Accept `none` in `entities`: no prefix default, counted as an entity setting (no sample mode), and a set
+- [x] 2.1 Accept `none` in `entities`: no prefix default, counted as an entity setting (no sample mode), and a set
   of roles not present in the resolved config (design D1).
   Verify: `npm test` covers card-config "Fan speed not present", "None is not a sample config" and the updated
   "Not an entity id".
-- [ ] 2.2 Hide the labels and footer items of roles not present, in the full and compact layouts; keep the dash
+- [x] 2.2 Hide the labels and footer items of roles not present, in the full and compact layouts; keep the dash
   for unknown entities (design D7); `none` mode inputs count as no value.
   Verify: `npm test` covers live-values "No pressure sensors", "No COP", "Unknown entity keeps its dash"; a browser
-  test checks no label is rendered at items 37/38 with both pressure roles `none`.
-- [ ] 2.3 Document `none` in the README (entities section) and in the "Using another source" section of the docs.
+  test checks no label is rendered at items 37/38 with both pressure roles `none`. Added in review: operating-mode
+  "Brine pump not present" and component-info "Compressor without a speed role" (design D7).
+- [x] 2.3 Document `none` in the README (entities section) and in the "Using another source" section of the docs.
   Verify: `test/readme.ts` passes.
 
 ## 3. Foreign naming in the emulator
