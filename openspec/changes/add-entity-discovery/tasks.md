@@ -58,10 +58,10 @@ Each group is implemented by one Sonnet subagent, reviewed by Opus and committed
 
 ## 4. Suggestion module
 
-- [ ] 4.1 Extend the role table with `accepts` and `direction`, and add `src/config/keywords.ts` (EN, NL, ES, DE)
+- [x] 4.1 Extend the role table with `accepts` and `direction`, and add `src/config/keywords.ts` (EN, NL, ES, DE)
   (design D2).
   Verify: `npm test` asserts every role has `accepts` and keywords, and every paired probe has a direction.
-- [ ] 4.2 Implement the pure suggestion function: candidates, prefix inference, fit, scoring, assignment, ties,
+- [x] 4.2 Implement the pure suggestion function: candidates, prefix inference, fit, scoring, assignment, ties,
   report (design D8).
   Verify: `npm test` covers card-editor "Renamed device", "Foreign names", "Unit must fit", "Tie left empty" against
   the firmware and foreign fixtures (every foreign role bound as the fixture intends, or left empty where it is

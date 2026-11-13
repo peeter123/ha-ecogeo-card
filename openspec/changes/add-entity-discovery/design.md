@@ -130,6 +130,29 @@ Refinements for compound words (Dutch, German), settled in the group 3 review:
 - The device name is removed from the start of the friendly name before tokenizing (Home Assistant builds
   `<device> <name>` for entities with `has_entity_name`), so a device named "Warmtepomp" does not hit `pomp`.
 
+Details fixed in group 4: direction and setpoint exclusions apply to keyword scores only, not to the id matches
+(100, 90); a candidate scoring 0 is not a pair, and a tie only counts among candidates above 0; the `device_class`
+check applies to roles with a quantity (a candidate without a device class passes); a role with a quantity needs a
+convertible unit, a number role without one needs a unit from its fit list (the COP none), on/off domains and text
+and binary roles skip the unit check; single-concept roles (superheat, alarm, COP, summer, winter, connection,
+on/off) list their words as both subject and role words. Known limit: when every entity of a device shares a longer
+start than the real prefix, the inferred prefix takes those words from the object id; the friendly name still
+carries them.
+
+Settled in the group 4 review:
+- A `sensor`, `number` or `input_number` candidate with a unit or a numeric `device_class` does not fit a text or
+  binary role (an hours counter is not a compressor mode).
+- Heating-circuit words count as production subject words (`heating`, `verwarming`, `heizung`, `heizkreis`,
+  `calefaccion`, `cv`), so "Flow temperature" style names under a heating word bind items 33/34.
+- A paired role (`direction` set) requires a direction word, like a setpoint role requires a setpoint word. Suction
+  words count as `in` and discharge words as `out`, so the compressor pairs carry a direction.
+- A role whose resolved entity (the prefix default included) is known to Home Assistant counts as bound: it does
+  not take part and its entity counts as used. "Known" means `hass.states` has it, also for the binding check.
+- Spanish `impulsion` is an `out` direction word, `retorno` an `in` word; DHW subject words are specific (no bare
+  `tank` or `agua`); the air unit's subject words exclude a bare `unit`.
+- `flow` is a weak `out` word: it counts only when no `in` word hits, so "return flow" is an inlet; an opposite
+  direction word still excludes a candidate.
+
 ### D9. Editor parts
 - Device picker: an `ha-form` field with the `device` selector, no integration filter (KNX, Modbus). Editor state
   only, like the advanced switch.

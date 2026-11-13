@@ -98,8 +98,17 @@ the opposite direction (inlet against outlet), a tie for the top, or a weak matc
 - **THEN** the production pressure is left empty
 
 #### Scenario: Tie left empty
-- **WHEN** two temperature entities of the device are both named "Supply temperature"
+- **WHEN** two temperature entities of the device are both named "Production supply temperature"
 - **THEN** the production outlet is left empty
+
+#### Scenario: Weak match left empty
+- **WHEN** the only temperature entity of the device that could fit the production outlet is named "Supply
+  temperature"
+- **THEN** the production outlet is left empty
+
+#### Scenario: Prefix binding kept
+- **WHEN** the config sets a prefix whose production outlet entity exists, and the user suggests from another device
+- **THEN** the production outlet is not written under `entities`
 
 ### Requirement: Suggestion report
 After a suggestion, the editor SHALL show how many roles it filled and name the roles it left empty, until the next

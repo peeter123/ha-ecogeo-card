@@ -25,49 +25,59 @@ export interface RoleSpec {
   item: string;
   /** The role also accepts an on/off entity (binary_sensor, switch, input_boolean), read as a boolean (add-entity-discovery D3). */
   onOff?: true;
+  /** The domains the role's picker and the suggestions allow. */
+  accepts: readonly string[];
+  /** For the paired probes (manual items 29/30, 31/32, 33/34, 35/36): in (inlet, return, suction) or out (outlet, supply, discharge). */
+  direction?: 'in' | 'out';
 }
+
+/** The domains each kind of role accepts, for its picker and for suggestions (add-entity-discovery D2). */
+const ACCEPTS_NUMBER = ['sensor', 'number', 'input_number'] as const;
+const ACCEPTS_NUMBER_ON_OFF = [...ACCEPTS_NUMBER, 'binary_sensor', 'switch', 'input_boolean'] as const;
+const ACCEPTS_BINARY = ['binary_sensor', 'switch', 'input_boolean', 'sensor'] as const;
+const ACCEPTS_TEXT = ['sensor', 'select', 'input_select', 'binary_sensor', 'switch', 'input_boolean'] as const;
 
 const t = UNITS.celsius;
 
 /* prettier-ignore */
 export const ROLES = [
-  { path: 'production.outlet_temperature', domain: 'sensor', suffix: 'production_out', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '33' },
-  { path: 'production.return_temperature', domain: 'sensor', suffix: 'production_in', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '34' },
-  { path: 'production.pressure', domain: 'sensor', suffix: 'pressure_production', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '38' },
-  { path: 'production.pump', domain: 'sensor', suffix: 'production_pump', kind: 'number', unit: UNITS.percent, decimals: 1, item: '15', onOff: true },
-  { path: 'brine.outlet_temperature', domain: 'sensor', suffix: 'brine_out', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '31' },
-  { path: 'brine.inlet_temperature', domain: 'sensor', suffix: 'brine_in', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '32' },
-  { path: 'brine.pressure', domain: 'sensor', suffix: 'pressure_brine', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '37' },
-  { path: 'brine.pump', domain: 'sensor', suffix: 'brine_pump', kind: 'number', unit: UNITS.percent, decimals: 1, item: '16', onOff: true },
-  { path: 'compressor.speed', domain: 'sensor', suffix: 'compressor_rpm', kind: 'number', unit: UNITS.rpm, decimals: 0, item: '11', onOff: true },
-  { path: 'compressor.percentage', domain: 'sensor', suffix: 'compressor_percentage', kind: 'number', unit: UNITS.percent, decimals: 1, item: '11' },
-  { path: 'compressor.power', domain: 'sensor', suffix: 'power_consumption', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '11' },
-  { path: 'compressor.suction_temperature', domain: 'sensor', suffix: 'compressor_suction_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '29' },
-  { path: 'compressor.discharge_temperature', domain: 'sensor', suffix: 'compressor_discharge_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '30' },
-  { path: 'compressor.suction_pressure', domain: 'sensor', suffix: 'compressor_suction_pressure', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '35' },
-  { path: 'compressor.discharge_pressure', domain: 'sensor', suffix: 'compressor_discharge_pressure', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '36' },
-  { path: 'compressor.mode', domain: 'sensor', suffix: 'compressor_operation_mode', kind: 'text', item: '11', onOff: true },
-  { path: 'refrigerant.condensation_temperature', domain: 'sensor', suffix: 'condensation_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '8' },
-  { path: 'refrigerant.evaporation_temperature', domain: 'sensor', suffix: 'evaporation_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '7' },
-  { path: 'refrigerant.superheat', domain: 'sensor', suffix: 'superheat', kind: 'number', quantity: 'difference', unit: UNITS.kelvin, decimals: 1, item: '12' },
-  { path: 'refrigerant.expansion_valve', domain: 'sensor', suffix: 'expansion_valve_position', kind: 'number', unit: UNITS.percent, decimals: 0, item: '12' },
-  { path: 'heating.capacity', domain: 'sensor', suffix: 'condensation_capacity', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '8' },
-  { path: 'cooling.capacity', domain: 'sensor', suffix: 'evaporation_capacity', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '7' },
-  { path: 'heating.demand', domain: 'binary_sensor', suffix: 'dg1_demand', kind: 'binary', item: '1/2' },
-  { path: 'heating.setpoint', domain: 'sensor', suffix: 'heating_dg1_setpoint', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '1/2' },
-  { path: 'dhw.temperature', domain: 'sensor', suffix: 'dhw_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'tank (54 on C)' },
-  { path: 'dhw.setpoint', domain: 'number', suffix: 'dhw_setpoint', kind: 'number', quantity: 'temperature', unit: t, decimals: 0, item: 'tank' },
-  { path: 'dhw.start_delta', domain: 'number', suffix: 'delta_t_start_dhw', kind: 'number', quantity: 'difference', unit: UNITS.kelvin, decimals: 0, item: 'tank' },
-  { path: 'dhw.demand', domain: 'binary_sensor', suffix: 'dhw_demand', kind: 'binary', item: '26' },
-  { path: 'source.fan_speed', domain: 'sensor', suffix: 'aerothermal_fan_speed', kind: 'number', unit: UNITS.percent, decimals: 1, item: 'air unit' },
-  { path: 'source.air_unit_outlet_temperature', domain: 'sensor', suffix: 'brine_temperature_air_unit_outlet', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'air unit' },
-  { path: 'source.outside_temperature', domain: 'sensor', suffix: 'outside_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'air unit / footer' },
-  { path: 'unit.on_off', domain: 'sensor', suffix: 'heatpump_on_off', kind: 'text', item: 'footer', onOff: true },
-  { path: 'unit.summer', domain: 'binary_sensor', suffix: 'summer', kind: 'binary', item: 'footer' },
-  { path: 'unit.winter', domain: 'binary_sensor', suffix: 'winter', kind: 'binary', item: 'footer' },
-  { path: 'unit.alarm', domain: 'binary_sensor', suffix: 'alarm', kind: 'binary', item: 'footer' },
-  { path: 'unit.connection', domain: 'binary_sensor', suffix: 'status', kind: 'binary', item: 'footer' },
-  { path: 'unit.cop', domain: 'sensor', suffix: 'cop', kind: 'number', decimals: 1, item: 'footer' },
+  { path: 'production.outlet_temperature', domain: 'sensor', suffix: 'production_out', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '33', accepts: ACCEPTS_NUMBER, direction: 'out' },
+  { path: 'production.return_temperature', domain: 'sensor', suffix: 'production_in', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '34', accepts: ACCEPTS_NUMBER, direction: 'in' },
+  { path: 'production.pressure', domain: 'sensor', suffix: 'pressure_production', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '38', accepts: ACCEPTS_NUMBER },
+  { path: 'production.pump', domain: 'sensor', suffix: 'production_pump', kind: 'number', unit: UNITS.percent, decimals: 1, item: '15', onOff: true, accepts: ACCEPTS_NUMBER_ON_OFF },
+  { path: 'brine.outlet_temperature', domain: 'sensor', suffix: 'brine_out', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '31', accepts: ACCEPTS_NUMBER, direction: 'out' },
+  { path: 'brine.inlet_temperature', domain: 'sensor', suffix: 'brine_in', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '32', accepts: ACCEPTS_NUMBER, direction: 'in' },
+  { path: 'brine.pressure', domain: 'sensor', suffix: 'pressure_brine', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '37', accepts: ACCEPTS_NUMBER },
+  { path: 'brine.pump', domain: 'sensor', suffix: 'brine_pump', kind: 'number', unit: UNITS.percent, decimals: 1, item: '16', onOff: true, accepts: ACCEPTS_NUMBER_ON_OFF },
+  { path: 'compressor.speed', domain: 'sensor', suffix: 'compressor_rpm', kind: 'number', unit: UNITS.rpm, decimals: 0, item: '11', onOff: true, accepts: ACCEPTS_NUMBER_ON_OFF },
+  { path: 'compressor.percentage', domain: 'sensor', suffix: 'compressor_percentage', kind: 'number', unit: UNITS.percent, decimals: 1, item: '11', accepts: ACCEPTS_NUMBER },
+  { path: 'compressor.power', domain: 'sensor', suffix: 'power_consumption', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '11', accepts: ACCEPTS_NUMBER },
+  { path: 'compressor.suction_temperature', domain: 'sensor', suffix: 'compressor_suction_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '29', accepts: ACCEPTS_NUMBER, direction: 'in' },
+  { path: 'compressor.discharge_temperature', domain: 'sensor', suffix: 'compressor_discharge_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '30', accepts: ACCEPTS_NUMBER, direction: 'out' },
+  { path: 'compressor.suction_pressure', domain: 'sensor', suffix: 'compressor_suction_pressure', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '35', accepts: ACCEPTS_NUMBER, direction: 'in' },
+  { path: 'compressor.discharge_pressure', domain: 'sensor', suffix: 'compressor_discharge_pressure', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '36', accepts: ACCEPTS_NUMBER, direction: 'out' },
+  { path: 'compressor.mode', domain: 'sensor', suffix: 'compressor_operation_mode', kind: 'text', item: '11', onOff: true, accepts: ACCEPTS_TEXT },
+  { path: 'refrigerant.condensation_temperature', domain: 'sensor', suffix: 'condensation_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '8', accepts: ACCEPTS_NUMBER },
+  { path: 'refrigerant.evaporation_temperature', domain: 'sensor', suffix: 'evaporation_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '7', accepts: ACCEPTS_NUMBER },
+  { path: 'refrigerant.superheat', domain: 'sensor', suffix: 'superheat', kind: 'number', quantity: 'difference', unit: UNITS.kelvin, decimals: 1, item: '12', accepts: ACCEPTS_NUMBER },
+  { path: 'refrigerant.expansion_valve', domain: 'sensor', suffix: 'expansion_valve_position', kind: 'number', unit: UNITS.percent, decimals: 0, item: '12', accepts: ACCEPTS_NUMBER },
+  { path: 'heating.capacity', domain: 'sensor', suffix: 'condensation_capacity', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '8', accepts: ACCEPTS_NUMBER },
+  { path: 'cooling.capacity', domain: 'sensor', suffix: 'evaporation_capacity', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '7', accepts: ACCEPTS_NUMBER },
+  { path: 'heating.demand', domain: 'binary_sensor', suffix: 'dg1_demand', kind: 'binary', item: '1/2', accepts: ACCEPTS_BINARY },
+  { path: 'heating.setpoint', domain: 'sensor', suffix: 'heating_dg1_setpoint', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '1/2', accepts: ACCEPTS_NUMBER },
+  { path: 'dhw.temperature', domain: 'sensor', suffix: 'dhw_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'tank (54 on C)', accepts: ACCEPTS_NUMBER },
+  { path: 'dhw.setpoint', domain: 'number', suffix: 'dhw_setpoint', kind: 'number', quantity: 'temperature', unit: t, decimals: 0, item: 'tank', accepts: ACCEPTS_NUMBER },
+  { path: 'dhw.start_delta', domain: 'number', suffix: 'delta_t_start_dhw', kind: 'number', quantity: 'difference', unit: UNITS.kelvin, decimals: 0, item: 'tank', accepts: ACCEPTS_NUMBER },
+  { path: 'dhw.demand', domain: 'binary_sensor', suffix: 'dhw_demand', kind: 'binary', item: '26', accepts: ACCEPTS_BINARY },
+  { path: 'source.fan_speed', domain: 'sensor', suffix: 'aerothermal_fan_speed', kind: 'number', unit: UNITS.percent, decimals: 1, item: 'air unit', accepts: ACCEPTS_NUMBER },
+  { path: 'source.air_unit_outlet_temperature', domain: 'sensor', suffix: 'brine_temperature_air_unit_outlet', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'air unit', accepts: ACCEPTS_NUMBER },
+  { path: 'source.outside_temperature', domain: 'sensor', suffix: 'outside_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'air unit / footer', accepts: ACCEPTS_NUMBER },
+  { path: 'unit.on_off', domain: 'sensor', suffix: 'heatpump_on_off', kind: 'text', item: 'footer', onOff: true, accepts: ACCEPTS_TEXT },
+  { path: 'unit.summer', domain: 'binary_sensor', suffix: 'summer', kind: 'binary', item: 'footer', accepts: ACCEPTS_BINARY },
+  { path: 'unit.winter', domain: 'binary_sensor', suffix: 'winter', kind: 'binary', item: 'footer', accepts: ACCEPTS_BINARY },
+  { path: 'unit.alarm', domain: 'binary_sensor', suffix: 'alarm', kind: 'binary', item: 'footer', accepts: ACCEPTS_BINARY },
+  { path: 'unit.connection', domain: 'binary_sensor', suffix: 'status', kind: 'binary', item: 'footer', accepts: ACCEPTS_BINARY },
+  { path: 'unit.cop', domain: 'sensor', suffix: 'cop', kind: 'number', decimals: 1, item: 'footer', accepts: ACCEPTS_NUMBER },
 ] as const satisfies readonly RoleSpec[];
 
 /** Every entity role of the card, as a config path. */
