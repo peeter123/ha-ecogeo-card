@@ -129,11 +129,11 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 
 ## 7. Release and live check
 
-- [ ] 7.1 Run `npm run release` and deploy `dist/ecogeo-card.js` with the workspace's deploy command, then bump the
+- [x] 7.1 Run `npm run release` and deploy `dist/ecogeo-card.js` with the workspace's deploy command, then bump the
   dashboard resource's `?v=` (ids and current value in `private/installation.md`) and record the deploy there.
   Verify: `check-release` reports the card and editor registered; the deploy reports the upload; the resource shows
   the new `?v=`.
-- [ ] 7.2 Live check: light screenshots of the Schematic view at desktop (1280 x 800), tablet (768) and phone (390)
+- [x] 7.2 Live check: light screenshots of the Schematic view at desktop (1280 x 800), tablet (768) and phone (390)
   width, and a state check.
   Verify: a subagent returns a verdict that the footer is on screen at desktop width, no value sits on a pipe at any
   width (except, in the compact layout, the five of `ON_PIPE_COMPACT` over their plates), the superheat and expansion valve opening are not shown; no new ecogeo or frontend errors in the system log;
