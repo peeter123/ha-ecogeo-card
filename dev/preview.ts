@@ -10,8 +10,9 @@ import type { RolePath } from '../src/config/roles';
 import { FEATURE_KEYS, VARIANTS } from '../src/config/variants';
 import { NBSP, NO_VALUE, UNITS } from '../src/strings';
 import { CAPTURES } from './captures';
+import { NAMINGS, namingStates, registryOf } from './foreign';
 import { MockHass } from './mock-hass';
-import { SCENARIO_NAMES, SCENARIOS, scenarioStates } from './scenarios';
+import { SCENARIO_NAMES, SCENARIOS } from './scenarios';
 import {
   DEFAULT_CYCLE_SECONDS,
   FEATURE_CHOICES,
@@ -97,7 +98,7 @@ function apply(): void {
     error.hidden = false;
   }
   const states = { ...SCENARIOS[state.scenario].states, ...overrides } as Record<RolePath, string>;
-  card.hass = mock.build(scenarioStates(states), state.theme === 'dark');
+  card.hass = mock.build(namingStates(state.naming, states), state.theme === 'dark', registryOf(state.naming));
   history.replaceState(null, '', toSearch(state));
   delete cardsRoot?.dataset['ready'];
   void card.updateComplete.then(() => {
@@ -248,6 +249,15 @@ controlsRoot.append(
   ),
   fieldset(
     'Configuration',
+    select(
+      'naming',
+      'Entity naming',
+      NAMINGS,
+      () => state.naming,
+      (value) => {
+        state = { ...state, naming: value };
+      },
+    ),
     select(
       'model',
       'Model',

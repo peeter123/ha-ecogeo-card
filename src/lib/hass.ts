@@ -15,11 +15,29 @@ export interface HassEntityState {
 /** The parts of a state object a value is read from (state and unit). */
 export type EntityStateLike = Pick<HassEntityState, 'state' | 'attributes'>;
 
+/** An entity registry display entry as in `hass.entities[entity_id]` (the fields the editor's suggestions read). */
+export interface HassEntityRegistryEntry {
+  entity_id: string;
+  device_id?: string | null;
+  platform?: string;
+  entity_category?: string | null;
+  name?: string | null;
+}
+
+/** A device registry entry as in `hass.devices[id]`. */
+export interface HassDevice {
+  id: string;
+  name?: string | null;
+  name_by_user?: string | null;
+}
+
 /** The `hass` object passed to the card. */
 export interface HassLike {
   states: Readonly<Record<string, HassEntityState | undefined>>;
   /** Entity registry entries (display precision, name); HA builds new entry objects on every registry update. */
   entities?: Readonly<Record<string, unknown>>;
+  /** Device registry entries by device id. */
+  devices?: Readonly<Record<string, HassDevice>>;
   /** Language and number format; replaced when the user changes them. */
   locale?: unknown;
   /** The UI language; older versions have it without `locale`. */

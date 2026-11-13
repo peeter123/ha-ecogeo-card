@@ -47,12 +47,12 @@ Each group is implemented by one Sonnet subagent, reviewed by Opus and committed
 
 ## 3. Foreign naming in the emulator
 
-- [ ] 3.1 Add the foreign mock source with `hass.entities` and `hass.devices` for both namings, the `naming`
+- [x] 3.1 Add the foreign mock source with `hass.entities` and `hass.devices` for both namings, the `naming`
   control and URL key, and the captures (design D11); export the mock for tests.
   Verify: `npm test` covers the URL round trip of `naming`; a subagent captures dev-emulator "Foreign heating"
   (also at 360 px), "Foreign defrost", foreign DHW and off, and returns a verdict (mode, bar, Hz, no labels for the
   roles not present, no overlaps).
-- [ ] 3.2 Note the naming control in the emulator section of the README or docs, wherever the emulator controls are
+- [x] 3.2 Note the naming control in the emulator section of the README or docs, wherever the emulator controls are
   documented.
   Verify: `test/readme.ts` passes.
 

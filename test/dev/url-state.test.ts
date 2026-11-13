@@ -22,6 +22,7 @@ describe('emulator URL state', () => {
     const state = {
       ...defaultState(),
       scenario: 'passive_cooling' as const,
+      naming: 'foreign' as const,
       model: 'C' as const,
       variant: 2 as const,
       source: 'hybrid' as const,
@@ -40,9 +41,30 @@ describe('emulator URL state', () => {
   test('invalid values keep their defaults', () => {
     expect(
       parseState(
-        '?scenario=x&model=Z&variant=9&source=sun&theme=blue&htr=maybe&detail=minimal&fill=solid&layout=portrait&width=abc',
+        '?scenario=x&naming=klingon&model=Z&variant=9&source=sun&theme=blue&htr=maybe&detail=minimal&fill=solid&layout=portrait&width=abc',
       ),
     ).toEqual(defaultState());
+  });
+
+  test('naming: the URL carries naming=foreign only when it is not the default', () => {
+    const foreign = { ...defaultState(), naming: 'foreign' as const };
+    expect(new URLSearchParams(toSearch(foreign)).get('naming')).toBe('foreign');
+    expect(new URLSearchParams(toSearch(defaultState())).has('naming')).toBe(false);
+    expect(parseState('?naming=foreign').naming).toBe('foreign');
+    expect(parseState('?naming=firmware').naming).toBe('firmware');
+  });
+
+  test('naming: the foreign config binds every role by id, sets the `none` roles and the states, and has no prefix', () => {
+    const config = configOf({ ...defaultState(), naming: 'foreign' });
+    expect(configErrors(config)).toEqual([]);
+    expect(config['prefix']).toBeUndefined();
+    expect(config['states']).toEqual({ defrost: ['Ontdooien'] });
+    expect(config['entities']).toMatchObject({
+      source: { fan_speed: 'none' },
+      unit: { cop: 'none', on_off: 'switch.wp_30' },
+      heating: { setpoint: 'none' },
+    });
+    expect(configOf(defaultState())['prefix']).toBe('demo_ecogeo');
   });
 
   test('switch detail: the URL carries detail=full and the card config follows', () => {
@@ -107,6 +129,16 @@ describe('capture list', () => {
       names.add(name);
       expect(configErrors(configOf(parseState(`?${query}`))), name).toEqual([]);
     }
+  });
+
+  test('the foreign naming is captured in heating, DHW, defrost and off, and in heating on a phone', () => {
+    const foreign = CAPTURES.map(({ query }) => parseState(`?${query}`)).filter((s) => s.naming === 'foreign');
+    for (const scenario of ['heating', 'dhw', 'defrost', 'off'] as const)
+      expect(
+        foreign.some((s) => s.scenario === scenario),
+        scenario,
+      ).toBe(true);
+    expect(foreign.some((s) => s.scenario === 'heating' && s.width === 360)).toBe(true);
   });
 
   test('each source is captured in light and dark, in heating and in a cold-source mode (passive cooling or defrost)', () => {

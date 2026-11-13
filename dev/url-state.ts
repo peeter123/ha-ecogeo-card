@@ -1,4 +1,4 @@
-// The emulator's state and its URL query string (add-schematic-card D9): scenario, model, variant, source, dhw, every feature,
+// The emulator's state and its URL query string (add-schematic-card D9): scenario, naming, model, variant, source, dhw, every feature,
 // detail, fill, layout, width, theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
 // hrv-ventilation dev/preview.ts (state in the query string); the parameters are this card's own.
 import {
@@ -18,6 +18,7 @@ import {
 } from '../src/config/options';
 import { FEATURE_KEYS, VARIANTS, type FeatureKey, type Variant } from '../src/config/variants';
 import type { CardConfig } from '../src/lib/config';
+import { FOREIGN_STATES, NAMINGS, foreignEntitiesConfig, type Naming } from './foreign';
 import { DEMO_PREFIX, SCENARIO_NAMES, isScenarioName, type ScenarioName } from './scenarios';
 
 export const THEMES = ['light', 'dark'] as const;
@@ -35,6 +36,8 @@ export const MAX_WIDTH = 2000;
 
 export interface EmulatorState {
   scenario: ScenarioName;
+  /** The mock source (URL `naming=`): the firmware's entity names (the default) or another integration's (dev/foreign.ts). */
+  naming: Naming;
   model: Model;
   variant: Variant;
   source: Source;
@@ -69,6 +72,7 @@ export const dhwForModel = (model: Model, dhw: 'default' | DhwStorage): 'default
 
 export const defaultState = (): EmulatorState => ({
   scenario: 'heating',
+  naming: 'firmware',
   model: 'B',
   variant: DEFAULT_VARIANT,
   source: 'ground',
@@ -98,6 +102,7 @@ export function parseState(search: string): EmulatorState {
   const model = pick(MODELS, params.get('model'), base.model);
   return {
     scenario: isScenarioName(scenario) ? scenario : base.scenario,
+    naming: pick(NAMINGS, params.get('naming'), base.naming),
     model,
     variant: VARIANTS.find((v) => v === variant) ?? base.variant,
     source: pick(SOURCES, params.get('source'), base.source),
@@ -128,6 +133,7 @@ export function toSearch(state: EmulatorState): string {
     source: state.source,
     theme: state.theme,
   });
+  if (state.naming !== 'firmware') params.set('naming', state.naming);
   if (state.dhw !== 'default') params.set('dhw', state.dhw);
   if (state.detail !== 'simplified') params.set('detail', state.detail);
   if (state.fill !== 'gradient') params.set('fill', state.fill);
@@ -138,7 +144,10 @@ export function toSearch(state: EmulatorState): string {
   return `?${params.toString()}`;
 }
 
-/** The card config of a state: the demo prefix, the options and the explicit features. */
+/**
+ * The card config of a state: the demo prefix (firmware naming) or every role bound by id with `none` roles and the
+ * `states` lists (foreign naming), the options and the explicit features.
+ */
 export function configOf(state: EmulatorState): CardConfig {
   const features: Record<string, boolean | 'unused'> = {};
   for (const key of FEATURE_KEYS) {
@@ -147,7 +156,12 @@ export function configOf(state: EmulatorState): CardConfig {
   }
   return {
     type: 'custom:ecogeo-card',
-    prefix: DEMO_PREFIX,
+    ...(state.naming === 'foreign'
+      ? {
+          entities: foreignEntitiesConfig(),
+          states: { defrost: [...FOREIGN_STATES.defrost] },
+        }
+      : { prefix: DEMO_PREFIX }),
     model: state.model,
     variant: state.variant,
     source: state.source,
@@ -159,4 +173,5 @@ export function configOf(state: EmulatorState): CardConfig {
   };
 }
 
-export { SCENARIO_NAMES };
+export { NAMINGS, SCENARIO_NAMES };
+export type { Naming };

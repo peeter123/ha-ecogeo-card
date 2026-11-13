@@ -117,6 +117,19 @@ the new `entities` values and a report (filled roles, empty roles). Steps:
 6. Only roles that are empty or bound to an unknown entity take part (card-editor).
 The numbers are tuned against the two fixtures (firmware, foreign) and fixed by tests.
 
+Refinements for compound words (Dutch, German), settled in the group 3 review:
+- A keyword of four or more letters hits when it is a substring of a token (`aanvoer` in `aanvoertemperatuur`,
+  `druk` in `zuigdruk`); a shorter keyword (`in`, `out`, `uit`) hits only as a whole token.
+- The direction words include `ingaand`/`uitgaand`, `eingang`/`ausgang` and `entrada`/`salida`; role words
+  include the suction and discharge words (`zuig`, `pers`, `saug`, `druck`, `succion`, `descarga`) and power words
+  (`opgenomen`, `verbruik`, `consumption`).
+- Setpoint words (`setpoint`, `target`, `gewenst`, `soll`, `consigna`) mark a setpoint: such a candidate is excluded
+  from roles that are not setpoints, and a setpoint role requires one, like an opposite direction.
+- The tie check compares a role's two best candidates that are still unused when the role's best pair comes up, so a
+  candidate taken by a stronger role no longer causes a tie.
+- The device name is removed from the start of the friendly name before tokenizing (Home Assistant builds
+  `<device> <name>` for entities with `has_entity_name`), so a device named "Warmtepomp" does not hit `pomp`.
+
 ### D9. Editor parts
 - Device picker: an `ha-form` field with the `device` selector, no integration filter (KNX, Modbus). Editor state
   only, like the advanced switch.

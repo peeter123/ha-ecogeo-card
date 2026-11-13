@@ -299,6 +299,12 @@ no installation data. The mock entities use the demo prefix `demo_ecogeo`.
 - **Scenario:** off, standby, heating, DHW, active cooling (all heat to the outer loop), active cooling with HTR
   recovery, passive cooling, defrost, alarm while heating, bridge offline and sensors unavailable. Each is a complete
   set of states (`dev/scenarios.ts`).
+- **Naming:** `firmware` (the default: the firmware's entity names under the demo prefix) or `foreign`, a second mock
+  source for a heat pump integrated through another integration (`dev/foreign.ts`): entity ids such as
+  `sensor.wp_3`, Dutch friendly names, pressures in kPa, the compressor speed in Hz, the compressor mode as an enum
+  (`Uit`, `Verwarmen`, `Tapwater`, `Ontdooien`), the on/off state as a switch, and the fan speed, the COP and the DG1
+  setpoint set to `none`. The card is configured with `entities` and `states` instead of a prefix, so every scenario
+  works with both namings. Both namings also provide `hass.entities` and `hass.devices`.
 - **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default; on B external, unused or none, on C internal or unused; the other choices are
   disabled, and a value in the URL that the model rejects falls back to the default), each feature (the variant's preset, `true`, `false` or `unused`), the detail level
   (simplified or full), the exchanger fill (gradient or none, the card's `exchanger_fill` option) and
@@ -313,6 +319,7 @@ All state is in the URL query string, so every combination is addressable. Param
 | Parameter                                                      | Values                                                                       | Default    |
 | -------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---------- |
 | `scenario`                                                     | `off`, `standby`, `heating`, `dhw`, `active_cooling`, `active_cooling_htr`, `passive_cooling`, `defrost`, `alarm_heating`, `offline`, `unavailable` | `heating`  |
+| `naming`                                                       | `firmware`, `foreign`                                                        | `firmware` |
 | `model`                                                        | `B`, `C`                                                                     | `B`        |
 | `variant`                                                      | `1` to `4`                                                                   | `4`        |
 | `source`                                                       | `air`, `ground`, `hybrid`                                                    | `ground`   |
@@ -328,6 +335,6 @@ For example `dev/index.html?scenario=passive_cooling&source=ground`.
 `npm run capture` starts its own Vite server, opens every URL of the fixed list in `dev/captures.ts` in headless
 Chromium (Playwright, a dev dependency for this script only) and writes one PNG per URL to `build/captures/`. The list
 covers every scenario, each source, each DHW value, model C, each feature `false` and `unused`, the other variants, the dark
-theme and two full-detail captures (heating and model C). The first run needs the browser: `npx playwright install chromium`.
+theme, the foreign naming (heating, DHW, defrost and off, and heating at 360 px) and two full-detail captures (heating and model C). The first run needs the browser: `npx playwright install chromium`.
 
 `dist/ecogeo-card.js` is the committed, deployable bundle. `npm run format` rewrites files with Prettier.

@@ -19,6 +19,12 @@ const step = (name: string, query: string): CaptureStep => ({ name, query });
 export const CAPTURES: readonly CaptureStep[] = [
   // every scenario with the default config
   ...SCENARIO_NAMES.map((name) => step(`scenario-${name}`, `scenario=${name}`)),
+  // add-entity-discovery D11: the foreign naming (other ids, kPa, Hz, an enum mode, `none` roles), also on a phone
+  step('foreign-heating', 'scenario=heating&naming=foreign'),
+  step('foreign-dhw', 'scenario=dhw&naming=foreign'),
+  step('foreign-defrost', 'scenario=defrost&naming=foreign'),
+  step('foreign-off', 'scenario=off&naming=foreign'),
+  step('foreign-phone-heating', `scenario=heating&naming=foreign&width=${String(PHONE_WIDTH)}`),
   // each source, in heating and in passive cooling
   ...(['air', 'ground', 'hybrid'] as const).flatMap((source) => [
     step(`source-${source}-heating`, `scenario=heating&source=${source}`),
