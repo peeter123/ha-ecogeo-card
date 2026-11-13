@@ -108,19 +108,19 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 
 ## 6. Panel view fits the screen
 
-- [ ] 6.1 Add `isPanel` as a plain reactive property and the pure drawing-width function (design D9); the card sets the
+- [x] 6.1 Add `isPanel` as a plain reactive property and the pure drawing-width function (design D9); the card sets the
   `.diagram`'s `max-width`, centres it, recomputes on window resize, and feeds the drawing width to `nextCompact`
   and `strokeWidths`.
   Verify: unit tests cover the width function (panel off; panel with a tall window; panel with a short window;
   unset `--header-height`) and that a card assigned `isPanel` by Home Assistant does not throw; responsive-layout
   "Not a panel" passes in the browser project.
-- [ ] 6.2 Add `panel=1` to the emulator (URL, control, slot at the window's width) and a panel capture at 1280 x 800
+- [x] 6.2 Add `panel=1` to the emulator (URL, control, slot at the window's width) and a panel capture at 1280 x 800
   to `dev/captures.ts` (dev-emulator "Panel view").
   Verify: `dev/url-state` unit tests cover `panel`; a browser test renders the panel card in a 1280 x 800 viewport
   and finds the footer inside it (responsive-layout "Desktop panel").
-- [ ] 6.3 Emulator check: the panel capture at 1280 x 800 and at 1280 x 1000.
+- [x] 6.3 Emulator check: the panel capture at 1280 x 800 and at 1280 x 1000.
   Verify: a subagent returns a verdict that the footer is on screen and the drawing centred.
-- [ ] 6.4 Document the panel fit in `docs/ecogeo-card.md` and `README.md` (panel views fit the screen); in the README's
+- [x] 6.4 Document the panel fit in `docs/ecogeo-card.md` and `README.md` (panel views fit the screen); in the README's
   planned follow-ups, drop `add-extra-circuits` and note extra circuits (DG2, DG3, pool) as a long-term idea, since
   they are external and need their own valves. Refresh the README's images (`docs/images/heating.png`,
   `docs/images/phone-heating.png`) from the emulator, since both show the drawing from before this change.

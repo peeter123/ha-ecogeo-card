@@ -180,3 +180,25 @@ describe('capture list', () => {
     }
   });
 });
+
+describe('panel', () => {
+  test('panel=1 shows the card as in a panel view; it is off by default and for any other value', () => {
+    expect(defaultState().panel).toBe(false);
+    expect(parseState('?panel=1').panel).toBe(true);
+    expect(parseState('?panel=0').panel).toBe(false);
+    expect(parseState('?panel=yes').panel).toBe(false);
+  });
+
+  test('it travels in the URL only when on, and round-trips', () => {
+    expect(new URLSearchParams(toSearch(defaultState())).has('panel')).toBe(false);
+    const panel = { ...defaultState(), panel: true };
+    expect(new URLSearchParams(toSearch(panel)).get('panel')).toBe('1');
+    expect(parseState(toSearch(panel))).toEqual(panel);
+  });
+
+  test('Panel view: the captures include the heating scenario in a 1280 x 800 window', () => {
+    const capture = CAPTURES.find((c) => c.query.includes('panel=1'));
+    expect(capture?.viewport).toEqual({ width: 1280, height: 800 });
+    expect(parseState(`?${capture?.query ?? ''}`).scenario).toBe('heating');
+  });
+});

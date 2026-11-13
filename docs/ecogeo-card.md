@@ -676,6 +676,26 @@ currentlyCompact)`, which the card calls with whether the layout it showed last 
 `layout: compact` forced does not count: after a switch to `auto` the card shows what a newly loaded card of that width
 shows. Forced layouts ignore the hysteresis.
 
+### Panel views
+
+Home Assistant sets `layout = 'panel'` on the card of a `panel` view and, when its card wrapper updates, `isPanel`; the card counts as in a panel when either says so (the wrapper does not set `isPanel` when it rebuilds the card). Both are plain reactive properties (a getter-only accessor for a name Home Assistant assigns breaks the card); the config's `layout` option is a different thing. In a panel view the card is as wide as the
+window, so on a desktop screen the drawing would be taller than the screen and the footer would be below the fold. The
+drawing's width is therefore `drawingWidth` in `src/lib/layout.ts`: the card's width, or in a panel view at most
+`(window height - header height - footer allowance) * viewBox width / viewBox height`. The header height is Home
+Assistant's `--header-height` (56 px if unset) plus its `--safe-area-inset-top` (0 if unset); outside a panel view the card reads neither. The footer allowance is 64 px: one footer line is about 20 px with 8 + 12 px of
+padding, and the footer wraps to two lines for the longer modes (Passive cooling) at card widths of 600-620 px (the footer is as wide as the card), 60 px, so
+the allowance covers that case and the footer stays on screen even then; a one-line footer leaves up to 24 px of free
+space under it. The width is never below 320 px, the narrowest verified compact width (a window too short for that scrolls). In a 1280 x 800 px window the
+simplified arrangement (1000 x 545) is 1247 px wide; for a 1280 px wide card, a window about 820 px or more tall leaves the drawing at the card's width.
+
+The card sets the width as the `max-width` of the drawing and centres it, and recomputes on the window's `resize`. The
+layout choice (`nextCompact`, with its hysteresis) and the stroke widths take the drawing's width, not the card's, so
+the labels (which scale with the drawing) and the lines stay consistent with what is drawn; a short window can therefore make
+a wide panel compact. The arrangement's ratio depends on the layout and the layout on the width; the layout is decided on
+the width the arrangement of the configured detail level would get, and the shown arrangement's ratio then sets the width,
+so the choice cannot depend on itself. Outside a panel view the drawing fills the card as before. The emulator shows this
+with `panel=1` (a control, a 56 px mock header, and a slot as wide as the window).
+
 ### What the compact layout shows
 
 The schematic at the simplified detail level whatever `detail` says (the resolved config keeps the user's `detail`;

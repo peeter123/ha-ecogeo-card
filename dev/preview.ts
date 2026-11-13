@@ -88,8 +88,10 @@ cardsRoot.append(slot);
 
 /** Pushes the state into the card: the config, the mock states, the theme and the URL. */
 function apply(): void {
-  document.body.className = state.theme;
-  slot.style.width = `${String(state.width)}px`;
+  document.body.className = state.panel ? `${state.theme} panel` : state.theme;
+  // A panel view's slot is as wide as the window, below a mock header (see index.html); `--header-height` is set there.
+  slot.style.width = state.panel ? '100%' : `${String(state.width)}px`;
+  card.isPanel = state.panel;
   try {
     card.setConfig(configOf(state));
     error.hidden = true;
@@ -330,6 +332,15 @@ controlsRoot.append(
       () => String(state.width),
       (value) => {
         state = { ...state, width: Number(value) };
+      },
+    ),
+    select(
+      'panel',
+      'Panel view',
+      ['off', 'on'] as const,
+      () => (state.panel ? 'on' : 'off'),
+      (value) => {
+        state = { ...state, panel: value === 'on' };
       },
     ),
     select(

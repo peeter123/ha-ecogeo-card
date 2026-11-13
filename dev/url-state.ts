@@ -1,5 +1,5 @@
 // The emulator's state and its URL query string (add-schematic-card D9): scenario, naming, model, variant, source, dhw, every feature,
-// detail, fill, layout, width, theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
+// detail, fill, layout, width, panel, theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
 // hrv-ventilation dev/preview.ts (state in the query string); the parameters are this card's own.
 import {
   DEFAULT_VARIANT,
@@ -52,6 +52,8 @@ export interface EmulatorState {
   layout: Layout;
   /** The width of the card's slot in px (URL `width=`). */
   width: number;
+  /** Shows the card as in a panel view (URL `panel=1`): the slot is as wide as the window and `isPanel` is set on the card. */
+  panel: boolean;
   theme: Theme;
   /** Seconds per step of the screenshot cycle; undefined when the cycle is off. */
   cycle: number | undefined;
@@ -82,6 +84,7 @@ export const defaultState = (): EmulatorState => ({
   fill: 'gradient',
   layout: 'auto',
   width: DEFAULT_WIDTH,
+  panel: false,
   theme: 'light',
   cycle: undefined,
 });
@@ -114,6 +117,7 @@ export function parseState(search: string): EmulatorState {
     fill: pick(EXCHANGER_FILLS, params.get('fill'), base.fill),
     layout: pick(LAYOUTS, params.get('layout'), base.layout),
     width: Number.isInteger(width) && width >= MIN_WIDTH && width <= MAX_WIDTH ? width : base.width,
+    panel: params.get('panel') === '1',
     theme: pick(THEMES, params.get('theme'), base.theme),
     cycle:
       cycleSeconds === undefined
@@ -139,6 +143,7 @@ export function toSearch(state: EmulatorState): string {
   if (state.fill !== 'gradient') params.set('fill', state.fill);
   if (state.layout !== 'auto') params.set('layout', state.layout);
   if (state.width !== DEFAULT_WIDTH) params.set('width', String(state.width));
+  if (state.panel) params.set('panel', '1');
   for (const key of FEATURE_KEYS) if (state.features[key] !== 'default') params.set(key, state.features[key]);
   if (state.cycle !== undefined) params.set('cycle', String(state.cycle));
   return `?${params.toString()}`;

@@ -44,6 +44,30 @@
       #cards {
         padding: 16px;
       }
+      /* A panel view (panel=1): a mock 56 px header above the card, the card's slot as wide as the window and the controls below
+         the fold, so the card sits where Home Assistant puts it. The card reads --header-height (also set by Home Assistant). */
+      body.panel {
+        --header-height: 56px;
+        display: flex;
+        flex-direction: column;
+        scrollbar-width: none;
+      }
+      body.panel::-webkit-scrollbar {
+        display: none;
+      }
+      body.panel #cards {
+        order: 1;
+        padding: 0;
+      }
+      body.panel #cards::before {
+        content: '';
+        display: block;
+        height: var(--header-height);
+        background: var(--secondary-background-color);
+      }
+      body.panel .controls {
+        order: 2;
+      }
       .slot {
         width: 1000px; /* the default; preview.ts sets the width of the state */
       }

@@ -246,18 +246,14 @@ describe('the layout property Home Assistant assigns', () => {
     }
   });
 
-  test('no class between the card and LitElement defines a layout property or accessor', () => {
+  test('layout is a plain reactive property (settable, never read-only), separate from the config option', () => {
     const card = document.createElement('ecogeo-card') as EcogeoCard;
-    for (
-      let proto = Object.getPrototypeOf(card) as object | null;
-      proto !== null;
-      proto = Object.getPrototypeOf(proto) as object | null
-    ) {
-      if (proto === LitElement.prototype) break;
-      expect(Object.getOwnPropertyDescriptor(proto, 'layout'), proto.constructor.name).toBeUndefined();
-    }
-    expect(Object.getOwnPropertyDescriptor(card, 'layout')).toBeUndefined();
-    expect((card.constructor as typeof LitElement).elementProperties.has('layout')).toBe(false);
+    // Home Assistant's panel view assigns layout = 'panel'; the config's layout option lives in the resolved config.
+    expect((card.constructor as typeof LitElement).elementProperties.has('layout')).toBe(true);
+    expect(() => {
+      (card as unknown as { layout: unknown }).layout = 'panel';
+    }).not.toThrow();
+    expect((card as unknown as { layout: unknown }).layout).toBe('panel');
   });
 
   // The properties Home Assistant's hui-card assigns to every card element.

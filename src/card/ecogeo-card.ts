@@ -13,7 +13,7 @@ import { SAMPLE_STATES } from '../config/sample';
 import { cabinetStyles, renderCabinet } from '../diagram/cabinet';
 import type { Taps } from '../diagram/component-info';
 import { dhwStyles, renderDhw } from '../diagram/dhw';
-import { arrangementFor, type DrawContext } from '../diagram/geometry';
+import { arrangementFor, type DrawContext, type ShownLayout } from '../diagram/geometry';
 import { footerItems, labelsFor, labelStyles, renderFooterItems, renderLabels } from '../diagram/labels';
 import { coilMutedColor, MUTED_COLOR } from '../diagram/colors';
 import { EDITOR_TAG } from '../editor/ecogeo-card-editor';
@@ -22,7 +22,7 @@ import { renderSource, sourceStyles } from '../diagram/source';
 import type { CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
-import { nextCompact, strokeWidths, type StrokeWidths } from '../lib/layout';
+import { drawingWidth, nextCompact, strokeWidths, type StrokeWidths } from '../lib/layout';
 import { fireMoreInfo, stateOf, type HassLike } from '../lib/hass';
 import { shouldRender } from '../lib/render';
 import { stubConfig } from '../suggest/stub';
@@ -75,6 +75,11 @@ export class EcogeoCard extends LitElement {
     hass: { attribute: false },
     config: { state: true },
     width: { state: true },
+    viewportHeight: { state: true },
+    // Plain reactive property: Home Assistant assigns it to the cards of a panel view (a getter-only accessor would throw).
+    isPanel: { attribute: false },
+    // Also assigned by Home Assistant: its panel view sets `layout = 'panel'`. Not the config's `layout` option (resolved.layout).
+    layout: { attribute: false },
   };
 
   /** The visual editor (add-card-editor): the editor element, which builds its own schema from the config. */
@@ -95,12 +100,19 @@ export class EcogeoCard extends LitElement {
   declare config?: CardConfig;
   /** The card's own width in px, from the ResizeObserver; 0 until the first observation (the layout is then full). */
   declare width: number;
+  /** True when Home Assistant shows the card in a panel view: the drawing is then kept within the window's height (D9). */
+  declare isPanel?: boolean;
+  /** The layout name Home Assistant's view assigns to the card element (`panel` in a panel view); not the `layout` option. */
+  declare layout?: string;
+  /** The window's inner height in px, from the window's `resize`. */
+  declare viewportHeight: number;
   private resolved?: ResolvedConfig;
   private observer?: ResizeObserver;
   private renderedCompact = false;
   /** Whether the layout last rendered was compact because `auto` chose it: only that counts for the hysteresis. */
   private renderedAutoCompact = false;
   private renderedStroke: StrokeWidths = strokeWidths(undefined);
+  private renderedDrawing = 0;
   private entityIds: string[] = [];
   private renderedHass?: HassLike;
   private readonly idPrefix = `ecogeo${String(++instances)}`;
@@ -108,6 +120,48 @@ export class EcogeoCard extends LitElement {
   constructor() {
     super();
     this.width = 0;
+    this.viewportHeight = window.innerHeight;
+  }
+
+  /**
+   * True in a panel view: Home Assistant set `isPanel` (only when its card wrapper updates) or `layout = 'panel'` (its panel
+   * view sets that on the card element, also when the card is rebuilt).
+   */
+  private get inPanel(): boolean {
+    return this.isPanel === true || this.layout === 'panel';
+  }
+
+  private readonly onWindowResize = (): void => {
+    if (this.inPanel && window.innerHeight !== this.viewportHeight) this.viewportHeight = window.innerHeight;
+  };
+
+  /** A CSS length custom property of the card in px (such as `56px`), or undefined when unset. */
+  private cssPx(name: string): number | undefined {
+    const value = Number.parseFloat(getComputedStyle(this).getPropertyValue(name));
+    return Number.isFinite(value) ? value : undefined;
+  }
+
+  /** The drawing's width in px for an arrangement's viewBox: the card's width, or in a panel view what fits the window. */
+  private drawingWidthFor(viewBox: { width: number; height: number }): number {
+    return drawingWidth({
+      isPanel: this.inPanel,
+      cardWidth: this.width,
+      // read directly: `viewportHeight` only triggers the update on a resize and can be stale when the card turns into a panel
+      windowHeight: window.innerHeight,
+      // outside a panel view no styles are read
+      headerHeight: this.inPanel ? this.cssPx('--header-height') : undefined,
+      safeAreaTop: this.inPanel ? this.cssPx('--safe-area-inset-top') : undefined,
+      viewBox,
+    });
+  }
+
+  /**
+   * The width the layout is decided on: the drawing's width with the arrangement the full layout would show (the viewBox of
+   * the configured detail level). The compact layout's arrangement is the simplified one, whose ratio gives a width at
+   * least as large, so deciding on this width keeps the choice from depending on the choice (D9).
+   */
+  private layoutWidth(): number {
+    return this.drawingWidthFor(arrangementFor(this.resolved?.detail ?? 'simplified', 'full').viewBox);
   }
 
   /**
@@ -115,7 +169,9 @@ export class EcogeoCard extends LitElement {
    * layout it showed so far (the hysteresis of add-compact-layout D1).
    */
   get shownLayout(): 'compact' | 'full' {
-    return nextCompact(this.resolved?.layout ?? 'auto', this.width, this.renderedAutoCompact) ? 'compact' : 'full';
+    return nextCompact(this.resolved?.layout ?? 'auto', this.layoutWidth(), this.renderedAutoCompact)
+      ? 'compact'
+      : 'full';
   }
 
   override connectedCallback(): void {
@@ -126,11 +182,14 @@ export class EcogeoCard extends LitElement {
       if (width !== undefined && width !== this.width) this.width = width;
     });
     this.observer.observe(this);
+    window.addEventListener('resize', this.onWindowResize);
+    this.viewportHeight = window.innerHeight;
   }
 
   override disconnectedCallback(): void {
     this.observer?.disconnect();
     this.observer = undefined;
+    window.removeEventListener('resize', this.onWindowResize);
     super.disconnectedCallback();
   }
 
@@ -154,16 +213,36 @@ export class EcogeoCard extends LitElement {
   }
 
   protected override shouldUpdate(changed: PropertyValues): boolean {
-    // A width change alone renders only when it flips the layout or changes the stroke widths (add-compact-layout D1, D4).
-    if (changed.size === 1 && changed.has('width')) {
-      const stroke = strokeWidths(this.width);
+    // A change of the card's width, the window's height, `isPanel` or `layout` alone renders only when it flips the layout or changes
+    // the drawing's width or the stroke widths (add-compact-layout D1, D4; refine-simplified-layout D9).
+    if (
+      changed.size > 0 &&
+      [...changed.keys()].every(
+        (key) => key === 'width' || key === 'viewportHeight' || key === 'isPanel' || key === 'layout',
+      )
+    ) {
+      const layout = this.shownLayout;
+      const stroke = strokeWidths(this.drawingWidthFor(this.arrangementViewBox(layout)));
       return (
-        (this.shownLayout === 'compact') !== this.renderedCompact ||
+        (layout === 'compact') !== this.renderedCompact ||
+        this.fittedWidth(layout) !== this.renderedDrawing ||
         stroke.pipe !== this.renderedStroke.pipe ||
         stroke.outline !== this.renderedStroke.outline
       );
     }
     return shouldRender(changed, this.hass, this.renderedHass, this.entityIds);
+  }
+
+  private arrangementViewBox(layout: ShownLayout): { width: number; height: number } {
+    const compact = layout === 'compact';
+    return arrangementFor(compact ? 'simplified' : (this.resolved?.detail ?? 'simplified'), layout).viewBox;
+  }
+
+  /** The `max-width` in px the drawing gets in a panel view (0: none, the drawing fills the card). */
+  private fittedWidth(layout: ShownLayout): number {
+    if (!this.inPanel || !(this.width > 0)) return 0;
+    const width = this.drawingWidthFor(this.arrangementViewBox(layout));
+    return width < this.width ? width : 0;
   }
 
   /** The readings of every role: the sample states in sample mode, `hass.states` otherwise. */
@@ -181,8 +260,10 @@ export class EcogeoCard extends LitElement {
     const compact = layout === 'compact';
     this.renderedCompact = compact;
     this.renderedAutoCompact = compact && this.resolved?.layout === 'auto';
-    const stroke = strokeWidths(this.width);
+    const stroke = strokeWidths(this.drawingWidthFor(this.arrangementViewBox(layout)));
     this.renderedStroke = stroke;
+    const fitted = this.fittedWidth(layout);
+    this.renderedDrawing = fitted;
     const config = this.resolved;
     if (config === undefined) return html`<ha-card data-layout=${layout}><div class="diagram"></div></ha-card>`;
     // The compact layout draws the simplified detail level whatever `detail` says; the resolved config keeps the user's (D3).
@@ -214,7 +295,7 @@ export class EcogeoCard extends LitElement {
         };
     const taps: Taps = { entities: resolved.entities, onTap };
     return html`<ha-card data-layout=${layout}>
-      <div class="diagram">
+      <div class="diagram" style=${fitted > 0 ? `max-width: ${String(fitted)}px; margin: 0 auto` : nothing}>
         <svg
           viewBox="0 0 ${viewBox.width} ${viewBox.height}"
           preserveAspectRatio="xMidYMid meet"

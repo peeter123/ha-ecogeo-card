@@ -9,6 +9,8 @@ export interface CaptureStep {
   name: string;
   /** The query string, without the leading `?`. */
   query: string;
+  /** The browser window's size in px, for a capture that depends on it (a panel view); the capture then shows the whole window. */
+  viewport?: { width: number; height: number };
 }
 
 /** A phone's card width in px (the emulator's 360 px option). */
@@ -23,7 +25,11 @@ const LABEL_VARIANTS = [
 const LABEL_WIDTHS = [COMPACT_BELOW, 800, 1000] as const;
 const LABEL_SCENARIOS = ['heating', 'dhw', 'defrost', 'passive_cooling'] as const;
 
-const step = (name: string, query: string): CaptureStep => ({ name, query });
+const step = (name: string, query: string, viewport?: CaptureStep['viewport']): CaptureStep =>
+  viewport === undefined ? { name, query } : { name, query, viewport };
+
+/** The window of the panel capture (refine-simplified-layout 6.2): a desktop screen. */
+export const PANEL_VIEWPORT = { width: 1280, height: 800 } as const;
 
 export const CAPTURES: readonly CaptureStep[] = [
   // every scenario with the default config
@@ -82,6 +88,8 @@ export const CAPTURES: readonly CaptureStep[] = [
   step('theme-dark-hybrid-passive_cooling', 'scenario=passive_cooling&theme=dark&source=hybrid'),
   step('theme-dark-ground-passive_cooling', 'scenario=passive_cooling&theme=dark&source=ground'),
   step('theme-dark-features-unused', 'scenario=active_cooling_htr&theme=dark&passive_cooling=unused&htr=unused'),
+  // refine-simplified-layout D9: a panel view in a desktop window; the drawing is narrower than the window and the footer is in it
+  step('panel-heating', 'scenario=heating&panel=1', PANEL_VIEWPORT),
   // add-compact-layout: every scenario on a phone (360 px, automatic layout) and in the full layout at the compact
   // threshold (the constant of src/lib/layout.ts), light and dark
   step('narrow-light-heating', 'scenario=heating&width=320'),

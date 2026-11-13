@@ -32,7 +32,7 @@ for the explanation of what the card shows and where each part comes from.
 
 Released and in use. The card validates its configuration, resolves its entities (or shows built-in sample values),
 reads them, derives the operating mode and draws the schematic with coloured, flowing pipes and live values.
-The visual editor is built (see Visual editor below). Planned follow-up changes: `add-hacs-release`, `add-browser-tests` and `add-extra-circuits`.
+The visual editor is built (see Visual editor below). Planned follow-up changes: `add-hacs-release` and `add-browser-tests`. Extra circuits (DG2, DG3, the pool) are a long-term idea only: they are external to the unit and need their own valves, so the card does not draw them.
 
 ## Installation
 
@@ -47,7 +47,7 @@ speed, the DHW temperature and the source's outlet temperature), at least 10 px 
 COP, outside temperature and the alarm and offline indications). Pipes and outlines never render thinner than 2 px
 and 1.25 px, and the footer wraps. Once compact, the card returns to full only at 624 px (24 px of hysteresis), so a
 scrollbar appearing with the layout cannot make it flip back and forth. Set `layout: full` or `layout: compact` to
-force one. How the 600 px was measured, and what each tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
+force one. In a panel view the card also fits the screen: the drawing is kept within the window's height below Home Assistant's header (and above the footer), narrower and centred when the card is wider than that, and the layout and line widths follow the drawing's own width. A tall window or a sections view is not affected: the drawing fills the card. How the 600 px was measured, and what each tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
 ![The card on a 360 px wide phone: the compact layout with its seven key values](docs/images/phone-heating.png)
 

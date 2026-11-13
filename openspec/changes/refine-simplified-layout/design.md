@@ -223,6 +223,24 @@ Note from group 4: the footer wraps to two lines for longer modes (Passive cooli
 A panel's drawing width only gets that narrow in a very short window; the footer allowance should cover two lines
 there, or the fit accepts a wrapped footer slightly below the fold at such heights.
 
+Settled in group 6: `drawingWidth({ isPanel, cardWidth, windowHeight, headerHeight, viewBox })` returns the card
+width outside a panel, else `min(cardWidth, max(floor((windowHeight - header - safeAreaTop - 64) * vbW / vbH), 320))`
+(the floor is the narrowest verified compact width; `safeAreaTop` per the next paragraph); the footer
+allowance of 64 px covers two footer lines, so a wrapped footer still fits. The layout is decided on the width
+computed with the configured detail level's full-layout viewBox; the shown arrangement's ratio then sets the final
+width (compact uses the simplified ratio, which is never narrower, so the choice cannot depend on itself). The
+`.diagram` gets `max-width` and auto margins only when the fitted width is below the card width. The emulator's
+panel mode sets `--header-height: 56px` and draws a mock header bar of that height. No helper was copied (D10).
+
+Also settled in group 6, after review: Home Assistant's panel view sets `layout = "panel"` on the card element, but
+`isPanel` only in `hui-card`'s update and not when it rebuilds the card (a late-loading resource, every edit in the
+editor). So the card is in a panel when `isPanel === true` or its element property `layout === 'panel'`; `layout` is
+declared as a plain reactive property (no accessor), separate from the config's `layout` option. The header offset is
+`--header-height` plus `--safe-area-inset-top` (0 if unset), matching the padding of Home Assistant's view container
+on devices with a top inset. A mobile browser's address bar changes `innerHeight` while scrolling; the fitted width
+then follows, which is accepted (the layout choice keeps its hysteresis). Outside a panel the card reads no styles and
+ignores window resizes.
+
 Alternative: CSS only (`aspect-ratio` with `max-height`). Rejected: a block's auto width does not shrink from a
 max-height through its aspect ratio in every engine, and the layout decision needs the width in JS anyway.
 

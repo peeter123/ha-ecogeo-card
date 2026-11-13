@@ -65,3 +65,50 @@ export function strokeWidths(width: number | undefined): StrokeWidths {
     outline: Math.max(DEFAULT_STROKES.outline, ceilTenth(MIN_OUTLINE_PX / scale)),
   };
 }
+
+/** Home Assistant's header height in px, used when `--header-height` is unset (refine-simplified-layout D9). */
+export const DEFAULT_HEADER_HEIGHT = 56;
+
+/**
+ * What a panel view keeps free below the drawing, in px: the footer and the card's padding. One footer line is about 20 px
+ * with 8 + 12 px of padding, so 40 px; the footer wraps to two lines for the longer modes (Passive cooling) at
+ * card widths of 600-620 px (the footer is as wide as the card), 60 px, and the allowance covers that case with a few px to spare. So the footer stays on screen even
+ * when it wraps, and a one-line footer leaves up to 24 px of empty space under it (refine-simplified-layout D9).
+ */
+export const FOOTER_ALLOWANCE = 64;
+
+/** The narrowest a panel's drawing is made, px: the narrowest width verified for the compact layout; a window too short for it gets this and scrolls (a floor, not a goal). */
+export const MIN_DRAWING_WIDTH = 320;
+
+/** The inputs of the drawing's width. */
+export interface DrawingFit {
+  /** True when Home Assistant shows the card in a panel view. */
+  isPanel: boolean;
+  /** The card's width in px; 0 or undefined while it is unknown. */
+  cardWidth: number | undefined;
+  /** The window's inner height in px. */
+  windowHeight: number;
+  /** Home Assistant's `--header-height` in px; undefined (or not a positive number) when unset. */
+  headerHeight: number | undefined;
+  /** Home Assistant's `--safe-area-inset-top` in px (a device's top inset, added to the header); undefined counts as 0. */
+  safeAreaTop?: number | undefined;
+  /** The viewBox of the arrangement the drawing uses. */
+  viewBox: { width: number; height: number };
+}
+
+/**
+ * The width of the drawing in px (refine-simplified-layout D9). Outside a panel view it is the card's width. In a panel view
+ * it is the smaller of the card's width and the width at which the drawing, the footer allowance and the header (plus the safe-area inset) fill the
+ * window's height: `(windowHeight - headerHeight - safeAreaTop - FOOTER_ALLOWANCE) * viewBox.width / viewBox.height`, rounded down to
+ * whole px and at least `MIN_DRAWING_WIDTH` (but never wider than the card). An unknown card width gives 0 (unknown), which
+ * `nextCompact` and `strokeWidths` treat as before the first measurement.
+ */
+export function drawingWidth(fit: DrawingFit): number {
+  const { cardWidth, viewBox } = fit;
+  if (cardWidth === undefined || !(cardWidth > 0)) return 0;
+  if (!fit.isPanel || !(fit.windowHeight > 0)) return cardWidth;
+  const header = fit.headerHeight !== undefined && fit.headerHeight > 0 ? fit.headerHeight : DEFAULT_HEADER_HEIGHT;
+  const inset = fit.safeAreaTop !== undefined && fit.safeAreaTop > 0 ? fit.safeAreaTop : 0;
+  const fitted = Math.floor(((fit.windowHeight - header - inset - FOOTER_ALLOWANCE) * viewBox.width) / viewBox.height);
+  return Math.min(cardWidth, Math.max(fitted, MIN_DRAWING_WIDTH));
+}

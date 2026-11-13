@@ -52,42 +52,49 @@ describe('markup snapshot of every capture', () => {
     expect(new Set(CAPTURES.map((capture) => capture.name)).size).toBe(CAPTURES.length);
   });
 
-  test.each(CAPTURES.map((capture) => [capture.name, capture.query] as const))('%s', async (name, query) => {
-    const state = parseState(`?${query}`);
-    const mock = new MockHass();
-    const card = document.createElement('ecogeo-card') as EcogeoCard;
-    card.setConfig(configOf(state));
-    card.hass = mock.build(
-      namingStates(state.naming, SCENARIOS[state.scenario].states),
-      state.theme === 'dark',
-      registryOf(state.naming),
-    );
-    document.body.append(card);
-    await card.updateComplete;
-    FakeObserver.instances.at(-1)?.resize(state.width);
-    await card.updateComplete;
-    const root = card.shadowRoot;
-    if (root === null) throw new Error('no shadow root');
-    const diagram = root.querySelector('.diagram');
-    const svg = root.querySelector('svg');
-    if (diagram === null || svg === null) throw new Error('no drawing');
-    const labels = [...diagram.querySelectorAll('[data-label]')].map(
-      (element) =>
-        `${element.getAttribute('data-label') ?? ''} | ${element.getAttribute('class') ?? ''} | ${element.getAttribute('style') ?? ''}`,
-    );
-    const footer = [...root.querySelectorAll('[data-footer]')].map(
-      (element) => element.getAttribute('data-footer') ?? '',
-    );
-    const text = [
-      `layout: ${root.querySelector('ha-card')?.getAttribute('data-layout') ?? ''}`,
-      'labels:',
-      ...labels,
-      `footer: ${footer.join(', ')}`,
-      'svg:',
-      normalise(svg.outerHTML),
-      '',
-    ].join('\n');
-    await expect(text).toMatchFileSnapshot(`__snapshots__/arrangement/${name}.snap`);
-    card.remove();
-  });
+  test.each(CAPTURES.map((capture) => [capture.name, capture.query, capture.viewport] as const))(
+    '%s',
+    async (name, query, viewport) => {
+      const state = parseState(`?${query}`);
+      const mock = new MockHass();
+      const card = document.createElement('ecogeo-card') as EcogeoCard;
+      card.setConfig(configOf(state));
+      // A panel capture: the window's height is the capture's, and the card is as wide as the window.
+      if (viewport !== undefined) vi.stubGlobal('innerHeight', viewport.height);
+      card.isPanel = state.panel;
+      card.hass = mock.build(
+        namingStates(state.naming, SCENARIOS[state.scenario].states),
+        state.theme === 'dark',
+        registryOf(state.naming),
+      );
+      document.body.append(card);
+      await card.updateComplete;
+      FakeObserver.instances.at(-1)?.resize(viewport?.width ?? state.width);
+      await card.updateComplete;
+      const root = card.shadowRoot;
+      if (root === null) throw new Error('no shadow root');
+      const diagram = root.querySelector('.diagram');
+      const svg = root.querySelector('svg');
+      if (diagram === null || svg === null) throw new Error('no drawing');
+      const labels = [...diagram.querySelectorAll('[data-label]')].map(
+        (element) =>
+          `${element.getAttribute('data-label') ?? ''} | ${element.getAttribute('class') ?? ''} | ${element.getAttribute('style') ?? ''}`,
+      );
+      const footer = [...root.querySelectorAll('[data-footer]')].map(
+        (element) => element.getAttribute('data-footer') ?? '',
+      );
+      const text = [
+        `layout: ${root.querySelector('ha-card')?.getAttribute('data-layout') ?? ''}`,
+        'labels:',
+        ...labels,
+        `footer: ${footer.join(', ')}`,
+        ...(diagram.hasAttribute('style') ? [`diagram: ${diagram.getAttribute('style') ?? ''}`] : []),
+        'svg:',
+        normalise(svg.outerHTML),
+        '',
+      ].join('\n');
+      await expect(text).toMatchFileSnapshot(`__snapshots__/arrangement/${name}.snap`);
+      card.remove();
+    },
+  );
 });
