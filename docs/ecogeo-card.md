@@ -57,22 +57,42 @@ nor an entity the card shows built-in sample values, taken from a heating day of
 `getConfigElement()` returns the `ecogeo-card-editor` element: Home Assistant's `ha-form` with a schema generated from
 the option table (`src/config/options.ts`) and the variant presets (`src/config/variants.ts`), so a new option cannot
 be left out of the editor. The mechanics are copied from the hrv-ventilation card editor (the editor element, the
-schema helpers and the field builders, each file naming its source in its header). `getStubConfig()` returns an
-empty config, so the card picker's preview shows the sample values.
+schema helpers and the field builders, each file naming its source in its header). `getStubConfig(hass)` runs the
+suggestion module's candidate and prefix steps over every device and counts the exact firmware ids
+`<domain>.<prefix>_<suffix>`: exactly one device with at least half of the roles gives `{ prefix }`, so the picker's
+preview shows that device's live values. Otherwise, and without `hass` (Home Assistant passes it, though the developer
+docs do not say so), the stub is empty and the preview shows the sample values.
 
-The sections are Unit (model, variant, source, DHW storage), Entities (the prefix), Features (the four features),
-Appearance (detail, exchanger fill, layout, colour stops) and Advanced entities (one picker per role). The variant is a select of the four variants, and the DHW select offers
+The sections are Unit (model, variant, source, DHW storage), Entities (the device picker and the prefix), Features
+(the four features), Appearance (detail, exchanger fill, layout, colour stops), Advanced entities (one picker per
+role, with the "Not present" choice) and State values (the `states` lists). The variant is a select of the four variants, and the DHW select offers
 only the storages the model allows (B: external, unused, none; C: internal, unused). The schema is built from the config being edited: the DHW storage's
 default follows the model, and the empty choice of each feature is labelled with the preset of the current variant.
 A feature is a select whose form values are text (`default`, `true`, `false`, `unused`) and whose config values are
 a boolean, `unused` or no key at all.
 
 The advanced entity pickers are built from the role table: an `entities` section with one section per role group (in
-the table's order of first appearance) and one `entity` selector per role, filtered to the role's domain and labelled
-from `src/strings.ts`. Sections nest, so the form data has the config's own shape, `entities.<group>.<role>`. They
+the table's order of first appearance) and one `entity` selector per role, filtered to the role's `accepts` domains and labelled
+from `src/strings.ts`. A role set to `none` has no picker. Sections nest, so the form data has the config's own shape, `entities.<group>.<role>`. They
 sit behind an "Advanced settings" switch, a separate `ha-form` with editor-local state that starts on when the config
-has an `entities` key and is never written to the config; turning it off hides the pickers and keeps the overrides
+has `entities` or `states` and is never written to the config; turning it off hides the pickers and keeps the overrides
 (the editor does not lock the switch on, unlike the hrv-ventilation editor).
+
+Entity discovery lives in the editor only; the card's render path never reads the registry or the suggestion module.
+The device picker is an `ha-form` field with the `device` selector (no integration filter), and the picked device is
+editor state, like the switch. "Suggest entities" is a native `<button>` styled with theme variables, so the editor
+still contains no Home Assistant element but `ha-form`. It calls `suggestEntities` (`src/suggest/suggest.ts`, the
+scoring of the design) with `hass.states`, `hass.entities`, `hass.devices`, the device and the config, merges the
+result into `entities`, fires `config-changed` and turns the switch on; the report (roles filled, roles left empty) is
+editor state shown until the next edit. "Not present" is a `select` selector with `multiple` over the role labels,
+a virtual field: it is shown from the `none` values and folded back into them, so adding a role writes `none` and
+removing it deletes the key (empty parents are pruned). The `states.off` and `states.defrost` fields are `select`
+selectors with `multiple` and `custom_value`; their options are the `attributes.options` of the entity bound to
+`unit.on_off` (off) or `compressor.mode` (defrost), plus the default, and the schema is rebuilt when those options
+change. An empty list is always dropped and stays blank in the form until a value is added; a list equal to its default is dropped too, unless the config already had it. The binding
+check (`src/editor/binding-check.ts`) is a plain list: each role bound to an entity not in `hass.states` is a warning,
+and each bound to an entity whose domain is not accepted, or whose unit does not fit (a domain check plus the suggestion module's
+`unitFits`, so the unit rule has one source), is another; an unavailable entity is not judged by its unit. It never fires `config-changed`.
 
 The colour stops are flat fields `colors_<i>_temperature` (a number box in °C) and `colors_<i>_color` (Home
 Assistant's `color_rgb` selector, which reports `[r, g, b]`), one row per stop plus an empty row, because `ha-form`

@@ -236,20 +236,37 @@ The colour scale, which pipe takes which probe and the animation are explained i
 ### Visual editor
 
 The card has a visual editor, so it can be added and set up from the dashboard without YAML: choose **Add card**, pick
-**ecoGEO Schematic** (the preview shows the sample values), or open an existing card with **Edit**. The editor is
-Home Assistant's own form and has five sections:
+**ecoGEO Schematic** (the preview shows the sample values, or the live values when exactly one device has the
+firmware's entity names: the card then starts with that device's `prefix`), or open an existing card with **Edit**.
+The editor is Home Assistant's own form and has six sections:
 
 - **Unit:** model, variant (a select of the four variants), outer-loop source and DHW storage (the select offers only
   the storages the model allows: on B external, unused or none; on C internal or unused).
-- **Entities:** the entity prefix (`prefix`).
+- **Entities:** a device picker and the entity prefix (`prefix`), and below the form a **Suggest entities** button.
+  Pick the device that holds your heat pump (any integration: ESPHome, KNX, Modbus) and press the button: the card
+  binds that device's entities to the roles that are empty or bound to an entity Home Assistant does not know, by
+  domain, unit and name (English, Dutch, Spanish and German), and writes them as `entities`. A role bound to a known
+  entity, or set to `none`, is not changed, and an entity serves one role at most. A list under the form says how
+  many roles were filled and which stayed empty (no match, a weak match or a tie; fill them with the pickers); it
+  stays until the next edit. The picked device is never written to the config, and the button is disabled without
+  one. Pressing it turns **Advanced settings** on.
 - **Features:** passive cooling, active cooling, HTR and backup heater, each On, Off, Unused or, left at the first
   choice, the variant's default (the choice names it, for example "Variant default: on").
 - **Appearance:** detail level, exchanger fill, layout and the colour stops (see below).
 - **Advanced entities:** one entity picker per role (the Roles table), in one collapsible group per part of the unit,
-  each picker limited to the role's domain. The groups are shown only while the **Advanced settings** switch above
-  the form is on. The switch starts on when the config has an `entities` key, is never written to the config, and
-  turning it off hides the pickers but keeps the overrides. Picking an entity writes `entities.<group>.<role>`;
-  clearing a picker removes that key, and a group or `entities` left empty is removed.
+  each picker limited to the domains the role accepts. The groups are shown only while the **Advanced settings**
+  switch above the form is on. The switch starts on when the config has `entities` or `states`, is never written to
+  the config, and turning it off hides the pickers but keeps the overrides. Picking an entity writes
+  `entities.<group>.<role>`; clearing a picker removes that key, and a group or `entities` left empty is removed.
+  The **Not present** choice (also behind the switch) lists the roles your installation lacks: choosing one writes
+  `none` for it and removes its picker, removing it deletes the key.
+- **State values:** the `states.off` and `states.defrost` lists (behind the switch): select values, or type your
+  own. When the bound entity lists its options (an enum sensor or select), they are offered, with the default. A list
+  equal to its default is not written, and an empty list removes the key.
+
+Under the form, an **Entity check** list warns about each role bound (by `entities` or by the prefix) to an entity
+Home Assistant does not know, and each bound to an entity whose unit or kind does not fit the role. It names the role
+and the entity, and changes nothing.
 
 The colour stops are one row per stop, a temperature (°C) and a colour, plus an empty row to add one. With no
 `colors` key the rows show the default stops. Rows are written to `colors` in ascending temperature order, a row with

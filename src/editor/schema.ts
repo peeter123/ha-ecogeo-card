@@ -132,7 +132,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * A copy of the config with `value` at the dotted path (parents created when missing); `undefined` removes it. A
  * parent left empty by a removal is removed as well, unless `original` already had it.
  */
-function withValueAt(config: CardConfig, path: string, value: unknown, original?: CardConfig, prefix = ''): CardConfig {
+export function withValueAt(
+  config: CardConfig,
+  path: string,
+  value: unknown,
+  original?: CardConfig,
+  prefix = '',
+): CardConfig {
   const [key, ...rest] = path.split('.') as [string, ...string[]];
   const record = config as Record<string, unknown>;
   const { [key]: current, ...others } = record;

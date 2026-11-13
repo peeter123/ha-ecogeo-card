@@ -113,6 +113,8 @@ describe('ecogeo-card-editor existing config', () => {
       detail: 'simplified',
       exchanger_fill: 'gradient',
       layout: 'auto',
+      states: { off: ['OFF'], defrost: ['Defrost'] },
+      _not_present: [],
       ...DEFAULT_ROW_DATA,
     });
     expect(fieldNames(form.schema)).toEqual([
@@ -120,6 +122,7 @@ describe('ecogeo-card-editor existing config', () => {
       'variant',
       'source',
       'dhw',
+      '_device',
       'prefix',
       'features.passive_cooling',
       'features.active_cooling',

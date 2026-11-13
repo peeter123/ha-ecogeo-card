@@ -213,6 +213,7 @@ export const EDITOR = {
     features: 'Features',
     appearance: 'Appearance',
     entities: 'Advanced entities',
+    states: 'State values',
   },
   fields: {
     model: 'Model',
@@ -227,6 +228,22 @@ export const EDITOR = {
     detail: 'Detail level',
     exchanger_fill: 'Exchanger fill',
     layout: 'Layout',
+    _device: 'Device',
+    _not_present: 'Not present',
+    off: 'Off state values',
+    defrost: 'Defrost state values',
+  },
+  /** The suggestion button, its report and the binding check (add-entity-discovery D9). */
+  suggest: {
+    button: 'Suggest entities',
+    /** How many roles a suggestion filled, then the roles it left empty. */
+    filled: (count: number): string => `${String(count)} ${count === 1 ? 'role' : 'roles'} filled from the device.`,
+    empty: (names: readonly string[]): string => `Left empty: ${names.join(', ')}.`,
+    warningsTitle: 'Entity check',
+    /** The role is named as "group, role" (the same label as in the "Not present" choice). */
+    unknown: (role: string, entity: string): string => `${role}: ${entity} does not exist in Home Assistant.`,
+    unit: (role: string, entity: string): string => `${role}: the unit of ${entity} does not fit this role.`,
+    kind: (role: string, entity: string): string => `${role}: ${entity} is not a kind of entity this role reads.`,
   },
   /** The label of the "Advanced settings" switch. */
   advanced: 'Advanced settings',

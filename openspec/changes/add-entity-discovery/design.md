@@ -106,7 +106,10 @@ the present role drives it; a lone season role that reads off shows a dash (both
 A pure function: input `hass.states`, `hass.entities`, `hass.devices`, the device id and the current config; output
 the new `entities` values and a report (filled roles, empty roles). Steps:
 1. Candidates: registry entries with that `device_id` whose state exists.
-2. Prefix: the longest common start of the candidates' object ids, cut after the last `_`.
+2. Prefix: the roles vote. Each candidate whose id is `<role domain>.<x>_<role suffix>` gives one vote to `x`; the
+   `x` with the most roles wins. Without any such candidate, the longest common start of the candidates' object ids,
+   cut after the last `_`. (Settled in the group 5 review: a device often carries helpers or template sensors with
+   other ids, which made the common start empty.)
 3. Fit: domain in the role's `accepts`, unit fits (D6), `device_class` compatible when both are set.
 4. Score per (role, candidate): exact firmware id 100; object id ending in `_<suffix>` 90; else keywords: tokens of
    the object id (after the prefix) and of the friendly name (without the device name), lower case, accents
@@ -163,9 +166,17 @@ Settled in the group 4 review:
 - `states.off` / `states.defrost`: `select` selectors with `multiple: true` and `custom_value: true`; options are the
   bound entity's `attributes.options` when present, plus the default.
 - Pickers filter by `accepts` (D2) instead of a single domain.
+- Settled in group 5: the button, the report and the binding warnings sit below the whole form, because one
+  `ha-form` cannot hold a native button between its fields and splitting the form would split the Entities section.
+  "Not present" and the state lists follow the entity pickers behind the advanced switch. Role names in the choice,
+  the report and the warnings read "<group>: <role>". The binding check also warns about a domain the role does not
+  accept, and does not judge the unit of an `unavailable` entity. `states.off` offers the options of the entity bound
+  to `unit.on_off`, `states.defrost` those of `compressor.mode`.
+- A state list the user empties stays blank (not written) until a value is added, like other cleared fields; it does
+  not jump back to the default.
 
 ### D10. Stub config
-`getStubConfig(hass)` runs D8's step 1-2 over every device and counts exact firmware ids. Exactly one device with at
+`getStubConfig(hass)` runs D8's step 1-2 (the voted prefix) over every device and counts exact firmware ids. Exactly one device with at
 least half of the roles found gives `{ prefix }`; otherwise `{}`. Home Assistant's frontend passes `hass` as the
 first argument, but the developer docs do not document it, so a missing `hass` gives `{}`.
 

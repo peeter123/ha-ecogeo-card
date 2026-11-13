@@ -15,7 +15,7 @@ export const entityField = (
   { advanced = false } = {},
 ): EditorField => ({
   name,
-  selector: { entity: { domain } },
+  selector: { entity: { filter: { domain } } },
   ...(advanced ? { advanced } : {}),
 });
 

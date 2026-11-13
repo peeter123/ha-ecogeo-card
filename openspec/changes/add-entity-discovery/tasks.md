@@ -69,17 +69,17 @@ Each group is implemented by one Sonnet subagent, reviewed by Opus and committed
 
 ## 5. Editor and stub config
 
-- [ ] 5.1 Add the device picker, the "Suggest entities" button and the report to the Entities section; pickers filter
+- [x] 5.1 Add the device picker, the "Suggest entities" button and the report to the Entities section; pickers filter
   by `accepts`; the advanced switch opens for `entities` or `states` (design D9).
   Verify: `npm test` covers card-editor "Device not written", "Empty roles filled", "Report", "Override a role",
   "Switch not written" and "Round trip" for configs with `states` and `none`.
-- [ ] 5.2 Add the "Not present" choice and the `states.off` / `states.defrost` value choices.
+- [x] 5.2 Add the "Not present" choice and the `states.off` / `states.defrost` value choices.
   Verify: `npm test` covers "Mark the fan speed", "Enum options offered" and "Default not written".
-- [ ] 5.3 Add the binding check warnings.
+- [x] 5.3 Add the binding check warnings.
   Verify: `npm test` covers "Unknown entity" and "Wrong unit", and that the check never fires `config-changed`.
-- [ ] 5.4 Fill the stub config from a firmware-named device (design D10).
+- [x] 5.4 Fill the stub config from a firmware-named device (design D10).
   Verify: `npm test` covers "Picker preview", "One firmware device", "Two firmware devices" and a missing `hass`.
-- [ ] 5.5 Document the device picker, suggestions, report, "Not present", value choices, binding check and the
+- [x] 5.5 Document the device picker, suggestions, report, "Not present", value choices, binding check and the
   filled stub in the README editor section and the docs.
   Verify: `test/readme.ts` passes.
 

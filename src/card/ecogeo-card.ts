@@ -25,6 +25,7 @@ import { localeFromHass } from '../lib/format';
 import { nextCompact, strokeWidths, type StrokeWidths } from '../lib/layout';
 import { fireMoreInfo, stateOf, type HassLike } from '../lib/hass';
 import { shouldRender } from '../lib/render';
+import { stubConfig } from '../suggest/stub';
 import { INDICATIONS, MODE_LABELS, SCHEMATIC_LABEL } from '../strings';
 
 export const CARD_TAG = 'ecogeo-card';
@@ -85,9 +86,13 @@ export class EcogeoCard extends LitElement {
     return document.createElement(EDITOR_TAG);
   }
 
-  /** The card picker's starting config: no prefix and no entities, so the preview shows the sample values. */
-  static getStubConfig(): CardConfig {
-    return {};
+  /**
+   * The card picker's starting config: the prefix of the one device that carries the firmware's entity names (the
+   * preview then shows its live values), else no prefix and no entities, so the preview shows the sample values.
+   * Home Assistant passes `hass`, though its developer docs do not say so: without it the stub is empty.
+   */
+  static getStubConfig(hass?: HassLike): CardConfig {
+    return stubConfig(hass);
   }
 
   declare hass?: HassLike;

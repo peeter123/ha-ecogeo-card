@@ -127,6 +127,32 @@ export function inferPrefix(objectIds: readonly string[]): string {
   return cut < 0 ? '' : common.slice(0, cut + 1);
 }
 
+/**
+ * Step 2 (D8): the prefix by role vote. Each role votes once for the `x` of every candidate whose id is
+ * `<role.domain>.<x>_<role.suffix>`; the `x` with most roles wins (ties: the longer, then the alphabetically first).
+ * Without a vote, the longest common start of the object ids. Returned with its trailing `_`, or empty.
+ */
+export function votePrefix(candidates: readonly Candidate[]): string {
+  const votes = new Map<string, number>();
+  for (const role of ROLES) {
+    const found = new Set<string>();
+    for (const candidate of candidates) {
+      const tail = `_${role.suffix}`;
+      if (
+        candidate.domain === role.domain &&
+        candidate.objectId.length > tail.length &&
+        candidate.objectId.endsWith(tail)
+      )
+        found.add(candidate.objectId.slice(0, -tail.length));
+    }
+    for (const x of found) votes.set(x, (votes.get(x) ?? 0) + 1);
+  }
+  const [winner] = [...votes].sort(
+    ([a, countA], [b, countB]) => countB - countA || b.length - a.length || (a < b ? -1 : 1),
+  );
+  return winner === undefined ? inferPrefix(candidates.map((candidate) => candidate.objectId)) : `${winner[0]}_`;
+}
+
 const unitKey = (unit: string | undefined): string => (unit ?? '').trim().toLowerCase();
 
 /** Units a number role takes beyond its convertible ones (D6): speed in rpm or Hz, pumps and the fan in % or rpm. */
@@ -145,9 +171,11 @@ const CLASSES: Readonly<Record<string, readonly string[]>> = {
   pressure: ['pressure', 'atmospheric_pressure'],
 };
 
-/** Step 3: does the candidate fit the role by domain, unit and device class? */
-export function fits(role: RoleSpec, candidate: Candidate): boolean {
-  if (!role.accepts.includes(candidate.domain)) return false;
+/** The parts of an entity the fit check reads: its domain, unit and device class. */
+export type Kind = Pick<Candidate, 'domain' | 'unit' | 'deviceClass'>;
+
+/** The unit (and device class) half of the fit, for an entity whose domain the role accepts. */
+export function unitFits(role: RoleSpec, candidate: Kind): boolean {
   if (ON_OFF_DOMAINS.includes(candidate.domain)) return true;
   if (role.kind !== 'number') {
     // A measurement (a unit or a numeric device class) is not a mode or a flag (an hours counter, a signal strength).
@@ -162,6 +190,11 @@ export function fits(role: RoleSpec, candidate: Candidate): boolean {
   const units =
     OTHER_UNITS[role.path as RolePath] ?? ('unit' in role && role.unit !== undefined ? [unitKey(role.unit)] : []);
   return units.length === 0 ? unit === '' : units.includes(unit);
+}
+
+/** Step 3: does the candidate fit the role by domain, unit and device class? */
+export function fits(role: RoleSpec, candidate: Kind): boolean {
+  return role.accepts.includes(candidate.domain) && unitFits(role, candidate);
 }
 
 /** A keyword of four or more letters hits inside a token, a shorter one only as a whole token. */
@@ -209,7 +242,7 @@ function cloneGroup(value: unknown): Record<string, unknown> {
 export function suggestEntities(input: SuggestInput): Suggestion {
   const { states, config } = input;
   const candidates = deviceCandidates(states, input.entities, input.devices, input.deviceId);
-  const prefix = inferPrefix(candidates.map((candidate) => candidate.objectId));
+  const prefix = votePrefix(candidates);
 
   // Step 6: only empty roles and roles bound to an unknown entity take part; kept bindings use their entity.
   const resolved = resolveEntities(config, prefixOf(config));

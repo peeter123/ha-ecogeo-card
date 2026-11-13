@@ -9,11 +9,14 @@
 // only fires `config-changed`; it calls no service and changes no entity.
 import { css, html, LitElement, nothing, type PropertyValues } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import { configErrors } from '../config/options';
+import { configErrors, notPresentRoles } from '../config/options';
+import { DEFAULT_STATES } from '../config/states';
 import { valueAt, type CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
-import type { HassLike } from '../lib/hass';
+import type { HassEntityRegistryEntry, HassEntityState, HassLike } from '../lib/hass';
 import { EDITOR } from '../strings';
+import { suggestEntities } from '../suggest/suggest';
+import { bindingWarnings } from './binding-check';
 import {
   colorRowData,
   colorRowOf,
@@ -24,7 +27,15 @@ import {
   withColors,
   type DraftRow,
 } from './color-rows';
-import { editorSchema, EMPTY_GROUPS, NESTED_GROUPS } from './ecogeo-schema';
+import {
+  DEVICE_FIELD,
+  editorSchema,
+  EMPTY_GROUPS,
+  NESTED_GROUPS,
+  NOT_PRESENT_FIELD,
+  stateOptions,
+} from './ecogeo-schema';
+import { roleLabel } from './role-labels';
 import {
   clearedPaths,
   fieldsWithPaths,
@@ -37,6 +48,7 @@ import {
   withoutShownDefaults,
   withoutUndefined,
   withShownDefaults,
+  withValueAt,
   type EditorSchema,
   type FormField,
   type FormSchema,
@@ -60,7 +72,43 @@ function label(item: FormField | FormSection): string {
   return FIELD_LABELS[item.name] ?? ROLE_LABELS[item.name] ?? item.name;
 }
 
+/** True for a config with `entities` or `states`: the advanced settings open for it. */
+const hasAdvanced = (config: CardConfig): boolean =>
+  Object.hasOwn(config, 'entities') || Object.hasOwn(config, 'states');
+
 const hasEntities = (config: CardConfig): boolean => Object.hasOwn(config, 'entities');
+
+/** The fields of the form that are not keys of the config. */
+const VIRTUAL_FIELDS: readonly string[] = [DEVICE_FIELD, NOT_PRESENT_FIELD];
+
+/** The `states` lists left out of the config when empty or equal to their default (unless already set that way). */
+function withoutDefaultStates(config: CardConfig, current: CardConfig): CardConfig {
+  const states = config['states'];
+  if (typeof states !== 'object' || states === null || Array.isArray(states)) return config;
+  const same = (a: unknown, b: unknown): boolean =>
+    Array.isArray(a) &&
+    Array.isArray(b) &&
+    a.length === b.length &&
+    a.every((item, i) => String(item).trim().toLowerCase() === String(b[i]).trim().toLowerCase());
+  const kept = Object.entries(states).filter(([key, list]) => {
+    if (!Array.isArray(list)) return true;
+    if (list.length === 0) return false;
+    const defaults = key === 'off' || key === 'defrost' ? DEFAULT_STATES[key] : undefined;
+    const unchanged = JSON.stringify(list) === JSON.stringify(valueAt(current, `states.${key}`));
+    return defaults === undefined || !same(list, defaults) || unchanged;
+  });
+  return { ...config, states: Object.fromEntries(kept) };
+}
+
+/** The config with the roles of `wanted` set to `none` and the other `none` roles of `current` removed. */
+function withNotPresent(config: CardConfig, wanted: ReadonlySet<string>, current: CardConfig): CardConfig {
+  let next = config;
+  for (const path of notPresentRoles(current)) {
+    if (!wanted.has(path)) next = withValueAt(next, `entities.${path}`, undefined, current);
+  }
+  for (const path of wanted) next = withValueAt(next, `entities.${path}`, 'none', current);
+  return next;
+}
 
 export class EcogeoCardEditor extends LitElement {
   static override styles = css`
@@ -75,18 +123,58 @@ export class EcogeoCardEditor extends LitElement {
       color: var(--error-color);
       margin: 0 0 8px;
     }
+    .suggest {
+      margin: 8px 0;
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--ha-border-radius-pill, 18px);
+      background: var(--primary-color);
+      color: var(--text-primary-color);
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .suggest:disabled {
+      background: var(--disabled-color);
+      cursor: default;
+    }
+    .report,
+    .warnings {
+      margin: 0 0 8px;
+      padding-left: 20px;
+      color: var(--secondary-text-color);
+    }
+    .warnings {
+      color: var(--warning-color, var(--secondary-text-color));
+    }
+    .title {
+      margin: 8px 0 0;
+      font-weight: 500;
+    }
   `;
 
   @property({ attribute: false }) hass?: HassLike;
 
   /** The schema for a config and the number of colour rows to show (the editor's draft); the card's own by default. */
-  @property({ attribute: false }) schemaFor: (config: CardConfig, colorRows?: number) => EditorSchema = editorSchema;
+  @property({ attribute: false }) schemaFor: (
+    config: CardConfig,
+    colorRows?: number,
+    states?: Readonly<Record<string, HassEntityState | undefined>>,
+  ) => EditorSchema = editorSchema;
 
   @state() private _config?: CardConfig;
 
   // The "Advanced settings" switch, as the data of its form: editor state, never written to the config. It starts on
   // when the config has an `entities` key and is turned on again when one arrives from outside; only the user turns it off.
   @state() private _switch = { advanced: false };
+
+  // The device picked for the suggestions and what the last suggestion did: editor state, never written to the
+  // config. The report stays until the next edit.
+  @state() private _device?: string;
+  @state() private _report?: { filled: number; empty: string[] };
+
+  // The options of the enum entities behind the state lists, as text: the schema is rebuilt when they change.
+  private _optionsKey = '';
 
   @state() private _formDefined = customElements.get('ha-form') !== undefined;
 
@@ -122,8 +210,9 @@ export class EcogeoCardEditor extends LitElement {
     // Home Assistant may hand back the config this editor just fired: that is not a change from outside.
     const fromOutside = JSON.stringify(config) !== JSON.stringify(this._config);
     if (this._emptied.size > 0 && fromOutside) this._emptied = new Set();
-    const hadEntities = this._config !== undefined && hasEntities(this._config);
-    if (hasEntities(config) && !hadEntities && !this._switch.advanced) this._switch = { advanced: true };
+    if (fromOutside) this._report = undefined;
+    const hadAdvanced = this._config !== undefined && hasAdvanced(this._config);
+    if (hasAdvanced(config) && !hadAdvanced && !this._switch.advanced) this._switch = { advanced: true };
     if (!this._draftBuilt || JSON.stringify(config['colors']) !== JSON.stringify(this._colorsSeen)) {
       this._draft = draftOf(config);
       this._colorsSeen = config['colors'];
@@ -134,7 +223,8 @@ export class EcogeoCardEditor extends LitElement {
   }
 
   private _refreshSchema(config: CardConfig): void {
-    const next = this.schemaFor(config, this._draft.length);
+    const next = this.schemaFor(config, this._draft.length, this.hass?.states);
+    this._optionsKey = JSON.stringify(stateOptions(config, this.hass?.states));
     if (JSON.stringify(next) === JSON.stringify(this._schema)) return;
     this._schema = next;
     this._formSchema = visibleSchema(next, this._switch.advanced);
@@ -142,14 +232,27 @@ export class EcogeoCardEditor extends LitElement {
 
   protected override willUpdate(changed: PropertyValues): void {
     if (changed.has('schemaFor') && this._config) this._refreshSchema(this._config);
+    else if (
+      changed.has('hass') &&
+      this._config &&
+      JSON.stringify(stateOptions(this._config, this.hass?.states)) !== this._optionsKey
+    )
+      this._refreshSchema(this._config);
     if (changed.has('_switch')) this._formSchema = visibleSchema(this._schema, this._switch.advanced);
     // Rebuilt only when the config or the schema changes, so ha-form is not handed new data on every hass update.
-    if (this._config && (changed.has('_config') || changed.has('schemaFor'))) {
+    if (this._config && (changed.has('_config') || changed.has('schemaFor') || changed.has('_device'))) {
       this._shown = {
         ...toFormData(this._schema, withShownDefaults(this._schema, this._config, this._emptied)),
         ...(this._hasColorRows ? colorRowData(this._draft) : {}),
+        ...(this._has(DEVICE_FIELD) && this._device !== undefined ? { [DEVICE_FIELD]: this._device } : {}),
+        ...(this._has(NOT_PRESENT_FIELD) ? { [NOT_PRESENT_FIELD]: [...notPresentRoles(this._config)] } : {}),
       };
     }
+  }
+
+  /** True when the schema has the field (a schema of another builder may not). */
+  private _has(name: string): boolean {
+    return fieldsWithPaths(this._schema).some(({ path }) => path === name);
   }
 
   /** True when the schema has the colour stop rows (a schema of another builder may not). */
@@ -165,20 +268,52 @@ export class EcogeoCardEditor extends LitElement {
   private _configChanged = (event: CustomEvent<{ value: CardConfig }>): void => {
     event.stopPropagation();
     const current = this._config ?? {};
+    // The device is editor state: picking one changes no config. "Not present" is a view of the `none` roles.
+    const { [DEVICE_FIELD]: device, [NOT_PRESENT_FIELD]: notPresent, ...formValue } = event.detail.value;
+    const hasDevice = this._has(DEVICE_FIELD);
+    const picked = typeof device === 'string' && device !== '' ? device : undefined;
+    if (hasDevice && picked !== this._device) {
+      this._device = picked;
+      this._report = undefined;
+      return;
+    }
+    this._report = undefined;
+    const hasNotPresent = this._has(NOT_PRESENT_FIELD);
+    const value = hasDevice || hasNotPresent ? formValue : event.detail.value;
     // ha-form reports the whole data it displays, defaults included: keep out the keys of cleared fields (reported
     // as undefined or as an empty text) and the defaults the config did not have.
     // The colour rows are folded into `colors` below and never reach the config as keys of their own.
     const hasRows = this._hasColorRows;
-    const split = hasRows ? splitColorRows(event.detail.value) : undefined;
-    const reported = withoutUndefined(withoutEmptyTexts(this._schema, split?.rest ?? event.detail.value));
+    const split = hasRows ? splitColorRows(value) : undefined;
+    const reported = withoutUndefined(withoutEmptyTexts(this._schema, split?.rest ?? value));
     const shownRest = hasRows ? splitColorRows(this._shown).rest : this._shown;
-    const cleared = clearedPaths(this._schema, shownRest, reported);
-    this._emptied = new Set([...this._emptied, ...cleared].filter((path) => valueAt(reported, path) === undefined));
-    const decoded = fromFormData(this._schema, reported, current);
+    // A state list emptied to [] stays blank, like a cleared field: its default does not reappear until a value is added.
+    const emptyList = (path: string): boolean => {
+      const list = valueAt(reported, path);
+      return path.startsWith('states.') && Array.isArray(list) && list.length === 0;
+    };
+    const cleared = [
+      ...clearedPaths(this._schema, shownRest, reported),
+      ...fieldsWithPaths(this._schema)
+        .map(({ path }) => path)
+        .filter((path) => emptyList(path) && valueAt(shownRest, path) !== undefined),
+    ].filter((path) => !VIRTUAL_FIELDS.includes(path));
+    this._emptied = new Set(
+      [...this._emptied, ...cleared].filter((path) => valueAt(reported, path) === undefined || emptyList(path)),
+    );
+    const decodedForm = fromFormData(this._schema, reported, current);
+    const decoded =
+      hasNotPresent && (Array.isArray(notPresent) || Object.hasOwn(event.detail.value, NOT_PRESENT_FIELD))
+        ? withNotPresent(
+            decodedForm,
+            new Set(Array.isArray(notPresent) ? notPresent.filter((p): p is string => typeof p === 'string') : []),
+            current,
+          )
+        : decodedForm;
     // Values the editor cannot represent (`prefix: ''`, `features:` without a value, an invalid value) are normalised
     // on the first edit; the card's error is shown above the form until then (design D2).
     const pruned = withoutEmptyGroups(
-      withoutShownDefaults(this._schema, current, decoded),
+      withoutDefaultStates(withoutShownDefaults(this._schema, current, decoded), current),
       current,
       EMPTY_GROUPS,
       NESTED_GROUPS,
@@ -191,6 +326,67 @@ export class EcogeoCardEditor extends LitElement {
     this._refreshSchema(config);
     this.dispatchEvent(new CustomEvent('config-changed', { detail: { config }, bubbles: true, composed: true }));
   };
+
+  private _pickDevice(): string | undefined {
+    return this.hass === undefined ? undefined : this._device;
+  }
+
+  /** "Suggest entities": binds the device's entities to the open roles, writes them as `entities`, opens the advanced part. */
+  private _suggest = (): void => {
+    const deviceId = this._pickDevice();
+    const hass = this.hass;
+    if (deviceId === undefined || hass === undefined || this._config === undefined) return;
+    const current = this._config;
+    const { entities, report } = suggestEntities({
+      states: hass.states,
+      entities: (hass.entities ?? {}) as Readonly<Record<string, HassEntityRegistryEntry>>,
+      devices: hass.devices ?? {},
+      deviceId,
+      config: current,
+    });
+    this._switch = { advanced: true };
+    this._report = { filled: report.filled.length, empty: report.empty.map(roleLabel) };
+    // Nothing filled and no `entities` yet: do not add an empty group.
+    const config = Object.keys(entities).length === 0 && !hasEntities(current) ? current : { ...current, entities };
+    if (JSON.stringify(config) === JSON.stringify(current)) return;
+    this._config = config;
+    this._refreshSchema(config);
+    this.dispatchEvent(new CustomEvent('config-changed', { detail: { config }, bubbles: true, composed: true }));
+  };
+
+  private _renderNotes(): unknown {
+    const warnings = this._config ? bindingWarnings(this._config, this.hass?.states) : [];
+    return html`
+      ${
+        this._has(DEVICE_FIELD)
+          ? html`<button
+              type="button"
+              class="suggest"
+              ?disabled=${this._pickDevice() === undefined}
+              @click=${this._suggest}
+            >
+              ${EDITOR.suggest.button}
+            </button>`
+          : nothing
+      }
+      ${
+        this._report
+          ? html`<ul class="report" role="status">
+              <li>${EDITOR.suggest.filled(this._report.filled)}</li>
+              ${this._report.empty.length > 0 ? html`<li>${EDITOR.suggest.empty(this._report.empty)}</li>` : nothing}
+            </ul>`
+          : nothing
+      }
+      ${
+        warnings.length > 0
+          ? html`<p class="title">${EDITOR.suggest.warningsTitle}</p>
+              <ul class="warnings">
+                ${warnings.map((warning) => html`<li>${warning}</li>`)}
+              </ul>`
+          : nothing
+      }
+    `;
+  }
 
   protected override render(): unknown {
     if (!this._config) return nothing;
@@ -213,7 +409,8 @@ export class EcogeoCardEditor extends LitElement {
                 .schema=${this._formSchema}
                 .computeLabel=${label}
                 @value-changed=${this._configChanged}
-              ></ha-form>`
+              ></ha-form>
+              ${this._renderNotes()}`
           : html`<p class="hint">${EDITOR.noForm}</p>`
       }
     `;

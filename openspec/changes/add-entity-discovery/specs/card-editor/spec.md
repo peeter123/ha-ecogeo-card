@@ -22,14 +22,20 @@ show the sample preview.
   prefix `hp_basement`
 - **THEN** the stub config is `{ prefix: hp_basement }` and the preview shows that device's live values
 
+#### Scenario: Firmware device with helpers
+- **WHEN** the card is added from the card picker and the only firmware device also carries entities with other ids
+  (for example a template sensor `sensor.heatpump_cop_dhw`)
+- **THEN** the stub config is `{ prefix: <the firmware prefix> }`
+
 #### Scenario: Two firmware devices
 - **WHEN** the card is added from the card picker and two devices carry the firmware naming
 - **THEN** the stub config renders the sample-value schematic
 
 ### Requirement: Editor sections
-The editor SHALL show, in this order: the unit (model, variant, source, DHW storage), the entities (a device picker,
-a "Suggest entities" button and the entity prefix), the four features (each `true`, `false`, `unused` or empty for
-the variant default), and the appearance (detail level, exchanger fill, layout and colour stops). Each field SHALL
+The editor SHALL show, in this order: the unit (model, variant, source, DHW storage), the entities (a device picker
+and the entity prefix), the four features (each `true`, `false`, `unused` or empty for the variant default), and the
+appearance (detail level, exchanger fill, layout and colour stops). Below the form it SHALL show the "Suggest
+entities" button, the suggestion report and the binding check warnings. Each field SHALL
 show the option's current value from the config, or its default when the config leaves it out. The picked device
 SHALL be editor state only and SHALL never be written to the config.
 
@@ -128,7 +134,7 @@ Behind the advanced switch the editor SHALL offer a "Not present" choice of role
 
 ### Requirement: Binding check
 The editor SHALL warn about each role bound to an entity Home Assistant does not know, and each role bound to an
-entity whose unit does not fit the role. A warning SHALL name the role and the entity. It SHALL NOT change the config.
+entity whose unit or domain does not fit the role. A warning SHALL name the role and the entity. It SHALL NOT change the config.
 
 #### Scenario: Unknown entity
 - **WHEN** the config binds the brine inlet to `sensor.old_name`, which Home Assistant does not know

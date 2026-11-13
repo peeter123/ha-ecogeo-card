@@ -41,8 +41,9 @@ const optionLabels = (item: EditorField | undefined): string[] => {
 describe('editorSchema', () => {
   test('the sections are Unit, Entity prefix, Features, Appearance and the advanced Entities, in that order', () => {
     const sections = editorSchema({}).map((item) => (isSection(item) ? item.name : undefined));
-    expect(sections).toEqual(['unit', 'entity_prefix', 'features', 'appearance', 'entities']);
-    for (const name of sections) expect(EDITOR.sections).toHaveProperty(name ?? '');
+    // The "Not present" choice is a field between the entity pickers and the state values.
+    expect(sections).toEqual(['unit', 'entity_prefix', 'features', 'appearance', 'entities', undefined, 'states']);
+    for (const name of sections.filter((item) => item !== undefined)) expect(EDITOR.sections).toHaveProperty(name);
   });
 
   test('the fields, in order, with the features under their group', () => {
@@ -51,6 +52,7 @@ describe('editorSchema', () => {
       'variant',
       'source',
       'dhw',
+      '_device',
       'prefix',
       'features.passive_cooling',
       'features.active_cooling',
@@ -63,6 +65,9 @@ describe('editorSchema', () => {
       'colors_6_temperature',
       'colors_6_color',
       ...rolePathsByGroup(),
+      '_not_present',
+      'states.off',
+      'states.defrost',
     ]);
   });
 
@@ -125,8 +130,7 @@ describe('editorSchema', () => {
 
   test('every option of the option table has an editor field, apart from the explicit exceptions', () => {
     // Not options of the editor: the card type and the keys Home Assistant adds to any card. `colors` is edited as rows.
-    // `states` has no field yet: the editor change of add-entity-discovery adds it.
-    const exceptions = ['type', 'view_layout', 'layout_options', 'grid_options', 'visibility', 'states'];
+    const exceptions = ['type', 'view_layout', 'layout_options', 'grid_options', 'visibility'];
     const roots = new Set(paths().map((path) => path.split('.')[0]));
     if (paths().some((path) => colorRowOf(path) !== undefined)) roots.add('colors');
     for (const option of TOP_LEVEL_OPTIONS.filter((key) => !exceptions.includes(key))) {
@@ -193,7 +197,10 @@ describe('field builders', () => {
       default: 4,
       selector: { number: { min: 1, max: 4, step: 1, mode: 'box', unit_of_measurement: 'K' } },
     });
-    expect(entityField('e', 'sensor')).toEqual({ name: 'e', selector: { entity: { domain: 'sensor' } } });
+    expect(entityField('e', 'sensor')).toEqual({
+      name: 'e',
+      selector: { entity: { filter: { domain: 'sensor' } } },
+    });
     expect(entityField('e', ['sensor', 'number'], { advanced: true })).toMatchObject({ advanced: true });
     expect(colorField('c')).toEqual({ name: 'c', selector: { color_rgb: {} } });
   });

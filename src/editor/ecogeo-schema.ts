@@ -5,6 +5,8 @@
 // (one section per role group, built from the role table) are in the `entities` section.
 import {
   DEFAULT_VARIANT,
+  isNone,
+  prefixOf,
   defaultDhw,
   DHW_STORAGES,
   DETAIL_OPTION,
@@ -18,20 +20,28 @@ import {
   SOURCE_OPTION,
   variantOf,
 } from '../config/options';
+import { resolveEntities } from '../config/resolve';
 import { ROLES } from '../config/roles';
+import { DEFAULT_STATES } from '../config/states';
 import { VARIANTS, variantFeatures, type FeatureKey, type FeatureState } from '../config/variants';
 import type { CardConfig } from '../lib/config';
 import { valueAt } from '../lib/config';
+import type { HassEntityState } from '../lib/hass';
 import { EDITOR } from '../strings';
 import { colorRowFields, draftOf } from './color-rows';
 import { choiceField, entityField } from './fields';
+import { roleLabel } from './role-labels';
 import type { EditorField, EditorSchema, EditorSection } from './schema';
 
 /** The top-level groups the editor removes when they end up empty. */
-export const EMPTY_GROUPS: readonly string[] = ['features', 'entities'];
+export const EMPTY_GROUPS: readonly string[] = ['features', 'entities', 'states'];
 
 /** The groups that hold groups of their own (`entities.<group>`), which are removed when they end up empty. */
 export const NESTED_GROUPS: readonly string[] = ['entities'];
+
+/** The name of the virtual fields: editor state or a view of the config that is never a config key of its own. */
+export const DEVICE_FIELD = '_device';
+export const NOT_PRESENT_FIELD = '_not_present';
 
 /** The form value of a feature that is left to the variant's preset. */
 const VARIANT_DEFAULT = 'default';
@@ -105,14 +115,16 @@ function dhwField(config: CardConfig, model: Model): EditorField {
 
 /**
  * The advanced entity pickers: an `entities` section with one section per role group (in the role table's order of
- * first appearance) and one entity picker per role, filtered to the role's domain. The form data thereby has the
- * config's own shape, `entities.<group>.<role>`.
+ * first appearance) and one entity picker per role, filtered to the domains the role accepts. A role set to `none`
+ * has no picker, and a group left without one is left out. The form data thereby has the config's own shape,
+ * `entities.<group>.<role>`.
  */
-function entitiesSection(): EditorSection {
+function entitiesSection(config: CardConfig): EditorSection {
   const groups = new Map<string, EditorField[]>();
   for (const role of ROLES) {
+    if (isNone(valueAt(config, `entities.${role.path}`))) continue;
     const [group = '', name = ''] = role.path.split('.');
-    groups.set(group, [...(groups.get(group) ?? []), entityField(name, role.domain, { advanced: true })]);
+    groups.set(group, [...(groups.get(group) ?? []), entityField(name, role.accepts, { advanced: true })]);
   }
   return {
     type: 'expandable',
@@ -126,9 +138,64 @@ function entitiesSection(): EditorSection {
   };
 }
 
-/** The editor schema for a config: Unit, Entities (the prefix), Features, Appearance (with the colour stop rows)
- * and the advanced entity pickers. */
-export function editorSchema(config: CardConfig, colorRows: number = draftOf(config).length): EditorSchema {
+/** The "Not present" choice: a multiple select over the roles (a virtual field, folded into `none` values). */
+const notPresentField = (): EditorField => ({
+  name: NOT_PRESENT_FIELD,
+  advanced: true,
+  selector: {
+    select: {
+      multiple: true,
+      mode: 'dropdown',
+      options: ROLES.map((role) => ({ value: role.path, label: roleLabel(role.path) })),
+    },
+  },
+});
+
+/** The roles whose entity's `options` the state value lists offer: the off value is read from the on/off entity. */
+const STATE_ROLES = { off: 'unit.on_off', defrost: 'compressor.mode' } as const;
+
+/** The `options` attribute of the entity bound to the role behind each state list (an enum sensor or select). */
+export function stateOptions(
+  config: CardConfig,
+  states: Readonly<Record<string, HassEntityState | undefined>> | undefined,
+): Record<keyof typeof STATE_ROLES, string[]> {
+  const resolved = resolveEntities(config, prefixOf(config));
+  const options = (key: keyof typeof STATE_ROLES): string[] => {
+    const entityId = resolved[STATE_ROLES[key]];
+    const list = entityId === undefined ? undefined : states?.[entityId]?.attributes['options'];
+    return Array.isArray(list) ? list.filter((item): item is string => typeof item === 'string') : [];
+  };
+  return { off: options('off'), defrost: options('defrost') };
+}
+
+/** The `states` lists: multiple selects with typed values, offering the bound entity's options and the default. */
+function statesSection(options: Record<keyof typeof STATE_ROLES, string[]>): EditorSection {
+  const field = (key: keyof typeof STATE_ROLES): EditorField => ({
+    name: key,
+    advanced: true,
+    default: [...DEFAULT_STATES[key]],
+    selector: {
+      select: {
+        multiple: true,
+        custom_value: true,
+        mode: 'dropdown',
+        options: [...new Set([...options[key], ...DEFAULT_STATES[key]])],
+      },
+    },
+  });
+  return { type: 'expandable', name: 'states', schema: [field('off'), field('defrost')] };
+}
+
+/**
+ * The editor schema for a config: Unit, Entities (the device picker and the prefix), Features, Appearance (with the
+ * colour stop rows) and the advanced parts (the entity pickers, "Not present", the state value lists). `states` are
+ * Home Assistant's states, for the options of the bound enum entities.
+ */
+export function editorSchema(
+  config: CardConfig,
+  colorRows: number = draftOf(config).length,
+  states?: Readonly<Record<string, HassEntityState | undefined>>,
+): EditorSchema {
   const preset = variantFeatures(variantOf(config));
   const model = valueAt(config, 'model') === MODELS[1] ? MODELS[1] : MODELS[0];
   return [
@@ -147,7 +214,10 @@ export function editorSchema(config: CardConfig, colorRows: number = draftOf(con
       type: 'expandable',
       name: 'entity_prefix',
       flatten: true,
-      schema: [{ name: 'prefix', selector: { text: {} } }],
+      schema: [
+        { name: DEVICE_FIELD, selector: { device: {} } },
+        { name: 'prefix', selector: { text: {} } },
+      ],
     },
     {
       type: 'expandable',
@@ -165,6 +235,8 @@ export function editorSchema(config: CardConfig, colorRows: number = draftOf(con
         ...colorRowFields(colorRows),
       ],
     },
-    entitiesSection(),
+    entitiesSection(config),
+    notPresentField(),
+    statesSection(stateOptions(config, states)),
   ];
 }

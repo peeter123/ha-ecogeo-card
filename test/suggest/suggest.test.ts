@@ -12,7 +12,7 @@ import { SCENARIOS } from '../../dev/scenarios';
 import { DIRECTION_WORDS, KEYWORDS } from '../../src/config/keywords';
 import { ROLES, ROLE_PATHS, defaultEntityId, type RolePath } from '../../src/config/roles';
 import type { HassDevice, HassEntityRegistryEntry, HassEntityState } from '../../src/lib/hass';
-import { inferPrefix, suggestEntities, tokens } from '../../src/suggest/suggest';
+import { inferPrefix, suggestEntities, tokens, votePrefix } from '../../src/suggest/suggest';
 
 interface Registry {
   entities: Record<string, HassEntityRegistryEntry>;
@@ -119,12 +119,46 @@ describe('helpers', () => {
     expect(inferPrefix(['one', 'two'])).toBe('');
   });
 
+  test('votePrefix: the id start most roles share wins; without a vote the common start', () => {
+    const c = (entityId: string) => {
+      const [domain = '', objectId = ''] = entityId.split('.');
+      return { entityId, domain, objectId, unit: undefined, deviceClass: undefined, names: [] };
+    };
+    expect(votePrefix([c('sensor.a_cop'), c('sensor.a_alarm'), c('sensor.b_summer')])).toBe('a_');
+    expect(votePrefix([c('sensor.x_cop'), c('sensor.yy_cop')])).toBe('yy_');
+    expect(votePrefix([c('sensor.wp_1'), c('sensor.wp_diag_1')])).toBe('wp_');
+  });
+
   test('tokens are folded and split on non-letters', () => {
     expect(tokens('Rücklauf-Temperatur 2')).toEqual(['rucklauf', 'temperatur']);
   });
 });
 
 describe('suggestions', () => {
+  test('a firmware device with helpers and lookalikes: the prefix is voted and every role binds exactly', () => {
+    const { states, registry: base } = firmware();
+    const registry = { ...base, entities: { ...base.entities } };
+    const extra: [string, string][] = [
+      ['sensor.demo_ecogeo_cop_dhw', 'COP DHW'],
+      ['sensor.demo_ecogeo_calculated_flow', 'Calculated flow'],
+      ['number.demo_ecogeo_bus_dhw_setpoint', 'Bus DHW setpoint'],
+      ['number.demo_ecogeo_bus_heating_dg1_setpoint', 'Bus heating DG1 setpoint'],
+    ];
+    for (const [id, name] of extra) {
+      states[id] = { entity_id: id, state: '40', attributes: { friendly_name: name, unit_of_measurement: '°C' } };
+      registry.entities[id] = { entity_id: id, device_id: FIRMWARE_DEVICE_ID };
+    }
+    // Helpers with another start take away the common start of every id.
+    for (const id of ['sensor.heatpump_cop_dhw', 'sensor.heatpump_calculated_flow']) {
+      states[id] = { entity_id: id, state: '1', attributes: { friendly_name: id } };
+      registry.entities[id] = { entity_id: id, device_id: FIRMWARE_DEVICE_ID };
+    }
+    const result = run(states, registry, FIRMWARE_DEVICE_ID);
+    const expected = Object.fromEntries(ROLES.map((r) => [r.path, defaultEntityId(r, 'demo_ecogeo')]));
+    expect(flat(result.entities)).toEqual(expected);
+    expect(result.report.empty).toEqual([]);
+  });
+
   test('firmware device: every role bound to its firmware entity', () => {
     const { states, registry } = firmware();
     const result = run(states, registry, FIRMWARE_DEVICE_ID);

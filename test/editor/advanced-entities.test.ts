@@ -78,14 +78,14 @@ describe('advanced switch', () => {
 });
 
 describe('entity pickers', () => {
-  test('every role in the role table has a picker filtered to its domain, and a label', async () => {
+  test('every role in the role table has a picker filtered to the domains it accepts, and a label', async () => {
     const { editor, form, toggle } = await openEditor(BASE);
     toggle.change({ advanced: true });
     await editor.updateComplete;
     const fields = new Map(fieldsWithPaths(form.schema).map(({ field, path }) => [path, field]));
     for (const role of ROLES) {
       const field = fields.get(`entities.${role.path}`);
-      expect(field?.selector, role.path).toEqual({ entity: { domain: role.domain } });
+      expect(field?.selector, role.path).toEqual({ entity: { filter: { domain: role.accepts } } });
       const leaf = role.path.split('.')[1] ?? '';
       expect(EDITOR.roles, role.path).toHaveProperty(leaf);
       expect(form.computeLabel?.({ name: leaf }), role.path).toBe(EDITOR.roles[leaf as keyof typeof EDITOR.roles]);
@@ -207,9 +207,10 @@ describe('roles not present (none)', () => {
     expect(saved).toStrictEqual([{ ...WITH_NONE, source: 'air' }]);
   });
 
-  test('editing the none role itself writes what the picker reports', async () => {
+  test('a none role has no picker; it is changed through the Not present choice', async () => {
     const { form, saved } = await openEditor(WITH_NONE);
-    form.change({ ...form.data, entities: { ...(form.data['entities'] as object), unit: { cop: 'sensor.cop' } } });
-    expect(saved).toStrictEqual([{ ...WITH_NONE, entities: { ...WITH_NONE.entities, unit: { cop: 'sensor.cop' } } }]);
+    expect(fieldsWithPaths(form.schema).some(({ path }) => path === 'entities.unit.cop')).toBe(false);
+    form.change({ ...form.data, _not_present: [] });
+    expect(saved).toStrictEqual([{ ...WITH_NONE, entities: { dhw: { temperature: 'sensor.boiler_top' } } }]);
   });
 });
