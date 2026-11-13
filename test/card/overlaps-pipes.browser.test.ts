@@ -10,13 +10,17 @@ import { SCENARIO_NAMES, SCENARIOS } from '../../dev/scenarios';
 import { NAMINGS, namingStates, registryOf } from '../../dev/foreign';
 import { configOf, parseState } from '../../dev/url-state';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
+import { COMPACT_BELOW } from '../../src/lib/layout';
 
 afterEach(() => {
   document.body.replaceChildren();
 });
 
-async function render(query: string, width = 900): Promise<ShadowRoot> {
-  const name = SCENARIO_NAMES[0];
+async function render(
+  query: string,
+  width = 900,
+  name: (typeof SCENARIO_NAMES)[number] = SCENARIO_NAMES[0],
+): Promise<ShadowRoot> {
   const state = parseState(`?scenario=${name}&${query}&layout=full&detail=simplified`);
   const wrapper = document.createElement('div');
   wrapper.style.fontFamily = EMULATOR_FONT.family;
@@ -81,6 +85,29 @@ describe('Pipe and caption overlaps', () => {
     const { left, right, top, bottom } = caption.getBoundingClientRect();
     moveOnto(label, (left + right) / 2, (top + bottom) / 2);
     expect(added(root, before)).toEqual([`caption:${caption.textContent.trim()} x label compressor_speed`]);
+  });
+
+  test('a label moved past the drawing edge is reported as that edge, and only that', async () => {
+    const root = await render('source=ground');
+    const label = root.querySelector<HTMLElement>('.label[data-label="compressor_speed"]');
+    const svg = root.querySelector('.diagram svg');
+    if (!label || !svg) throw new Error('no label or drawing');
+    const before = pairs(root);
+    const rect = svg.getBoundingClientRect();
+    moveOnto(label, rect.left, rect.top + rect.height * 0.8);
+    expect(added(root, before)).toEqual(['label compressor_speed x edge']);
+  });
+
+  test("the ground loop's Out value stays at least 2 px inside the drawing at the compact threshold", async () => {
+    for (const source of ['ground', 'hybrid']) {
+      const root = await render(`source=${source}`, COMPACT_BELOW, 'defrost');
+      const label = root.querySelector(
+        `.label[data-label="${source === 'ground' ? 'ground_out' : 'hybrid_ground_out'}"]`,
+      );
+      const svg = root.querySelector('.diagram svg');
+      if (!label || !svg) throw new Error('no label or drawing');
+      expect(label.getBoundingClientRect().left - svg.getBoundingClientRect().left, source).toBeGreaterThanOrEqual(2);
+    }
   });
 
   test('a caption moved onto a pipe is reported with that pipe', async () => {

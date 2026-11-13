@@ -21,8 +21,8 @@ for the explanation of what the card shows and where each part comes from.
 - The active circuits move: dashes run in the direction of the flow at a speed that follows the pump or the
   compressor, the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode
   are muted. `prefers-reduced-motion` stops all animation.
-- Live values beside their components (temperatures, pressures, pump and compressor speeds, power, superheat, the
-  tank's values) and a footer with the mode, season, outside temperature, COP and capacities. The card formats the
+- Live values beside their components (temperatures, pressures, pump and compressor speeds, power, the
+  tank's values; the superheat and the expansion valve's opening at `detail: full`) and a footer with the mode, season, outside temperature, COP and capacities. The card formats the
   numbers itself with Home Assistant's locale and keeps every number joined to its unit by a no-break space.
 - A visual editor (add the card from the picker, or edit it) for the unit, the entity prefix, the features and the
   appearance; it writes only what you set and keeps every other key.
@@ -40,14 +40,14 @@ Copy `dist/ecogeo-card.js` to the Home Assistant `www` folder, register it as a 
 the card to a view. The steps are in the Installation section of [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
 The card measures its own width and chooses a layout from it (the `layout` option, see Options). With `layout: auto`
-(the default) it shows the full layout from 640 px wide, which is a panel view or a wide section, and the compact
+(the default) it shows the full layout from 600 px wide, which is a panel view or a wide section, and the compact
 layout below that, which is what a phone gets. The compact layout shows the schematic at the simplified detail
 level, whatever `detail` says, without the captions inside the drawing and with only the key labels (production out and in, brine out and in, compressor
 speed, the DHW temperature and the source's outlet temperature), at least 10 px high and, for production and brine, captioned In and Out and the DHW temperature captioned DHW, and a shorter footer (mode,
 COP, outside temperature and the alarm and offline indications). Pipes and outlines never render thinner than 2 px
-and 1.25 px, and the footer wraps. Once compact, the card returns to full only at 664 px (24 px of hysteresis), so a
+and 1.25 px, and the footer wraps. Once compact, the card returns to full only at 624 px (24 px of hysteresis), so a
 scrollbar appearing with the layout cannot make it flip back and forth. Set `layout: full` or `layout: compact` to
-force one. How the 640 px was measured, and what each tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
+force one. How the 600 px was measured, and what each tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
 ![The card on a 360 px wide phone: the compact layout with its seven key values](docs/images/phone-heating.png)
 
@@ -88,8 +88,8 @@ fault.
 | `states` | group | `off: [OFF]`, `defrost: [Defrost]` | The state texts that mean off (the on/off entity) and defrost (the compressor mode entity); a list replaces its default, case-insensitive. See Using another source in the docs. |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
-| `layout` | `auto`, `full`, `compact` | `auto` | `auto` shows the compact layout while the card is narrower than 640 px and the full layout otherwise (and before the width is known), with 24 px of hysteresis once compact (see Layout in the docs); `full` and `compact` use that layout at any width. |
-| `detail` | `simplified`, `full` | `simplified` | `simplified` leaves out the service and safety parts with no live value, shows no item numbers and draws a wider, shorter cabinet with a smaller outer-loop source and external tank, so the labels get room; `full` draws every part of the manual figure with its item number, in the original, taller cabinet. |
+| `layout` | `auto`, `full`, `compact` | `auto` | `auto` shows the compact layout while the card is narrower than 600 px and the full layout otherwise (and before the width is known), with 24 px of hysteresis once compact (see Layout in the docs); `full` and `compact` use that layout at any width. |
+| `detail` | `simplified`, `full` | `simplified` | `simplified` leaves out the service and safety parts with no live value, shows no item numbers and draws a wider, shorter cabinet with a smaller outer-loop source and external tank, so the labels get room, and leaves out the superheat and the expansion valve's opening (tap the valve for the opening); `full` draws every part of the manual figure with its item number, in the original, taller cabinet. |
 
 ### Source and DHW
 

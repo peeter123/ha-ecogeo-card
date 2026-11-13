@@ -14,7 +14,7 @@ export type Align = 'start' | 'middle' | 'end';
 /** Whether a label or footer item stays in the compact layout (add-compact-layout D2): `key` stays, `detail` does not. */
 export type Tier = 'key' | 'detail';
 
-export interface LabelSpec extends Pick<Visibility, 'dhw' | 'source'> {
+export interface LabelSpec extends Pick<Visibility, 'dhw' | 'source' | 'detail'> {
   /** A unique id, also the `data-label` of the element. */
   id: string;
   role: RolePath;
@@ -70,6 +70,74 @@ export const FULL_COMPACT_PLACES: Readonly<Record<string, Placement>> = {
   hybrid_ground_out: { x: 100, y: 435, align: 'middle' },
   tank_internal_temperature: { x: 604, y: 176, align: 'start' },
 };
+
+/** Maps a point of the full arrangement's cabinet to the arrangement's own. */
+export type PointMap = (x: number, y: number) => readonly [number, number];
+
+export interface SimplifiedPlace {
+  /** The place, from the zones and the point map of the cabinet. */
+  at: (z: Zones, map: PointMap) => Placement;
+  reason: string;
+}
+
+/**
+ * The labels of the simplified arrangement that are not at the full arrangement's place under the maps (refine-simplified-layout D6),
+ * each with its reason: places that the pipe-aware overlap check (dev/overlaps.ts) reported on a label's own pipes, caption or
+ * neighbour once the pipes are counted. A place is a function of the arrangement's zones where it hangs on the source, so it
+ * follows them. Labels at the full level are not affected.
+ */
+export const SIMPLIFIED_PLACES: Readonly<Record<string, SimplifiedPlace>> = {
+  air_unit_out: {
+    at: (z) => ({ x: z.airUnitWallX + 3, y: z.airPortY.top + portLabelDy(z), align: 'start' }),
+    reason:
+      'starts 3 units off the housing so that the outlet caption and its widest value end before the feed pipe at the narrowest full layout',
+  },
+  dg1_demand: {
+    at: (_z, map) => ({ x: map(320, 118)[0], y: 118, align: 'start' }),
+    reason:
+      'the demand text 5 units higher, clear of the cabinet top edge that its plate touches at the full place (y 123)',
+  },
+  fan_speed: {
+    at: (z) => ({ x: z.airUnit.x + 9, y: z.airUnit.y + z.airUnit.height + 12, align: 'start' }),
+    reason:
+      'left-aligned 9 units inside the housing: the outside air value (about 105 units wide at 600 px) centred on the fan reaches the hybrid return pipe at x 6',
+  },
+  outside_temperature: {
+    at: (z) => ({ x: z.airUnit.x + 9, y: z.airUnit.y + z.airUnit.height + 25, align: 'start' }),
+    reason: 'under the fan value, on the same left edge',
+  },
+  ground_in: {
+    at: (z) => ({ x: z.groundLoop.downX + 3, y: z.groundLineY.ground + 20, align: 'start' }),
+    reason:
+      'starts 3 units off the down leg (not 6): the legs sit 4 units further right than before, and the widest value must still end left of the cabinet',
+  },
+  ground_out: {
+    at: (z) => ({ x: z.groundLoop.upX - 3, y: z.groundLineY.ground + 20, align: 'end' }),
+    reason:
+      'ends 3 units off the up leg (not 6) so that the widest value (-12.3, defrost) stays 2 px inside the drawing edge at 600 px',
+  },
+  hybrid_ground_out: {
+    at: (z) => ({ x: z.groundLoop.upX - 3, y: z.groundLineY.hybrid + 20, align: 'end' }),
+    reason:
+      'the same as the ground loop: 3 units off the up leg, so that the widest value stays inside the drawing edge',
+  },
+  compressor_speed: {
+    at: (_z, map) => ({ x: map(503, 308)[0], y: 308, align: 'middle' }),
+    reason:
+      'the stack of three rows is 14 units apart (12 in the full arrangement), since the 8 px text of a 600 px card is taller than 12 units',
+  },
+  compressor_percentage: {
+    at: (_z, map) => ({ x: map(503, 322)[0], y: 322, align: 'middle' }),
+    reason: 'the middle row of the compressor stack, 14 units under the speed',
+  },
+  compressor_power: {
+    at: (_z, map) => ({ x: map(503, 336)[0], y: 336, align: 'middle' }),
+    reason: 'the bottom row of the compressor stack, 14 units under the percentage, still clear of the pipes below',
+  },
+};
+
+/** The distance of an air unit port label from its port's pipe: 12 units at the arrangement's scale. */
+const portLabelDy = (z: Zones): number => Math.round(12 * (z.scale ?? 1) * 100) / 100;
 
 /** The short captions of the four production and brine values in the compact layout (add-compact-layout D8), like the source ports'. */
 const COMPACT_CAPTIONS: Readonly<Record<string, string>> = {
@@ -155,7 +223,7 @@ export function labelPlacesFor(
   const AIR_LABELS_Y = airUnit.y + airUnit.height + 12;
   /** The air unit's port labels: 6 units right of the housing's wall, 12 units under (top port) or above (bottom port) the port's pipe. */
   const PORT_LABEL_X = airUnitWallX + 6;
-  const PORT_LABEL_DY = Math.round(12 * (z.scale ?? 1) * 100) / 100;
+  const PORT_LABEL_DY = portLabelDy(z);
   /** The ground loop's labels: 20 units under the ground line, clear of its hatching. */
   const GROUND_LABEL_DY = 20;
   /** Every value label of the drawing. */
@@ -186,8 +254,8 @@ export function labelPlacesFor(
     cab('compressor_speed', 'compressor.speed', 503, 307, 'middle', { item: 11 }),
     cab('compressor_percentage', 'compressor.percentage', 503, 319, 'middle', { item: 11 }),
     cab('compressor_power', 'compressor.power', 503, 331, 'middle', { item: 11 }),
-    cab('superheat', 'refrigerant.superheat', 527, 376, 'middle', { item: 12 }),
-    cab('expansion_valve', 'refrigerant.expansion_valve', 527, 388, 'middle', { item: 12 }),
+    cab('superheat', 'refrigerant.superheat', 527, 376, 'middle', { item: 12, detail: 'full' }),
+    cab('expansion_valve', 'refrigerant.expansion_valve', 527, 388, 'middle', { item: 12, detail: 'full' }),
     cab('condensation_temperature', 'refrigerant.condensation_temperature', 432, 437, 'middle', { item: 8 }),
     cab('evaporation_temperature', 'refrigerant.evaporation_temperature', 572, 437, 'middle', { item: 7 }),
     // air unit (also in the hybrid): the fan and the outside air under the housing, the brine In and Out beside the two

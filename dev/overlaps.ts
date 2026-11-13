@@ -9,7 +9,7 @@
 // than TOLERANCE px in both directions. Pipes and captions are opt-in (refine-simplified-layout D4): measureCard with
 // `{ pipes: true }` also samples every `path.pipe` along its rendered length at 1 px steps, each sample a square of the
 // rendered stroke width, and boxes the `text.circuit-label`, `text.source-caption` and `text.tank-caption` elements like
-// labels; overlapPairs then reports `label <id> x pipe:<segment>`, `caption:<text> x label <id>` and
+// labels, and takes the svg's box as the drawing's edge; overlapPairs then reports `label <id> x edge` for a label box that leaves it by more than TOLERANCE, `label <id> x pipe:<segment>`, `caption:<text> x label <id>` and
 // `caption:<text> x pipe:<segment>`. A hop is a gap in the path data (a moveto), so each subpath is sampled on its own
 // and the gap yields no samples. The `bare` labels inside tank 50 ignore pipe samples that lie within tank 50's box.
 
@@ -52,6 +52,8 @@ export interface Measurement {
   /** The captions inside the drawing, boxed like labels; present when measured with `pipes: true`. */
   captions?: Caption[];
   parts: PartBox[];
+  /** The drawing's svg box; present when measured with `pipes: true`. */
+  drawing?: Box;
   /** The cabinet's outline (its rectangle, without the stroke). */
   cabinet: Box | undefined;
 }
@@ -143,7 +145,15 @@ export function measureCard(root: ParentNode, options: { pipes?: boolean } = {})
   const outline = root.querySelector('.cabinet > .outline');
   const cabinet = outline === null ? undefined : box(outline);
   if (options.pipes !== true) return { labels, parts, cabinet };
-  return { labels, parts, cabinet, pipes: measurePipes(root), captions: measureCaptions(root) };
+  const svg = root.querySelector('.diagram svg');
+  return {
+    labels,
+    parts,
+    cabinet,
+    pipes: measurePipes(root),
+    captions: measureCaptions(root),
+    ...(svg === null ? {} : { drawing: box(svg) }),
+  };
 }
 
 const overlaps = (a: Box, b: Box): boolean =>
@@ -151,7 +161,7 @@ const overlaps = (a: Box, b: Box): boolean =>
   Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > TOLERANCE;
 
 /** The overlapping pairs of a measurement, as texts. */
-export function overlapPairs({ labels, parts, pipes = [], captions = [] }: Measurement): string[] {
+export function overlapPairs({ labels, parts, pipes = [], captions = [], drawing }: Measurement): string[] {
   const pairs: string[] = [];
   const tank50 = parts.find((part) => part.item === '50');
   const inside = (square: Box, outer: Box): boolean =>
@@ -168,6 +178,18 @@ export function overlapPairs({ labels, parts, pipes = [], captions = [] }: Measu
       if (pipe.squares.some((s) => overlaps(s, label) && !(ignored !== undefined && inside(s, ignored)))) {
         add(`label ${label.id} x ${pipe.id}`);
       }
+    }
+  }
+  // a label whose box leaves the drawing (the card's own edge) by more than the tolerance
+  if (drawing !== undefined) {
+    for (const label of labels) {
+      if (
+        drawing.left - label.left > TOLERANCE ||
+        label.right - drawing.right > TOLERANCE ||
+        drawing.top - label.top > TOLERANCE ||
+        label.bottom - drawing.bottom > TOLERANCE
+      )
+        add(`label ${label.id} x edge`);
     }
   }
   for (const caption of captions) {

@@ -65,22 +65,25 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 
 ## 4. Simplified labels clear of pipes, and the threshold
 
-- [ ] 4.1 Show the superheat and the expansion valve opening only at the full detail level (design D5).
+- [x] 4.1 Show the superheat and the expansion valve opening only at the full detail level (design D5).
   Verify: `npm test` covers live-values "Superheat" and "Simplified leaves out item 12's values" (labels absent at
   the simplified level, valve 12's tap still opens the opening's entity); "Compact refrigerant values" still passes.
-- [ ] 4.2 Add `SIMPLIFIED_PLACES` for the labels the pipe-aware check still reports (design D6): at least the brine
+- [x] 4.2 Add `SIMPLIFIED_PLACES` for the labels the pipe-aware check still reports (design D6): at least the brine
   outlet and inlet, pump 16's speed, the heating demand and the DG1 setpoint; one reason per entry.
   Verify: `npm run measure-layout -- --pipes` reports zero pairs at the chosen widths in every installation and
   scenario.
-- [ ] 4.3 Switch the browser guard and the measure script's default to the pipe-aware check, re-measure the threshold
+  Note: the brine outlet and inlet, pump 16's speed and the DG1 setpoint report no pair from 600 px up on the wider
+  cabinet, so they got no place (design D6, settled in group 4). Since 4.3, pipes are the measure script's default
+  and `--pipes` is no longer needed.
+- [x] 4.3 Switch the browser guard and the measure script's default to the pipe-aware check, re-measure the threshold
   and set `COMPACT_BELOW` (responsive-layout "Compact threshold").
   Verify: `test/card/overlaps.browser.test.ts` passes at the new `COMPACT_BELOW` in Chromium and WebKit, and the new
   value is at most 640 px. If it is not, stop and put the options of design D6 to the user before closing the group.
-- [ ] 4.4 Emulator check of the labels: the full layout at `COMPACT_BELOW`, 800 and 1000 px for the heating, DHW,
+- [x] 4.4 Emulator check of the labels: the full layout at `COMPACT_BELOW`, 800 and 1000 px for the heating, DHW,
   defrost and passive cooling scenarios with a ground loop, an air unit and model C.
   Verify: a subagent captures them (`threshold-*` and new captures in `dev/captures.ts`) and returns a verdict that
   no value sits on a pipe, a component or another value, and that each value is readable next to its component.
-- [ ] 4.5 Update `docs/ecogeo-card.md` (the threshold, its measurement with pipes and captions, the simplified places,
+- [x] 4.5 Update `docs/ecogeo-card.md` (the threshold, its measurement with pipes and captions, the simplified places,
   the item 12 values) and `README.md` (which values the simplified level shows).
   Verify: the documented threshold equals `COMPACT_BELOW`; `test/readme.ts` and `test/docs.test.ts` pass.
 

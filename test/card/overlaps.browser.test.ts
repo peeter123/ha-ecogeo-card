@@ -1,6 +1,8 @@
-// No overlaps above the threshold (add-compact-layout D6, D7): every emulator scenario in every installation of the
-// measurement script, in the full layout at the compact threshold, has no two labels that overlap and no label that
-// overlaps a component. The boxes are the script's (dev/overlaps.ts).
+// No overlaps above the threshold (add-compact-layout D6, D7; refine-simplified-layout D4, D6): every emulator scenario in
+// every installation of the measurement script, in the full layout at the compact threshold, has no two labels that overlap,
+// no label that overlaps a component or a pipe, and no caption that overlaps a label or a pipe. The boxes are the
+// script's (dev/overlaps.ts). The compact layout below still counts labels and components only, until its places are
+// searched with pipes (refine-simplified-layout group 5).
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';
@@ -37,7 +39,7 @@ describe('No overlaps above the threshold', () => {
         const root = card.shadowRoot;
         if (!root) throw new Error('no shadow root');
         expect(root.querySelectorAll('.label').length).toBeGreaterThan(0);
-        expect(overlapPairs(measureCard(root))).toEqual([]);
+        expect(overlapPairs(measureCard(root, { pipes: true }))).toEqual([]);
       });
     }
 });

@@ -17,7 +17,7 @@ import type { CircuitId, Circuits } from '../calc/circuits';
 import type { Detail, DhwStorage, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
-import { FULL_COMPACT_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
+import { FULL_COMPACT_PLACES, SIMPLIFIED_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
 
 /** A rectangle in viewBox units. */
 export interface Rect {
@@ -984,10 +984,10 @@ const K = SIMPLIFIED_ZONE_SCALE;
 /** A source zone value scaled about the viewBox's left edge (x) and about the cabinet's top line (y). */
 const scaleX = (x: number): number => round2(x * K);
 /**
- * The air unit sits 6 units left of where the scale puts it, so that the brine In and Out labels beside its ports (up to
- * 64 units wide) fit between its wall and the feed's column (x 187).
+ * The air unit sits 12 units left of where the scale puts it, so that the brine In and Out labels beside its ports (up to
+ * 64 units wide) fit between its wall and the feed's column (x 190).
  */
-const AIR_SHIFT = -6;
+const AIR_SHIFT = -12;
 const airX = (x: number): number => round2(scaleX(x) + AIR_SHIFT);
 const scaleY = (y: number): number => round2(FULL_CABINET.y + (y - FULL_CABINET.y) * K);
 
@@ -1036,11 +1036,11 @@ const SIMPLIFIED_ZONES: Zones = deriveZones({
     captionY: FULL_CABINET.y - 8,
     passes: { y0: scaleY(FULL_CABINET.y + 30), step: round2(15 * K), count: 4, left: airX(44), right: airX(132) },
   },
-  // the legs 4.8 units left of the scale's: the In label (up to 64 units wide) right of the down leg ends at the cabinet's edge
-  groundLoop: { downX: 128, upX: 80, depth: round2(140 * K) },
+  // the legs 2.8 (down) and 0.8 (up) units left of the scale's (so that the Out value, up to 77 units wide, stays inside the drawing): the In label (up to 64 units wide) right of the down leg ends at the cabinet's edge
+  groundLoop: { downX: 130, upX: 84, depth: round2(140 * K) },
   groundLineX: { start: scaleX(8), end: scaleX(220) },
-  // the run above the cabinet keeps its heights; its columns sit right of the air unit's wall (x 114) with room for its port labels
-  run: { outY: 85, inY: 50, feedX: 187, returnX: 169, hybridReturnX: 6 },
+  // the run above the cabinet keeps its heights; its columns sit right of the air unit's wall (x 108) with room for its port labels
+  run: { outY: 85, inY: 50, feedX: 190, returnX: 172, hybridReturnX: 6 },
 });
 
 /**
@@ -1102,11 +1102,13 @@ function buildSimplifiedArrangement(): Arrangement {
     crossings,
     circuitLabels: FULL_CIRCUIT_LABELS.map((label) => ({ ...label, x: simplifiedX(label.x), y: simplifiedY(label.y) })),
     labels: {
-      specs: labels.specs.map((spec) =>
-        spec.id === 'production_pressure'
-          ? { ...spec, x: stubX + 32, y: TRANSDUCER_38_Y, align: 'start' as const }
-          : spec,
-      ),
+      specs: labels.specs.map((spec) => {
+        if (spec.id === 'production_pressure') {
+          return { ...spec, x: stubX + 32, y: TRANSDUCER_38_Y, align: 'start' as const };
+        }
+        const place = SIMPLIFIED_PLACES[spec.id]?.at(zones, (x, y) => [simplifiedX(x), simplifiedY(y)]);
+        return place === undefined ? spec : { ...spec, ...place };
+      }),
     },
   };
 }

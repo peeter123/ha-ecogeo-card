@@ -4,11 +4,12 @@
 import type { Layout } from '../config/options';
 
 /**
- * With `layout: auto`, cards narrower than this (px) get the compact layout. Measured on 2026-11-11 with
+ * With `layout: auto`, cards narrower than this (px) get the compact layout. Measured on 2026-11-13 with
  * `npm run measure-layout` (scripts/measure-layout.mjs): the narrowest width on the 20 px grid from which the
- * full layout at the simplified detail level has no overlapping labels in any emulator scenario.
+ * full layout at the simplified detail level has no label that overlaps another label, a component, a pipe or a
+ * caption in any emulator scenario (refine-simplified-layout D4, D6).
  */
-export const COMPACT_BELOW = 640;
+export const COMPACT_BELOW = 600;
 
 /**
  * True when the card shows the compact layout. With `auto` that depends on the card's width; an unknown width

@@ -13,21 +13,19 @@ discharge_temperature | label start | left: 43%; top: 48.07339449541285%
 discharge_pressure | label middle | left: 47.4%; top: 50.45871559633027%
 suction_temperature | label start | left: 52.2%; top: 48.07339449541285%
 suction_pressure | label middle | left: 57.4%; top: 50.45871559633027%
-compressor_speed | label middle | left: 49.7%; top: 56.330275229357795%
-compressor_percentage | label middle | left: 49.7%; top: 58.532110091743114%
-compressor_power | label middle | left: 49.7%; top: 60.73394495412844%
-superheat | label middle | left: 52.1%; top: 68.9908256880734%
-expansion_valve | label middle | left: 52.1%; top: 71.19266055045873%
+compressor_speed | label middle | left: 49.7%; top: 56.513761467889914%
+compressor_percentage | label middle | left: 49.7%; top: 59.082568807339456%
+compressor_power | label middle | left: 49.7%; top: 61.65137614678899%
 condensation_temperature | label middle | left: 42.6%; top: 80.18348623853211%
 evaporation_temperature | label middle | left: 57.599999999999994%; top: 80.18348623853211%
-ground_in | label start | left: 13.4%; top: 27.522935779816514%
-ground_out | label end | left: 7.3999999999999995%; top: 27.522935779816514%
+ground_in | label start | left: 13.3%; top: 27.522935779816514%
+ground_out | label end | left: 8.1%; top: 27.522935779816514%
 tank_external_temperature | label middle emphasis | left: 92%; top: 54.31192660550459%
 tank_external_setpoint | label middle | left: 92%; top: 57.064220183486235%
 tank_external_start_delta | label middle | left: 92%; top: 59.63302752293578%
 footer: on_off, season, outside_temperature, cop, condensation_capacity, evaporation_capacity
 svg:
-<svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 545" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: var(--disabled-text-color); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3.2; --outline-width: 2">
+<svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 545" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: var(--disabled-text-color); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3.4; --outline-width: 2.1">
           <g class="source" data-source-kind="ground">
     
     <g data-source="ground" class="ground-loop muted">
@@ -45,7 +43,7 @@ svg:
 </path>
 <path class="source-ground" d="M62.4 130 l-6 8">
 </path>
-<path class="source-ground" d="M92.4 130 l-6 8">
+<path class="source-ground" d="M72.4 130 l-6 8">
 </path>
 <path class="source-ground" d="M102.4 130 l-6 8">
 </path>
@@ -57,7 +55,7 @@ svg:
 </path>
 <path class="source-ground" d="M162.4 130 l-6 8">
 </path>
-    <text class="source-caption" text-anchor="middle" x="104" y="270">Ground loop</text>
+    <text class="source-caption" text-anchor="middle" x="107" y="270">Ground loop</text>
   </g>
   </g>
 <g data-dhw="external" class="dhw-storage" aria-label="DHW tank" role="button" tabindex="0">
@@ -134,11 +132,11 @@ svg:
 </path>
 <path class="pipe muted" data-segment="p1_up" d="M234 160 L234 130">
 </path>
-<path class="pipe muted" data-segment="p2_in" d="M288 130 L288 164.53333333333333 M288 179.46666666666667 L288 198">
+<path class="pipe muted" data-segment="p2_in" d="M288 130 L288 164.06666666666666 M288 179.93333333333334 L288 198">
 </path>
 <path class="pipe muted" data-segment="prod_44_26" d="M234 292 L234 184">
 </path>
-<path class="pipe muted" data-segment="prod_8_44" d="M414 348 L295.46666666666664 348 M280.53333333333336 348 L234 348">
+<path class="pipe muted" data-segment="prod_8_44" d="M414 348 L295.93333333333334 348 M280.06666666666666 348 L234 348">
 </path>
 <path class="pipe muted" data-segment="prod_15_8" d="M383 416 L414 416">
 </path>
@@ -152,7 +150,7 @@ svg:
 </path>
 <path class="pipe muted" data-segment="prod_10_out" d="M502 448 L336 448 L336 428">
 </path>
-<path class="pipe muted" data-segment="prod_tap_a" d="M354 416 L354 440.53333333333336 M354 455.46666666666664 L354 470">
+<path class="pipe muted" data-segment="prod_tap_a" d="M354 416 L354 440.06666666666666 M354 455.93333333333334 L354 470">
 </path>
 <path class="pipe muted" data-segment="dhw_sup_a" d="M246 172 L347 172">
 </path>
@@ -174,7 +172,7 @@ svg:
 </path>
 <path class="pipe muted" data-segment="htr_drain" d="M326 296 L326 309">
 </path>
-<path class="pipe muted" data-segment="htr_riser" d="M347 250 L347 205.46666666666667 M347 190.53333333333333 L347 172">
+<path class="pipe muted" data-segment="htr_riser" d="M347 250 L347 205.93333333333334 M347 190.06666666666666 L347 172">
 </path>
 <path class="pipe muted" data-segment="dhw_ext_in" d="M768 130 L768 50 L960 50 L960 180">
 </path>
@@ -205,17 +203,17 @@ svg:
 </path>
 <path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M880 247 L864 247 L864 85 L800 85 L800 130">
 </path>
-<path class="pipe muted" data-segment="src_out" d="M638 130 L638 85 L195 85">
+<path class="pipe muted" data-segment="src_out" d="M638 130 L638 85 L198 85">
 </path>
-<path class="pipe muted" data-segment="src_in" d="M177 50 L728 50 L728 130">
+<path class="pipe muted" data-segment="src_in" d="M180 50 L728 50 L728 130">
 </path>
-<path class="pipe muted" data-segment="src_gnd_feed" d="M195 85 L128 85 L128 130">
+<path class="pipe muted" data-segment="src_gnd_feed" d="M198 85 L130 85 L130 130">
 </path>
-<path class="pipe muted" data-segment="src_gnd_down" stroke-linecap="round" d="M128 130 L128 218 A24 24 0 0 1 104 242 L104 242">
+<path class="pipe muted" data-segment="src_gnd_down" stroke-linecap="round" d="M130 130 L130 219 A23 23 0 0 1 107 242 L107 242">
 </path>
-<path class="pipe muted" data-segment="src_gnd_up" d="M104 242 L104 242 A24 24 0 0 1 80 218 L80 130">
+<path class="pipe muted" data-segment="src_gnd_up" d="M107 242 L107 242 A23 23 0 0 1 84 219 L84 130">
 </path>
-<path class="pipe muted" data-segment="src_gnd_exit" d="M80 130 L80 50 L177 50">
+<path class="pipe muted" data-segment="src_gnd_exit" d="M84 130 L84 50 L180 50">
 </path>
 <path class="pipe muted" data-segment="ref_discharge" d="M490 250 L371 250">
 </path>
@@ -233,21 +231,21 @@ svg:
 </path>
 <path class="pipe muted" data-segment="ref_12_7" d="M533 416 L564 416">
 </path>
-<path class="pipe muted" data-segment="ln4_a" d="M728 130 L728 164.53333333333333 M728 179.46666666666667 L728 190.53333333333333 M728 205.46666666666667 L728 288">
+<path class="pipe muted" data-segment="ln4_a" d="M728 130 L728 164.06666666666666 M728 179.93333333333334 L728 190.06666666666666 M728 205.93333333333334 L728 288">
 </path>
 <path class="pipe muted" data-segment="ln4_b" d="M728 312 L728 348">
 </path>
-<path class="pipe muted" data-segment="br_feed7" d="M728 348 L645.4666666666667 348 M630.5333333333333 348 L588 348">
+<path class="pipe muted" data-segment="br_feed7" d="M728 348 L645.9333333333333 348 M630.0666666666667 348 L588 348">
 </path>
 <path class="pipe muted" data-segment="brine_7_28" d="M588 416 L606 416">
 </path>
 <path class="pipe muted" data-segment="brine_28_ln3" d="M630 416 L638 416">
 </path>
-<path class="pipe muted" data-segment="ln3" d="M638 416 L638 205.46666666666667 M638 190.53333333333333 L638 179.46666666666667 M638 164.53333333333333 L638 130">
+<path class="pipe muted" data-segment="ln3" d="M638 416 L638 205.93333333333334 M638 190.06666666666666 L638 179.93333333333334 M638 164.06666666666666 L638 130">
 </path>
 <path class="pipe muted" data-segment="br_10_in" d="M728 348 L728 448 L526 448">
 </path>
-<path class="pipe muted" data-segment="br_10_28" d="M526 492 L618 492 L618 455.46666666666664 M618 440.53333333333336 L618 428">
+<path class="pipe muted" data-segment="br_10_28" d="M526 492 L618 492 L618 455.93333333333334 M618 440.06666666666666 L618 428">
 </path>
 <path class="pipe muted" data-segment="brine_tap_a" d="M728 270 L771 270 L771 440">
 </path>

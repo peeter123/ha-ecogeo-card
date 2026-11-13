@@ -5,8 +5,8 @@
 // `g.air-unit`, and the marks of `g.ground-loop`). The threshold is the narrowest width at which every case has zero overlaps and
 // every wider measured width does too (a width of the 20 px grid). Paste it into COMPACT_BELOW in src/lib/layout.ts.
 //
-// With `--pipes` the check also counts pipes and captions (dev/overlaps.ts) and prints the most frequent pairs; do not
-// paste that threshold into COMPACT_BELOW until group 4 of refine-simplified-layout switches the guard.
+// The check counts pipes and captions too (dev/overlaps.ts) and prints the most frequent pairs; `--no-pipes` leaves them
+// out, which is the measurement of before refine-simplified-layout.
 //
 // The boxes, the exclusions, the installations and the tolerance are in dev/overlaps.ts, shared with the browser
 // test that guards the threshold (test/card/overlaps.browser.test.ts). Starts and stops its own Vite server, like
@@ -17,9 +17,13 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
 
-const WIDTHS = Array.from({ length: 25 }, (_, index) => 320 + index * 20);
+const GRID = Array.from({ length: 25 }, (_, index) => 320 + index * 20);
+// `--widths=a,b,c` measures only those widths (to iterate on a place); the threshold is then not reported.
+const only = process.argv.find((arg) => arg.startsWith('--widths='));
+const WIDTHS = only === undefined ? GRID : only.slice('--widths='.length).split(',').map(Number);
 const quiet = process.argv.includes('--quiet');
-const pipes = process.argv.includes('--pipes');
+// Pipes and captions count by default (refine-simplified-layout D4); `--no-pipes` measures labels and components only.
+const pipes = !process.argv.includes('--no-pipes');
 
 /** Runs in the page: the shared check of dev/overlaps.ts, served by the Vite dev server. */
 async function measureInPage(/** @type {boolean} */ withPipes) {
@@ -94,7 +98,9 @@ for (const width of WIDTHS) {
   if (total > 0) cleanFrom = undefined;
   else cleanFrom ??= width;
 }
-if (cleanFrom === undefined) {
+if (only !== undefined) {
+  console.log('\nPartial run (--widths): no threshold reported.');
+} else if (cleanFrom === undefined) {
   console.log(`\nOverlaps remain at ${String(WIDTHS[WIDTHS.length - 1])} px: no threshold. Stop and decide.`);
   process.exitCode = 1;
 } else {

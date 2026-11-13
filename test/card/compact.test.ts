@@ -129,9 +129,18 @@ describe('compact content', () => {
     expect(ids).not.toContain('tank_internal_start_delta');
   });
 
-  test('the full layout still shows every label', async () => {
-    const card = await show(1000, { source: 'ground', dhw: 'external' });
+  test('the full layout at the full detail level still shows every label', async () => {
+    const card = await show(1000, { source: 'ground', dhw: 'external', detail: 'full' });
     for (const id of [...KEY, ...DETAIL]) expect(labelIds(card), id).toContain(id);
+  });
+
+  test('the full layout at the simplified level leaves out the superheat and the expansion valve opening (refine-simplified-layout D5)', async () => {
+    const card = await show(1000, { source: 'ground', dhw: 'external' });
+    const shown = labelIds(card);
+    for (const id of [...KEY, ...DETAIL].filter((label) => label !== 'superheat' && label !== 'expansion_valve'))
+      expect(shown, id).toContain(id);
+    expect(shown).not.toContain('superheat');
+    expect(shown).not.toContain('expansion_valve');
   });
 
   test('Compact footer: the outside temperature and the COP, not the capacities, on/off or season', async () => {

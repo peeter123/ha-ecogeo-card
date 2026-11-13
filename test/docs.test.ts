@@ -2,6 +2,7 @@
 import { describe, expect, test } from 'vitest';
 import { configErrors } from '../src/config/options';
 import { resolveConfig } from '../src/config/resolve';
+import { COMPACT_BELOW, COMPACT_HYSTERESIS } from '../src/lib/layout';
 
 const files = import.meta.glob<string>('../docs/ecogeo-card.md', { query: '?raw', import: 'default', eager: true });
 const DOCS = (Object.values(files)[0] ?? '').replaceAll('\r\n', '\n');
@@ -51,5 +52,14 @@ describe('docs: Using another source', () => {
     const config = parseYaml(blocks[0]?.[1] ?? '');
     expect(configErrors(config)).toEqual([]);
     expect(resolveConfig(config).states).toEqual({ off: ['Uit', 'Standby'], defrost: ['Ontdooien'] });
+  });
+});
+
+describe('the compact threshold in the docs', () => {
+  test('the docs state the threshold and the width where an auto card returns to full', () => {
+    const text = DOCS.replace(/\s+/g, ' ');
+    expect(text).toContain(`The threshold is ${String(COMPACT_BELOW)} px`);
+    expect(text).toContain(`the threshold plus 24 px, ${String(COMPACT_BELOW + COMPACT_HYSTERESIS)} px`);
+    expect(COMPACT_HYSTERESIS).toBe(24);
   });
 });

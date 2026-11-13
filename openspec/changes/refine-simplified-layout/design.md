@@ -157,6 +157,20 @@ cabinet's top edge, the DG1 setpoint clear of the run pipes. The threshold is th
 (`npm run measure-layout`). The target is the spec's: at most 640 px. If the arrangement cannot reach it, that is a
 decision point for the user before the group closes, not a silent higher threshold.
 
+Settled in group 4: the wider cabinet already clears the brine outlet and inlet, pump 16's speed and the DG1 setpoint
+of every pipe from 600 px up, so they get no simplified place (a place would be an exception with no reason). The
+places are the air unit's Out value, the fan and outside values, the compressor stack (pitch 14 instead of 12) and
+the DG1 demand text. To reach 600 px the simplified air unit moved 6 more units left (12 in all) and the run's feed and
+return columns 3 units right (x 190 and 172), changing the group 3 values. The threshold with pipes and captions
+counted is 600 px (`COMPACT_BELOW`). At 580 px the only pairs are the air unit's Out value against its feed pipe in
+defrost; from 560 px down they are vertical row conflicts (probe temperatures against pressures, fan against outside,
+tank 50's setpoint against its demand) that no further place was sought for. The superheat and valve opening specs
+stay in the simplified arrangement, hidden by `partState`. The check also counts a label whose box leaves the
+drawing (`label x edge`), since the ground loop's Out value crossed the left edge at 600 px and no other pair saw it;
+the ground and hybrid Out values get simplified places to stay inside. The Out value (about 77 units) did not fit
+between the drawing's edge and the up leg (about 80), so the simplified ground loop's legs moved right (up leg x 84,
+down leg x 130, 46 apart), and the In value got a place of its own to still end left of the cabinet.
+
 ### D7. Compact switches in its own step
 
 Until the compact places are searched again, the compact layout keeps drawing the full arrangement with the simplified
@@ -188,6 +202,10 @@ arrangement's ratio; the card sets it as the `.diagram`'s `max-width`, centred, 
 `resize`. The layout choice (`nextCompact`) and the stroke widths take this drawing width instead of the card's
 width, so the labels (cqw of `.diagram`) and lines stay consistent with what is drawn. Derived state: inputs
 `isPanel`, the card width, `window.innerHeight`, `--header-height` and the arrangement.
+
+Note from group 4: the footer wraps to two lines for longer modes (Passive cooling) at drawing widths of 600-620 px.
+A panel's drawing width only gets that narrow in a very short window; the footer allowance should cover two lines
+there, or the fit accepts a wrapped footer slightly below the fold at such heights.
 
 Alternative: CSS only (`aspect-ratio` with `max-height`). Rejected: a block's auto width does not shrink from a
 max-height through its aspect ratio in every engine, and the layout decision needs the width in JS anyway.

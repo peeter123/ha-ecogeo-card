@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { FEATURE_KEYS, variantFeatures, VARIANTS } from '../src/config/variants';
 import { TOP_LEVEL_OPTIONS } from '../src/config/options';
+import { COMPACT_BELOW, COMPACT_HYSTERESIS } from '../src/lib/layout';
 import { ROLES } from '../src/config/roles';
 import { EDITOR, MODE_LABELS } from '../src/strings';
 import { README, rowCells, section, tableNames } from './readme';
@@ -47,6 +48,13 @@ describe('README configuration reference', () => {
   test('every mode label is named in the operating mode paragraph', () => {
     const text = section('### Operating mode').replace(/\s+/g, ' ');
     for (const label of Object.values(MODE_LABELS)) expect(text, label).toContain(label);
+  });
+
+  test('the README names the compact threshold and the width where the card returns to full', () => {
+    const text = README.replace(/\s+/g, ' ');
+    expect(text).toContain(`from ${String(COMPACT_BELOW)} px wide`);
+    expect(text).toContain(`narrower than ${String(COMPACT_BELOW)} px`);
+    expect(text).toContain(`only at ${String(COMPACT_BELOW + COMPACT_HYSTERESIS)} px`);
   });
 
   test('the visual editor section names every section of the editor', () => {

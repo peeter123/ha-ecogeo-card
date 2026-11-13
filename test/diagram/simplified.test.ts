@@ -3,6 +3,7 @@
 // rule of the full level checked on it for every source, DHW storage and model.
 import { describe, expect, test } from 'vitest';
 import { DHW_STORAGES, SOURCES } from '../../src/config/options';
+import { SIMPLIFIED_PLACES } from '../../src/diagram/label-places';
 import type { FeatureState, Features } from '../../src/config/variants';
 import {
   MAX_CROSSINGS,
@@ -189,6 +190,19 @@ describe('arrangementFor: the simplified arrangement', () => {
     }
   });
 
+  test('the labels with a place of their own have a reason, are in the arrangement and sit where the table says', () => {
+    const ids = Object.keys(SIMPLIFIED_PLACES);
+    expect(ids.length).toBeGreaterThan(0);
+    for (const [id, place] of Object.entries(SIMPLIFIED_PLACES)) {
+      expect(place.reason.length, id).toBeGreaterThan(20);
+      const spec = simplified.labels.specs.find((label) => label.id === id);
+      expect(spec, id).toBeDefined();
+      expect({ x: spec?.x, y: spec?.y, align: spec?.align }, id).toEqual(
+        place.at(simplified, (x, y) => [mapAxis(SIMPLIFIED_MAP_X, x), mapAxis(SIMPLIFIED_MAP_Y, y)]),
+      );
+    }
+  });
+
   test('the exceptions to the maps are named with a reason', () => {
     expect(Object.keys(SIMPLIFIED_EXCEPTIONS).sort()).toEqual([
       'component 38',
@@ -259,7 +273,8 @@ describe('arrangementFor: the simplified arrangement', () => {
       'condensation_temperature',
       'evaporation_temperature',
     ];
-    for (const id of cabinetLabels) {
+    // the labels with a place of their own (SIMPLIFIED_PLACES) are checked below
+    for (const id of cabinetLabels.filter((label) => SIMPLIFIED_PLACES[label] === undefined)) {
       const [a, b] = [
         full.labels.specs.find((spec) => spec.id === id),
         simplified.labels.specs.find((spec) => spec.id === id),

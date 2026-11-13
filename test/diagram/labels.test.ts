@@ -103,7 +103,7 @@ describe('refrigerant labels', () => {
   });
 
   test('superheat of 6.2 degrees reads 6.2 K near item 12, the valve opening in %', async () => {
-    const card = await mount({}, hassOf({ 'refrigerant.superheat': ['6.2', '°C'] }));
+    const card = await mount({ detail: 'full' }, hassOf({ 'refrigerant.superheat': ['6.2', '°C'] }));
     expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
     expect(label(card, 'superheat')?.getAttribute('data-label-item')).toBe('12');
     expect(valueOf(card, 'expansion_valve')).toBe(nb('58 %'));
@@ -248,7 +248,7 @@ describe('units, locale and precision', () => {
       { 'refrigerant.superheat': ['6.2', '°C'] },
       { entities: { [idOf('refrigerant.superheat')]: { display_precision: 2 } } },
     );
-    const card = await mount({}, hass);
+    const card = await mount({ detail: 'full' }, hass);
     expect(valueOf(card, 'superheat')).toBe(nb('6.20 K'));
     card.remove();
   });
@@ -258,13 +258,13 @@ describe('units, locale and precision', () => {
       { 'refrigerant.superheat': ['43.2', '°F'] },
       { entities: { [idOf('refrigerant.superheat')]: { display_precision: 2 } } },
     );
-    const card = await mount({}, hass);
+    const card = await mount({ detail: 'full' }, hass);
     expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
     card.remove();
   });
 
   test('Fahrenheit superheat: 43.2 degrees F reads 6.2 K', async () => {
-    const card = await mount({}, hassOf({ 'refrigerant.superheat': ['43.2', '°F'] }));
+    const card = await mount({ detail: 'full' }, hassOf({ 'refrigerant.superheat': ['43.2', '°F'] }));
     expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
     card.remove();
   });

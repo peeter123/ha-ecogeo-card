@@ -14,6 +14,15 @@ export interface CaptureStep {
 /** A phone's card width in px (the emulator's 360 px option). */
 const PHONE_WIDTH = 360;
 
+/** The installations and widths of the label captures (refine-simplified-layout 4.4). */
+const LABEL_VARIANTS = [
+  { name: 'ground', query: 'source=ground' },
+  { name: 'air', query: 'source=air' },
+  { name: 'modelC', query: 'model=C&dhw=internal' },
+] as const;
+const LABEL_WIDTHS = [COMPACT_BELOW, 800, 1000] as const;
+const LABEL_SCENARIOS = ['heating', 'dhw', 'defrost', 'passive_cooling'] as const;
+
 const step = (name: string, query: string): CaptureStep => ({ name, query });
 
 export const CAPTURES: readonly CaptureStep[] = [
@@ -85,6 +94,19 @@ export const CAPTURES: readonly CaptureStep[] = [
       step(`phone-${theme}-${name}`, `scenario=${name}&width=${String(PHONE_WIDTH)}&theme=${theme}`),
       step(`threshold-${theme}-${name}`, `scenario=${name}&layout=full&width=${String(COMPACT_BELOW)}&theme=${theme}`),
     ]),
+  ),
+  // refine-simplified-layout 4.4: the values of the simplified drawing at the compact threshold, 800 and 1000 px, in the
+  // scenarios with the most values (heating, DHW, defrost, passive cooling), for an air unit, model C and, where the
+  // `threshold-*` and `scenario-*` captures do not already show it, a ground loop
+  ...LABEL_VARIANTS.flatMap(({ name, query }) =>
+    LABEL_WIDTHS.flatMap((width) =>
+      LABEL_SCENARIOS.filter(() => name !== 'ground' || width === 800).map((scenario) =>
+        step(
+          `labels-${name}-${String(width)}-${scenario}`,
+          `scenario=${scenario}&${query}&layout=full&width=${String(width)}`,
+        ),
+      ),
+    ),
   ),
 ];
 

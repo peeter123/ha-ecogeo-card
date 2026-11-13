@@ -338,14 +338,14 @@ level leaves out (vessels, safety and drain valves, items 18-21, 23, 24), so the
 
 **The source and the external tank.** They are not mapped point by point (their shapes would distort) but placed from
 zone constants at a uniform scale of 0.8: the air unit's housing is 99.2 x 168 units with a fan of radius 27.2 (the
-blades scale with it), the ground loop is 48 units between its legs and 112 deep, the external tank is 134 x 144 with a
+blades scale with it), the ground loop is 46 units between its legs (about 0.77 of the full 60) and 112 deep, the external tank is 134 x 144 with a
 dome of 11 and a coil of half width 40. The top of the air unit's housing, the ground line and the tank's dome stay on
-the cabinet's top line (y 130). The source zone ends at x 187 (the feed's column; its legs at x 80 and 128, the
-housing's wall at x 114; the run above the cabinet joins at x 195), the tank zone starts at x 840 and the tank
-(x 853 to 987) is centred in it. The air unit is 6 units left of where the scale puts it and the ground loop's legs 5
-units, so that the brine In and Out labels (up to 64 units wide at the nominal label size) fit between the housing and the feed's column and
+the cabinet's top line (y 130). The source zone ends at x 190 (the feed's column; its legs at x 84 and 130, the
+housing's wall at x 108; the run above the cabinet joins at x 198), the tank zone starts at x 840 and the tank
+(x 853 to 987) is centred in it. The air unit is 12 units left of where the scale puts it and the ground loop's legs
+at x 84 and 130 (0.8 and 2.8 units left of the scaled position), so that the brine In and Out labels (up to 64 units wide at the nominal label size, about 72 at 600 px) fit between the housing and the feed's column and
 between the loop and the cabinet. The pipes of the source and of ports 5 and 6 are generated from these constants, so
-they stay connected to the ports, which follow `fx`. With the 8 px label floor on cards of about 640-680 px the air unit's Out label in the defrost scenario still touches the feed pipe; group 4 of refine-simplified-layout handles that pair.
+they stay connected to the ports, which follow `fx`.
 
 **Exceptions to the maps** (`SIMPLIFIED_EXCEPTIONS`, each with its reason in code): pressure transducer 38 and its
 stub sat in the cut band (y 520), so they move up, between the two production lines of exchanger 10 (y 448 and 492) on
@@ -617,7 +617,7 @@ writes no entity.
 | Brine outlet (31) and inlet (32), pressure (37), pump 16 | under the probes, under probe 37, left of the pump |
 | Discharge (30) and suction (29) temperatures, pressures 36 and 35 | below the discharge and suction lines of the probe row |
 | Compressor 11: rpm, %, W | a stack inside the refrigerant loop |
-| Superheat (K) and valve opening (%) at 12 | above the expansion valve |
+| Superheat (K) and valve opening (%) at 12 | above the expansion valve; at `detail: full` only (tap valve 12 for the opening at `simplified`) |
 | Condensation (8) and evaporation (7) temperatures | under exchangers 8 and 7 |
 | Air unit: fan, outside temperature | under the housing |
 | Air unit: In (brine outlet of the heat pump) and Out (air unit outlet temperature); a hybrid: only In | right of the housing, next to the ports: air, In at the bottom port and Out at the top one; hybrid, In at the top port |
@@ -670,8 +670,8 @@ layout but changes the stroke widths (see Minimum rendered sizes) renders again 
 
 Once the compact layout is shorter than the full one, a page scrollbar can appear and disappear as the layout flips,
 which changes the card's width by about 15-17 px near the threshold. So with `auto` a card that is already compact
-returns to full only at the threshold plus 24 px, 664 px (`COMPACT_HYSTERESIS` in `src/lib/layout.ts`); going compact still
-happens below the threshold, at 640 px. The decision is the pure function `nextCompact(layout, width,
+returns to full only at the threshold plus 24 px, 624 px (`COMPACT_HYSTERESIS` in `src/lib/layout.ts`); going compact still
+happens below the threshold, at 600 px. The decision is the pure function `nextCompact(layout, width,
 currentlyCompact)`, which the card calls with whether the layout it showed last was compact because `auto` chose it. A compact layout that
 `layout: compact` forced does not count: after a switch to `auto` the card shows what a newly loaded card of that width
 shows. Forced layouts ignore the hysteresis.
@@ -719,8 +719,8 @@ the compact layout and at least 8 px in the full one, and the footer wraps onto 
   and `--outline-width: max(2, 1.25 / scale)` on the svg, in drawing units and rounded up to 0.1 (so the rendered
   minimum still holds after rounding). The stroke rules of the drawing (pipes, outlines, the flow overlay) read them,
   with 3 and 2 as the fallbacks, so a card of unknown width draws as before. The overlay's dash pattern and the gaps of
-  the hops scale with `--pipe-width`. From 667 px up `scale` is 0.667 or more and the widths stay 3 and 2; between 640 px (the threshold) and
-  667 px the pipes are up to 3.2 units wide, and the threshold measurement below was taken with that. Decorative thin lines (fins, the air unit's divider, the ground
+  the hops scale with `--pipe-width`. From 667 px up `scale` is 0.667 or more and the widths stay 3 and 2; between 600 px (the threshold) and
+  667 px the pipes are up to 3.4 units wide, and the threshold measurement below was taken with that. Decorative thin lines (fins, the air unit's divider, the ground
   hatching, the tank rim) are fractions of `--outline-width`.
 - Fonts: the compact layout's labels are `max(10px, 1.6cqw)` and the external tank's temperature `max(11px, 1.9cqw)`
   (model C's integrated tank temperature is an ordinary 10 px label); the full layout keeps `max(8px, 0.95cqw)`. The
@@ -731,54 +731,74 @@ Browser tests (`test/card/compact.browser.test.ts`) measure these in Chromium an
 
 ### The compact threshold
 
-The threshold is 640 px (measured on 2026-11-11, after the compressor rows were spaced further apart). It is the narrowest card width at which the full layout, at the
-simplified detail level, shows no overlapping labels in any emulator scenario, on the 20 px grid from 320 to 800 px with
-every wider grid width also clean.
+The threshold is 600 px (`COMPACT_BELOW`; measured on 2026-11-13, with pipes and captions counted, after
+refine-simplified-layout drew the simplified arrangement and gave some labels places of their own). It is the narrowest
+card width at which the full layout, at the simplified detail level, has no value label that overlaps another label, a
+component, a pipe or a caption in any emulator scenario, on the 20 px grid from 320 to 800 px with every wider grid width
+also clean.
 
 Method (`npm run measure-layout`, `scripts/measure-layout.mjs`, Playwright): every emulator scenario is opened in
 the forced full layout at the simplified detail level, in seven installations (a ground loop on model B, an air unit,
 the hybrid, model C with its internal tank on a ground loop and on an air unit, and the unused-tank cases: a ground loop on model B and an air unit on model C), and the card is set to every width from 320 to 800 px in 20 px
-steps. At each width the script compares, in the DOM, the bounding boxes of the value labels with each other and
-with the boxes of the drawing's component groups (the symbol groups, the DHW storage, the air unit and the marks of
-the ground loop). A label's box leaves out the half-leading above and below its text; two boxes overlap when they
+steps (`--widths=a,b,c` measures only those, to iterate on a place, and prints no threshold). At each width the script compares, in the DOM, the bounding boxes of the value labels with each other, with
+the boxes of the drawing's component groups (the symbol groups, the DHW storage, the air unit and the marks of
+the ground loop), with the pipes and with the captions, and checks that no label's box leaves the drawing (`label X x edge`: the box extends past the svg's box by more than the tolerance, which the other pairs cannot see). A label's box leaves out the half-leading above and below its text; two boxes overlap when they
 share more than 0.5 px in both directions. The labels inside tank 50 on model C are not compared with tank 50, which
 they sit on by design. The threshold is the narrowest width with zero overlaps in every case, provided every wider
-measured width is also clean. Without `--pipes` the script does not check pipes; the emulator captures at the threshold
-(`threshold-*` in `npm run capture`) are inspected by eye for those.
+measured width is also clean. `--no-pipes` leaves the pipes and captions out, which is the measurement of before
+refine-simplified-layout (580 px on today's drawing).
 
-The boxes, exclusions, installations and tolerance live in `dev/overlaps.ts`, shared by the script and by the
-browser test `test/card/overlaps.browser.test.ts`, which runs the same check at the threshold in headless Chromium and WebKit
-so that a change to the drawing or the labels that brings overlaps back fails `npm test`. The layout at real widths
-(`test/card/layout.browser.test.ts`) is also a browser test: happy-dom has no layout.
-
-Two choices decide the result. A label's box is its em box, with the half-leading trimmed, because the line boxes of
-the stacked compressor rows overlap at every width. And the tolerance is 0.5 px; with no tolerance (boxes that merely touch
-count) the threshold would be 680 px, measured with the same script.
-
-The compressor rows (speed, percentage, power) were what limited the first measurement, 700 px, at a pitch of 11
-drawing units; their pitch is now 12 units (labels at y 307, 319 and 331), which gives 640 px.
-
-Result: at 620 px and below every case has overlaps (165 at 620 px, 877 at 360 px; re-measured 2026-11-12 after task 2.5 of add-compact-layout, which added the air-C-internal installation), because the labels stop shrinking
-at their 8 px minimum while the drawing keeps shrinking.
-
-Pipes and captions (refine-simplified-layout D4, `npm run measure-layout -- --pipes`): the same script can also count
-pipes and captions, which the browser guard does not do yet (it stays label-and-component only until the group that
-switches it). Every `path.pipe` is sampled along its rendered length at 1 px steps, each sample a square of the pipe's
+Pipes and captions (refine-simplified-layout D4): every `path.pipe` is sampled along its rendered length at 1 px steps, each sample a square of the pipe's
 rendered stroke width, and a label overlaps the pipe when a sample shares more than 0.5 px with its box in both
 directions. A hop is a gap in the path data, so each subpath is sampled on its own and a label over a hop's gap does not
 count; the halves of a helix share their segment's name. The captions (`text.circuit-label`, `text.source-caption`,
 `text.tank-caption`) are boxed like labels, as the em box of their text, and a caption overlapping a label or a pipe
 counts (captions inside a part's group, such as the ground loop's, are checked against pipes only; as that part they are already checked against labels). The `bare` labels inside tank 50 ignore pipe samples inside tank 50's box. Pairs read `label X x pipe:<segment>`,
-`caption:<text> x label X` and `caption:<text> x pipe:<segment>`.
+`caption:<text> x label X` and `caption:<text> x pipe:<segment>`. The check is about the full layout at the simplified level; the full detail level, which keeps today's
+arrangement, is not measured against pipes. The compact layout below the threshold still counts labels and components only, until
+refine-simplified-layout group 5 puts it on the simplified arrangement.
 
-Baseline with pipes counted (measured 2026-11-13, before refine-simplified-layout changes any drawing; 7 installations
-by 11 scenarios, 77 cases per width): the threshold would be 700 px, not 640 px (171 overlaps at 640 px and at 660 px,
-126 at 680 px, none from 700 px; 3242 at 320 px). The most frequent pairs over every width and case are the compressor
-rows against each other (1232 each), superheat against the expansion valve opening (1232), the production inlet
-against pipes `prod_44_26` and `trunk` (1197 each), the brine pump against pipe `ln3` (959), the discharge and suction
-temperatures against their pressures (819 each), the DG1 caption against the DG1 setpoint (693), the fan speed
-against the outside temperature (572) and the brine outlet against pipe `ln4_a` (546). `COMPACT_BELOW` stays 640 px
-until the drawing is refined.
+The boxes, exclusions, installations and tolerance live in `dev/overlaps.ts`, shared by the script and by the
+browser test `test/card/overlaps.browser.test.ts`, which runs the same check (with pipes) at the threshold in headless Chromium and WebKit
+so that a change to the drawing or the labels that brings overlaps back fails `npm test`. The layout at real widths
+(`test/card/layout.browser.test.ts`) is also a browser test: happy-dom has no layout.
+
+Two choices decide the result. A label's box is its em box, with the half-leading trimmed, because the line boxes of
+the stacked compressor rows overlap at every width. And the tolerance is 0.5 px; with no tolerance (boxes that merely touch
+count) the threshold is the same, 600 px (re-measured 2026-11-13 with the tolerance set to 0; it was 680 px before refine-simplified-layout).
+
+History: the first measurement (add-compact-layout, labels and components only) gave 700 px, then 640 px once the compressor rows were spaced
+12 units apart. With pipes and captions counted on the drawing before refine-simplified-layout the threshold was 700 px
+(171 overlaps at 640 px and 660 px, 126 at 680 px, 3242 at 320 px; the most frequent pairs were the compressor rows, the
+superheat against the expansion valve opening, the production inlet against pipes `prod_44_26` and `trunk`, the discharge and suction
+temperatures against their pressures and the DG1 caption against the DG1 setpoint). The wider, shorter cabinet
+(see The simplified arrangement) and the places in the next section brought it to 600 px (no overlaps from 600 px; 3 at 580 px, all the air
+unit's Out label against the feed pipe in the defrost scenario; 179 at 560 px, 2662 at 320 px). Below 600 px the labels stop shrinking
+at their 8 px minimum while the drawing keeps shrinking, so what remains are rows that are 12 to 13 units apart (the
+discharge and suction temperatures against their pressures, the fan against the outside temperature), and the Out label against the feed pipe.
+
+### The simplified places
+
+A label of the simplified arrangement is at the full label's place under the maps (or at its zone's place for the
+source, the tank and tank 50), unless `SIMPLIFIED_PLACES` in `src/diagram/label-places.ts` gives it another, each with its reason in code; labels at the
+full detail level are not affected. Today's table:
+
+| Label | Place | Why |
+|---|---|---|
+| Air unit outlet (the top port's value) | starts 3 units off the housing's wall, 12 units under the top port | "Out" and its widest value (-12.3 in the defrost scenario) end before the feed pipe at 600 px |
+| Fan, outside temperature | left-aligned 9 units inside the housing, 12 and 25 units under it | the outside value (about 105 units wide at 600 px) centred on the fan reaches the hybrid return pipe |
+| Compressor 11: rpm, %, W | x 497, y 308, 322 and 336 (a pitch of 14 units instead of 12) | the text of a 600 px card is taller than 12 units |
+| DG1 demand | y 118 instead of 123 | the plate touches the cabinet's top edge at 123 |
+| Ground loop In (ground) | 3 units off the down leg (x 130), start-aligned | the legs moved right for the Out value, and the widest In value must still end left of the cabinet (x 200) |
+| Ground loop Out (ground; hybrid) | 3 units off the up leg (x 84), end-aligned | the widest value (-12.3, defrost) crossed the drawing's left edge at 600 px; it now stays 2 px or more inside it in Chromium and WebKit |
+
+The brine outlet and inlet, pump 16's speed and the DG1 setpoint keep their places under the maps: with the cabinet's
+extra width they clear pipes `ln3`, `ln4_a`, `src_out` and the DG1 caption at 600 px and above, so they need no place of their own.
+
+### Superheat and the expansion valve opening
+
+The two values at item 12 show only at `detail: full` (live values, "Simplified leaves out item 12's values"); they were what
+put several pairs on the simplified drawing. Tapping valve 12 still opens the opening's entity, and the compact layout's key set is unchanged.
 
 ## Installation
 
