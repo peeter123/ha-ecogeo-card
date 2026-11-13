@@ -38,6 +38,26 @@ it as an absolute temperature.
 - **WHEN** the production pressure entity reports 150 kPa, in the full layout
 - **THEN** the label at item 38 reads "1.5 bar"
 
+### Requirement: Locale and precision
+Numbers SHALL use Home Assistant's locale and number format setting. The decimals SHALL come from the entity's
+display precision when Home Assistant has one and the entity's unit is the card's unit for the role, and from the
+card's default for the role otherwise (a converted value, such as kW shown in W, uses the role default). A
+temperature difference reported in °C counts as the card's unit K, since the number is unchanged. A value shown with
+the entity's own unit (see "The card's own units") SHALL take its decimals from the entity's display precision, or
+else keep the decimals of its state.
+
+#### Scenario: Locale
+- **WHEN** Home Assistant's number format uses a decimal comma
+- **THEN** the production outlet reads "25,2 °C"
+
+#### Scenario: Display precision
+- **WHEN** the production outlet entity has a display precision of 0 and reads 25.2 °C
+- **THEN** the label reads "25 °C"
+
+#### Scenario: Passed-through decimals
+- **WHEN** the compressor speed entity reports 45.6 Hz without a display precision
+- **THEN** the label reads "45.6 Hz"
+
 ## ADDED Requirements
 
 ### Requirement: On/off states from any domain

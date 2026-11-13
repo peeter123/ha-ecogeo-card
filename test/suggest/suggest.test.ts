@@ -149,7 +149,7 @@ describe('suggestions', () => {
       registry.entities[id] = { entity_id: id, device_id: FIRMWARE_DEVICE_ID };
     }
     // Helpers with another start take away the common start of every id.
-    for (const id of ['sensor.heatpump_cop_dhw', 'sensor.heatpump_calculated_flow']) {
+    for (const id of ['sensor.template_cop_dhw', 'sensor.estimated_flow']) {
       states[id] = { entity_id: id, state: '1', attributes: { friendly_name: id } };
       registry.entities[id] = { entity_id: id, device_id: FIRMWARE_DEVICE_ID };
     }

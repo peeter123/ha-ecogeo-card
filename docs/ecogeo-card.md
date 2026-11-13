@@ -79,7 +79,7 @@ has `entities` or `states` and is never written to the config; turning it off hi
 (the editor does not lock the switch on, unlike the hrv-ventilation editor).
 
 Entity discovery lives in the editor only; the card's render path never reads the registry or the suggestion module.
-The device picker is an `ha-form` field with the `device` selector (no integration filter), and the picked device is
+The device picker is an `ha-form` field with the `device` selector (no integration filter, so any integration works; suggestions only reach entities that belong to a device, and entities without one, often YAML-configured Modbus or KNX, are bound with the pickers), and the picked device is
 editor state, like the switch. "Suggest entities" is a native `<button>` styled with theme variables, so the editor
 still contains no Home Assistant element but `ha-form`. It calls `suggestEntities` (`src/suggest/suggest.ts`, the
 scoring of the design) with `hass.states`, `hass.entities`, `hass.devices`, the device and the config, merges the
@@ -92,7 +92,7 @@ selectors with `multiple` and `custom_value`; their options are the `attributes.
 change. An empty list is always dropped and stays blank in the form until a value is added; a list equal to its default is dropped too, unless the config already had it. The binding
 check (`src/editor/binding-check.ts`) is a plain list: each role bound to an entity not in `hass.states` is a warning,
 and each bound to an entity whose domain is not accepted, or whose unit does not fit (a domain check plus the suggestion module's
-`unitFits`, so the unit rule has one source), is another; an unavailable entity is not judged by its unit. It never fires `config-changed`.
+`unitFits`, so the unit rule has one source), is another; an unavailable entity is not judged by its unit. The check is stricter than the card: it also warns about a pressure or pump entity without a unit, which the card still shows (pressure as bar, pump as %). It never fires `config-changed`.
 
 The colour stops are flat fields `colors_<i>_temperature` (a number box in °C) and `colors_<i>_color` (Home
 Assistant's `color_rgb` selector, which reports `[r, g, b]`), one row per stop plus an empty row, because `ha-form`

@@ -77,7 +77,7 @@ No breaking change: every default reproduces today's behaviour, and the prefix s
 ## Impact
 
 - Code: `src/config/` (`states`, `none`, the role table's keywords and directions), `src/calc/readings.ts` and
-  `mode.ts`, `src/lib/units.ts` and `availability.ts`, the labels and footer (hidden roles), `src/editor/`
+  `mode.ts`, `src/lib/units.ts`, the labels and footer (hidden roles), `src/editor/`
   (device picker, suggestions, checks, value choices), a new pure suggestion module, `src/card/ecogeo-card.ts`
   (`getStubConfig`), `dev/` (the foreign naming), tests, README and docs.
 - Depends on `add-card-editor` being archived (done).

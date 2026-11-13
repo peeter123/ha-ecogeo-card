@@ -24,7 +24,7 @@ show the sample preview.
 
 #### Scenario: Firmware device with helpers
 - **WHEN** the card is added from the card picker and the only firmware device also carries entities with other ids
-  (for example a template sensor `sensor.heatpump_cop_dhw`)
+  (for example a template sensor `sensor.template_cop_dhw`)
 - **THEN** the stub config is `{ prefix: <the firmware prefix> }`
 
 #### Scenario: Two firmware devices
@@ -62,6 +62,23 @@ picker. The switch SHALL be editor state only and SHALL never be written to the 
 - **WHEN** the user turns the switch on and off
 - **THEN** the config is unchanged
 
+### Requirement: Minimal writes
+The editor SHALL write only the keys the user set. A field set to its default value SHALL NOT be written, a cleared
+field SHALL remove its key (and an emptied `features`, `entities` or `states` object SHALL be removed), and keys the
+editor does not show SHALL be kept unchanged.
+
+#### Scenario: Clear the variant
+- **WHEN** the config has `variant: 3` and the user clears the variant field
+- **THEN** the config no longer has a `variant` key
+
+#### Scenario: Unshown keys kept
+- **WHEN** the config has a `grid_options` key and the user changes the source
+- **THEN** `grid_options` is kept unchanged in the new config
+
+#### Scenario: Round trip
+- **WHEN** the editor opens a valid config and the user saves without changing anything
+- **THEN** the saved config equals the original
+
 ## ADDED Requirements
 
 ### Requirement: Entity suggestions from a device
@@ -87,8 +104,8 @@ Without a picked device the button SHALL be disabled.
 ### Requirement: Suggestion matching
 For each role, only entities whose domain and unit fit the role SHALL be candidates. Candidates SHALL be ranked:
 first the firmware entity id with the prefix inferred from the device, then an object id ending in the role's
-firmware suffix, then keywords per role (EN, NL, ES, DE) found in the object id or friendly name. A candidate with
-the opposite direction (inlet against outlet), a tie for the top, or a weak match SHALL leave the role empty.
+firmware suffix, then keywords per role (EN, NL, ES, DE) found in the object id or friendly name. A tie for the top
+or a weak match SHALL leave the role empty (see also "Suggestion exclusions").
 
 #### Scenario: Renamed device
 - **WHEN** the device's entities are the firmware's under the prefix `hp_basement`
@@ -116,13 +133,25 @@ the opposite direction (inlet against outlet), a tie for the top, or a weak matc
 - **WHEN** the config sets a prefix whose production outlet entity exists, and the user suggests from another device
 - **THEN** the production outlet is not written under `entities`
 
+### Requirement: Suggestion exclusions
+A keyword candidate with the opposite direction (inlet against outlet), or a paired role's candidate without a
+direction word, SHALL be excluded from that role. A candidate named as a setpoint SHALL fit only a setpoint role.
+
+#### Scenario: Opposite direction excluded
+- **WHEN** the only temperature entity named for the brine is "Brine inlet temperature"
+- **THEN** the brine outlet is left empty
+
+#### Scenario: Setpoint kept apart
+- **WHEN** the device has "DHW temperature" and "DHW set temperature"
+- **THEN** the DHW temperature is the first and the DHW setpoint the second
+
 ### Requirement: Suggestion report
 After a suggestion, the editor SHALL show how many roles it filled and name the roles it left empty, until the next
 edit.
 
 #### Scenario: Report
-- **WHEN** a suggestion fills 31 roles and leaves the fan speed, the COP and the DG1 setpoint empty
-- **THEN** the editor shows that 31 roles were filled and names the three empty roles
+- **WHEN** a suggestion fills 34 roles and leaves the fan speed, the COP and the DG1 setpoint empty
+- **THEN** the editor shows that 34 roles were filled and names the three empty roles
 
 ### Requirement: Roles not present choice
 Behind the advanced switch the editor SHALL offer a "Not present" choice of roles. Choosing a role SHALL write

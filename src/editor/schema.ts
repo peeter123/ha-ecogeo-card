@@ -4,14 +4,14 @@
 // `withoutBlankTexts` (this card has no text lists); `withValueAt` keeps the position of an existing key; sections
 // can nest (the entity pickers sit in one section per role group inside an `entities` section, so the form data has
 // the config's own shape `entities.<group>.<role>`); `withoutEmptyGroups` also prunes emptied nested groups; the
-// imports are this card's. `hasAdvancedValue` is kept unused: this card's switch follows `entities` (design D5).
+// imports are this card's. `hasAdvancedValue` is kept unused: this card's switch follows `entities` or `states`; `withValueAt` is exported.
 // The editor schema of a card: Home Assistant `ha-form` fields and expandable sections, each field marked basic
 // or advanced. The pure functions here decide what the form shows; the editor element only renders their result.
 import { parseNumericState } from '../lib/availability';
 import type { CardConfig } from '../lib/config';
 import { valueAt } from '../lib/config';
 
-/** One form field. `selector` is a Home Assistant selector, e.g. `{ entity: { domain: 'sensor' } }`. */
+/** One form field. `selector` is a Home Assistant selector, e.g. `{ entity: { filter: { domain: 'sensor' } } }`. */
 export interface EditorField {
   name: string;
   selector: Readonly<Record<string, unknown>>;

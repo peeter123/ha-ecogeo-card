@@ -1,7 +1,7 @@
 // Copied from hrv-ventilation src/editor/hrv-card-editor.ts. Deviations: tag name and strings are this card's; the
 // schema comes from `schemaFor` (a function of the config, see ecogeo-schema.ts) instead of a fixed `schema`; the
 // "Advanced settings" switch is kept but never locked on (turning it off hides the entity pickers and keeps the
-// overrides; it starts on when the config has an `entities` key); the config reaches ha-form through `toFormData`
+// overrides; it starts on when the config has an `entities` or `states` key); the config reaches ha-form through `toFormData`
 // and comes back through `fromFormData`, and the saved config is pruned of empty groups (add-card-editor D3); the
 // colour stop rows are shown from and folded back into `colors` (color-rows.ts); the card's configuration error is
 // shown above the form; no list-of-text draft handling (this card has no text lists).
@@ -165,7 +165,7 @@ export class EcogeoCardEditor extends LitElement {
   @state() private _config?: CardConfig;
 
   // The "Advanced settings" switch, as the data of its form: editor state, never written to the config. It starts on
-  // when the config has an `entities` key and is turned on again when one arrives from outside; only the user turns it off.
+  // when the config has an `entities` or `states` key and is turned on again when one arrives from outside; only the user turns it off.
   @state() private _switch = { advanced: false };
 
   // The device picked for the suggestions and what the last suggestion did: editor state, never written to the

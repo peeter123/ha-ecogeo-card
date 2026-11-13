@@ -100,4 +100,5 @@ Each group is implemented by one Sonnet subagent, reviewed by Opus and committed
 
 - Before archive: one fresh Opus review of the whole change, then `/opsx:archive add-entity-discovery`.
 - Follow-up candidates: detecting the source and DHW storage once the firmware exposes register 5143
-  (esphome-ecoforest-ecogeo).
+  (esphome-ecoforest-ecogeo); suggestions for entities without a device (an area or an integration as the source);
+  more pressure units (hPa, cbar, mmHg, inHg); a binding check that skips roles whose part is not drawn.

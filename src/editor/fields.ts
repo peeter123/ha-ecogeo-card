@@ -1,7 +1,7 @@
 // Copied from hrv-ventilation src/editor/fields.ts. Deviations: only the builders this card needs (choice, entity,
 // color, number); the sensor, stream, list, boolean and section builders of the HRV cards are dropped; `choiceField`
 // takes the choices and the default from this card's option table (src/config/options.ts), with an optional default
-// of its own (the DHW storage's default depends on the model); `entityField` takes the role's domain.
+// of its own (the DHW storage's default depends on the model); `entityField` takes the role's domains, as `filter.domain`.
 // `colorField` is Home Assistant's `color_rgb` selector (hrv has a text selector); it reports [r, g, b], so
 // `hexToRgb` and `rgbToHex` convert to and from the hex text the config holds. `numberField` is kept unused.
 // Editor fields built from the option table and the role table.

@@ -47,7 +47,7 @@ describe('card editor hooks', () => {
 
   test('card-editor "Firmware device with helpers": helpers with other ids do not hide the prefix', () => {
     const hass = firmwareHass('hp_basement');
-    for (const id of ['sensor.heatpump_cop_dhw', 'sensor.heatpump_calculated_flow']) {
+    for (const id of ['sensor.template_cop_dhw', 'sensor.estimated_flow']) {
       hass.states = { ...hass.states, [id]: { entity_id: id, state: '1', attributes: {} } };
       hass.entities = { ...hass.entities, [id]: { entity_id: id, device_id: 'dev_ecogeo_demo' } };
     }

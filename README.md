@@ -243,13 +243,14 @@ The editor is Home Assistant's own form and has six sections:
 - **Unit:** model, variant (a select of the four variants), outer-loop source and DHW storage (the select offers only
   the storages the model allows: on B external, unused or none; on C internal or unused).
 - **Entities:** a device picker and the entity prefix (`prefix`), and below the form a **Suggest entities** button.
-  Pick the device that holds your heat pump (any integration: ESPHome, KNX, Modbus) and press the button: the card
+  Pick the device that holds your heat pump (the picker works with any integration) and press the button: the card
   binds that device's entities to the roles that are empty or bound to an entity Home Assistant does not know, by
   domain, unit and name (English, Dutch, Spanish and German), and writes them as `entities`. A role bound to a known
   entity, or set to `none`, is not changed, and an entity serves one role at most. A list under the form says how
   many roles were filled and which stayed empty (no match, a weak match or a tie; fill them with the pickers); it
   stays until the next edit. The picked device is never written to the config, and the button is disabled without
-  one. Pressing it turns **Advanced settings** on.
+  one. Pressing it turns **Advanced settings** on. Suggestions only reach entities that belong to a device;
+  entities without one (often YAML-configured Modbus or KNX) are bound with the pickers.
 - **Features:** passive cooling, active cooling, HTR and backup heater, each On, Off, Unused or, left at the first
   choice, the variant's default (the choice names it, for example "Variant default: on").
 - **Appearance:** detail level, exchanger fill, layout and the colour stops (see below).

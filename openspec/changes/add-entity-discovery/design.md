@@ -157,8 +157,9 @@ Settled in the group 4 review:
   direction word still excludes a candidate.
 
 ### D9. Editor parts
-- Device picker: an `ha-form` field with the `device` selector, no integration filter (KNX, Modbus). Editor state
-  only, like the advanced switch.
+- Device picker: an `ha-form` field with the `device` selector, no integration filter. Editor state only, like the
+  advanced switch. Suggestions reach only entities that belong to a device (entities set up in YAML, as Modbus and
+  much of KNX, often have none); those are bound with the pickers.
 - "Suggest entities": a native `<button>` styled with Home Assistant's theme variables (not a Home Assistant element,
   so the "only `ha-form`" rule holds). After use it turns the advanced switch on.
 - Report and binding warnings: a plain list below the form, strings in `src/strings.ts`.

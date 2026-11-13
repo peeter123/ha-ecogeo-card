@@ -105,6 +105,24 @@ part is `unused` SHALL never be active, except exchanger 10 in `defrost`.
 - **WHEN** the mode is `defrost` and passive cooling is `false`
 - **THEN** the card shows the mode "Defrost", and no exchanger 10 circuit is drawn
 
+### Requirement: Offline indication
+The card SHALL show an offline indication when the bridge connection entity (`unit.connection`) reads off (any off
+value of an on/off state, live-values: `off`, `false`, `no`, `0`), `unavailable` or `unknown`. The connection SHALL
+NOT change the mode. Without a connection entity, the card SHALL show no offline indication. A configured
+connection entity that Home Assistant does not know counts as no connection entity.
+
+#### Scenario: Bridge offline
+- **WHEN** the connection entity reads `off` and every other heat pump entity is `unavailable`
+- **THEN** the mode is `standby`, and the card shows the offline indication
+
+#### Scenario: Bridge online
+- **WHEN** the connection entity reads `on`
+- **THEN** the card shows no offline indication
+
+#### Scenario: Offline from false
+- **WHEN** the connection entity is a sensor that reads `false`
+- **THEN** the card shows the offline indication
+
 ## ADDED Requirements
 
 ### Requirement: Compressor running from what exists
