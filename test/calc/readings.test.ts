@@ -96,3 +96,64 @@ describe('every input unavailable', () => {
     expect(deriveMode(r, variantFeatures(4))).toBe('standby');
   });
 });
+
+describe('on/off states from any domain', () => {
+  const bound = (role: keyof typeof entities, entityId: string, value: string, unit?: string) =>
+    readRoles(states([entityId, value, unit]), { ...entities, [role]: entityId });
+
+  test.each([
+    ['on', true],
+    ['TRUE', true],
+    [' Yes ', true],
+    ['1', true],
+    ['off', false],
+    ['False', false],
+    ['no', false],
+    ['0', false],
+  ])('demand as a number or text: "%s" is %s', (value, expected) => {
+    expect(bound('dhw.demand', 'sensor.demand_code', value)['dhw.demand']).toBe(expected);
+  });
+
+  test.each(['2', 'unavailable', 'maybe', ''])('"%s" on a binary role is no value', (value) => {
+    expect(bound('dhw.demand', 'sensor.demand_code', value)['dhw.demand']).toBeUndefined();
+  });
+
+  test('summer from a switch', () => {
+    expect(bound('unit.summer', 'switch.summer_mode', 'on')['unit.summer']).toBe(true);
+  });
+
+  test('pump as on/off', () => {
+    expect(bound('production.pump', 'binary_sensor.pump', 'on')['production.pump']).toBe(true);
+    expect(bound('brine.pump', 'input_boolean.pump', 'off')['brine.pump']).toBe(false);
+  });
+
+  test('the compressor speed from an on/off entity', () => {
+    expect(bound('compressor.speed', 'switch.compressor', 'on')['compressor.speed']).toBe(true);
+  });
+
+  test('on/off and compressor mode roles bound to on/off entities give booleans', () => {
+    expect(bound('unit.on_off', 'switch.heat_pump', 'off')['unit.on_off']).toBe(false);
+    expect(bound('compressor.mode', 'binary_sensor.defrost', 'on')['compressor.mode']).toBe(true);
+    expect(bound('compressor.mode', 'binary_sensor.defrost', 'unavailable')['compressor.mode']).toBeUndefined();
+  });
+
+  test('a sensor reading 1 on a text role stays text', () => {
+    expect(bound('compressor.mode', 'sensor.mode_code', '1')['compressor.mode']).toBe('1');
+    expect(bound('unit.on_off', 'sensor.state_code', '0')['unit.on_off']).toBe('0');
+  });
+
+  test('a role that takes no on/off entity does not read one as a number', () => {
+    expect(bound('production.outlet_temperature', 'switch.x', 'on')['production.outlet_temperature']).toBeUndefined();
+  });
+});
+
+describe('pressure units', () => {
+  test('kPa converts to bar', () => {
+    expect(read([id('production.pressure'), '150', 'kPa'])['production.pressure']).toBeCloseTo(1.5, 6);
+  });
+
+  test('an unconvertible or missing pressure unit keeps the entity number', () => {
+    expect(read([id('production.pressure'), '2.2', 'atm'])['production.pressure']).toBe(2.2);
+    expect(read([id('production.pressure'), '2.2'])['production.pressure']).toBe(2.2);
+  });
+});

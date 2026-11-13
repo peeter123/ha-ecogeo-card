@@ -1,6 +1,6 @@
 // Adapted from hrv-ventilation test/lib/units.test.ts: temperature and power, plus the difference rule.
 import { describe, expect, test } from 'vitest';
-import { convertedState, toCalcUnit } from '../../src/lib/units';
+import { canConvert, convertedState, toCalcUnit } from '../../src/lib/units';
 
 describe('toCalcUnit', () => {
   test('68 °F is 20 °C', () => {
@@ -78,5 +78,24 @@ describe('convertedState', () => {
     expect(convertedState(undefined, 'temperature')).toBeUndefined();
     expect(convertedState({ state: 'unavailable', attributes }, 'temperature')).toBeUndefined();
     expect(convertedState({ state: '-999.9', attributes }, 'temperature')).toBeUndefined();
+  });
+});
+
+describe('pressure', () => {
+  test.each([
+    [150, 'kPa', 1.5],
+    [0.15, 'MPa', 1.5],
+    [150000, 'Pa', 1.5],
+    [1500, 'mbar', 1.5],
+    [1.5, 'bar', 1.5],
+    [100, 'psi', 6.89476],
+  ])('%s %s is %s bar', (value, unit, bar) => {
+    expect(toCalcUnit('pressure', value, unit)).toBeCloseTo(bar, 6);
+  });
+
+  test('an unknown pressure unit has no conversion', () => {
+    expect(toCalcUnit('pressure', 1, 'atm')).toBeUndefined();
+    expect(canConvert('pressure', 'atm')).toBe(false);
+    expect(canConvert('pressure', 'kPa')).toBe(true);
   });
 });

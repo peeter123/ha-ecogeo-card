@@ -181,3 +181,35 @@ describe('entity roles', () => {
     expect(errors({ entities: { dhw: { temperature: '' } } })).toEqual([]);
   });
 });
+
+describe('states option', () => {
+  test('defaults reproduce the firmware texts', () => {
+    expect(resolveConfig({ prefix: 'p' }).states).toEqual({ off: ['OFF'], defrost: ['Defrost'] });
+  });
+
+  test('own off values', () => {
+    const config = { states: { off: ['Uit', 'Standby'] } };
+    expect(errors(config)).toEqual([]);
+    expect(resolveConfig(config).states).toEqual({ off: ['Uit', 'Standby'], defrost: ['Defrost'] });
+  });
+
+  test('default replaced: a set list replaces the default', () => {
+    expect(resolveConfig({ states: { off: ['Uit'] } }).states.off).toEqual(['Uit']);
+  });
+
+  test.each([
+    [{ off: 'Uit' }, 'states.off'],
+    [{ cooling: ['Cool'] }, 'states.cooling'],
+    [{ defrost: [] }, 'states.defrost'],
+    [{ off: ['Uit', ''] }, 'states.off'],
+    [{ off: [1] }, 'states.off'],
+  ])('invalid states %j names %s', (states, name) => {
+    const [message, ...rest] = errors({ states });
+    expect(rest).toEqual([]);
+    expect(message).toContain(name);
+  });
+
+  test('states must be a group', () => {
+    expect(errors({ states: 'Uit' })[0]).toContain('states');
+  });
+});

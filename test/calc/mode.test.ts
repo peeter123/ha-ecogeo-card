@@ -168,3 +168,99 @@ describe('alarm overlay', () => {
     expect(deriveMode(other, features)).toBe(deriveMode(base, features));
   });
 });
+
+describe('own state values (the states option)', () => {
+  const states = { off: ['Uit', 'Standby'], defrost: ['Abtauen'] };
+
+  test('own off values', () => {
+    expect(deriveMode(readings({ ...winterRun, 'unit.on_off': 'uit' }), v4, states)).toBe('off');
+    expect(deriveMode(readings({ ...winterRun, 'unit.on_off': ' STANDBY ' }), v4, states)).toBe('off');
+  });
+
+  test('a set list replaces the default', () => {
+    expect(deriveMode(readings({ ...winterRun, 'unit.on_off': 'OFF' }), v4, { off: ['Uit'], defrost: [] })).toBe(
+      'heating',
+    );
+  });
+
+  test('own defrost value', () => {
+    expect(deriveMode(readings({ ...winterRun, 'compressor.mode': 'abtauen' }), v4, states)).toBe('defrost');
+    expect(deriveMode(readings({ ...winterRun, 'compressor.mode': 'Defrost' }), v4, states)).toBe('heating');
+  });
+});
+
+describe('on/off entities', () => {
+  test('off from a switch', () => {
+    expect(deriveMode(readings({ ...winterRun, 'unit.on_off': false }), v4)).toBe('off');
+  });
+
+  test('on from a switch', () => {
+    expect(deriveMode(readings({ ...winterRun, 'unit.on_off': true }), v4)).toBe('heating');
+  });
+
+  test('defrost from a binary sensor', () => {
+    expect(deriveMode(readings({ ...winterRun, 'compressor.mode': true }), v4)).toBe('defrost');
+    expect(deriveMode(readings({ ...winterRun, 'compressor.mode': false }), v4)).toBe('heating');
+  });
+
+  test('pump on/off', () => {
+    const inputs = { 'compressor.speed': 0, 'unit.summer': true, 'production.pump': true };
+    expect(deriveMode(readings(inputs), v4)).toBe('passive_cooling');
+    expect(deriveMode(readings({ ...inputs, 'production.pump': false }), v4)).toBe('standby');
+  });
+
+  test('a compressor speed entity that reads on is running', () => {
+    expect(deriveMode(readings({ 'compressor.speed': true, 'unit.winter': true }), v4)).toBe('heating');
+    expect(deriveMode(readings({ 'compressor.speed': false, 'dhw.demand': true }), v4)).toBe('standby');
+  });
+});
+
+describe('compressor running from what exists', () => {
+  test('no speed entity: the percentage decides', () => {
+    expect(deriveMode(readings({ 'compressor.percentage': 38.9, 'dhw.demand': false, 'unit.winter': true }), v4)).toBe(
+      'heating',
+    );
+  });
+
+  test('power only', () => {
+    expect(deriveMode(readings({ 'compressor.power': 786, 'dhw.demand': true }), v4)).toBe('dhw');
+  });
+
+  test('standby power does not count', () => {
+    expect(deriveMode(readings({ 'compressor.power': 15, 'dhw.demand': true }), v4)).toBe('standby');
+    expect(deriveMode(readings({ 'compressor.power': 100, 'dhw.demand': true }), v4)).toBe('standby');
+  });
+
+  test('speed wins over the power', () => {
+    expect(deriveMode(readings({ 'compressor.speed': 0, 'compressor.power': 300, 'dhw.demand': true }), v4)).toBe(
+      'standby',
+    );
+  });
+
+  test('compressor speed unavailable: the next role with a value decides', () => {
+    expect(deriveMode(readings({ 'compressor.percentage': 0, 'compressor.power': 900, 'dhw.demand': true }), v4)).toBe(
+      'standby',
+    );
+  });
+
+  test('every input unavailable is standby, but off and defrost still win', () => {
+    expect(deriveMode(readings({ 'dhw.demand': true }), v4)).toBe('standby');
+    expect(deriveMode(readings({ 'compressor.mode': 'Defrost' }), v4)).toBe('defrost');
+  });
+});
+
+describe('offline from any on/off text', () => {
+  test.each(['false', '0', 'no', 'False'])('connection %s is offline', (value) => {
+    expect(isOffline(state('sensor.x', value))).toBe(true);
+  });
+
+  test.each(['true', '1', 'yes'])('connection %s is not offline', (value) => {
+    expect(isOffline(state('sensor.x', value))).toBe(false);
+  });
+});
+
+describe('offline state case', () => {
+  test.each(['Unavailable', 'UNKNOWN'])('connection %s is offline', (value) => {
+    expect(isOffline(state('binary_sensor.x', value))).toBe(true);
+  });
+});

@@ -10,6 +10,7 @@ import {
   layoutOf,
   prefixOf,
   setsAnyEntity,
+  statesOf,
   variantOf,
   type Detail,
   type ExchangerFill,
@@ -18,6 +19,7 @@ import {
   type Model,
   type Source,
 } from './options';
+import type { StateLists } from './states';
 import { defaultEntityId, ROLES, type RolePath } from './roles';
 import { SAMPLE_ENTITIES } from './sample';
 import { mergeFeatures, type Features, type Variant } from './variants';
@@ -37,6 +39,8 @@ export interface ResolvedConfig {
   features: Features;
   /** The entity id of each role, or undefined when the role has no entity (no override and no prefix). */
   entities: Readonly<Record<RolePath, string | undefined>>;
+  /** The state values that mean off and defrost (the `states` option). */
+  states: StateLists;
   /** The temperature colour stops: the `colors` option or the default scale. */
   colors: readonly ColorStop[];
   /** True when the config sets neither a prefix nor an entity: the roles are the sample entities. */
@@ -70,6 +74,7 @@ export function resolveConfig(config: CardConfig): ResolvedConfig {
     layout: layoutOf(config),
     variant,
     prefix,
+    states: statesOf(config),
     colors: stopsOf(config),
     features: mergeFeatures(variant, featureOverrides(config)),
     entities: sample ? SAMPLE_ENTITIES : resolveEntities(config, prefix),

@@ -78,8 +78,16 @@ running is unknown and the mode is `standby` (as today with an unknown speed). P
   roles get it, so suggestions and checks can use it.
 - A number role whose entity unit is not the role's unit and not convertible to it is shown with the entity's own
   number and unit (normalised spelling kept as Home Assistant reports it), decimals from the entity's display
-  precision or the role's default. A role without a quantity that matches its unit (for example `%` on a pump)
-  shows as today.
+  precision, or else the number as the state reports it (no padding: `2400` stays "2400 rpm"). A role without a
+  quantity that matches its unit (for example `%` on a pump) shows as today.
+- Exception: temperature, temperature difference and power roles in a unit the card cannot convert have no value,
+  as today, because they feed the colouring and the mode (the 100 W threshold). Every other number role, pressure
+  included, passes through; a pressure entity without a unit keeps its number, as today.
+- `states` values are texts; a numeric code is quoted in YAML (`defrost: ['4']`).
+- Animation: a pump that runs without a percentage (on, or a speed above 0 in another unit such as rpm) animates
+  its segments at the fixed medium speed HTR already uses; a fan speed above 0 in another unit rotates the fan at a
+  fixed medium speed (temperature-coloring "Flow animation", outer-loop-source "Air unit").
+- `unit.connection` reads on/off like every binary role, so `0`, `false` and `no` show the card offline.
 - Unit fit (for the editor check and suggestions): the role's convertible units; for the compressor speed rpm or Hz;
   for pumps and the fan % or rpm; for the COP no unit. Colouring only uses temperatures, which are always
   converted or no value.

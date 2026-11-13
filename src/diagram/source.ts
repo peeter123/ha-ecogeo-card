@@ -8,7 +8,7 @@
 // The live values (labels.ts): the air unit's fan speed and outside temperature go under the housing, its In and Out
 // beside its two ports on the housing's right; the ground loop's In and Out sit at the ground line, beside the legs.
 import { css, nothing, svg, type SVGTemplateResult } from 'lit';
-import type { Readings } from '../calc/readings';
+import type { AnimationReadings } from '../calc/readings';
 import { AIR_UNIT_FAN_NAME, SOURCE_LABELS } from '../strings';
 import { FAN_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
 import { AIR_UNIT, GROUND_CAPTION, GROUND_LINE_X, GROUND_LINE_Y, drawnSegments, type DrawContext } from './geometry';
@@ -90,9 +90,19 @@ export const sourceStyles = css`
   }
 `;
 
-/** The seconds a full turn of the fan takes: 1.2 s at 100 %, slower below, never faster than 0.5 s or slower than 6 s. */
-export const fanDuration = (speed: number | undefined): number | undefined =>
-  speed === undefined || !(speed > 0) ? undefined : Math.min(6, Math.max(0.5, 120 / speed));
+/** The fan's turn in seconds at the fixed medium speed, for a speed in another unit than % (add-entity-discovery D6). */
+const FAN_MEDIUM_SECONDS = 3;
+
+/**
+ * The seconds a full turn of the fan takes: 1.2 s at 100 %, slower below, never faster than 0.5 s or slower than 6 s.
+ * `true` (a speed above 0 in another unit, see animationReadings) turns at the fixed medium speed.
+ */
+export const fanDuration = (speed: number | boolean | undefined): number | undefined =>
+  speed === true
+    ? FAN_MEDIUM_SECONDS
+    : speed === undefined || speed === false || !(speed > 0)
+      ? undefined
+      : Math.min(6, Math.max(0.5, 120 / speed));
 
 /** The fan's five swept blades around the origin (refine-schematic-drawing D6): each curves away from its root at the hub. */
 const BLADES = [0, 72, 144, 216, 288].map(
@@ -101,7 +111,7 @@ const BLADES = [0, 72, 144, 216, 288].map(
 );
 
 function airUnit(
-  speed: number | undefined,
+  speed: number | boolean | undefined,
   muted: boolean,
   taps: Taps | undefined,
   captions: boolean,
@@ -165,7 +175,7 @@ function groundLine(context: DrawContext, kind: 'ground' | 'hybrid', lineY: numb
  */
 export function renderSource(
   context: DrawContext,
-  readings: Pick<Readings, 'source.fan_speed'>,
+  readings: Pick<AnimationReadings, 'source.fan_speed'>,
   brineActive: boolean,
   taps?: Taps,
 ): SVGTemplateResult {

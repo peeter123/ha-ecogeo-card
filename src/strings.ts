@@ -41,6 +41,9 @@ export const UNITS = {
   watt: 'W',
 } as const;
 
+/** The defaults of the `states` option: the texts of the firmware's on/off and compressor mode entities (firmware-entity: heatpump_on_off, compressor_operation_mode). */
+export const DEFAULT_STATE_VALUES = { off: ['OFF'], defrost: ['Defrost'] } as const;
+
 /** The label of each derived operating mode (add-schematic-card D4). */
 export const MODE_LABELS = {
   off: 'Off',
@@ -66,6 +69,8 @@ export const CONFIG_ERRORS = {
     `Unknown feature ${feature}: expected one of ${known.join(', ')}`,
   unknownRole: (role: string): string => `Unknown entity role ${role}`,
   notEntityId: (role: string): string => `Invalid entity for ${role}: expected an entity id such as sensor.name`,
+  statesKey: (key: string): string => `Unknown option states.${key}: expected off or defrost`,
+  statesList: (key: string): string => `Invalid option states.${key}: expected a list of one or more texts`,
   featureState: (feature: string): string => `Invalid option features.${feature}: expected true, false or unused`,
   integer: (min: string, max: string): string => `a whole number from ${min} to ${max}`,
   prefix: 'a prefix of lowercase letters, digits and underscores',

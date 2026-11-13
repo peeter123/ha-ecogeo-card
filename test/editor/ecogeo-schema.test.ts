@@ -125,7 +125,8 @@ describe('editorSchema', () => {
 
   test('every option of the option table has an editor field, apart from the explicit exceptions', () => {
     // Not options of the editor: the card type and the keys Home Assistant adds to any card. `colors` is edited as rows.
-    const exceptions = ['type', 'view_layout', 'layout_options', 'grid_options', 'visibility'];
+    // `states` has no field yet: the editor change of add-entity-discovery adds it.
+    const exceptions = ['type', 'view_layout', 'layout_options', 'grid_options', 'visibility', 'states'];
     const roots = new Set(paths().map((path) => path.split('.')[0]));
     if (paths().some((path) => colorRowOf(path) !== undefined)) roots.add('colors');
     for (const option of TOP_LEVEL_OPTIONS.filter((key) => !exceptions.includes(key))) {

@@ -238,3 +238,21 @@ describe('outer-loop source', () => {
     expect(fanDuration(1000)).toBe(0.5);
   });
 });
+
+describe('fan speed in another unit', () => {
+  test('fan speed in rpm: the fan rotates at the fixed medium speed and the label reads 900 rpm', async () => {
+    const hass: HassLike = {
+      states: states([`sensor.${P}_aerothermal_fan_speed`, '900', 'rpm']),
+    };
+    const card = await mount({ prefix: P, source: 'air', layout: 'full' }, hass);
+    expect(fan(card)?.classList.contains('still')).toBe(false);
+    expect(fan(card)?.getAttribute('style') ?? '').toContain('--fan-duration: 3s');
+    expect(root(card).querySelector('[data-label="fan_speed"] .value')?.textContent.trim()).toBe('900 rpm');
+    card.remove();
+  });
+
+  test('fanDuration: true is the fixed medium speed, false is still', () => {
+    expect(fanDuration(true)).toBe(3);
+    expect(fanDuration(false)).toBeUndefined();
+  });
+});

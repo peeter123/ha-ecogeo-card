@@ -85,6 +85,7 @@ fault.
 | `prefix` | lowercase letters, digits, `_` | none | Entity object id prefix; the firmware default is `ecoforest_ecogeo`. |
 | `features` | group | from the variant | Feature states that override the variant (see Features). |
 | `entities` | group | from the prefix | Entity id per role, nested by role path (see Roles). |
+| `states` | group | `off: [OFF]`, `defrost: [Defrost]` | The state texts that mean off (the on/off entity) and defrost (the compressor mode entity); a list replaces its default, case-insensitive. See Using another source in the docs. |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
 | `layout` | `auto`, `full`, `compact` | `auto` | `auto` shows the compact layout while the card is narrower than 640 px and the full layout otherwise (and before the width is known), with 24 px of hysteresis once compact (see Layout in the docs); `full` and `compact` use that layout at any width. |
@@ -162,8 +163,9 @@ Exchanger 10 with valves 27 and 28 also serves defrost: it is active in a defros
 
 Every value the card reads is a role. With a `prefix`, a role defaults to `<domain>.<prefix>_<suffix>` (the
 firmware entity naming); `entities` overrides single roles, nested by path: `entities: { dhw: { temperature:
-sensor.boiler_top } }`. The card shows its own unit for every role, whatever the entity reports (°F and kW are
-converted; a temperature difference is shown in K).
+sensor.boiler_top } }`. The card shows its own unit for every role (°F, kW and kPa, MPa, Pa, mbar and psi are
+converted; a difference is shown in K). A number in a unit it cannot convert keeps the entity's unit, except
+temperatures, differences and power, which then have no value.
 
 | Role | Default entity | Shown as | Manual item |
 |---|---|---|---|

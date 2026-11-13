@@ -150,3 +150,24 @@ describe('mode, alarm and offline indications', () => {
     card.remove();
   });
 });
+
+describe('states option in the card', () => {
+  test('own off and defrost texts reach the mode', async () => {
+    const config = { type: 'custom:ecogeo-card', prefix: P, states: { off: ['Uit'], defrost: ['Ontdooien'] } };
+    const off = await mount(config, hassWith([`sensor.${P}_heatpump_on_off`, 'Uit']));
+    expect(text(off, '.mode')).toBe(MODE_LABELS.off);
+    off.remove();
+    const defrost = await mount(config, hassWith([`sensor.${P}_compressor_operation_mode`, 'Ontdooien']));
+    expect(text(defrost, '.mode')).toBe(MODE_LABELS.defrost);
+    defrost.remove();
+  });
+});
+
+describe('on/off entity in the card', () => {
+  test('a switch bound to the on/off role that reads off gives the off mode', async () => {
+    const config = { type: 'custom:ecogeo-card', prefix: P, entities: { unit: { on_off: 'switch.heat_pump' } } };
+    const card = await mount(config, hassWith(['switch.heat_pump', 'off'], [`sensor.${P}_compressor_rpm`, '2000']));
+    expect(text(card, '.mode')).toBe(MODE_LABELS.off);
+    card.remove();
+  });
+});

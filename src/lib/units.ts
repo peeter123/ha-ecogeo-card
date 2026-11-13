@@ -9,7 +9,8 @@ import type { EntityStateLike } from './hass';
 export type Quantity =
   | 'temperature' // °C
   | 'difference' // K, a temperature difference (superheat, start delta-T)
-  | 'power'; // W
+  | 'power' // W
+  | 'pressure'; // bar
 
 /** card value = (value + offset) * scale */
 interface Conversion {
@@ -39,6 +40,15 @@ const CONVERSIONS: Record<Quantity, ReadonlyMap<string, Conversion>> = {
     ['w', SAME],
     ['kw', KILOWATTS],
   ]),
+  // Pressure (add-entity-discovery D6): kPa, MPa, Pa, mbar and psi to bar.
+  pressure: new Map([
+    ['bar', SAME],
+    ['kpa', { scale: 0.01 }],
+    ['mpa', { scale: 10 }],
+    ['pa', { scale: 0.00001 }],
+    ['mbar', { scale: 0.001 }],
+    ['psi', { scale: 0.0689476 }],
+  ]),
 };
 
 /**
@@ -48,6 +58,10 @@ const CONVERSIONS: Record<Quantity, ReadonlyMap<string, Conversion>> = {
 function unitKey(unit: string): string {
   return unit.trim().replaceAll('º', '°').normalize('NFKC').toLowerCase(); // º before NFKC, which makes it "o"
 }
+
+/** True when a value in `unit` converts to the card unit of `quantity`. */
+export const canConvert = (quantity: Quantity, unit: string | undefined): boolean =>
+  unit !== undefined && CONVERSIONS[quantity].has(unitKey(unit));
 
 /**
  * A state object's value in the card unit of `quantity`, or undefined while it has no value or its unit is not

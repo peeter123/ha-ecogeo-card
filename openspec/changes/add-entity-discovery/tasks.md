@@ -5,28 +5,29 @@ Each group is implemented by one Sonnet subagent, reviewed by Opus and committed
 
 ## 1. State values and units from any source
 
-- [ ] 1.1 Add the `states` option (`off`, `defrost`, defaults `['OFF']`, `['Defrost']`) with validation, and pass the
+- [x] 1.1 Add the `states` option (`off`, `defrost`, defaults `['OFF']`, `['Defrost']`) with validation, and pass the
   lists to `deriveMode` (design D4).
   Verify: `npm test` covers card-config "Own off values", "Default replaced", "Invalid states" and operating-mode
   "Own defrost value"; the existing "Off", "Emergency is not off", "Defrost" and "Balance is not defrost" still pass.
-- [ ] 1.2 Read on/off states from any domain for binary roles, and on/off entities for the on/off, compressor mode,
+- [x] 1.2 Read on/off states from any domain for binary roles, and on/off entities for the on/off, compressor mode,
   compressor speed and pump roles, with "On"/"Off" labels (design D3).
   Verify: `npm test` covers live-values "Demand as a number", "Summer from a switch", "Pump as on/off" and
   operating-mode "Off from a switch", "On from a switch", "Defrost from a binary sensor", "Pump on/off".
-- [ ] 1.3 Derive compressor running from speed, percentage, then power above 100 W (design D5).
+- [x] 1.3 Derive compressor running from speed, percentage, then power above 100 W (design D5).
   Verify: `npm test` covers operating-mode "No speed entity", "Power only", "Standby power", "Speed wins",
   "Compressor speed unavailable" and "Every input unavailable".
-- [ ] 1.4 Add the pressure quantity (kPa, MPa, Pa, mbar, psi to bar) and show a non-convertible unit as the entity's
+- [x] 1.4 Add the pressure quantity (kPa, MPa, Pa, mbar, psi to bar) and show a non-convertible unit as the entity's
   own number and unit (design D6).
   Verify: `npm test` covers live-values "Pressure in kPa", "Compressor speed in Hz", "Pump speed in rpm" and the
-  NBSP between number and unit; the existing unit tests still pass.
-- [ ] 1.5 Documentation: add a concise section "Using another source" to `docs/ecogeo-card.md` (what the card
+  NBSP between number and unit; the existing unit tests still pass. Added in review: temperature-coloring "Pump on
+  without a percentage" and outer-loop-source "Fan speed in rpm" (design D6, Animation).
+- [x] 1.5 Documentation: add a concise section "Using another source" to `docs/ecogeo-card.md` (what the card
   expects per kind of value, on/off entities, `states` with a short YAML example, the running fallback, the
   converted and passed-through units) and the `states` option to the README option table. Short sentences, one
   example, no repetition of the role table.
   Verify: the section and the option row exist, the example is valid config (a unit test parses it), and
   `test/readme.ts` passes.
-- [ ] 1.6 Emulator check: the firmware scenarios render unchanged.
+- [x] 1.6 Emulator check: the firmware scenarios render unchanged.
   Verify: a subagent captures the heating, DHW, defrost and off scenarios and returns a verdict that they match
   the previous release.
 

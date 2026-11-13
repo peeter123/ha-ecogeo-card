@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import '../../src/index';
-import { formatReading, decimalsOf, displayPrecision } from '../../src/calc/display';
+import { formatReading, decimalsInState, decimalsOf, displayPrecision } from '../../src/calc/display';
 import { readRoles } from '../../src/calc/readings';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
 import { SAMPLE_STATES, sampleEntityId } from '../../src/config/sample';
@@ -819,5 +819,73 @@ describe('label positions', () => {
     expect(labelsFor(context, readings, entities, { locale: {} })).toEqual(
       labelsFor(context, readings, entities, { locale: {} }),
     );
+  });
+});
+
+describe('units from another source', () => {
+  test('pressure in kPa reads in bar at item 38 (full layout)', async () => {
+    const card = await mount({ layout: 'full' }, hassOf({ 'production.pressure': ['150', 'kPa'] }));
+    expect(valueOf(card, 'production_pressure')).toBe(`1.5${NBSP}bar`);
+    card.remove();
+  });
+
+  test('compressor speed in Hz keeps its own unit', async () => {
+    const card = await mount({ layout: 'full' }, hassOf({ 'compressor.speed': ['45', 'Hz'] }));
+    expect(valueOf(card, 'compressor_speed')).toBe(`45${NBSP}Hz`);
+    card.remove();
+  });
+
+  test('pump speed in rpm keeps its own unit, joined by a no-break space', async () => {
+    const card = await mount({ layout: 'full' }, hassOf({ 'production.pump': ['2400', 'rpm'] }));
+    const text = valueOf(card, 'production_pump');
+    expect(text).toBe(`2400${NBSP}rpm`);
+    expect(text).not.toContain(' ');
+    card.remove();
+  });
+
+  test('pump as on/off reads On', async () => {
+    const entityId = 'binary_sensor.pump_state';
+    const states = { ...hassOf().states, [entityId]: { entity_id: entityId, state: 'on', attributes: {} } };
+    const card = await mount({ layout: 'full', entities: { production: { pump: entityId } } }, { states });
+    expect(valueOf(card, 'production_pump')).toBe('On');
+    card.remove();
+  });
+
+  test('a unit the card converts is not passed through', () => {
+    const context = { locale: undefined, states: { 'sensor.p': { attributes: { unit_of_measurement: 'kW' } } } };
+    expect(formatReading('compressor.power', 786, 'sensor.p', context)).toBe(`786${NBSP}W`);
+  });
+});
+
+describe('passed-through decimals', () => {
+  const context = (state: string, unit: string, precision?: number) => ({
+    locale: { language: 'en' },
+    states: { 'sensor.x': { state, attributes: { unit_of_measurement: unit } } },
+    ...(precision === undefined ? {} : { entities: { 'sensor.x': { display_precision: precision } } }),
+  });
+
+  test('the decimals of the state are kept', () => {
+    expect(formatReading('compressor.speed', 45.6, 'sensor.x', context('45.6', 'Hz'))).toBe(`45.6${NBSP}Hz`);
+    expect(formatReading('production.pump', 2400, 'sensor.x', context('2400', 'rpm'))).toBe(`2400${NBSP}rpm`);
+  });
+
+  test('display_precision is honoured when set', () => {
+    expect(formatReading('compressor.speed', 45.6, 'sensor.x', context('45.6', 'Hz', 0))).toBe(`46${NBSP}Hz`);
+  });
+
+  test('a pressure in atm passes through', () => {
+    expect(formatReading('production.pressure', 1.25, 'sensor.x', context('1.25', 'atm'))).toBe(`1.25${NBSP}atm`);
+  });
+});
+
+describe('decimalsInState', () => {
+  test.each([
+    ['45.6', 1],
+    ['2400', 0],
+    ['1.5e3', 0],
+    ['1.5E-3', 0],
+    [undefined, 0],
+  ])('"%s" has %s decimals', (text, decimals) => {
+    expect(decimalsInState(text)).toBe(decimals);
   });
 });

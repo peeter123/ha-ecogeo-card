@@ -439,7 +439,12 @@ export function labelsFor(
       const text = label.role === 'heating.demand' ? HEATING_LABELS.demand : DHW_LABELS.demand;
       return value === true ? [{ ...common, text, missing: false }] : [];
     }
-    const text = formatReading(label.role, typeof value === 'number' ? value : undefined, entityId, display);
+    const text = formatReading(
+      label.role,
+      typeof value === 'number' || typeof value === 'boolean' ? value : undefined,
+      entityId,
+      display,
+    );
     return [{ ...common, text: text ?? NO_VALUE, missing: text === undefined }];
   });
 }
@@ -484,7 +489,12 @@ export function footerItems(
       id,
       role,
       caption,
-      formatReading(role, typeof value === 'number' ? value : undefined, entities[role], display),
+      formatReading(
+        role,
+        typeof value === 'number' || typeof value === 'boolean' ? value : undefined,
+        entities[role],
+        display,
+      ),
     );
   };
   const onOff = readings['unit.on_off'];
@@ -499,7 +509,11 @@ export function footerItems(
       'on_off',
       'unit.on_off',
       undefined,
-      onOff === undefined ? undefined : (ON_OFF_LABELS[onOff.toLowerCase()] ?? onOff),
+      onOff === undefined
+        ? undefined
+        : typeof onOff === 'boolean'
+          ? ON_OFF_LABELS[onOff ? 'on' : 'off']
+          : (ON_OFF_LABELS[onOff.toLowerCase()] ?? onOff),
     ),
     item('season', readings['unit.summer'] === true ? 'unit.summer' : 'unit.winter', undefined, season),
     number('outside_temperature', 'source.outside_temperature', FOOTER_LABELS.outside),

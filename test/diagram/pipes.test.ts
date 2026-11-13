@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { circuitsFor } from '../../src/calc/circuits';
 import type { Mode } from '../../src/calc/mode';
-import { readRoles, type Readings } from '../../src/calc/readings';
+import { animationReadings, readRoles, type AnimationReadings } from '../../src/calc/readings';
 import type { DhwStorage, Source } from '../../src/config/options';
 import { ROLE_BY_PATH, ROLE_PATHS, type RolePath } from '../../src/config/roles';
 import { mergeFeatures, type FeatureKey, type FeatureState } from '../../src/config/variants';
@@ -35,7 +35,7 @@ interface Options {
 function scenario(
   options: Options,
   values: Partial<Record<RolePath, number | string | boolean>> = {},
-  base?: Readings,
+  base?: AnimationReadings,
 ) {
   const features = mergeFeatures(4, options.features ?? {});
   const dhw = options.dhw ?? 'external';
@@ -204,7 +204,7 @@ describe('muted segments', () => {
   });
 
   test('a probe that is missing or reads the sentinel mutes its segment even in an active circuit', () => {
-    const units = { temperature: '°C', difference: 'K', power: 'W' } as const;
+    const units = { temperature: '°C', difference: 'K', power: 'W', pressure: 'bar' } as const;
     const stateOf = (
       role: RolePath,
       value: string,
@@ -492,5 +492,38 @@ describe('reduced motion', () => {
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.flow\s*\{\s*animation: none;\s*\}\s*\}/);
     const block = /@media \(prefers-reduced-motion: reduce\)\s*\{[^@]*\}\s*\}/.exec(css)?.[0] ?? '';
     expect(block).not.toMatch(/stroke:|color/);
+  });
+});
+
+describe('pump without a percentage animates at the fixed medium speed', () => {
+  test('a pump reading on (binary sensor) animates its production segments at the fixed speed', () => {
+    const { get } = scenario({ mode: 'heating' }, { ...HEATING, 'production.pump': true });
+    expect(get('trunk')).toMatchObject({ animated: true, duration: HTR_FLOW_SECONDS });
+  });
+
+  test('a pump off, 0 or unknown stays still', () => {
+    for (const value of [false, 0, undefined]) {
+      expect(scenario({ mode: 'heating' }, { ...HEATING, 'production.pump': value }).get('trunk').animated).toBe(false);
+    }
+  });
+
+  test('2400 rpm becomes running through animationReadings, a percentage does not', () => {
+    const rd = readings({ 'production.pump': 2400, 'brine.pump': 60, 'source.fan_speed': 900 });
+    const entities = {
+      'production.pump': 'sensor.a',
+      'brine.pump': 'sensor.b',
+      'source.fan_speed': 'sensor.c',
+    } as Record<RolePath, string>;
+    const states = {
+      'sensor.a': { state: '2400', attributes: { unit_of_measurement: 'rpm' } },
+      'sensor.b': { state: '60', attributes: { unit_of_measurement: '%' } },
+      'sensor.c': { state: '900', attributes: { unit_of_measurement: 'rpm' } },
+    };
+    const moving = animationReadings(rd, entities, states);
+    expect(moving['production.pump']).toBe(true);
+    expect(moving['brine.pump']).toBe(60);
+    expect(moving['source.fan_speed']).toBe(true);
+    const { get } = scenario({ mode: 'heating' }, {}, moving);
+    expect(get('trunk')).toMatchObject({ animated: true, duration: HTR_FLOW_SECONDS });
   });
 });

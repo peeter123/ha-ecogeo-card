@@ -6,7 +6,7 @@
 import { css, html, LitElement, nothing, svg, type PropertyValues, type TemplateResult } from 'lit';
 import { circuitsFor } from '../calc/circuits';
 import { deriveMode, isAlarm, isOffline } from '../calc/mode';
-import { readRoles, type Readings } from '../calc/readings';
+import { animationReadings, readRoles, type Readings } from '../calc/readings';
 import { configErrors } from '../config/options';
 import { resolveConfig, type ResolvedConfig } from '../config/resolve';
 import { SAMPLE_STATES } from '../config/sample';
@@ -190,10 +190,11 @@ export class EcogeoCard extends LitElement {
       ? { ...config, detail: 'simplified', captions: false }
       : config;
     const { readings, offline } = this.readings(resolved);
-    const mode = deriveMode(readings, resolved.features);
+    const mode = deriveMode(readings, resolved.features, resolved.states);
     const circuits = circuitsFor(mode, resolved.features, resolved.dhw, readings);
-    const view: PipeView = { mode, circuits, readings, stops: resolved.colors };
     const states = resolved.sample ? SAMPLE_STATES : (this.hass?.states ?? {});
+    const moving = animationReadings(readings, resolved.entities, states);
+    const view: PipeView = { mode, circuits, readings: moving, stops: resolved.colors };
     const display = { locale: localeFromHass(this.hass), entities: this.hass?.entities, states };
     // Taps open more-info of the role's entity; the sample's entities do not exist, so they do nothing there.
     const onTap = resolved.sample
@@ -211,7 +212,7 @@ export class EcogeoCard extends LitElement {
           aria-label=${SCHEMATIC_LABEL}
           style="--dhw-tank-color: ${resolved.dhw === 'unused' ? MUTED_COLOR : tankColor(view)}; --ecogeo-coil-muted: ${coilMutedColor(this.hass?.themes?.darkMode === true)}; --pipe-width: ${String(stroke.pipe)}; --outline-width: ${String(stroke.outline)}"
         >
-          ${svg`${renderSource(resolved, readings, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix }, stroke.pipe)}`}
+          ${svg`${renderSource(resolved, moving, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix }, stroke.pipe)}`}
         </svg>
         ${renderLabels(labelsFor(resolved, readings, resolved.entities, display, compact), onTap)}
       </div>

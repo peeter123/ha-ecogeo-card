@@ -3,6 +3,7 @@
 // falling back to a default silently. The option checking is the copied lib/options.ts; the checks it cannot
 // express (a whole-number variant, tri-state features, nested entity roles) are here.
 import { colorsErrors } from '../diagram/colors';
+import { DEFAULT_STATES, type StateLists } from './states';
 import { asEntityId, valueAt, type CardConfig } from '../lib/config';
 import { invalidOptions, optionValue, type ChoiceOption, type OptionSpec } from '../lib/options';
 import { CONFIG_ERRORS, OPTIONS } from '../strings';
@@ -64,6 +65,7 @@ export const TOP_LEVEL_OPTIONS: readonly string[] = [
   'prefix',
   'features',
   'entities',
+  'states',
   'colors',
   'detail',
   'exchanger_fill',
@@ -121,6 +123,24 @@ export const exchangerFillOf = (config: CardConfig): ExchangerFill =>
 /** The layout choice, `auto` unless set. Call after configErrors found no problem. */
 export const layoutOf = (config: CardConfig): Layout => optionValue(config, LAYOUT_OPTION) as Layout;
 
+/** The keys of the `states` option. */
+export const STATES_KEYS = ['off', 'defrost'] as const;
+
+/** A list of one or more non-empty texts. */
+const isTextList = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.length > 0 && value.every((text) => typeof text === 'string' && text.trim() !== '');
+
+/** The state values that mean off and defrost: the lists of `states`, each replacing its default. Call after configErrors found no problem. */
+export function statesOf(config: CardConfig): StateLists {
+  const states = valueAt(config, 'states');
+  const group = isGroup(states) ? states : {};
+  const list = (key: (typeof STATES_KEYS)[number]): readonly string[] => {
+    const value = group[key];
+    return isTextList(value) ? value : DEFAULT_STATES[key];
+  };
+  return { off: list('off'), defrost: list('defrost') };
+}
+
 /** The features set in the config (only valid keys and states), without the preset. */
 export function featureOverrides(config: CardConfig): Partial<Record<FeatureKey, FeatureState>> {
   const features = valueAt(config, 'features');
@@ -168,6 +188,16 @@ function featureErrors(config: CardConfig): string[] {
   });
 }
 
+function statesErrors(config: CardConfig): string[] {
+  const states = valueAt(config, 'states');
+  if (isLeftOut(states)) return [];
+  if (!isGroup(states)) return [OPTIONS.invalid('states', OPTIONS.object)];
+  return Object.entries(states).flatMap(([key, value]) => {
+    if (!STATES_KEYS.some((known) => known === key)) return [CONFIG_ERRORS.statesKey(key)];
+    return isLeftOut(value) || isTextList(value) ? [] : [CONFIG_ERRORS.statesList(key)];
+  });
+}
+
 function entityErrors(config: CardConfig): string[] {
   const entities = valueAt(config, 'entities');
   if (isLeftOut(entities)) return [];
@@ -201,6 +231,7 @@ export function configErrors(config: CardConfig): string[] {
     ...prefixErrors(config),
     ...featureErrors(config),
     ...entityErrors(config),
+    ...statesErrors(config),
     ...colorsErrors(config),
   ];
   // The mismatch is only checked when model and dhw are valid by themselves.

@@ -23,6 +23,8 @@ export interface RoleSpec {
   decimals?: number;
   /** The manual item the value belongs to, or where it is shown. */
   item: string;
+  /** The role also accepts an on/off entity (binary_sensor, switch, input_boolean), read as a boolean (add-entity-discovery D3). */
+  onOff?: true;
 }
 
 const t = UNITS.celsius;
@@ -31,20 +33,20 @@ const t = UNITS.celsius;
 export const ROLES = [
   { path: 'production.outlet_temperature', domain: 'sensor', suffix: 'production_out', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '33' },
   { path: 'production.return_temperature', domain: 'sensor', suffix: 'production_in', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '34' },
-  { path: 'production.pressure', domain: 'sensor', suffix: 'pressure_production', kind: 'number', unit: UNITS.bar, decimals: 1, item: '38' },
-  { path: 'production.pump', domain: 'sensor', suffix: 'production_pump', kind: 'number', unit: UNITS.percent, decimals: 1, item: '15' },
+  { path: 'production.pressure', domain: 'sensor', suffix: 'pressure_production', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '38' },
+  { path: 'production.pump', domain: 'sensor', suffix: 'production_pump', kind: 'number', unit: UNITS.percent, decimals: 1, item: '15', onOff: true },
   { path: 'brine.outlet_temperature', domain: 'sensor', suffix: 'brine_out', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '31' },
   { path: 'brine.inlet_temperature', domain: 'sensor', suffix: 'brine_in', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '32' },
-  { path: 'brine.pressure', domain: 'sensor', suffix: 'pressure_brine', kind: 'number', unit: UNITS.bar, decimals: 1, item: '37' },
-  { path: 'brine.pump', domain: 'sensor', suffix: 'brine_pump', kind: 'number', unit: UNITS.percent, decimals: 1, item: '16' },
-  { path: 'compressor.speed', domain: 'sensor', suffix: 'compressor_rpm', kind: 'number', unit: UNITS.rpm, decimals: 0, item: '11' },
+  { path: 'brine.pressure', domain: 'sensor', suffix: 'pressure_brine', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '37' },
+  { path: 'brine.pump', domain: 'sensor', suffix: 'brine_pump', kind: 'number', unit: UNITS.percent, decimals: 1, item: '16', onOff: true },
+  { path: 'compressor.speed', domain: 'sensor', suffix: 'compressor_rpm', kind: 'number', unit: UNITS.rpm, decimals: 0, item: '11', onOff: true },
   { path: 'compressor.percentage', domain: 'sensor', suffix: 'compressor_percentage', kind: 'number', unit: UNITS.percent, decimals: 1, item: '11' },
   { path: 'compressor.power', domain: 'sensor', suffix: 'power_consumption', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '11' },
   { path: 'compressor.suction_temperature', domain: 'sensor', suffix: 'compressor_suction_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '29' },
   { path: 'compressor.discharge_temperature', domain: 'sensor', suffix: 'compressor_discharge_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '30' },
-  { path: 'compressor.suction_pressure', domain: 'sensor', suffix: 'compressor_suction_pressure', kind: 'number', unit: UNITS.bar, decimals: 1, item: '35' },
-  { path: 'compressor.discharge_pressure', domain: 'sensor', suffix: 'compressor_discharge_pressure', kind: 'number', unit: UNITS.bar, decimals: 1, item: '36' },
-  { path: 'compressor.mode', domain: 'sensor', suffix: 'compressor_operation_mode', kind: 'text', item: '11' },
+  { path: 'compressor.suction_pressure', domain: 'sensor', suffix: 'compressor_suction_pressure', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '35' },
+  { path: 'compressor.discharge_pressure', domain: 'sensor', suffix: 'compressor_discharge_pressure', kind: 'number', quantity: 'pressure', unit: UNITS.bar, decimals: 1, item: '36' },
+  { path: 'compressor.mode', domain: 'sensor', suffix: 'compressor_operation_mode', kind: 'text', item: '11', onOff: true },
   { path: 'refrigerant.condensation_temperature', domain: 'sensor', suffix: 'condensation_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '8' },
   { path: 'refrigerant.evaporation_temperature', domain: 'sensor', suffix: 'evaporation_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '7' },
   { path: 'refrigerant.superheat', domain: 'sensor', suffix: 'superheat', kind: 'number', quantity: 'difference', unit: UNITS.kelvin, decimals: 1, item: '12' },
@@ -60,7 +62,7 @@ export const ROLES = [
   { path: 'source.fan_speed', domain: 'sensor', suffix: 'aerothermal_fan_speed', kind: 'number', unit: UNITS.percent, decimals: 1, item: 'air unit' },
   { path: 'source.air_unit_outlet_temperature', domain: 'sensor', suffix: 'brine_temperature_air_unit_outlet', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'air unit' },
   { path: 'source.outside_temperature', domain: 'sensor', suffix: 'outside_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'air unit / footer' },
-  { path: 'unit.on_off', domain: 'sensor', suffix: 'heatpump_on_off', kind: 'text', item: 'footer' },
+  { path: 'unit.on_off', domain: 'sensor', suffix: 'heatpump_on_off', kind: 'text', item: 'footer', onOff: true },
   { path: 'unit.summer', domain: 'binary_sensor', suffix: 'summer', kind: 'binary', item: 'footer' },
   { path: 'unit.winter', domain: 'binary_sensor', suffix: 'winter', kind: 'binary', item: 'footer' },
   { path: 'unit.alarm', domain: 'binary_sensor', suffix: 'alarm', kind: 'binary', item: 'footer' },
@@ -70,9 +72,17 @@ export const ROLES = [
 
 /** Every entity role of the card, as a config path. */
 export type RolePath = (typeof ROLES)[number]['path'];
-type RoleOf<P extends RolePath> = Extract<(typeof ROLES)[number], { path: P }>;
+/** The table entry of a role. */
+export type RoleOf<P extends RolePath> = Extract<(typeof ROLES)[number], { path: P }>;
 /** The kind of a role. */
 export type KindOf<P extends RolePath> = RoleOf<P>['kind'];
+
+/** The domains of an on/off entity: read as a boolean by the roles that accept one (add-entity-discovery D3). */
+export const ON_OFF_DOMAINS: readonly string[] = ['binary_sensor', 'switch', 'input_boolean'];
+
+/** True when the entity id is of an on/off domain. */
+export const isOnOffEntity = (entityId: string | undefined): boolean =>
+  entityId !== undefined && ON_OFF_DOMAINS.includes(entityId.split('.')[0] ?? '');
 
 /** The role's spec by path. */
 export const ROLE_BY_PATH: ReadonlyMap<string, RoleSpec> = new Map(ROLES.map((role) => [role.path, role]));

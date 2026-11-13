@@ -11,7 +11,7 @@
 // - Direction: the geometry's direction, flipped in active cooling for the `reversible` refrigerant legs.
 import type { Circuits } from '../calc/circuits';
 import type { Mode } from '../calc/mode';
-import type { Readings } from '../calc/readings';
+import type { AnimationReadings } from '../calc/readings';
 import type { RolePath } from '../config/roles';
 import { MUTED_COLOR, temperatureColor, type ColorStop } from './colors';
 import { HTR_WATER_SEGMENT_IDS, isSegmentActive, type PartState, type Segment, type Visibility } from './geometry';
@@ -20,7 +20,7 @@ import { HTR_WATER_SEGMENT_IDS, isSegmentActive, type PartState, type Segment, t
 export interface PipeView {
   mode: Mode;
   circuits: Circuits;
-  readings: Readings;
+  readings: AnimationReadings;
   stops: readonly ColorStop[];
 }
 
@@ -108,7 +108,13 @@ export function shownState(
   return state === 'muted' && mode === 'defrost' && part.feature === 'passive_cooling' ? 'normal' : state;
 }
 
-const numberOf = (readings: Readings, role: RolePath): number | undefined => {
+/** The flow period of a speed role: a number is a % (flowDuration), `true` a pump without a percentage (the fixed medium speed). */
+const flowOf = (readings: AnimationReadings, role: RolePath): number | undefined => {
+  const value: unknown = readings[role];
+  return value === true ? HTR_FLOW_SECONDS : flowDuration(typeof value === 'number' ? value : undefined);
+};
+
+const numberOf = (readings: AnimationReadings, role: RolePath): number | undefined => {
   const value: unknown = readings[role];
   return typeof value === 'number' ? value : undefined;
 };
@@ -142,7 +148,7 @@ export function pipeState(segment: Segment, state: Exclude<PartState, 'hidden'>,
     ? HTR_FLOW_SECONDS
     : segment.speedRole === undefined
       ? undefined
-      : flowDuration(numberOf(readings, segment.speedRole));
+      : flowOf(readings, segment.speedRole);
   return duration === undefined ? { ...base, animated: false } : { ...base, animated: true, duration };
 }
 

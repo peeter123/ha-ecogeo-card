@@ -59,6 +59,8 @@ No breaking change: every default reproduces today's behaviour, and the prefix s
 - `card-editor`: device picker and suggestions, roles not present, binding check, state value choices, the stub
   config from the device.
 - `dev-emulator`: the foreign naming.
+- `temperature-coloring`: a pump on without a percentage animates at the fixed medium speed.
+- `outer-loop-source`: a fan speed in another unit rotates the fan at a fixed medium speed.
 
 ## Out of scope
 

@@ -105,21 +105,23 @@ real form is checked once on the live installation.
 ## Operating mode
 
 The mode is derived (derived), by a pure function that names its inputs: `unit.on_off`, `compressor.mode`,
-`compressor.speed`, `dhw.demand`, `unit.summer`, `production.pump` and the `active_cooling` and
-`passive_cooling` feature states. The first row whose condition holds wins.
+`compressor.speed`, `compressor.percentage`, `compressor.power`, `dhw.demand`, `unit.summer`, `production.pump`, the
+`states` lists and the `active_cooling` and `passive_cooling` feature states. The first row whose condition holds wins.
 
 | Order | Mode | Condition |
 |---|---|---|
-| 1 | Off | `unit.on_off` reads OFF (case-insensitive); EMERGENCY is not off |
-| 2 | Defrost | `compressor.mode` reads Defrost (case-insensitive); Balance is not defrost |
+| 1 | Off | `unit.on_off` matches `states.off` (default OFF, case-insensitive), or its on/off entity reads off; EMERGENCY is not off |
+| 2 | Defrost | `compressor.mode` matches `states.defrost` (default Defrost, case-insensitive), or its on/off entity reads on; Balance is not defrost |
 | 3 | DHW | the compressor runs and `dhw.demand` is on |
 | 4 | Active cooling | the compressor runs, `unit.summer` is on and `active_cooling` is `true` |
 | 5 | Heating | the compressor runs |
 | 6 | Passive cooling | the compressor is stopped, `unit.summer` is on, the production pump runs and `passive_cooling` is `true` |
-| 7 | Standby | everything else, including an unknown compressor speed |
+| 7 | Standby | everything else, including an unknown running state (no speed, percentage or power) |
 
-The compressor runs when its speed is above 0 rpm; a pump runs when its speed is above 0 %. An unavailable or unknown
-input counts as not running or not active. The alarm (`unit.alarm`) and the bridge connection (`unit.connection`,
+The compressor runs by the first of its speed (above 0, or on), its percentage (above 0) and its power (above 100 W)
+that has a value; a pump runs when its speed is above 0 or it is on. If the compressor has none of the three, whether
+it runs is unknown and the mode is Standby unless it is Off or Defrost. An unavailable or unknown input counts as not
+running or not active. The alarm (`unit.alarm`) and the bridge connection (`unit.connection`,
 the ESPHome device's connectivity, not the heat pump) never change the mode: they add an Alarm and an Offline
 indication.
 
@@ -143,6 +145,35 @@ Valves and circuits follow the mode (also pure, in `src/calc/circuits.ts`):
 - Without DHW storage (`dhw: none`, model B only) or with an unused tank (`dhw: unused`) there is no DHW loop, so the DHW
   mode has no DHW circuits (no circuit to ports 5/6, no DHW coil) and HTR is never active. The DHW mode is still derived
   and labelled, and valve 26 follows it.
+
+## Using another source
+
+The card reads the firmware's entities by default. Any role can be bound to another entity (`entities`), and the
+card reads what it finds.
+
+- A number role wants a numeric state. Temperatures, power and pressure are converted: °F to °C, kW to W, and kPa,
+  MPa, Pa, mbar and psi to bar.
+- A unit the card cannot convert is shown as it is: a compressor speed in Hz reads "45 Hz", a pump in rpm
+  "2400 rpm". A temperature, difference or power in an unknown unit has no value.
+- A yes/no role (demand, summer, winter, alarm, connection) reads `on`, `true`, `yes` and `1` as on, and `off`,
+  `false`, `no` and `0` as off, from any domain.
+- The on/off, compressor mode, compressor speed and pump roles also take an on/off entity (`binary_sensor`,
+  `switch` or `input_boolean`). Its label (compressor speed, pumps) or footer item (on/off) reads "On" or "Off". On the on/off role, off means the unit is off; on the
+  compressor mode role, on means defrost. A sensor that reads `1` on a text role stays text.
+- Text roles are compared with `states`, which replaces the firmware's texts:
+
+```yaml
+type: custom:ecogeo-card
+prefix: heatpump
+states:
+  off: [Uit, Standby]
+  defrost: [Ontdooien]
+```
+
+- Without a compressor speed, the card takes the percentage, then the power (above 100 W, so the standby draw does
+  not count). With none of the three the mode is Standby.
+- A pump or fan that runs without a percentage (an on/off entity that reads on, or a speed above 0 in rpm) animates
+  at a fixed medium speed.
 
 ## Drawing
 
@@ -290,7 +321,8 @@ keep their places relative to their device: "Air unit" above the housing, "Groun
   exit leaves the top pass and rises at x 206, left of the feed, so that no pipe crosses another (it is the reason
   for the order of the ports: the exit on top). The fan is a ring with a hub and five swept blades. It rotates
   while `source.fan_speed` is above 0 % (a full turn takes 120 s divided by the speed in %, between 0.5 and 6 s) and
-  stands still at 0 % or without a value. It does not depend on the mode, so it also turns in standby when its own
+  stands still at 0 % or without a value. A fan speed in another unit (rpm) above 0 turns it at a fixed medium
+  speed (3 s). It does not depend on the mode, so it also turns in standby when its own
   speed says so. With `prefers-reduced-motion` the fan stands still.
 - **Ground:** a ground line (the surface, hatched) with a single loop below it, like a borehole's U-tube: one leg
   goes down from the line, a half circle forms the bottom and one leg comes back up. The brine goes down the leg
@@ -469,6 +501,8 @@ that moves the fluid: 1.2 s at 100 %, proportionally slower below, never faster 
 | Refrigerant | `compressor.percentage` |
 | HTR water (pump 17 reports no speed) | a fixed 3 s |
 
+A pump without a percentage that runs (an on/off entity that reads on, or a speed in rpm above 0) also uses a fixed 3 s.
+
 At 0 % or without a value the pipe is still. Dead-end taps (vessels, drain valves, safety valves) are coloured
 but never animated. With `prefers-reduced-motion: reduce` nothing is animated, the pipes and the fan alike; the colours
 stay the same.
@@ -512,12 +546,16 @@ The card formats every number itself (`src/calc/display.ts`), never through `has
 
 - The number uses Home Assistant's language and number format, without a thousands separator ("2803 rpm", "4712 W").
   The copied `formatNumber` has a `grouping` flag for this.
+- A passed-through unit (see Using another source) uses the entity's `display_precision`, else the decimals of its
+  state ("45.6" is "45.6 Hz", "2400" is "2400 rpm").
 - The decimals come from the entity's `display_precision` in the entity registry when it has one and the entity's unit
   is the role's own unit; else (no precision, or a converted value such as kW shown as W, a Fahrenheit probe) from the role
   table (1 for temperatures, bar and %, 0 for rpm, W, the valve opening, the DHW setpoint and start delta-T).
 - The unit is the role's own, joined to the number by a no-break space: °C for temperatures, K for temperature
   differences (superheat, start delta-T), bar, %, rpm and W. The COP has none.
-- A state in °F is converted to °C and one in kW to W; a temperature difference in °F is converted back with the
+- A state in °F is converted to °C, one in kW to W and a pressure in kPa, MPa, Pa, mbar or psi to bar (see Using
+  another source); a unit the card cannot convert is shown as the entity reports it, except temperature, difference and power, which
+  have no value. A temperature difference in °F is converted back with the
   same absolute formula (43.2 °F is 6.2 K), because Home Assistant converted it as if it were a temperature.
 - The card re-renders when the state or registry entry of one of its entities changes, or the theme, locale or
   configuration; other entities changing do nothing.
