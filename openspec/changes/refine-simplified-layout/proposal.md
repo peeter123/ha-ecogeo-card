@@ -21,7 +21,12 @@ below the fold.
   shorter (the empty bottom band goes; pressure transducer 38 moves up), the probe row and the brine-side values get
   room clear of the pipes, and the outer-loop source (air unit, ground loop) and the external DHW tank are drawn
   smaller to make that width. The drawing's height shrinks with the cabinet. The topology stays the manual figure's.
-  `detail: full` keeps today's drawing unchanged.
+  `detail: full` keeps its parts, pipes and crossings.
+- **Label places and a threshold for the full detail level** (added after the pre-archive review). Measured with
+  pipes, the full level overlapped at every width, so it gets label places of its own (`FULL_PLACES`), among them the
+  production Out/In column outside the cabinet's left wall with Out and In captions, and its own compact threshold
+  (640 px, `COMPACT_BELOW_FULL`; the simplified level's is 600 px). The overlap check also counts a label that
+  crosses the cabinet outline.
 - **Fewer values at the simplified level.** The superheat and the expansion valve opening (item 12) are shown only
   with `detail: full`; the compact layout already leaves them out. Tapping valve 12 still opens the opening's
   more-info.
@@ -43,10 +48,11 @@ None.
 ### Modified Capabilities
 
 - `schematic-drawing`: the detail level gets its own arrangement at `simplified` (wider, shorter cabinet; smaller
-  source and tank), with `full` unchanged.
-- `live-values`: the superheat and the expansion valve opening are shown only at the full detail level.
-- `responsive-layout`: the compact threshold and the compact places count overlaps with pipes and captions; a panel
-  view fits the screen's height.
+  source and tank); `full` keeps its parts, pipes and crossings, with label places of its own.
+- `live-values`: the superheat and the expansion valve opening are shown only at the full detail level; at the full
+  level the production outlet and return values form an Out/In column outside the cabinet.
+- `responsive-layout`: the compact threshold is set per detail level, and it and the compact places count overlaps
+  with pipes, captions and the cabinet outline; a panel view fits the screen's height.
 - `dev-emulator`: a panel control, so the panel fit can be captured.
 
 ## Facts and their sources
@@ -59,8 +65,8 @@ None.
 
 ## Out of scope
 
-- A new arrangement for `detail: full`: it stays as drawn today. Its overlaps with pipes are not measured; the
-  threshold is measured at the simplified level, as before.
+- A new arrangement for `detail: full`: its parts, pipes and crossings stay as drawn; only its value labels get
+  places of its own (added after the pre-archive review).
 - A portrait re-layout (source above, tank below): still a later idea from `add-compact-layout`.
 - Extra heating circuits (DG2, DG3, pool): long-term, no change named; they need external valves and sensors the card
   does not know about.
@@ -72,9 +78,10 @@ None.
 
 - Code: `src/diagram/geometry.ts` (the geometry as a value per detail level), `labels.ts` (placements per arrangement,
   the two values gated on detail, compact places), `cabinet.ts`, `source.ts`, `dhw.ts` (read the
-  arrangement), `src/card/ecogeo-card.ts` (viewBox per arrangement, `isPanel`, the panel fit), `src/lib/layout.ts`
-  (`COMPACT_BELOW` re-measured).
-- Dev and tests: `dev/overlaps.ts` (pipes and captions), `scripts/measure-layout.mjs`, `dev/url-state.ts` (panel),
+  arrangement), `src/diagram/label-places.ts` (`SIMPLIFIED_PLACES`, `COMPACT_PLACES`, `FULL_PLACES`),
+  `src/card/ecogeo-card.ts` (viewBox per arrangement, `isPanel`, the panel fit), `src/lib/layout.ts` (`COMPACT_BELOW`
+  re-measured, `COMPACT_BELOW_FULL` and `compactBelow(detail)`).
+- Dev and tests: `dev/overlaps.ts` (pipes and captions), `scripts/measure-layout.mjs` (`--detail`), `scripts/search-places.mjs`, `dev/url-state.ts` (panel),
   `dev/captures.ts`, the browser tests, and new invariant tests for the simplified arrangement.
 - Docs: `docs/ecogeo-card.md` (arrangements, overlap method, threshold, compact places, panel fit), `README.md`
   (detail level, panel view, follow-ups).

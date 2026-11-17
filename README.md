@@ -47,7 +47,7 @@ speed, the DHW temperature and the source's outlet temperature), at least 10 px 
 COP, outside temperature and the alarm and offline indications). Pipes and outlines never render thinner than 2 px
 and 1.25 px, and the footer wraps. Once compact, the card returns to full only at 624 px, or 664 px with `detail: full` (24 px of hysteresis), so a
 scrollbar appearing with the layout cannot make it flip back and forth. Set `layout: full` or `layout: compact` to
-force one. In a panel view the card also fits the screen: the drawing is kept within the window's height below Home Assistant's header (and above the footer), narrower and centred when the card is wider than that, and the layout and line widths follow the drawing's own width. A tall window or a sections view is not affected: the drawing fills the card. How the 600 px was measured, and what each tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
+force one. In a panel view the card also fits the screen: the drawing is kept within the window's height below Home Assistant's header (and above the footer), narrower and centred when the card is wider than that, and the layout and line widths follow the drawing's own width. A tall window or a sections view is not affected: the drawing fills the card. How the thresholds were measured, and what each tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
 ![The card on a 360 px wide phone: the compact layout with its seven key values](docs/images/phone-heating.png)
 

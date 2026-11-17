@@ -12,8 +12,8 @@ import { AIR_UNIT_FAN_NAME, COMPONENT_NAMES, DHW_LABELS, componentLabel } from '
 import { states } from '../helpers';
 
 // the default config draws the simplified level
-const full = arrangementFor('simplified', 'full');
-const COMPONENTS = full.components;
+const simplified = arrangementFor('simplified', 'full');
+const COMPONENTS = simplified.components;
 
 const P = 'demo_ecogeo';
 const ALL_TRUE = { active_cooling: true, passive_cooling: true, htr: true, backup_heater: true };

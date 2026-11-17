@@ -153,8 +153,8 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
   full arrangement do not move. If no place set reaches 800 px, stop and put it to the user.
   Verify: `npm run measure-layout -- --detail=full` reports a threshold at most 800 px and no pair at 1000 px; the
   `detail-full-*` markup snapshots are updated on purpose and differ from the previous ones in value label positions
-  only (schematic-drawing "Full level unchanged"); the simplified snapshots pass unchanged.
-  Note: 14 places in `FULL_PLACES`; the full level's threshold is 640 px (`COMPACT_BELOW_FULL`), clean from 640 px up to 1400 px; the air unit's Out value against the feed pipe (defrost) keeps 620 px from it.
+  only (schematic-drawing "Full level keeps its parts"); the simplified snapshots pass unchanged.
+  Note: 14 places in `FULL_PLACES` (15 after 8.6 added `production_out`); the full level's threshold is 640 px (`COMPACT_BELOW_FULL`), clean from 640 px up to 1400 px; the air unit's Out value against the feed pipe (defrost) keeps 620 px from it.
 - [x] 8.3 Add `COMPACT_BELOW_FULL` (the measured value) and `compactBelow(detail)` to `src/lib/layout.ts`; `isCompact`
   and `nextCompact` take the configured detail level, and every caller passes it (the card, the panel fit, the
   emulator, the scripts, the tests).

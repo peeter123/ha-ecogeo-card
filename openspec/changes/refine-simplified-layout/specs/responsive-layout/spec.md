@@ -40,8 +40,8 @@ over their background plate.
   and In captions, the DHW tank's value carries a DHW caption, and the source's Out value sits outside it
 
 #### Scenario: Compact labels clear of pipes
-- **WHEN** the card shows the compact layout at 320, 360, 480 px or just under the threshold, in any emulator
-  scenario
+- **WHEN** the card shows the compact layout at 320, 360, 480 px or just under either detail level's threshold, in
+  any emulator scenario
 - **THEN** no label overlaps another label, a component or the drawing's edge, and no label other than the
   production and brine values and the compressor speed overlaps a pipe
 

@@ -38,7 +38,7 @@ probe 34 at that level.
 
 #### Scenario: Production labels
 - **WHEN** the production outlet reads 25.2 °C and pump 15 runs at 99.9 %, in the full layout
-- **THEN** "25.2 °C" is shown at probe 33 and "99.9 %" at pump 15
+- **THEN** "25.2 °C" is shown beside probe 33 and "99.9 %" at pump 15
 
 #### Scenario: Full-level production column
 - **WHEN** the config sets `detail: full`, the card shows the full layout, and the production outlet reads 25.2 °C

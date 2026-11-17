@@ -86,6 +86,10 @@ describe('compactBelow', () => {
     expect(COMPACT_BELOW_FULL).toBeGreaterThan(COMPACT_BELOW);
     expect(COMPACT_BELOW_FULL).toBeLessThanOrEqual(800);
   });
+
+  test('keeps the simplified threshold at 640 px or less', () => {
+    expect(COMPACT_BELOW).toBeLessThanOrEqual(640);
+  });
 });
 
 describe('isCompact', () => {

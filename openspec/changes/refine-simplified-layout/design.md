@@ -29,12 +29,13 @@ See proposal.md (Why). Current state that shapes the approach:
   compact places and the browser guard.
 - A simplified arrangement whose topology is the full one's by construction, so the existing topology rules hold
   without re-proving them by hand.
-- `detail: full` renders byte-for-byte as today.
+- `detail: full` keeps its parts, pipes and crossings byte-for-byte (its value labels got places of their own later,
+  D11).
 
 **Non-Goals:**
 
 - Changing label font sizes or the 8 px and 10 px floors.
-- Measuring pipe overlaps at `detail: full`.
+- Measuring pipe overlaps at `detail: full` (dropped after the pre-archive review: D11 measures both levels).
 - A height fit outside panel views (sections and masonry views size cards themselves).
 
 ## Decisions
@@ -201,7 +202,8 @@ The five on-pipe labels search with a 2 px vertical margin, so their plates clea
 A unit test renders the card (happy-dom) for every capture configuration in `dev/captures.ts` with sample states and
 compares the SVG markup and the label positions with a stored snapshot. Recorded before the refactor of D1, it must
 pass unchanged after it. When the simplified arrangement lands, only the simplified snapshots are updated, on
-purpose; the `detail: full` snapshots must still pass, which is the "full level unchanged" scenario.
+purpose; the `detail: full` snapshots must still pass, which is the "Full level keeps its parts" scenario. Since D11 the
+`detail: full` snapshots change on purpose in their value-label lines only; parts, pipes and crossings still match.
 
 Settled in group 2: one snapshot file per capture (`toMatchFileSnapshot`), so `git diff --stat` shows which captures
 changed and that the `detail: full` ones did not. Since only two captures used `detail: full`, the capture list gains
@@ -246,6 +248,11 @@ max-height through its aspect ratio in every engine, and the layout decision nee
 
 The emulator gets `panel=1` (URL and a control), which sets `isPanel` and gives the card slot the window's width,
 so a 1280 x 800 capture shows the fit.
+
+### D10. Helpers from hrv-ventilation
+
+None are copied in this change. If an implementer finds one worth copying (for example for the panel fit), the copy
+names its source file and deviations in a header comment and in this design before the group closes.
 
 ### D11. A compact threshold per detail level
 
@@ -292,11 +299,6 @@ threshold is re-measured with it. The overlap check (D4, `dev/overlaps.ts`) also
 the cabinet outline (`label x cabinet`), for the full layout at both levels; both thresholds are re-measured with it,
 and if the simplified level's 600 px moves, that is a decision point for the user. `FULL_PLACES` is applied in
 `buildArrangement`, after `labelPlacesFor`, to the full arrangement only.
-
-### D10. Helpers from hrv-ventilation
-
-None are copied in this change. If an implementer finds one worth copying (for example for the panel fit), the copy
-names its source file and deviations in a header comment and in this design before the group closes.
 
 ## Risks / Trade-offs
 

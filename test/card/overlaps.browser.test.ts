@@ -61,12 +61,12 @@ describe('No overlaps above the threshold', () => {
 const onPipe = (pair: string): boolean => [...ON_PIPE_COMPACT].some((id) => pair.startsWith(`label ${id} x pipe:`));
 
 describe('No overlaps in the compact layout', () => {
-  for (const width of [320, 360, 480, COMPACT_BELOW - 1]) {
+  for (const width of [320, 360, 480, COMPACT_BELOW - 1, COMPACT_BELOW_FULL - 1]) {
     for (const naming of NAMINGS)
       for (const installation of INSTALLATIONS) {
         test.each(SCENARIO_NAMES)(`${naming} ${installation.name}: %s at ${String(width)} px`, async (name) => {
           const state = parseState(
-            `?scenario=${name}&${installation.query}&naming=${naming}&layout=compact&detail=simplified`,
+            `?scenario=${name}&${installation.query}&naming=${naming}&layout=compact&detail=${width === COMPACT_BELOW_FULL - 1 ? 'full' : 'simplified'}`,
           );
           const wrapper = document.createElement('div');
           wrapper.style.fontFamily = EMULATOR_FONT.family;

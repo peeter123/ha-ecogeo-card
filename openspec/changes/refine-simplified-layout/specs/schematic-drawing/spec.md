@@ -12,10 +12,10 @@ level. The full level SHALL keep its own arrangement, unaffected by the simplifi
 - **THEN** the simplified cabinet is wider and less tall in drawing units than the full one, and the simplified
   drawing's height-to-width ratio is smaller
 
-#### Scenario: Full level unchanged
+#### Scenario: Full level keeps its parts
 - **WHEN** the card renders any emulator capture with `detail: full`
-- **THEN** its parts, pipes and crossings match the recorded `detail-full-*` markup snapshots; only value labels may
-  have moved
+- **THEN** its parts, pipes and crossings match the recorded `detail-full-*` markup snapshots, and its value labels
+  take the full level's own places
 
 #### Scenario: No empty band
 - **WHEN** the card renders variant 4 with every feature `true` and no `detail`

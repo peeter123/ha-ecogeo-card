@@ -617,7 +617,7 @@ writes no entity.
 | Brine outlet (31) and inlet (32), pressure (37), pump 16 | under the probes, under probe 37 (`full`: ending before pipe `brine_tap_b`), left of the pump (`full`: under the pump, left of pipe `ln4`) |
 | Discharge (30) and suction (29) temperatures, pressures 36 and 35 | below the discharge and suction lines of the probe row |
 | Compressor 11: rpm, %, W | a stack inside the refrigerant loop |
-| Superheat (K) and valve opening (%) at 12 | above the expansion valve (`full`: left of evaporator 7, ending 16 units before its item number); at `detail: full` only (tap valve 12 for the opening at `simplified`) |
+| Superheat (K) and valve opening (%) at 12 | left of evaporator 7, ending 16 units before its item number; at `detail: full` only (tap valve 12 for the opening at `simplified`) |
 | Condensation (8) and evaporation (7) temperatures | under exchangers 8 and 7 |
 | Air unit: fan, outside temperature | under the housing |
 | Air unit: In (brine outlet of the heat pump) and Out (air unit outlet temperature); a hybrid: only In | right of the housing, next to the ports: air, In at the bottom port and Out at the top one; hybrid, In at the top port |
