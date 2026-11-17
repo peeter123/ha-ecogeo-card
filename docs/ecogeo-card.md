@@ -419,7 +419,7 @@ keep their places relative to their device: "Air unit" above the housing, "Groun
   speed says so. With `prefers-reduced-motion` the fan stands still.
 - **Ground:** a ground line (the surface, hatched) with a single loop below it, like a borehole's U-tube: one leg
   goes down from the line, a half circle forms the bottom and one leg comes back up. The brine goes down the leg
-  fed from port 3 (at x 166) and returns up the other (x 106) to port 4. The hatching leaves out the places where
+  fed from port 3 (at `full`: x 166; at `simplified`: the down leg at x 130) and returns up the other (`full`: x 106; `simplified`: the up leg at x 84) to port 4. The hatching leaves out the places where
   the legs pass.
 - **Hybrid:** both on one brine loop, in series. The brine runs through the air unit first and then down to the
   ground loop, which sits under the air unit; the link leaves the air unit from its outlet port. In the hybrid the
@@ -606,7 +606,7 @@ shows no number while the DHW temperature is unavailable; with `dhw: unused` it 
 ## Live values
 
 Values are HTML labels laid over the drawing at percentage positions computed from viewBox coordinates, so text stays
-crisp and selectable; they scale with the drawing. Positions are in `src/diagram/labels.ts`. Tapping a value opens
+crisp and selectable; they scale with the drawing. The placements are in `src/diagram/label-places.ts` and reach the drawing through the arrangement; `src/diagram/labels.ts` selects and renders them. Tapping a value opens
 Home Assistant's more-info dialog for its entity (in sample mode they do nothing); the card calls no service and
 writes no entity.
 
@@ -702,7 +702,7 @@ The schematic at the simplified detail level whatever `detail` says (the resolve
 only the drawing is told `simplified`, and its geometry does not change), only the key value labels, and a footer
 with the mode, the COP, the outside temperature and the alarm and offline indications.
 
-Every value label and every footer value has a tier, `key` or `detail` (`tier` in `src/diagram/labels.ts`), and the
+Every value label and every footer value has a tier, `key` or `detail` (value labels in `KEY_LABELS` in `src/diagram/label-places.ts`, footer values in `FOOTER_KEY_ITEMS` in `src/diagram/labels.ts`), and the
 compact layout draws only the key ones:
 
 | Tier | Labels |

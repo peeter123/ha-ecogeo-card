@@ -20,7 +20,7 @@ import type { FeatureKey, Features } from '../config/variants';
 import { COMPACT_PLACES, FULL_PLACES, SIMPLIFIED_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
 
 /** A rectangle in viewBox units. */
-export interface Rect {
+interface Rect {
   readonly x: number;
   readonly y: number;
   readonly width: number;
@@ -62,11 +62,11 @@ export interface AirUnitShape {
  * (inside the cabinet), the external tank, the air unit, the ground loop and the pipe run above the cabinet.
  * `deriveZones` computes everything else that depends on them.
  */
-export interface ZoneBase {
+interface ZoneBase {
   readonly viewBox: { readonly width: number; readonly height: number };
   /**
    * The uniform scale of the source and the external tank relative to the full arrangement (1 when left out): it sizes
-   * the offsets `deriveZones` adds to them (the external coil, the hybrid's ground line).
+   * the offsets `deriveZones` adds to them (the external coil, the hybrid's ground line) and the air unit's fan blades.
    */
   readonly scale?: number;
   /** The cabinet's outline and the zones around it. */
@@ -143,7 +143,7 @@ export interface Zones extends ZoneBase {
 const round2 = (value: number): number => Math.round(value * 100) / 100;
 
 /** The values that depend on the primary ones: ports, line heights, the external coil, the joins of the pipe run. */
-export function deriveZones(base: ZoneBase): Zones {
+function deriveZones(base: ZoneBase): Zones {
   const { airUnit, groundLoop, externalTank, run, cabinet } = base;
   const k = base.scale ?? 1;
   const groundLineY = { ground: cabinet.y, hybrid: airUnit.y + airUnit.height + Math.round(70 * k) };
@@ -879,7 +879,7 @@ export interface DrawContext {
 }
 
 /** Which arrangement a card shows. */
-export type ArrangementId = 'full' | 'simplified';
+type ArrangementId = 'full' | 'simplified';
 
 /** The layout the card shows now (card-config `layout`, resolved): compact or full. */
 export type ShownLayout = 'compact' | 'full';
@@ -931,7 +931,7 @@ const FULL_ARRANGEMENT = buildArrangement('full', FULL_ZONES);
 // monotone piecewise-linear maps, the source and the external tank are the same shapes at a uniform scale.
 
 /** A monotone piecewise-linear map of one axis: breakpoints `[from, to]` in the full arrangement's units, ascending. Beyond the first and the last it keeps their offset (slope 1). */
-export type AxisMap = readonly (readonly [from: number, to: number])[];
+type AxisMap = readonly (readonly [from: number, to: number])[];
 
 export function mapAxis(map: AxisMap, value: number): number {
   const first = map[0];

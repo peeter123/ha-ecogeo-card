@@ -107,9 +107,6 @@ export const fanDuration = (speed: number | boolean | undefined): number | undef
       ? undefined
       : Math.min(6, Math.max(0.5, 120 / speed));
 
-/** The ring radius the blades are drawn for (the full arrangement's). */
-const FAN_RADIUS = 34;
-
 /** The fan's five swept blades around the origin (refine-schematic-drawing D6): each curves away from its root at the hub. */
 const BLADES = [0, 72, 144, 216, 288].map(
   (angle) =>
@@ -122,6 +119,7 @@ function airUnit(
   muted: boolean,
   taps: Taps | undefined,
   captions: boolean,
+  scale: number | undefined,
 ): SVGTemplateResult {
   const { x, y, width, height, fanX, fanY, fanRadius, coil, fins: fin, slats: slat, dividerY } = unit;
   const duration = fanDuration(speed);
@@ -130,7 +128,7 @@ function airUnit(
   const [gutterLeft, gutterRight] = [round2(x + 6), round2(fanX + fanRadius + 6)];
   const gutter = round2(fanX - fanRadius - 6 - gutterLeft);
   // the blades keep the full arrangement's proportions to the ring: a smaller air unit scales them with it
-  const fanScale = round2(fanRadius / FAN_RADIUS);
+  const fanScale = round2(scale ?? 1);
   const tap = tapBindings(tapTarget(FAN_ROLE, taps), taps?.onTap);
   return svg`<g class="air-unit${muted ? ' muted' : ''}" data-source="air">
     <rect class="source-outline" x=${x} y=${y} width=${width} height=${height} rx="6" />
@@ -189,12 +187,12 @@ export function renderSource(
   brineActive: boolean,
   taps?: Taps,
 ): SVGTemplateResult {
-  const { airUnit: unit, groundLineY } = arrangementOf(context);
+  const { airUnit: unit, groundLineY, scale } = arrangementOf(context);
   const air = context.source === 'air' || context.source === 'hybrid';
   const ground = context.source === 'ground' || context.source === 'hybrid';
   const kind = context.source === 'hybrid' ? 'hybrid' : 'ground';
   return svg`<g class="source" data-source-kind=${context.source}>
-    ${air ? airUnit(unit, readings['source.fan_speed'], !brineActive, taps, context.captions !== false) : svg``}
+    ${air ? airUnit(unit, readings['source.fan_speed'], !brineActive, taps, context.captions !== false, scale) : svg``}
     ${ground ? groundLine(context, kind, groundLineY[kind], !brineActive) : svg``}
   </g>`;
 }

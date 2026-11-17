@@ -186,7 +186,7 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 
 ## 9. The pre-archive review's findings
 
-- [ ] 9.1 Fix the pre-archive review's findings: `docs/ecogeo-card.md` names `src/diagram/label-places.ts` as where the
+- [x] 9.1 Fix the pre-archive review's findings: `docs/ecogeo-card.md` names `src/diagram/label-places.ts` as where the
   positions live (`labels.ts` renders them); the label "under pressure probe 38" is marked as the full level's (the
   simplified level puts it right of transducer 38); the ground loop's leg columns (x 166 / x 106) are marked as the
   full level's, next to the simplified ones; the tank 50 row's "about 560 px" is marked as measured on the full

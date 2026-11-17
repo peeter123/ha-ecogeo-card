@@ -85,9 +85,9 @@ export const COMPACT_PLACES: Readonly<Record<string, Placement>> = {
 };
 
 /** Maps a point of the full arrangement's cabinet to the arrangement's own. */
-export type PointMap = (x: number, y: number) => readonly [number, number];
+type PointMap = (x: number, y: number) => readonly [number, number];
 
-export interface SimplifiedPlace {
+interface SimplifiedPlace {
   /** The place, from the zones and the point map of the cabinet. */
   at: (z: Zones, map: PointMap) => Placement;
   reason: string;
