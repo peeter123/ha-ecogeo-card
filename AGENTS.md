@@ -29,7 +29,10 @@ advanced entity pickers and colour stop rows, and `dhw: unused` with no `none` o
 `openspec/changes/archive/2026-11-13-add-card-editor/`. The fifth, `add-entity-discovery` (the `states` option,
 on/off entities and pass-through units from any source, `none` roles, the emulator's foreign naming, and the
 editor's entity suggestions from a device, binding check and filled stub config), is archived in
-`openspec/changes/archive/2026-11-13-add-entity-discovery/`.
+`openspec/changes/archive/2026-11-13-add-entity-discovery/`. The sixth, `refine-simplified-layout` (its own
+arrangement for the simplified level, the pipe-, caption- and outline-aware overlap check, label places and a compact
+threshold per detail level, the compact layout on the simplified arrangement, and the panel view fit), is archived in
+`openspec/changes/archive/2026-11-17-refine-simplified-layout/`.
 
 ## Rules in short
 
