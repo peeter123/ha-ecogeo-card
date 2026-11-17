@@ -197,11 +197,11 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 
 ## 10. Release the full level's places and threshold
 
-- [ ] 10.1 Run `npm run release`, deploy `dist/ecogeo-card.js` with the workspace's deploy command, bump the dashboard
+- [x] 10.1 Run `npm run release`, deploy `dist/ecogeo-card.js` with the workspace's deploy command, bump the dashboard
   resource's `?v=` and record the deploy in `private/installation.md`.
   Verify: `check-release` reports the card and editor registered; the deploy reports the upload; the resource shows
   the new `?v=`.
-- [ ] 10.2 Live check: light screenshots of the Schematic view at desktop (1280 x 800) and phone (390) width, and a state
+- [x] 10.2 Live check: light screenshots of the Schematic view at desktop (1280 x 800) and phone (390) width, and a state
   check.
   Verify: a subagent returns a verdict that the drawing matches the group 7 release (the live card uses the default
   level); no new ecogeo or frontend errors in the system log; the dashboard config is unchanged (its hash in
