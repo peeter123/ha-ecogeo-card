@@ -1,31 +1,31 @@
 layout: full
 labels:
-production_out | label end | left: 23.7%; top: 36.774193548387096%
-production_in | label middle | left: 29.099999999999998%; top: 39.83870967741935%
+production_out | label end | left: 23.599999999999998%; top: 36.774193548387096%
+production_in | label end | left: 23.599999999999998%; top: 39.83870967741935%
 production_pressure | label end | left: 36%; top: 86.61290322580645%
-production_pump | label end | left: 39.6%; top: 61.29032258064516%
+production_pump | label end | left: 39.6%; top: 59.83870967741935%
 dg1_setpoint | label middle | left: 29.099999999999998%; top: 15.483870967741936%
 brine_out | label start | left: 63.3%; top: 39.83870967741935%
 brine_in | label start | left: 69.69999999999999%; top: 39.83870967741935%
-brine_pressure | label start | left: 68.89999999999999%; top: 74.03225806451613%
-brine_pump | label end | left: 67.60000000000001%; top: 48.38709677419355%
+brine_pressure | label end | left: 72%; top: 74.03225806451613%
+brine_pump | label end | left: 68.60000000000001%; top: 52.09677419354839%
 discharge_temperature | label start | left: 43.6%; top: 42.25806451612903%
 discharge_pressure | label middle | left: 48%; top: 44.354838709677416%
 suction_temperature | label start | left: 52.800000000000004%; top: 42.25806451612903%
 suction_pressure | label middle | left: 56.99999999999999%; top: 44.354838709677416%
-compressor_speed | label middle | left: 50.3%; top: 49.516129032258064%
-compressor_percentage | label middle | left: 50.3%; top: 51.45161290322581%
-compressor_power | label middle | left: 50.3%; top: 53.387096774193544%
-superheat | label middle | left: 52.7%; top: 60.64516129032258%
-expansion_valve | label middle | left: 52.7%; top: 62.58064516129033%
+compressor_speed | label middle | left: 50.3%; top: 49.67741935483871%
+compressor_percentage | label middle | left: 50.3%; top: 51.935483870967744%
+compressor_power | label middle | left: 50.3%; top: 54.19354838709678%
+superheat | label end | left: 53%; top: 59.83870967741935%
+expansion_valve | label end | left: 53%; top: 62.096774193548384%
 condensation_temperature | label middle | left: 43.2%; top: 70.48387096774194%
-evaporation_temperature | label middle | left: 57.199999999999996%; top: 70.48387096774194%
+evaporation_temperature | label middle | left: 57.199999999999996%; top: 69.6774193548387%
 ground_in | label start | left: 17.2%; top: 24.193548387096776%
 ground_out | label end | left: 10%; top: 24.193548387096776%
 tank_internal_temperature | label middle bare | left: 43.83333333333333%; top: 24.193548387096776%
-tank_internal_setpoint | label middle bare | left: 49.9%; top: 24.193548387096776%
-tank_internal_start_delta | label middle bare | left: 55.96666666666666%; top: 24.193548387096776%
-tank_internal_demand | label middle bare | left: 49.9%; top: 26.29032258064516%
+tank_internal_setpoint | label middle bare | left: 48.8%; top: 24.193548387096776%
+tank_internal_start_delta | label end bare | left: 56.3%; top: 24.193548387096776%
+tank_internal_demand | label middle bare | left: 48.8%; top: 26.29032258064516%
 footer: on_off, season, outside_temperature, cop, condensation_capacity, evaporation_capacity
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 620" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #f2711c 91%, #e8a317); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3; --outline-width: 2">

@@ -278,6 +278,26 @@ describe('Compact value captions', () => {
     for (const id of Object.keys(expected)) expect(caption(full, id), id).toBeUndefined();
   });
 
+  test('Full-level production column: at detail full the production values are captioned Out and In, outside the cabinet wall', async () => {
+    const full = arrangementFor('full', 'full');
+    const card = await show(1000, { detail: 'full' });
+    const wall = full.cabinet.x;
+    for (const [id, text] of [
+      ['production_out', VALUE_CAPTIONS.portOut],
+      ['production_in', VALUE_CAPTIONS.portIn],
+    ] as const) {
+      expect(caption(card, id), id).toBe(text);
+      const spec = full.labels.specs.find((label) => label.id === id);
+      expect(spec?.align, id).toBe('end');
+      expect(spec?.x ?? Infinity, id).toBeLessThan(wall);
+    }
+    const [out, inn] = ['production_out', 'production_in'].map((id) => full.labels.specs.find((l) => l.id === id));
+    expect(out?.x).toBe(inn?.x);
+    expect(out?.y ?? Infinity).toBeLessThan(inn?.y ?? 0);
+    // the other labels keep no caption of this kind
+    expect(caption(card, 'production_pump')).toBeUndefined();
+  });
+
   test('model C: the internal tank value carries the DHW caption in compact only', async () => {
     const config = { model: 'C', dhw: 'internal' } as const;
     expect(caption(await show(360, config), 'tank_internal_temperature')).toBe(VALUE_CAPTIONS.dhw);

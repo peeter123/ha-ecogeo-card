@@ -169,7 +169,12 @@ export class EcogeoCard extends LitElement {
    * layout it showed so far (the hysteresis of add-compact-layout D1).
    */
   get shownLayout(): 'compact' | 'full' {
-    return nextCompact(this.resolved?.layout ?? 'auto', this.layoutWidth(), this.renderedAutoCompact)
+    return nextCompact(
+      this.resolved?.layout ?? 'auto',
+      this.layoutWidth(),
+      this.renderedAutoCompact,
+      this.resolved?.detail ?? 'simplified',
+    )
       ? 'compact'
       : 'full';
   }

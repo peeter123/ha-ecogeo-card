@@ -17,7 +17,7 @@ import type { CircuitId, Circuits } from '../calc/circuits';
 import type { Detail, DhwStorage, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
-import { COMPACT_PLACES, SIMPLIFIED_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
+import { COMPACT_PLACES, FULL_PLACES, SIMPLIFIED_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
 
 /** A rectangle in viewBox units. */
 export interface Rect {
@@ -908,7 +908,20 @@ function buildArrangement(id: ArrangementId, zones: Zones): Arrangement {
     crossings: FULL_CROSSINGS,
     circuitLabels: FULL_CIRCUIT_LABELS,
     // the full arrangement is never drawn compact (D7): its labels have no compact places
-    labels: labelPlacesFor(zones, {}),
+    labels: {
+      specs: labelPlacesFor(zones, {}).specs.map((spec) => {
+        const place = FULL_PLACES[spec.id];
+        return place === undefined
+          ? spec
+          : {
+              ...spec,
+              x: place.x,
+              y: place.y,
+              align: place.align,
+              ...(place.caption === undefined ? {} : { caption: place.caption }),
+            };
+      }),
+    },
   };
 }
 

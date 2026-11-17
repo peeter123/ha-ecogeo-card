@@ -149,6 +149,125 @@ export const SIMPLIFIED_PLACES: Readonly<Record<string, SimplifiedPlace>> = {
   },
 };
 
+/** A label's place at the full arrangement, with its reason. */
+export interface FullPlace extends Placement {
+  /** A caption in front of the value (the full level's production column: Out and In, like the compact layout's). */
+  caption?: string;
+  reason: string;
+}
+
+/**
+ * The labels of the full arrangement that are not at the place `labelPlacesFor` gives them (refine-simplified-layout D11), each with its
+ * reason: places that the pipe-aware overlap check (dev/overlaps.ts, `npm run measure-layout -- --detail=full`) reported on a
+ * part, a pipe or a neighbour. The parts, pipes and crossings of the full arrangement do not move; each value stays next to its part.
+ * Applied to the full arrangement only; the simplified and compact layouts have their own places.
+ */
+export const FULL_PLACES: Readonly<Record<string, FullPlace>> = {
+  evaporation_temperature: {
+    x: 572,
+    y: 432,
+    align: 'middle',
+    reason:
+      "evaporator 7's temperature 5 units higher: at y 437 its box reaches exchanger 10 (x 500-559, from y 439), whose top is only 14 units under evaporator 7 (to y 425)",
+  },
+  tank_internal_setpoint: {
+    x: 488,
+    y: 150,
+    align: 'middle',
+    reason:
+      "tank 50's setpoint (item 50) 11 units left of the centre to leave room for the start delta end-aligned at x 563",
+  },
+  tank_internal_demand: {
+    x: 488,
+    y: 163,
+    align: 'middle',
+    reason: "tank 50's demand text under the row (item 50), kept under the setpoint it follows",
+  },
+  tank_internal_start_delta: {
+    x: 563,
+    y: 150,
+    align: 'end',
+    reason:
+      "tank 50's start delta ends at x 563, 2 units before item 54 (x 565-611, from y 151) that its box reached when centred at x 560",
+  },
+  brine_pressure: {
+    x: 720,
+    y: 459,
+    align: 'end',
+    reason: 'ends at x 720, before pipe brine_tap_b (x 723-726) that the start-aligned value of transducer 37 ran over',
+  },
+  brine_pump: {
+    x: 686,
+    y: 323,
+    align: 'end',
+    reason:
+      "pump 16's speed under the pump and left of pipe ln4, not beside it: the 45 units between pipe ln3 (to x 633) and the pump (from x 678) hold the speed only above 700 px",
+  },
+  superheat: {
+    x: 530,
+    y: 371,
+    align: 'end',
+    reason:
+      'ends at x 530, left of evaporator 7 (item 7, from x 540) that the centred value touched; 5 units higher so that the pair, 14 apart, still fits above valve 12 (from y 393)',
+  },
+  expansion_valve: {
+    x: 530,
+    y: 385,
+    align: 'end',
+    reason:
+      "under the superheat (14 units), ending at x 530: 16 units before item 7's number (x 546), so that it does not read as 58 % 7",
+  },
+  air_unit_out: {
+    x: 152,
+    y: 172,
+    align: 'start',
+    reason:
+      "the air unit's outlet starts 2 units off the housing (6 before), so that the outlet caption and its widest value end before the feed pipe (x 224-228) at 640 px",
+  },
+  production_pump: {
+    x: 396,
+    y: 371,
+    align: 'end',
+    reason:
+      "pump 15's speed 9 units higher: at y 380 its box touched valve 27 (x 338-362, from y 383) at narrow widths",
+  },
+  compressor_speed: {
+    x: 503,
+    y: 308,
+    align: 'middle',
+    reason:
+      "compressor 11's stack of three rows is 14 units apart (12 before), since the 8 px text of a 640 px card is taller than 12 units",
+  },
+  compressor_percentage: {
+    x: 503,
+    y: 322,
+    align: 'middle',
+    reason: "the middle row of compressor 11's stack",
+  },
+  compressor_power: {
+    x: 503,
+    y: 336,
+    align: 'middle',
+    reason: "the bottom row of compressor 11's stack, clear of the pipe under it",
+  },
+  production_out: {
+    x: 236,
+    y: 228,
+    align: 'end',
+    caption: VALUE_CAPTIONS.portOut,
+    reason:
+      "the production column (probes 33 and 34) outside the cabinet's left wall (x 240), level with the probes, with the compact layout's outlet caption; the value ends 4 units before the wall",
+  },
+  production_in: {
+    x: 236,
+    y: 247,
+    align: 'end',
+    caption: VALUE_CAPTIONS.portIn,
+    reason:
+      "under the outlet value, outside the wall with the return caption: the 39 units between probe 34's pipes hold the value only above about 800 px, and left of pipe prod_44_26 it would straddle the wall",
+  },
+};
+
 /** The distance of an air unit port label from its port's pipe: 12 units at the arrangement's scale. */
 const portLabelDy = (z: Zones): number => Math.round(12 * (z.scale ?? 1) * 100) / 100;
 

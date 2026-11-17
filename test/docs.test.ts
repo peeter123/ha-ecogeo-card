@@ -2,8 +2,8 @@
 import { describe, expect, test } from 'vitest';
 import { configErrors } from '../src/config/options';
 import { resolveConfig } from '../src/config/resolve';
-import { COMPACT_PLACES, ON_PIPE_COMPACT } from '../src/diagram/label-places';
-import { COMPACT_BELOW, COMPACT_HYSTERESIS } from '../src/lib/layout';
+import { COMPACT_PLACES, FULL_PLACES, ON_PIPE_COMPACT } from '../src/diagram/label-places';
+import { COMPACT_BELOW, COMPACT_BELOW_FULL, COMPACT_HYSTERESIS } from '../src/lib/layout';
 
 const files = import.meta.glob<string>('../docs/ecogeo-card.md', { query: '?raw', import: 'default', eager: true });
 const DOCS = (Object.values(files)[0] ?? '').replaceAll('\r\n', '\n');
@@ -62,6 +62,26 @@ describe('the compact threshold in the docs', () => {
     expect(text).toContain(`The threshold is ${String(COMPACT_BELOW)} px`);
     expect(text).toContain(`the threshold plus 24 px, ${String(COMPACT_BELOW + COMPACT_HYSTERESIS)} px`);
     expect(COMPACT_HYSTERESIS).toBe(24);
+  });
+
+  test('the docs state the threshold of the full detail level and its return width', () => {
+    const text = DOCS.replace(/\s+/g, ' ');
+    expect(text).toContain(`The full detail level's threshold is ${String(COMPACT_BELOW_FULL)} px`);
+    expect(text).toContain(`returns to full at ${String(COMPACT_BELOW_FULL + COMPACT_HYSTERESIS)} px`);
+    expect(text).toContain('`--detail=full`');
+  });
+});
+
+describe('the full places in the docs', () => {
+  test('the table lists the places FULL_PLACES holds', () => {
+    const rows = [...DOCS.matchAll(/^\| `(\w+)` \| (\d+) \| (\d+) \| (start|middle|end) \| .+ \|$/gm)].map((row) => ({
+      id: row[1],
+      x: Number(row[2]),
+      y: Number(row[3]),
+      align: row[4],
+    }));
+    const code = Object.entries(FULL_PLACES).map(([id, { x, y, align }]) => ({ id, x, y, align }));
+    expect(rows).toEqual(code);
   });
 });
 

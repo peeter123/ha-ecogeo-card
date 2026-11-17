@@ -61,7 +61,7 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
   release.
 - [x] 3.5 Document the simplified arrangement in `docs/ecogeo-card.md` (the maps' breakpoints, the zone scale, the
   overrides and why) and the detail level's effect in `README.md`.
-  Verify: the docs state the final numbers used in code; `test/readme.ts` and `test/docs.test.ts` pass.
+  Verify: the docs state the final numbers used in code; `test/readme.test.ts` and `test/docs.test.ts` pass.
 
 ## 4. Simplified labels clear of pipes, and the threshold
 
@@ -85,7 +85,7 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
   no value sits on a pipe, a component or another value, and that each value is readable next to its component.
 - [x] 4.5 Update `docs/ecogeo-card.md` (the threshold, its measurement with pipes and captions, the simplified places,
   the item 12 values) and `README.md` (which values the simplified level shows).
-  Verify: the documented threshold equals `COMPACT_BELOW`; `test/readme.ts` and `test/docs.test.ts` pass.
+  Verify: the documented threshold equals `COMPACT_BELOW`; `test/readme.test.ts` and `test/docs.test.ts` pass.
 
 ## 5. The compact layout on the simplified arrangement
 
@@ -124,7 +124,7 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
   planned follow-ups, drop `add-extra-circuits` and note extra circuits (DG2, DG3, pool) as a long-term idea, since
   they are external and need their own valves. Refresh the README's images (`docs/images/heating.png`,
   `docs/images/phone-heating.png`) from the emulator, since both show the drawing from before this change.
-  Verify: `test/readme.ts` and `test/docs.test.ts` pass; the README no longer lists `add-extra-circuits` as planned;
+  Verify: `test/readme.test.ts` and `test/docs.test.ts` pass; the README no longer lists `add-extra-circuits` as planned;
   the images show the simplified arrangement and the new compact places.
 
 ## 7. Release and live check
@@ -138,6 +138,74 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
   Verify: a subagent returns a verdict that the footer is on screen at desktop width, no value sits on a pipe at any
   width (except, in the compact layout, the five of `ON_PIPE_COMPACT` over their plates), the superheat and expansion valve opening are not shown; no new ecogeo or frontend errors in the system log;
   the dashboard config is unchanged (its hash in `private/installation.md`).
+
+## 8. Label places and a compact threshold for the full level
+
+- [x] 8.1 Give `scripts/measure-layout.mjs` a `--detail=full|simplified` flag (design D11; default simplified) and
+  measure the full level with pipes and captions counted.
+  Verify: `npm run measure-layout` with no flag still reports 600 px; with `--detail=full` it reports the full level's
+  overlaps per width and its most frequent pairs.
+  Note: measured in group 8: no threshold up to 800 px; two place conflicts remain at 1000 and 1400 px (design D11).
+- [x] 8.2 Add `FULL_PLACES` to `src/diagram/label-places.ts` (design D11), applied to the full arrangement only, one
+  reason per entry: first the evaporation temperature clear of exchanger 10 and model C's tank start delta clear of
+  tank 54, then the labels the pipe-aware check reports at the narrower widths, until the full level has a threshold at
+  most 800 px, as low as the places allow with each value still next to its part. Parts, pipes and crossings of the
+  full arrangement do not move. If no place set reaches 800 px, stop and put it to the user.
+  Verify: `npm run measure-layout -- --detail=full` reports a threshold at most 800 px and no pair at 1000 px; the
+  `detail-full-*` markup snapshots are updated on purpose and differ from the previous ones in value label positions
+  only (schematic-drawing "Full level unchanged"); the simplified snapshots pass unchanged.
+  Note: 14 places in `FULL_PLACES`; the full level's threshold is 640 px (`COMPACT_BELOW_FULL`), clean from 640 px up to 1400 px; the air unit's Out value against the feed pipe (defrost) keeps 620 px from it.
+- [x] 8.3 Add `COMPACT_BELOW_FULL` (the measured value) and `compactBelow(detail)` to `src/lib/layout.ts`; `isCompact`
+  and `nextCompact` take the configured detail level, and every caller passes it (the card, the panel fit, the
+  emulator, the scripts, the tests).
+  Verify: unit tests cover responsive-layout "Full detail switches earlier" and the hysteresis at both thresholds ("No
+  flip at the threshold"); `test/card/overlaps.browser.test.ts` runs the full-layout guard at each level's threshold at
+  that level, with pipes, in Chromium and WebKit.
+- [x] 8.4 Emulator check of the full level: add `threshold-full-*` captures to `dev/captures.ts` (the full layout with
+  `detail=full` at `COMPACT_BELOW_FULL`) for the heating, DHW, defrost and passive cooling scenarios with a ground loop,
+  an air unit and model C, a `detail=full` capture at 1000 px for the same, and one just under `COMPACT_BELOW_FULL`.
+  Verify: a subagent captures them and returns a verdict that at the threshold and at 1000 px no value sits on a pipe,
+  a component or another value, each value reads next to its part, and just under the threshold the card is compact.
+- [x] 8.5 Document the full level's places and the per-level threshold in `docs/ecogeo-card.md` ("The compact
+  threshold": both values, how each is measured, the `--detail` flag; the label places table) and `README.md` (the
+  full layout from 600 px, or from `COMPACT_BELOW_FULL` with `detail: full`).
+  Verify: the documented thresholds equal `COMPACT_BELOW` and `COMPACT_BELOW_FULL`, and the documented places those in
+  code; `test/readme.test.ts` and `test/docs.test.ts` pass.
+
+- [x] 8.6 Fix the group 8 review (design D11, last paragraph): the cabinet outline in `dev/overlaps.ts` for the full
+  layout at both levels (`label x cabinet`); at `detail: full` the production Out/In column outside the cabinet's left
+  wall with Out and In captions; re-measure both thresholds and update `COMPACT_BELOW_FULL` (and stop if `COMPACT_BELOW`
+  would move); a `FULL_PLACES` consistency test like the simplified one; the item numbers in the place reasons; the
+  `expansion_valve` place clear of evaporator 7's item number; the docs' account of what remains below the full
+  threshold, the Live values table's places per level, the tank 50 row's width, and `src/lib/layout.ts`'s copy note
+  naming the `detail` parameter as a deviation.
+  Verify: live-values "Full-level production column" has a test; `npm run measure-layout` and
+  `npm run measure-layout -- --detail=full` report the documented thresholds with the outline counted; the browser
+  guard counts the outline; the `threshold-full-*` and `labels-full-*` captures are checked again by a subagent verdict;
+  `npm run check` is green.
+
+## 9. The pre-archive review's findings
+
+- [ ] 9.1 Fix the pre-archive review's findings: `docs/ecogeo-card.md` names `src/diagram/label-places.ts` as where the
+  positions live (`labels.ts` renders them); the label "under pressure probe 38" is marked as the full level's (the
+  simplified level puts it right of transducer 38); the ground loop's leg columns (x 166 / x 106) are marked as the
+  full level's, next to the simplified ones; the tank 50 row's "about 560 px" is marked as measured on the full
+  arrangement or re-measured; `src/diagram/source.ts` reads the fan radius from the arrangement instead of its own
+  `FAN_RADIUS`; the exports used only in their own module (`Rect`, `ZoneBase`, `deriveZones`, `ArrangementId`, `AxisMap`
+  in `geometry.ts`; `PointMap`, `SimplifiedPlace` in `label-places.ts`) are no longer exported.
+  Verify: `npm run check` is green and the markup snapshots pass unchanged. Re-check each doc finding against the text as group 8 left it.
+
+## 10. Release the full level's places and threshold
+
+- [ ] 10.1 Run `npm run release`, deploy `dist/ecogeo-card.js` with the workspace's deploy command, bump the dashboard
+  resource's `?v=` and record the deploy in `private/installation.md`.
+  Verify: `check-release` reports the card and editor registered; the deploy reports the upload; the resource shows
+  the new `?v=`.
+- [ ] 10.2 Live check: light screenshots of the Schematic view at desktop (1280 x 800) and phone (390) width, and a state
+  check.
+  Verify: a subagent returns a verdict that the drawing matches the group 7 release (the live card uses the default
+  level); no new ecogeo or frontend errors in the system log; the dashboard config is unchanged (its hash in
+  `private/installation.md`).
 
 ## Workflow follow-up
 

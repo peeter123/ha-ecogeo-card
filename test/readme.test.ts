@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { FEATURE_KEYS, variantFeatures, VARIANTS } from '../src/config/variants';
 import { TOP_LEVEL_OPTIONS } from '../src/config/options';
-import { COMPACT_BELOW, COMPACT_HYSTERESIS } from '../src/lib/layout';
+import { COMPACT_BELOW, COMPACT_BELOW_FULL, COMPACT_HYSTERESIS } from '../src/lib/layout';
 import { ROLES } from '../src/config/roles';
 import { EDITOR, MODE_LABELS } from '../src/strings';
 import { README, rowCells, section, tableNames } from './readme';
@@ -55,6 +55,11 @@ describe('README configuration reference', () => {
     expect(text).toContain(`from ${String(COMPACT_BELOW)} px wide`);
     expect(text).toContain(`narrower than ${String(COMPACT_BELOW)} px`);
     expect(text).toContain(`only at ${String(COMPACT_BELOW + COMPACT_HYSTERESIS)} px`);
+    expect(text).toContain(`from ${String(COMPACT_BELOW_FULL)} px wide with \`detail: full\``);
+    expect(text).toContain(
+      `narrower than ${String(COMPACT_BELOW)} px (${String(COMPACT_BELOW_FULL)} px with \`detail: full\`)`,
+    );
+    expect(text).toContain(`${String(COMPACT_BELOW_FULL + COMPACT_HYSTERESIS)} px with \`detail: full\``);
   });
 
   test('the visual editor section names every section of the editor', () => {

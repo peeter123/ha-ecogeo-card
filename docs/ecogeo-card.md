@@ -612,19 +612,19 @@ writes no entity.
 
 | Value | Where |
 |---|---|
-| Production outlet (33) and return (34), pressure (38), pump 15 | left of probe 33, under probe 34, under pressure probe 38, above pump 15 |
+| Production outlet (33) and return (34), pressure (38), pump 15 | `simplified`: left of probe 33, under probe 34, right of transducer 38, above pump 15. `full`: the outlet and return form a column outside the cabinet's left wall, level with probes 33 and 34 and captioned Out and In; the pressure is under probe 38; pump 15's speed is above the pump, 9 units higher |
 | DG1 setpoint, and "Demand" while the DG1 demand is on | above the DG1 label at connections 1/2, and right of port 2 |
-| Brine outlet (31) and inlet (32), pressure (37), pump 16 | under the probes, under probe 37, left of the pump |
+| Brine outlet (31) and inlet (32), pressure (37), pump 16 | under the probes, under probe 37 (`full`: ending before pipe `brine_tap_b`), left of the pump (`full`: under the pump, left of pipe `ln4`) |
 | Discharge (30) and suction (29) temperatures, pressures 36 and 35 | below the discharge and suction lines of the probe row |
 | Compressor 11: rpm, %, W | a stack inside the refrigerant loop |
-| Superheat (K) and valve opening (%) at 12 | above the expansion valve; at `detail: full` only (tap valve 12 for the opening at `simplified`) |
+| Superheat (K) and valve opening (%) at 12 | above the expansion valve (`full`: left of evaporator 7, ending 16 units before its item number); at `detail: full` only (tap valve 12 for the opening at `simplified`) |
 | Condensation (8) and evaporation (7) temperatures | under exchangers 8 and 7 |
 | Air unit: fan, outside temperature | under the housing |
 | Air unit: In (brine outlet of the heat pump) and Out (air unit outlet temperature); a hybrid: only In | right of the housing, next to the ports: air, In at the bottom port and Out at the top one; hybrid, In at the top port |
 | Ground loop: In (brine outlet) and Out (brine inlet); a hybrid: only Out | at the ground line, In right of the down leg and Out left of the up leg |
 | Tank: temperature, setpoint, start delta-T (K), "Demand" while on | under the external tank; on model C as one row inside tank 50, in the strip above coil 51, with no background plate, at the normal label size and with the short captions "Set" and "ΔT" (the "Demand" text under the row) |
 
-The labels have a minimum font size, so on a card narrower than about 560 px while the demand line shows (about 510 px for the three values alone) the labels inside tank 50 start to touch; narrower cards are left to the compact layout (`add-compact-layout`).
+The labels have a minimum font size, so on a card narrower than about 560 px at `simplified` and about 620 px at `full` (measured with the demand line showing, and the setpoint 11 units left of the centre at `full`; about 510 px for the three values alone at `simplified`) the labels inside tank 50 start to touch; narrower cards are left to the compact layout (`add-compact-layout`).
 
 A value of a part that is not drawn is not shown (no DHW storage, or an unused tank (`dhw: unused`), no tank values; a source that is not drawn, no
 source values). A drawn value with no value shows a muted dash and keeps its place. A role set to `none` shows nothing
@@ -659,10 +659,10 @@ The card formats every number itself (`src/calc/display.ts`), never through `has
 
 The card observes its own width (a `ResizeObserver` on the card element) and derives a layout from it and from the
 `layout` option (`auto`, `full` or `compact`, default `auto`). `full` and `compact` force that layout at any width.
-With `auto` the card is compact while it is narrower than the compact threshold and full from the threshold up;
+With `auto` the card is compact while it is narrower than the compact threshold of its `detail` level (600 px at `simplified`, 640 px at `full`, `compactBelow(detail)`) and full from the threshold up;
 before the first width is known (or while the card is not displayed, width 0) it is full. The rule is `nextCompact` in
 `src/lib/layout.ts` (based on `isCompact`, copied from the hrv-ventilation repo's `src/diagram/labels.ts`; see
-Hysteresis); the threshold constant `COMPACT_BELOW` is this card's own. A re-render happens only when the derived layout changes, so state updates keep
+Hysteresis); the threshold constants `COMPACT_BELOW` and `COMPACT_BELOW_FULL` are this card's own. A re-render happens only when the derived layout changes, so state updates keep
 their entity-based gating, and an observation whose width did not change is ignored. A width change that keeps the
 layout but changes the stroke widths (see Minimum rendered sizes) renders again too.
 
@@ -670,9 +670,9 @@ layout but changes the stroke widths (see Minimum rendered sizes) renders again 
 
 Once the compact layout is shorter than the full one, a page scrollbar can appear and disappear as the layout flips,
 which changes the card's width by about 15-17 px near the threshold. So with `auto` a card that is already compact
-returns to full only at the threshold plus 24 px, 624 px (`COMPACT_HYSTERESIS` in `src/lib/layout.ts`); going compact still
-happens below the threshold, at 600 px. The decision is the pure function `nextCompact(layout, width,
-currentlyCompact)`, which the card calls with whether the layout it showed last was compact because `auto` chose it. A compact layout that
+returns to full only at the threshold plus 24 px, 624 px at the simplified detail level and 664 px at the full one (`COMPACT_HYSTERESIS` in `src/lib/layout.ts`); going compact still
+happens below the threshold, at 600 px (640 px at `detail: full`). The decision is the pure function `nextCompact(layout, width,
+currentlyCompact, detail)`, which the card calls with whether the layout it showed last was compact because `auto` chose it. A compact layout that
 `layout: compact` forced does not count: after a switch to `auto` the card shows what a newly loaded card of that width
 shows. Forced layouts ignore the hysteresis.
 
@@ -784,18 +784,22 @@ Browser tests (`test/card/compact.browser.test.ts`) measure these in Chromium an
 
 ### The compact threshold
 
+Each detail level has its own threshold (refine-simplified-layout D11), `compactBelow(detail)` in `src/lib/layout.ts`.
 The threshold is 600 px (`COMPACT_BELOW`; measured on 2026-11-13, with pipes and captions counted, after
 refine-simplified-layout drew the simplified arrangement and gave some labels places of their own). It is the narrowest
 card width at which the full layout, at the simplified detail level, has no value label that overlaps another label, a
 component, a pipe or a caption in any emulator scenario, on the 20 px grid from 320 to 800 px with every wider grid width
-also clean.
+also clean. The full detail level's threshold is 640 px (`COMPACT_BELOW_FULL`; measured on 2026-11-17 the same way
+with `npm run measure-layout -- --detail=full`, after the places of "The full places" below); a card with `detail: full`
+goes compact below 640 px, and returns to full at 664 px. The card passes its configured `detail` to `nextCompact`; the compact layout
+itself draws the simplified arrangement whatever the level.
 
 Method (`npm run measure-layout`, `scripts/measure-layout.mjs`, Playwright): every emulator scenario is opened in
-the forced full layout at the simplified detail level, in seven installations (a ground loop on model B, an air unit,
+the forced full layout at the simplified detail level (`--detail=full` measures the full level instead; the default is `simplified`), in seven installations (a ground loop on model B, an air unit,
 the hybrid, model C with its internal tank on a ground loop and on an air unit, and the unused-tank cases: a ground loop on model B and an air unit on model C), and the card is set to every width from 320 to 800 px in 20 px
 steps (`--widths=a,b,c` measures only those, to iterate on a place, and prints no threshold). At each width the script compares, in the DOM, the bounding boxes of the value labels with each other, with
 the boxes of the drawing's component groups (the symbol groups, the DHW storage, the air unit and the marks of
-the ground loop), with the pipes and with the captions, and checks that no label's box leaves the drawing (`label X x edge`: the box extends past the svg's box by more than the tolerance, which the other pairs cannot see). A label's box leaves out the half-leading above and below its text; two boxes overlap when they
+the ground loop), with the pipes and with the captions, and checks that no label's box leaves the drawing (`label X x edge`: the box extends past the svg's box by more than the tolerance, which the other pairs cannot see). A label that crosses the cabinet's outline, partly inside and partly outside, is reported as `label X x cabinet`. A label's box leaves out the half-leading above and below its text; two boxes overlap when they
 share more than 0.5 px in both directions. The labels inside tank 50 on model C are not compared with tank 50, which
 they sit on by design. The threshold is the narrowest width with zero overlaps in every case, provided every wider
 measured width is also clean. `--no-pipes` leaves the pipes and captions out, which is the measurement of before
@@ -807,8 +811,7 @@ directions. A hop is a gap in the path data, so each subpath is sampled on its o
 count; the halves of a helix share their segment's name. The captions (`text.circuit-label`, `text.source-caption`,
 `text.tank-caption`) are boxed like labels, as the em box of their text, and a caption overlapping a label or a pipe
 counts (captions inside a part's group, such as the ground loop's, are checked against pipes only; as that part they are already checked against labels). The `bare` labels inside tank 50 ignore pipe samples inside tank 50's box. Pairs read `label X x pipe:<segment>`,
-`caption:<text> x label X` and `caption:<text> x pipe:<segment>`. The check is about the full layout at the simplified level; the full detail level, which keeps today's
-arrangement, is not measured against pipes. The compact layout below the threshold is checked with pipes and the drawing's edge too,
+`caption:<text> x label X` and `caption:<text> x pipe:<segment>`. The same check measures both levels (`--detail`); the full level's arrangement is the original one, so only its labels got places of their own. The compact layout below the threshold is checked with pipes and the drawing's edge too,
 with the five `ON_PIPE_COMPACT` labels exempt from pipes only (see "What the compact layout shows").
 
 The boxes, exclusions, installations and tolerance live in `dev/overlaps.ts`, shared by the script and by the
@@ -847,6 +850,34 @@ full detail level are not affected. Today's table:
 
 The brine outlet and inlet, pump 16's speed and the DG1 setpoint keep their places under the maps: with the cabinet's
 extra width they clear pipes `ln3`, `ln4_a`, `src_out` and the DG1 caption at 600 px and above, so they need no place of their own.
+
+### The full places
+
+The full arrangement keeps its parts, pipes and crossings, but with pipes and captions counted its labels overlapped at every
+width up to 800 px (466 overlaps at 640 px, 295 at 700 px, 85 at 780 px and 800 px), and two conflicts remained at 1000 and 1400 px (the evaporation
+temperature on exchanger 10 and, on model C, the tank's start delta on item 54). `FULL_PLACES` in `src/diagram/label-places.ts` gives the labels that
+the check reported another place at `detail: full`, each with its reason in code; the simplified and compact layouts are not affected. The check also counts a value
+label that crosses the cabinet outline (`label X x cabinet`, in both levels). With the places there are no overlaps from 640 px up to 1400 px. Below 640 px the grid measured:
+620 px 3 overlaps (the air unit's Out value against the feed pipe in the defrost scenario, in 3 cases), 600 px and 580 px 21 and 57 (those 3 plus, on model C, tank 50's temperature
+against its setpoint, 18 cases at 600 px, from the setpoint's move to x 488), and 560 px 240 (rows 13 units apart, such as the discharge temperature against its pressure). Today's table (x, y and alignment in viewBox units of the full arrangement; `production_out` and `production_in` also carry the compact layout's Out and In captions):
+
+| Label | x | y | Align | Why |
+|---|---|---|---|---|
+| `evaporation_temperature` | 572 | 432 | middle | at y 437 its box reaches exchanger 10, whose top is only 14 units under evaporator 7 |
+| `tank_internal_setpoint` | 488 | 150 | middle | middle value of the tank 50 row, 11 units left of the centre to leave room for the start delta |
+| `tank_internal_demand` | 488 | 163 | middle | the demand text, kept under the setpoint it follows |
+| `tank_internal_start_delta` | 563 | 150 | end | ends 2 units before item 54, which its box reached when centred |
+| `brine_pressure` | 720 | 459 | end | ends before pipe `brine_tap_b`, which the start-aligned value ran over |
+| `brine_pump` | 686 | 323 | end | under pump 16 and left of pipe `ln4`: the 45 units between pipe `ln3` and the pump hold the speed only above 700 px |
+| `superheat` | 530 | 371 | end | left of evaporator 7 (item 7), 5 units higher so that the pair, 14 apart, fits above valve 12 |
+| `expansion_valve` | 530 | 385 | end | under the superheat, ending at the same x: 16 units before item 7's number, so that it does not read as 58 % 7 |
+| `air_unit_out` | 152 | 172 | start | 2 units off the housing, so that the caption and the widest value end before the feed pipe |
+| `production_pump` | 396 | 371 | end | 9 units higher, clear of valve 27 at narrow widths |
+| `compressor_speed` | 503 | 308 | middle | the stack's rows are 14 units apart (12 before), since the text of a 640 px card is taller than 12 units |
+| `compressor_percentage` | 503 | 322 | middle | the middle row of the stack |
+| `compressor_power` | 503 | 336 | middle | the bottom row of the stack, clear of the pipe under it |
+| `production_out` | 236 | 228 | end | probe 33's value level with the probes, outside the cabinet's left wall (x 240) and captioned Out |
+| `production_in` | 236 | 247 | end | probe 34's value under the outlet value, outside the wall: between the two production pipes it holds only above about 800 px, and left of pipe `prod_44_26` it would straddle the wall |
 
 ### Superheat and the expansion valve opening
 

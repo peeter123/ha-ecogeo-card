@@ -1,10 +1,12 @@
 // Copied from the hrv-ventilation repo, src/diagram/labels.ts: `isCompact` (the `LayoutChoice` type is `Layout` in
-// config/options.ts here). Deviation: the threshold constant, `COMPACT_BELOW`, is this card's own (add-compact-layout D1, D6).
+// config/options.ts here). Deviations: the threshold constants, `COMPACT_BELOW` and `COMPACT_BELOW_FULL`, are this card's own
+// (add-compact-layout D1, D6), and `isCompact` takes the configured detail level as a third parameter and compares the width
+// with that level's threshold, `compactBelow(detail)` (refine-simplified-layout D11).
 // `nextCompact`, `strokeWidths` and the other constants are this card's own, not from hrv-ventilation.
-import type { Layout } from '../config/options';
+import type { Detail, Layout } from '../config/options';
 
 /**
- * With `layout: auto`, cards narrower than this (px) get the compact layout. Measured on 2026-11-13 with
+ * With `layout: auto`, cards narrower than this (px) get the compact layout at the simplified detail level. Measured on 2026-11-13 with
  * `npm run measure-layout` (scripts/measure-layout.mjs): the narrowest width on the 20 px grid from which the
  * full layout at the simplified detail level has no label that overlaps another label, a component, a pipe or a
  * caption in any emulator scenario (refine-simplified-layout D4, D6).
@@ -12,29 +14,47 @@ import type { Layout } from '../config/options';
 export const COMPACT_BELOW = 600;
 
 /**
- * True when the card shows the compact layout. With `auto` that depends on the card's width; an unknown width
- * (before the first measurement, or 0 while the card is not displayed) gives the full layout.
+ * The same threshold for `detail: full` (refine-simplified-layout D11). Measured on 2026-11-17 with
+ * `npm run measure-layout -- --detail=full`: the narrowest width on the 20 px grid from which the full layout at the full
+ * detail level (with FULL_PLACES) has no label that overlaps another label, a component, a pipe or a caption in any
+ * emulator scenario, up to 800 px.
  */
-export function isCompact(layout: Layout, width: number | undefined): boolean {
-  if (layout !== 'auto') return layout === 'compact';
-  return width !== undefined && width > 0 && width < COMPACT_BELOW;
+export const COMPACT_BELOW_FULL = 640;
+
+/** The width below which `layout: auto` goes compact at a detail level: `COMPACT_BELOW` (simplified) or `COMPACT_BELOW_FULL` (full). */
+export function compactBelow(detail: Detail): number {
+  return detail === 'full' ? COMPACT_BELOW_FULL : COMPACT_BELOW;
 }
 
 /**
- * With `layout: auto`, a card that is already compact returns to full only at `COMPACT_BELOW` plus this many px
- * (add-compact-layout D1). Going compact still happens below `COMPACT_BELOW`. It keeps the layout from flipping back and
+ * True when the card shows the compact layout. With `auto` that depends on the card's width and the configured detail
+ * level's threshold; an unknown width (before the first measurement, or 0 while the card is not displayed) gives the full layout.
+ */
+export function isCompact(layout: Layout, width: number | undefined, detail: Detail): boolean {
+  if (layout !== 'auto') return layout === 'compact';
+  return width !== undefined && width > 0 && width < compactBelow(detail);
+}
+
+/**
+ * With `layout: auto`, a card that is already compact returns to full only at the detail level's threshold plus this many px
+ * (add-compact-layout D1). Going compact still happens below the threshold. It keeps the layout from flipping back and
  * forth when a page scrollbar appears and disappears with the layout's height, which changes the width by about 15-17 px.
  */
 export const COMPACT_HYSTERESIS = 24;
 
 /**
  * The layout decision with hysteresis: like `isCompact`, but with `auto` a card that is `currentlyCompact` stays compact
- * until it is `COMPACT_HYSTERESIS` px wider than `COMPACT_BELOW`. An unknown width gives the full layout.
+ * until it is `COMPACT_HYSTERESIS` px wider than the detail level's threshold. An unknown width gives the full layout.
  */
-export function nextCompact(layout: Layout, width: number | undefined, currentlyCompact: boolean): boolean {
+export function nextCompact(
+  layout: Layout,
+  width: number | undefined,
+  currentlyCompact: boolean,
+  detail: Detail,
+): boolean {
   if (layout !== 'auto') return layout === 'compact';
   if (width === undefined || !(width > 0)) return false;
-  return width < COMPACT_BELOW + (currentlyCompact ? COMPACT_HYSTERESIS : 0);
+  return width < compactBelow(detail) + (currentlyCompact ? COMPACT_HYSTERESIS : 0);
 }
 
 /** The stroke widths of the drawing's pipes and outlines, in drawing units (add-compact-layout D4). */

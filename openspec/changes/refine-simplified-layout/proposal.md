@@ -71,7 +71,7 @@ None.
 ## Impact
 
 - Code: `src/diagram/geometry.ts` (the geometry as a value per detail level), `labels.ts` (placements per arrangement,
-  the two values gated on detail, compact places), `cabinet.ts`, `source.ts`, `dhw.ts`, `pipes.ts` (read the
+  the two values gated on detail, compact places), `cabinet.ts`, `source.ts`, `dhw.ts` (read the
   arrangement), `src/card/ecogeo-card.ts` (viewBox per arrangement, `isPanel`, the panel fit), `src/lib/layout.ts`
   (`COMPACT_BELOW` re-measured).
 - Dev and tests: `dev/overlaps.ts` (pipes and captions), `scripts/measure-layout.mjs`, `dev/url-state.ts` (panel),

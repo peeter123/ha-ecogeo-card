@@ -701,7 +701,10 @@ describe('source labels', () => {
       // every other label below the cabinet's top (the probe labels at the cabinet's left edge, for one) keeps 8 units
       // clear of every pipe of the source (the labels of the pipe run above the cabinet sit by design under the top lines)
       for (const other of shown.filter((item) => !SOURCE_IDS.has(item.id) && item.y > arr.cabinet.y)) {
-        const width = other.caption === undefined ? 40 : WIDTH;
+        // the full level's production column (Out and In captions, ending at the cabinet wall): 58 units is an upper estimate for production values
+        // (about 49 units measured at 1000 px; production water has no minus sign, unlike the 64-unit source estimate)
+        const width =
+          other.caption === undefined ? 40 : ['production_out', 'production_in'].includes(other.id) ? 58 : WIDTH;
         const left = other.align === 'start' ? other.x : other.align === 'end' ? other.x - width : other.x - width / 2;
         const box: Box = { left, right: left + width, top: other.y - HEIGHT / 2, bottom: other.y + HEIGHT / 2 };
         for (const pipe of pipes.filter((candidate) => candidate.id.startsWith('src_'))) {

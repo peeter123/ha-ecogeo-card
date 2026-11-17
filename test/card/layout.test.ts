@@ -4,7 +4,15 @@ import '../../src/index';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import { configErrors } from '../../src/config/options';
 import { resolveConfig } from '../../src/config/resolve';
-import { COMPACT_BELOW, COMPACT_HYSTERESIS, isCompact, nextCompact, strokeWidths } from '../../src/lib/layout';
+import {
+  COMPACT_BELOW,
+  COMPACT_BELOW_FULL,
+  COMPACT_HYSTERESIS,
+  compactBelow,
+  isCompact,
+  nextCompact,
+  strokeWidths,
+} from '../../src/lib/layout';
 import type { CardConfig } from '../../src/lib/config';
 
 /** A ResizeObserver whose observations the test triggers. */
@@ -71,42 +79,70 @@ describe('layout option', () => {
   });
 });
 
+describe('compactBelow', () => {
+  test('gives each detail level its own threshold, the full level switching earlier', () => {
+    expect(compactBelow('simplified')).toBe(COMPACT_BELOW);
+    expect(compactBelow('full')).toBe(COMPACT_BELOW_FULL);
+    expect(COMPACT_BELOW_FULL).toBeGreaterThan(COMPACT_BELOW);
+    expect(COMPACT_BELOW_FULL).toBeLessThanOrEqual(800);
+  });
+});
+
 describe('isCompact', () => {
-  test('forced layouts ignore the width', () => {
-    expect(isCompact('compact', 2000)).toBe(true);
-    expect(isCompact('full', 100)).toBe(false);
+  test('forced layouts ignore the width and the detail level', () => {
+    expect(isCompact('compact', 2000, 'simplified')).toBe(true);
+    expect(isCompact('full', 100, 'full')).toBe(false);
   });
 
   test('auto is compact below the threshold only, and full while the width is unknown', () => {
-    expect(isCompact('auto', COMPACT_BELOW - 1)).toBe(true);
-    expect(isCompact('auto', COMPACT_BELOW)).toBe(false);
-    expect(isCompact('auto', undefined)).toBe(false);
-    expect(isCompact('auto', 0)).toBe(false);
+    expect(isCompact('auto', COMPACT_BELOW - 1, 'simplified')).toBe(true);
+    expect(isCompact('auto', COMPACT_BELOW, 'simplified')).toBe(false);
+    expect(isCompact('auto', undefined, 'simplified')).toBe(false);
+    expect(isCompact('auto', 0, 'simplified')).toBe(false);
+  });
+
+  test('Full detail switches earlier: between the two thresholds only the full level is compact', () => {
+    for (const width of [COMPACT_BELOW, COMPACT_BELOW_FULL - 1]) {
+      expect(isCompact('auto', width, 'simplified')).toBe(false);
+      expect(isCompact('auto', width, 'full')).toBe(true);
+    }
+    expect(isCompact('auto', COMPACT_BELOW_FULL - 1, 'full')).toBe(true);
+    expect(isCompact('auto', COMPACT_BELOW_FULL, 'full')).toBe(false);
+    expect(isCompact('auto', undefined, 'full')).toBe(false);
+    expect(isCompact('auto', 0, 'full')).toBe(false);
   });
 });
 
 describe('nextCompact (layout hysteresis)', () => {
   test('forced layouts ignore the width and the current layout', () => {
-    expect(nextCompact('compact', 2000, false)).toBe(true);
-    expect(nextCompact('full', 100, true)).toBe(false);
+    expect(nextCompact('compact', 2000, false, 'simplified')).toBe(true);
+    expect(nextCompact('full', 100, true, 'full')).toBe(false);
   });
 
   test('a full card goes compact below the threshold, as isCompact does', () => {
-    expect(nextCompact('auto', COMPACT_BELOW - 1, false)).toBe(true);
-    expect(nextCompact('auto', COMPACT_BELOW, false)).toBe(false);
+    expect(nextCompact('auto', COMPACT_BELOW - 1, false, 'simplified')).toBe(true);
+    expect(nextCompact('auto', COMPACT_BELOW, false, 'simplified')).toBe(false);
+    expect(nextCompact('auto', COMPACT_BELOW_FULL - 1, false, 'full')).toBe(true);
+    expect(nextCompact('auto', COMPACT_BELOW_FULL, false, 'full')).toBe(false);
   });
 
-  test('No flip at the threshold: a compact card stays compact until the threshold plus the hysteresis', () => {
-    expect(COMPACT_HYSTERESIS).toBe(24);
-    expect(nextCompact('auto', COMPACT_BELOW + 10, true)).toBe(true);
-    expect(nextCompact('auto', COMPACT_BELOW + COMPACT_HYSTERESIS - 1, true)).toBe(true);
-    expect(nextCompact('auto', COMPACT_BELOW + COMPACT_HYSTERESIS, true)).toBe(false);
-    expect(nextCompact('auto', COMPACT_BELOW + 100, true)).toBe(false);
-  });
+  test.each([
+    ['simplified', COMPACT_BELOW],
+    ['full', COMPACT_BELOW_FULL],
+  ] as const)(
+    'No flip at the threshold: a compact card at the %s level stays compact until its threshold plus the hysteresis',
+    (detail, threshold) => {
+      expect(COMPACT_HYSTERESIS).toBe(24);
+      expect(nextCompact('auto', threshold + 10, true, detail)).toBe(true);
+      expect(nextCompact('auto', threshold + COMPACT_HYSTERESIS - 1, true, detail)).toBe(true);
+      expect(nextCompact('auto', threshold + COMPACT_HYSTERESIS, true, detail)).toBe(false);
+      expect(nextCompact('auto', threshold + 100, true, detail)).toBe(false);
+    },
+  );
 
   test('an unknown width gives full, also for a compact card', () => {
-    expect(nextCompact('auto', undefined, true)).toBe(false);
-    expect(nextCompact('auto', 0, true)).toBe(false);
+    expect(nextCompact('auto', undefined, true, 'full')).toBe(false);
+    expect(nextCompact('auto', 0, true, 'simplified')).toBe(false);
   });
 });
 

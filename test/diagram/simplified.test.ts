@@ -3,7 +3,7 @@
 // rule of the full level checked on it for every source, DHW storage and model.
 import { describe, expect, test } from 'vitest';
 import { DHW_STORAGES, SOURCES } from '../../src/config/options';
-import { SIMPLIFIED_PLACES } from '../../src/diagram/label-places';
+import { SIMPLIFIED_PLACES, labelPlacesFor } from '../../src/diagram/label-places';
 import type { FeatureState, Features } from '../../src/config/variants';
 import {
   MAX_CROSSINGS,
@@ -276,7 +276,8 @@ describe('arrangementFor: the simplified arrangement', () => {
     // the labels with a place of their own (SIMPLIFIED_PLACES) are checked below
     for (const id of cabinetLabels.filter((label) => SIMPLIFIED_PLACES[label] === undefined)) {
       const [a, b] = [
-        full.labels.specs.find((spec) => spec.id === id),
+        // the full arrangement's own places (FULL_PLACES) do not carry over: the maps start from the table's defaults
+        labelPlacesFor(full, {}).specs.find((spec) => spec.id === id),
         simplified.labels.specs.find((spec) => spec.id === id),
       ];
       expect([b?.x, b?.y], id).toEqual([fx(a?.x ?? NaN), fy(a?.y ?? NaN)]);

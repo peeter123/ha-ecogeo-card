@@ -161,7 +161,7 @@ const overlaps = (a: Box, b: Box): boolean =>
   Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > TOLERANCE;
 
 /** The overlapping pairs of a measurement, as texts. */
-export function overlapPairs({ labels, parts, pipes = [], captions = [], drawing }: Measurement): string[] {
+export function overlapPairs({ labels, parts, pipes = [], captions = [], drawing, cabinet }: Measurement): string[] {
   const pairs: string[] = [];
   const tank50 = parts.find((part) => part.item === '50');
   const inside = (square: Box, outer: Box): boolean =>
@@ -190,6 +190,17 @@ export function overlapPairs({ labels, parts, pipes = [], captions = [], drawing
         label.bottom - drawing.bottom > TOLERANCE
       )
         add(`label ${label.id} x edge`);
+    }
+  }
+  // a label that crosses the cabinet's outline: partly inside it and partly outside (refine-simplified-layout D11)
+  if (cabinet !== undefined) {
+    for (const label of labels) {
+      const within =
+        label.left >= cabinet.left - TOLERANCE &&
+        label.right <= cabinet.right + TOLERANCE &&
+        label.top >= cabinet.top - TOLERANCE &&
+        label.bottom <= cabinet.bottom + TOLERANCE;
+      if (overlaps(label, cabinet) && !within) add(`label ${label.id} x cabinet`);
     }
   }
   for (const caption of captions) {

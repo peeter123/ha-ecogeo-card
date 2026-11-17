@@ -4,7 +4,7 @@
 At the simplified level the card SHALL use an arrangement of its own: a cabinet wider and shorter than at the full
 level, with no empty band where the full level's service and safety parts are, and the outer-loop source and the
 external DHW tank drawn smaller beside it. The drawing SHALL keep its aspect ratio, which is wider at the simplified
-level. The full level's arrangement SHALL stay as it was before this change.
+level. The full level SHALL keep its own arrangement, unaffected by the simplified one.
 
 #### Scenario: Wider, shorter cabinet
 - **WHEN** the card renders model B with `dhw: external` and a ground loop, once with `detail: simplified` and once
@@ -14,7 +14,8 @@ level. The full level's arrangement SHALL stay as it was before this change.
 
 #### Scenario: Full level unchanged
 - **WHEN** the card renders any emulator capture with `detail: full`
-- **THEN** its drawing and label positions are the same as before this change
+- **THEN** its parts, pipes and crossings match the recorded `detail-full-*` markup snapshots; only value labels may
+  have moved
 
 #### Scenario: No empty band
 - **WHEN** the card renders variant 4 with every feature `true` and no `detail`

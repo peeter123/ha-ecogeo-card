@@ -44,7 +44,7 @@ See proposal.md (Why). Current state that shapes the approach:
 `geometry.ts` gains an `Arrangement` value: viewBox, cabinet, zone constants (source, tank, internal tank 50), components,
 segments, crossings, circuit-label positions, label placements and compact places. `arrangementFor(level)` returns the
 `full` arrangement (today's constants, unchanged) or the `simplified` one. Every consumer (`cabinet.ts`, `source.ts`,
-`dhw.ts`, `pipes.ts`, `labels.ts`, `component-info.ts`, the card's viewBox, the emulator and the overlap tools) reads
+`dhw.ts`, `labels.ts`, the card's viewBox, the emulator and the overlap tools) reads
 the arrangement from the draw context instead of module constants. The choice of arrangement is a pure function of
 the shown layout and the detail level (D7 says when compact switches).
 
@@ -246,6 +246,52 @@ max-height through its aspect ratio in every engine, and the layout decision nee
 
 The emulator gets `panel=1` (URL and a control), which sets `isPanel` and gives the card slot the window's width,
 so a 1280 x 800 capture shows the fit.
+
+### D11. A compact threshold per detail level
+
+Found in the pre-archive review: `COMPACT_BELOW` (600 px) is measured at the simplified level, but a `detail: full`
+card uses it too. The full arrangement keeps its old label places, which overlap below about 640 px without pipes and
+about 700 px with pipes counted, so a full-detail card 600-699 px wide shows overlapping labels where it used to switch
+to compact below 640 px. Settled with the user: one threshold per detail level.
+
+`src/lib/layout.ts` keeps `COMPACT_BELOW` as the simplified level's threshold and adds `COMPACT_BELOW_FULL` and
+`compactBelow(detail)`, which returns the threshold of a detail level. `isCompact` and `nextCompact` take the configured
+detail level (the hysteresis of `COMPACT_HYSTERESIS` applies to either threshold the same way); every caller passes it,
+including the panel fit, whose layout choice already uses the configured level's full-layout viewBox (D9). The compact
+layout still draws the simplified arrangement whatever the detail level (D7). `scripts/measure-layout.mjs` gets
+`--detail=full|simplified` (default simplified) and measures the forced full layout at that level with pipes and
+captions counted (D4); its value goes into `COMPACT_BELOW_FULL`. Derived state: inputs `layout`, `detail`, the
+drawing width and whether the card is compact now.
+
+If the full level's measured threshold is above 800 px (the grid's end), that is a decision point for the user, not a
+silent clamp.
+
+Found when measuring (group 8): the full level has no threshold. With pipes and captions counted it overlaps at every
+width up to 800 px (466 overlaps at 640 px, 295 at 700, 85 at 780 and 800), and two place conflicts remain at 1000 and
+1400 px in nearly every case: the evaporation temperature label on exchanger 10, and on model C the tank's start delta
+on tank 54. Labels scale with the drawing above the minimum font size, so no width clears them. Both predate this
+change (the full level's markup is unchanged since 80c3727); the old threshold was only ever measured at the
+simplified level. Settled with the user: fix it in this change.
+
+So the full level gets label places of its own, like the simplified level (D6): a `FULL_PLACES` table in
+`src/diagram/label-places.ts`, one reason per entry, applied in `buildArrangement` to the full arrangement only. First
+the two fixed conflicts, then the labels the pipe-aware check reports at the narrower widths, most frequent pair first
+(at 640-800 px: brine pressure on the brine tap, superheat on evaporator 7, the valve opening on valve 12, production
+pump 15's speed on valve 27, the compressor stack at its 12-unit pitch, production in on its pipes). The parts and
+pipes of the full arrangement do not move; only labels do. `npm run search-places` may be extended with
+`--detail=full --width=<w>` to search these places, or they are hand-picked; either way the result is checked with
+`npm run measure-layout -- --detail=full`. Target: a full-level threshold at most 800 px, as low as the places allow
+without moving a label away from its component (each value stays readable next to its part). The `detail-full-*`
+markup snapshots change on purpose, in their label positions only.
+
+Settled after the group 8 review (with the user): the place under the Out value that gave 640 px left the production
+return value straddling the cabinet's left wall and reading as a second value of probe 33. At `detail: full` the
+production outlet and return values (33, 34) become a column outside the cabinet's left wall, level with their
+probes, with the compact layout's Out and In captions (live-values "Full-level production column"); the full level's
+threshold is re-measured with it. The overlap check (D4, `dev/overlaps.ts`) also reports a value label that crosses
+the cabinet outline (`label x cabinet`), for the full layout at both levels; both thresholds are re-measured with it,
+and if the simplified level's 600 px moves, that is a decision point for the user. `FULL_PLACES` is applied in
+`buildArrangement`, after `labelPlacesFor`, to the full arrangement only.
 
 ### D10. Helpers from hrv-ventilation
 

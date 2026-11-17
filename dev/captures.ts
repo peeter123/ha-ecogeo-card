@@ -3,7 +3,7 @@
 // url-state.ts (scenario heating, model B, variant 4, source ground, dhw and features by preset, detail simplified, light theme).
 import { SCENARIO_NAMES } from './scenarios';
 import { FEATURE_KEYS } from '../src/config/variants';
-import { COMPACT_BELOW } from '../src/lib/layout';
+import { COMPACT_BELOW, COMPACT_BELOW_FULL } from '../src/lib/layout';
 
 export interface CaptureStep {
   name: string;
@@ -116,6 +116,21 @@ export const CAPTURES: readonly CaptureStep[] = [
       ),
     ),
   ),
+  // refine-simplified-layout 8.4: the full detail level at its own threshold and at 1000 px for the same scenarios, and just under
+  // the threshold, where the card is compact
+  ...LABEL_VARIANTS.flatMap(({ name, query }) =>
+    ([COMPACT_BELOW_FULL, 1000] as const).flatMap((width) =>
+      LABEL_SCENARIOS.map((scenario) =>
+        step(
+          width === COMPACT_BELOW_FULL
+            ? `threshold-full-${name}-${scenario}`
+            : `labels-full-${name}-${String(width)}-${scenario}`,
+          `scenario=${scenario}&${query}&detail=full&layout=full&width=${String(width)}`,
+        ),
+      ),
+    ),
+  ),
+  step('threshold-full-under', `scenario=heating&detail=full&width=${String(COMPACT_BELOW_FULL - 1)}`),
 ];
 
 /** The scenario in which a feature is active, so that muting or removing it shows. */

@@ -1,19 +1,28 @@
 ## MODIFIED Requirements
 
 ### Requirement: Compact threshold
-The compact threshold SHALL be the narrowest card width, on a grid of 20 px steps from 320 to 800 px, at which the
-full layout, at the simplified detail level, shows no overlapping labels in any emulator scenario, and no wider
-width on that grid does. Overlapping counts a label with another label, with a component, or with a pipe at its
-rendered stroke width, and an in-drawing caption with a label or a pipe. It SHALL be recorded in the docs with how it
-was measured, including the label box and tolerance the result depends on.
+The compact threshold SHALL be set per detail level. For each level it SHALL be the narrowest card width, on a grid
+of 20 px steps from 320 to 800 px, at which the full layout at that level shows no overlapping labels in any
+emulator scenario, and no wider width on that grid does. Overlapping counts a label with another label, with a
+component, with a pipe at its rendered stroke width, or with the cabinet outline (a label that crosses it), and an
+in-drawing caption with a label or a pipe. The card SHALL use the threshold of its configured `detail` level. Each
+threshold SHALL be recorded in the docs with how it was measured, including the label box and tolerance the result
+depends on.
 
 #### Scenario: No overlaps above the threshold
-- **WHEN** the emulator captures every scenario in the full layout at the threshold width
-- **THEN** no two labels overlap, no label overlaps a component or a pipe, and no caption overlaps a label or a pipe
+- **WHEN** the emulator captures every scenario in the full layout at the threshold width of a detail level, at that
+  level
+- **THEN** no two labels overlap, no label overlaps a component or a pipe or crosses the cabinet outline, and no
+  caption overlaps a label or a pipe
 
-#### Scenario: Not wider than before
-- **WHEN** the threshold is measured after this change
-- **THEN** it is at most 640 px, the threshold before pipes were counted
+#### Scenario: Simplified threshold
+- **WHEN** the threshold of the simplified level is measured
+- **THEN** it is at most 640 px
+
+#### Scenario: Full detail switches earlier
+- **WHEN** the config sets `detail: full` and no `layout`, and the card is wider than the simplified level's
+  threshold but narrower than the full level's
+- **THEN** the card shows the compact layout, and with no `detail` at the same width it shows the full layout
 
 ### Requirement: Compact captions and label sides
 The compact layout SHALL draw no in-drawing captions (such as "DG1", "Outer loop", "Air unit", "Ground loop" or
@@ -41,8 +50,9 @@ over their background plate.
 ### Requirement: Panel view fits the screen
 In a panel view the card SHALL keep its drawing and footer within the screen's height below Home Assistant's
 header: when the card's width would make the drawing taller than that, the drawing SHALL be narrower and centred,
-and the layout and line widths SHALL follow the drawing's own width. Outside a panel view the drawing SHALL fill the
-card's width as before.
+and the layout and line widths SHALL follow the drawing's own width. The drawing SHALL NOT get narrower than 320 px,
+the narrowest verified compact width; in a window too short for that, the view scrolls. Outside a panel view the
+drawing SHALL fill the card's width.
 
 #### Scenario: Desktop panel
 - **WHEN** the card is in a panel view in a 1280 x 800 px window
