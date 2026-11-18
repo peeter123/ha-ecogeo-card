@@ -29,6 +29,11 @@ export interface RoleSpec {
   accepts: readonly string[];
   /** For the paired probes (manual items 29/30, 31/32, 33/34, 35/36): in (inlet, return, suction) or out (outlet, supply, discharge). */
   direction?: 'in' | 'out';
+  /**
+   * The role has no entity when it is `none`, or not set in `entities` and its prefix default does not exist in Home
+   * Assistant; its consumer then takes a fallback (add-htr-state D3). Firmware-only roles are optional.
+   */
+  optional?: true;
 }
 
 /** The domains each kind of role accepts, for its picker and for suggestions (add-entity-discovery D2). */
@@ -65,10 +70,14 @@ export const ROLES = [
   { path: 'cooling.capacity', domain: 'sensor', suffix: 'evaporation_capacity', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '7', accepts: ACCEPTS_NUMBER },
   { path: 'heating.demand', domain: 'binary_sensor', suffix: 'dg1_demand', kind: 'binary', item: '1/2', accepts: ACCEPTS_BINARY },
   { path: 'heating.setpoint', domain: 'sensor', suffix: 'heating_dg1_setpoint', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: '1/2', accepts: ACCEPTS_NUMBER },
+  { path: 'heating.power', domain: 'sensor', suffix: 'heating_power_dg1', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '1/2', optional: true, accepts: ACCEPTS_NUMBER },
   { path: 'dhw.temperature', domain: 'sensor', suffix: 'dhw_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'tank (54 on C)', accepts: ACCEPTS_NUMBER },
   { path: 'dhw.setpoint', domain: 'number', suffix: 'dhw_setpoint', kind: 'number', quantity: 'temperature', unit: t, decimals: 0, item: 'tank', accepts: ACCEPTS_NUMBER },
   { path: 'dhw.start_delta', domain: 'number', suffix: 'delta_t_start_dhw', kind: 'number', quantity: 'difference', unit: UNITS.kelvin, decimals: 0, item: 'tank', accepts: ACCEPTS_NUMBER },
   { path: 'dhw.demand', domain: 'binary_sensor', suffix: 'dhw_demand', kind: 'binary', item: '26', accepts: ACCEPTS_BINARY },
+  { path: 'dhw.power', domain: 'sensor', suffix: 'heating_power_dhw', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '26', optional: true, accepts: ACCEPTS_NUMBER },
+  { path: 'htr.active', domain: 'binary_sensor', suffix: 'htr_active', kind: 'binary', item: '9', optional: true, accepts: ACCEPTS_BINARY },
+  { path: 'htr.power', domain: 'sensor', suffix: 'heating_power_htr', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '9', optional: true, accepts: ACCEPTS_NUMBER },
   { path: 'source.fan_speed', domain: 'sensor', suffix: 'aerothermal_fan_speed', kind: 'number', unit: UNITS.percent, decimals: 1, item: 'air unit', accepts: ACCEPTS_NUMBER },
   { path: 'source.air_unit_outlet_temperature', domain: 'sensor', suffix: 'brine_temperature_air_unit_outlet', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'air unit', accepts: ACCEPTS_NUMBER },
   { path: 'source.outside_temperature', domain: 'sensor', suffix: 'outside_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'air unit / footer', accepts: ACCEPTS_NUMBER },
@@ -78,6 +87,7 @@ export const ROLES = [
   { path: 'unit.alarm', domain: 'binary_sensor', suffix: 'alarm', kind: 'binary', item: 'footer', accepts: ACCEPTS_BINARY },
   { path: 'unit.connection', domain: 'binary_sensor', suffix: 'status', kind: 'binary', item: 'footer', accepts: ACCEPTS_BINARY },
   { path: 'unit.cop', domain: 'sensor', suffix: 'cop', kind: 'number', decimals: 1, item: 'footer', accepts: ACCEPTS_NUMBER },
+  { path: 'unit.system_cop', domain: 'sensor', suffix: 'system_cop_display', kind: 'number', decimals: 1, item: 'footer', optional: true, accepts: ACCEPTS_NUMBER },
 ] as const satisfies readonly RoleSpec[];
 
 /** Every entity role of the card, as a config path. */
@@ -96,6 +106,11 @@ export const isOnOffEntity = (entityId: string | undefined): boolean =>
 
 /** The role's spec by path. */
 export const ROLE_BY_PATH: ReadonlyMap<string, RoleSpec> = new Map(ROLES.map((role) => [role.path, role]));
+
+/** The optional roles (add-htr-state D3), in table order. */
+export const OPTIONAL_ROLE_PATHS: readonly RolePath[] = ROLES.filter((role) => 'optional' in role).map(
+  (role) => role.path,
+);
 
 /** The role paths, in table order. */
 export const ROLE_PATHS: readonly RolePath[] = ROLES.map((role) => role.path);

@@ -193,6 +193,13 @@ states:
 - A role the unit does not have is set to `none` (`entities: { brine: { pressure: none } }`): no default entity, no
   label or footer item, and no value for the mode. Its component stays drawn. An unknown or unavailable entity
   keeps its label with a dash instead. `none` counts as an entity setting, so it does not give the sample.
+- Five roles are optional, because only newer firmware has their entities: `htr.active`, `htr.power`, `heating.power`,
+  `dhw.power` and `unit.system_cop`. An optional role has no entity, and whatever uses it takes its fallback, when it is
+  set to `none`, or when it is not set in `entities` and its prefix default does not exist in Home Assistant (without a
+  prefix there is no default, so an unset optional role has no entity). A role set to an entity id keeps it, so a typo
+  shows a muted dash, and so does an entity that exists but is unavailable or unknown: the card does not switch to the
+  fallback because of a state. The sample values give every optional role its own value, never a fallback. The card
+  watches the default entity, so it takes the role when the entity appears (for example after a firmware update).
 - A brine pump set to `none` does not limit the brine circuit: the mode alone decides whether it is active. Without a
   production pump role the card cannot tell passive cooling from standby, so passive cooling is never shown.
 - Without a compressor speed, the card takes the percentage, then the power (above 100 W, so the standby draw does

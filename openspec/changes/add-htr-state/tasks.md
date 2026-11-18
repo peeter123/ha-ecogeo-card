@@ -6,31 +6,40 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
 
 ## 1. Optional roles (no visible change)
 
-- [ ] 1.1 Add the five roles to `src/config/roles.ts` with an `optional` flag (design D3): `htr.active`
+- [x] 1.1 Add the five roles to `src/config/roles.ts` with an `optional` flag (design D3): `htr.active`
   (binary_sensor, `htr_active`, item 9), `htr.power` (sensor, `heating_power_htr`, W, 0 decimals, item 9),
   `heating.power` (sensor, `heating_power_dg1`, W, 0 decimals, item 1/2), `dhw.power` (sensor, `heating_power_dhw`, W,
   0 decimals, item 26) and `unit.system_cop` (sensor, `system_cop_display`, 1 decimal, item footer). Every other role
   stays non-optional.
   Verify: `test/config/roles.test.ts` checks the five entries, their suffixes and that exactly these five are optional;
   `test/config/resolve.test.ts` checks the card-config scenario "Default entities of the optional roles".
-- [ ] 1.2 Add the presence check where the readings are read (`src/calc/readings.ts`): an optional role has no entity
+- [x] 1.2 Add the presence check where the readings are read (`src/calc/readings.ts`): an optional role has no entity
   when it is `none`, or not set in `entities` and its prefix default (or, without a prefix, nothing) is not in
   `hass.states`; an explicitly set entity id and an existing but unknown or unavailable entity keep the entity. Expose
   the result next to the readings so the drawing and the footer can pick their fallbacks; `resolveEntities` stays a
   pure function of the config.
   Verify: `test/calc/readings.test.ts` covers the card-config scenarios "Older firmware", "Set to none", "Explicit
   entity that does not exist", "Default entity unavailable" and "No prefix".
-- [ ] 1.3 Watch both the preferred and the fallback entity for re-rendering (`src/lib/render.ts`), so the card
+- [x] 1.3 Watch both the preferred and the fallback entity for re-rendering (`src/lib/render.ts`), so the card
   re-renders when an optional default entity appears or disappears.
   Verify: `test/lib/render.test.ts` re-renders when `sensor.<prefix>_heating_power_dg1` is added to `hass.states`.
-- [ ] 1.4 Give the five roles sample values in `src/config/sample.ts` (heating, HTR off, DG1 power equal to the sample
+- [x] 1.4 Give the five roles sample values in `src/config/sample.ts` (heating, HTR off, DG1 power equal to the sample
   condensation capacity, HTR power 0 W, DHW power 0 W, system COP close to the sample COP), taking them without
   fallback (card-config "Optional roles in the sample values").
   Verify: `test/config/sample.test.ts` checks a value for every role, optional ones included.
-- [ ] 1.5 Document optional roles in `docs/ecogeo-card.md` (the role table and "Using another source": which roles are
+- [x] 1.5 Document optional roles in `docs/ecogeo-card.md` (the role table and "Using another source": which roles are
   optional, when they have no entity, that an explicit entity keeps its dash) and add the five roles to the README's
   entity list.
   Verify: `test/docs.test.ts` and `test/readme.test.ts` pass with the five role paths listed.
+- [x] 1.6 Label the three heat power roles "Heat power" by path in the editor (design D6, card-editor "Labels of the
+  heat power roles"); `compressor.power` keeps "Power consumption". Added in the group 1 review.
+  Verify: an editor or role-labels test reads "Heat power" for `heating.power`, `dhw.power` and `htr.power`, and "Power
+  consumption" for `compressor.power`.
+
+Note (group 1 review): "no visible change" holds for the drawing and the footer, not for the editor. The editor already
+shows the new pickers and the `htr` group, the suggestions fill the new roles (keywords without the electrical-power
+exclusion until 4.2), and the binding check warns about an absent optional default until 4.1. Accepted as interim:
+nothing is released before group 5. The foreign naming writes the optional roles as `none` until 3.2.
 
 ## 2. HTR state in heating and active cooling
 
@@ -65,9 +74,11 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
   Verify: `test/diagram/labels.test.ts` covers every scenario of live-values "Footer", "Footer power items by mode",
   "Footer efficiency" and "Roles not present are hidden"; `test/card/compact.test.ts` covers "Compact footer without
   power items".
-- [ ] 3.2 Leave the optional roles unbound in the foreign naming (`dev/foreign.ts`), so it shows every fallback.
-  Verify: `test/dev/foreign.test.ts` checks that no optional role is bound; a subagent screenshots the foreign naming
-  in the heating with HTR recovery scenario and confirms dev-emulator "Foreign fallbacks".
+- [ ] 3.2 Leave the optional roles unbound in the foreign naming (`dev/foreign.ts`), so it shows every fallback, and
+  bind `unit.cop` to a foreign COP entity (design D7, decided in the group 1 review) so the register COP fallback
+  shows; update the foreign naming's description in the README.
+  Verify: `test/dev/foreign.test.ts` checks that no optional role is bound and `unit.cop` is; a subagent screenshots
+  the foreign naming in the heating with HTR recovery scenario and confirms dev-emulator "Foreign fallbacks".
 - [ ] 3.3 Check the footer's wrap and the panel fit with the longest new footer (active cooling with HTR, EER) at
   624 px (`detail: simplified`), 664 px (`detail: full`) and in the 1280 x 800 panel view.
   Verify: `test/card/compact.browser.test.ts` (footer wrap) and `test/card/panel.browser.test.ts` pass in Chromium and
@@ -92,6 +103,10 @@ Emulator screenshots are captured and judged by a subagent, which returns a text
   for `heating.power`, `dhw.power` and `htr.power`.
   Verify: `test/suggest/suggest.test.ts` covers card-editor "Firmware device" and "Electrical power kept apart", and a
   device with Dutch names for the HTR power and state.
+  Note (group 1): group 1 already added keywords for the five roles, without the exclusion, so 4.2 reviews and
+  completes them. By names alone a plain "COP" and a "System COP" entity still tie for `unit.cop` (only the `_cop`
+  suffix rule separates them); the exclusion mechanism of 4.2 should also keep "system systeem sistema" away from
+  `unit.cop`.
 - [ ] 4.3 Document the binding check exception and the new suggestions in the editor section of
   `docs/ecogeo-card.md`, and the README's editor notes if they list roles.
   Verify: `test/docs.test.ts` passes.

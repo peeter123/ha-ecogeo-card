@@ -42,6 +42,11 @@ export interface ResolvedConfig {
   entities: Readonly<Record<RolePath, string | undefined>>;
   /** The roles set to `none` in `entities`: not present, so no label or footer item (a role with no entity shows a dash). */
   notPresent: ReadonlySet<RolePath>;
+  /**
+   * The roles whose entity is the prefix default (not set in `entities`, not `none`): the ones an optional role
+   * without a known entity falls back from (add-htr-state D3). Empty in sample mode.
+   */
+  defaulted: ReadonlySet<RolePath>;
   /** The state values that mean off and defrost (the `states` option). */
   states: StateLists;
   /** The temperature colour stops: the `colors` option or the default scale. */
@@ -68,6 +73,20 @@ export function resolveEntities(
   ) as Record<RolePath, string | undefined>;
 }
 
+/** The roles whose entity comes from the prefix default: no `entities` value, not `none`, and a prefix. */
+export function defaultedRoles(
+  config: CardConfig,
+  prefix: string | undefined,
+  notPresent: ReadonlySet<RolePath> = notPresentRoles(config),
+): ReadonlySet<RolePath> {
+  if (prefix === undefined) return new Set();
+  return new Set(
+    ROLES.filter((role) => entityAt(config, `entities.${role.path}`) === undefined && !notPresent.has(role.path)).map(
+      (role) => role.path,
+    ),
+  );
+}
+
 /** True when the card shows its built-in sample: no prefix and no entity override. */
 export const isSampleMode = (config: CardConfig): boolean => prefixOf(config) === undefined && !setsAnyEntity(config);
 
@@ -89,6 +108,7 @@ export function resolveConfig(config: CardConfig): ResolvedConfig {
     features: mergeFeatures(variant, featureOverrides(config)),
     entities: sample ? SAMPLE_ENTITIES : resolveEntities(config, prefix, notPresent),
     notPresent,
+    defaulted: sample ? new Set() : defaultedRoles(config, prefix, notPresent),
     sample,
   };
 }

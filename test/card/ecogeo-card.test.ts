@@ -83,6 +83,32 @@ describe('sample mode', () => {
   });
 });
 
+describe('optional roles (add-htr-state)', () => {
+  const dg1 = `sensor.${P}_heating_power_dg1`;
+
+  test('Older firmware: with a prefix and no optional entity the card renders without a configuration error', async () => {
+    const config = { type: 'custom:ecogeo-card', prefix: P };
+    expect(() => {
+      (document.createElement('ecogeo-card') as EcogeoCard).setConfig(config);
+    }).not.toThrow();
+    const card = await mount(config, { states: {} });
+    expect(card.shadowRoot?.querySelector('svg')).not.toBeNull();
+    expect(card.shadowRoot?.querySelector('.error')).toBeNull();
+    card.remove();
+  });
+
+  test('the default entity of an absent optional role is watched: adding it to hass.states re-renders', async () => {
+    const card = await mount({ type: 'custom:ecogeo-card', prefix: P }, { states: {} });
+    const inner = card as unknown as { entityIds: string[]; renderedHass: HassLike | undefined };
+    expect(inner.entityIds).toContain(dg1);
+    const next = hassWith([dg1, '4000', 'W']);
+    card.hass = next;
+    await card.updateComplete;
+    expect(inner.renderedHass).toBe(next);
+    card.remove();
+  });
+});
+
 describe('none is not a sample config', () => {
   test('only unit.cop none: no sample values and no Sample values note', async () => {
     const card = await mount({ type: 'custom:ecogeo-card', entities: { unit: { cop: 'none' } } }, { states: {} });

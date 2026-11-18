@@ -24,6 +24,15 @@ entity. It SHALL NOT change the config.
 
 ## ADDED Requirements
 
+### Requirement: Labels of the heat power roles
+The editor SHALL label `heating.power`, `dhw.power` and `htr.power` "Heat power" wherever it names a role (the
+advanced pickers, the "Not present" list, the suggestion report and the binding warnings); `compressor.power` keeps
+"Power consumption".
+
+#### Scenario: HTR power label
+- **WHEN** the editor lists `htr.power` in the advanced pickers
+- **THEN** its label reads "Heat power" in the "HTR recovery" group, not "Power consumption"
+
 ### Requirement: Suggestions for the HTR and power roles
 The device suggestions SHALL match the HTR state, the HTR power, the DG1 power, the DHW power and the system COP to a
 device's entities by their names, like every other role. A candidate named as electrical power (for example

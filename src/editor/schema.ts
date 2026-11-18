@@ -18,6 +18,8 @@ export interface EditorField {
   required?: boolean;
   /** Hidden while the "Advanced settings" switch is off. */
   advanced?: boolean;
+  /** The label, when the field's name alone does not give it (roles that share a last path part). */
+  label?: string;
   /**
    * The value the card uses when the field is not set. Only `hasAdvancedValue` reads it, which is kept unused: this
    * card's "Advanced settings" switch starts on when the config has an `entities` override (design D5), not when an

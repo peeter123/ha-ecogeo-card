@@ -3,6 +3,7 @@ import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { ROLES } from '../../src/config/roles';
 import { fieldsWithPaths, isSection } from '../../src/editor/schema';
 import type { CardConfig } from '../../src/lib/config';
+import { roleLabel, roleOwnLabel } from '../../src/editor/role-labels';
 import { EDITOR } from '../../src/strings';
 import { cleared, openEditor, StubForm } from './harness';
 
@@ -88,8 +89,27 @@ describe('entity pickers', () => {
       expect(field?.selector, role.path).toEqual({ entity: { filter: { domain: role.accepts } } });
       const leaf = role.path.split('.')[1] ?? '';
       expect(EDITOR.roles, role.path).toHaveProperty(leaf);
-      expect(form.computeLabel?.({ name: leaf }), role.path).toBe(EDITOR.roles[leaf as keyof typeof EDITOR.roles]);
+      if (field !== undefined) expect(form.computeLabel?.(field), role.path).toBe(roleOwnLabel(role.path));
     }
+  });
+
+  test('add-htr-state "Labels of the heat power roles": the heat power roles read "Heat power", the compressor keeps its own', async () => {
+    const { editor, form, toggle } = await openEditor(BASE);
+    toggle.change({ advanced: true });
+    await editor.updateComplete;
+    const fields = new Map(fieldsWithPaths(form.schema).map(({ field, path }) => [path, field]));
+    const labelOf = (path: string): string | undefined => {
+      const field = fields.get(`entities.${path}`);
+      return field === undefined ? undefined : form.computeLabel?.(field);
+    };
+    for (const path of ['heating.power', 'dhw.power', 'htr.power']) {
+      expect(labelOf(path), path).toBe('Heat power');
+      expect(roleLabel(path)).toBe(
+        `${EDITOR.roleGroups[path.split('.')[0] as keyof typeof EDITOR.roleGroups]}: Heat power`,
+      );
+    }
+    expect(labelOf('compressor.power')).toBe('Power consumption');
+    expect(roleLabel('compressor.power')).toBe('Compressor: Power consumption');
   });
 
   test('the pickers are in one section per role group, in the role table order, inside an entities section', async () => {

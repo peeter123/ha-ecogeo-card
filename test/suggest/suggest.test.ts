@@ -168,6 +168,16 @@ describe('suggestions', () => {
     expect(result.report.empty).toEqual([]);
   });
 
+  test('a device with both "COP" and "System COP": each COP role gets its own entity', () => {
+    const { states, registry } = device([
+      ['hp_cop', 'COP', undefined],
+      ['hp_sys', 'System COP', undefined],
+    ]);
+    const result = flat(run(states, registry, 'dev').entities);
+    expect(result['unit.cop']).toBe('sensor.hp_cop');
+    expect(result['unit.system_cop']).toBe('sensor.hp_sys');
+  });
+
   test('Renamed device', () => {
     const { states, registry } = device(
       ROLES.map((r) => [`hp_basement_${r.suffix}`, r.suffix, 'unit' in r ? r.unit : undefined]),

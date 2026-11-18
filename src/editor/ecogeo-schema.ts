@@ -30,7 +30,7 @@ import type { HassEntityState } from '../lib/hass';
 import { EDITOR } from '../strings';
 import { colorRowFields, draftOf } from './color-rows';
 import { choiceField, entityField } from './fields';
-import { roleLabel } from './role-labels';
+import { roleLabel, roleOwnLabel } from './role-labels';
 import type { EditorField, EditorSchema, EditorSection } from './schema';
 
 /** The top-level groups the editor removes when they end up empty. */
@@ -124,7 +124,10 @@ function entitiesSection(config: CardConfig): EditorSection {
   for (const role of ROLES) {
     if (isNone(valueAt(config, `entities.${role.path}`))) continue;
     const [group = '', name = ''] = role.path.split('.');
-    groups.set(group, [...(groups.get(group) ?? []), entityField(name, role.accepts, { advanced: true })]);
+    groups.set(group, [
+      ...(groups.get(group) ?? []),
+      { ...entityField(name, role.accepts, { advanced: true }), label: roleOwnLabel(role.path) },
+    ]);
   }
   return {
     type: 'expandable',

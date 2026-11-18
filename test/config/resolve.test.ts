@@ -30,6 +30,29 @@ describe('entity defaults from the prefix', () => {
   });
 });
 
+describe('optional roles (add-htr-state)', () => {
+  test('Default entities of the optional roles', () => {
+    const resolved = resolveConfig({ prefix: 'ecoforest_ecogeo' });
+    expect(resolved.entities['htr.active']).toBe('binary_sensor.ecoforest_ecogeo_htr_active');
+    expect(resolved.entities['htr.power']).toBe('sensor.ecoforest_ecogeo_heating_power_htr');
+    expect(resolved.entities['heating.power']).toBe('sensor.ecoforest_ecogeo_heating_power_dg1');
+    expect(resolved.entities['dhw.power']).toBe('sensor.ecoforest_ecogeo_heating_power_dhw');
+    expect(resolved.entities['unit.system_cop']).toBe('sensor.ecoforest_ecogeo_system_cop_display');
+  });
+
+  test('defaulted: the roles bound by the prefix default, not an override, none or the sample', () => {
+    const resolved = resolveConfig({
+      prefix: 'p',
+      entities: { heating: { power: 'sensor.mine' }, unit: { system_cop: 'none' } },
+    });
+    expect(resolved.defaulted.has('dhw.power')).toBe(true);
+    expect(resolved.defaulted.has('heating.power')).toBe(false);
+    expect(resolved.defaulted.has('unit.system_cop')).toBe(false);
+    expect(resolveConfig({ entities: { dhw: { temperature: 'sensor.t' } } }).defaulted.size).toBe(0);
+    expect(resolveConfig({ type: 'custom:ecogeo-card' }).defaulted.size).toBe(0);
+  });
+});
+
 describe('per-role overrides', () => {
   test('override one role, every other keeps its prefix default', () => {
     const resolved = resolveConfig({

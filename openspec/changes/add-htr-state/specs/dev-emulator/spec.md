@@ -48,7 +48,8 @@ The emulator SHALL offer a naming control, `firmware` (default) or `foreign`, mi
 foreign naming SHALL be a mock source with other entity ids and Dutch friendly names, pressures in kPa, the
 compressor speed in Hz, the compressor mode as an enum with Dutch values, the on/off state as a switch, and some
 roles set to `none`, configured through `entities` and `states`. It SHALL leave the optional roles (card-config)
-unbound, so the card shows their fallbacks.
+unbound, so the card shows their fallbacks, and SHALL bind `unit.cop`, so the register COP shows as the fallback of
+`unit.system_cop`.
 
 #### Scenario: Foreign heating
 - **WHEN** a capture script opens the emulator URL with `naming=foreign` and the heating scenario

@@ -35,6 +35,7 @@ const SETPOINT = 'setpoint set target desired gewenst ingesteld soll wunsch cons
 const SUPERHEAT = 'superheat oververhitting oververhit sobrecalentamiento ueberhitzung uberhitzung';
 const ON_OFF = 'on off aan uit onoff encendido apagado ein aus';
 const ALARM = 'alarm alarma storing stoerung storung fehler error fault malfunction';
+const HTR = 'htr recovery recuperacion recuperatie rueckgewinnung';
 const COP = 'cop scop coefficient rendimiento rendement wirkungsgrad efficiency';
 
 /* prettier-ignore */
@@ -76,6 +77,12 @@ export const KEYWORDS: Readonly<Record<RolePath, RoleKeywords>> = {
   'unit.alarm': { subject: w(ALARM), role: w(ALARM) },
   'unit.connection': { subject: w('connection connected connectivity conexion verbinding verbindung online communication'), role: w('connection connected connectivity conexion verbinding verbindung status online communication') },
   'unit.cop': { subject: w(COP), role: w(COP) },
+  // The optional roles of add-htr-state D6 (the electrical-power exclusion comes with the editor group).
+  'heating.power': { subject: w(`${HEATING} dg1`), role: w(CAPACITY) },
+  'dhw.power': { subject: w(DHW), role: w(CAPACITY) },
+  'htr.active': { subject: w(HTR), role: w('active actief activo aktiv') },
+  'htr.power': { subject: w(HTR), role: w(CAPACITY) },
+  'unit.system_cop': { subject: w('system systeem sistema'), role: w(COP) },
 };
 
 /** Direction words, shared by all roles (a word of four or more letters also hits inside a compound word). */

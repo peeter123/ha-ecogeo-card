@@ -69,6 +69,7 @@ function label(item: FormField | FormSection): string {
   if (isSection(item)) return item.title ?? SECTION_LABELS[item.name] ?? item.name;
   const row = colorRowOf(item.name);
   if (row !== undefined) return EDITOR.colorRow[row.part](row.index + 1);
+  if (item.label !== undefined) return item.label;
   return FIELD_LABELS[item.name] ?? ROLE_LABELS[item.name] ?? item.name;
 }
 

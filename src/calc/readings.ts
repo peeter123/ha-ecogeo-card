@@ -6,7 +6,15 @@ import { isUnavailable, numericValue } from '../lib/availability';
 import type { EntityStateLike } from '../lib/hass';
 import { stateOf } from '../lib/hass';
 import { convertedState } from '../lib/units';
-import { isOnOffEntity, ROLES, type KindOf, type RoleOf, type RolePath, type RoleSpec } from '../config/roles';
+import {
+  isOnOffEntity,
+  OPTIONAL_ROLE_PATHS,
+  ROLES,
+  type KindOf,
+  type RoleOf,
+  type RolePath,
+  type RoleSpec,
+} from '../config/roles';
 
 type ValueOfKind<K> = K extends 'number' ? number : K extends 'text' ? string : boolean;
 
@@ -84,6 +92,24 @@ export function readRoles(
   return Object.fromEntries(
     ROLES.map((role) => [role.path, valueOf(stateOf(states, entities[role.path]), role, entities[role.path])]),
   ) as unknown as Readings;
+}
+
+/**
+ * The optional roles without an entity (add-htr-state D3), whose consumer takes its fallback: no entity id (`none`, or
+ * no prefix and no override), or an entity id from the prefix default (`defaulted`) that `states` does not know. An
+ * explicit entity id keeps its entity even when unknown (a muted dash), and so does a known but unavailable one. Pure.
+ */
+export function absentOptionalRoles(
+  states: Readonly<Record<string, EntityStateLike | undefined>>,
+  entities: Readonly<Record<RolePath, string | undefined>>,
+  defaulted: ReadonlySet<RolePath>,
+): ReadonlySet<RolePath> {
+  return new Set(
+    OPTIONAL_ROLE_PATHS.filter((path) => {
+      const id = entities[path];
+      return id === undefined || (defaulted.has(path) && stateOf(states, id) === undefined);
+    }),
+  );
 }
 
 /** The roles that animate by their speed: the two pumps (flow) and the fan. */

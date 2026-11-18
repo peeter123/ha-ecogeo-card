@@ -1,7 +1,7 @@
 // The emulator's second mock source (add-entity-discovery D11): a heat pump integrated by hand through another
 // integration, as a user of a KNX or Modbus bridge would have it. Other entity ids (`wp_<n>`), Dutch friendly names,
 // pressures in kPa, the compressor speed in Hz, an enum compressor mode with Dutch values, a switch for on/off, and
-// three roles the installation does not have (`none`). The scenarios' values are mapped onto these entities, so every
+// eight roles the installation does not have (`none`). The scenarios' values are mapped onto these entities, so every
 // scenario works with both namings. Exported for the suggestion tests: the fixture and the screenshots are one
 // source. The ids and names are invented; nothing here comes from a live installation.
 import { ROLE_BY_PATH, ROLE_PATHS, defaultEntityId, type RolePath } from '../src/config/roles';
@@ -32,7 +32,18 @@ interface ForeignEntity {
 }
 
 /** The roles the foreign installation has no entity for: `none` in the card config. */
-export const FOREIGN_NONE: readonly RolePath[] = ['source.fan_speed', 'unit.cop', 'heating.setpoint'];
+// The five optional roles (add-htr-state) are `none` here for now: the foreign installation has none of the firmware's
+// derived sensors. Task 3.2 (the footer group) leaves them unbound instead, so that the fallbacks show.
+export const FOREIGN_NONE: readonly RolePath[] = [
+  'source.fan_speed',
+  'unit.cop',
+  'heating.setpoint',
+  'heating.power',
+  'dhw.power',
+  'htr.active',
+  'htr.power',
+  'unit.system_cop',
+];
 
 /** The `states` option of the foreign naming: its enum value for defrost (off is the switch, read as a boolean). */
 export const FOREIGN_STATES = { defrost: ['Ontdooien'] } as const;

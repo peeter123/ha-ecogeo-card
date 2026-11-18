@@ -6,9 +6,10 @@
 import { css, html, LitElement, nothing, svg, type PropertyValues, type TemplateResult } from 'lit';
 import { circuitsFor } from '../calc/circuits';
 import { deriveMode, isAlarm, isOffline } from '../calc/mode';
-import { animationReadings, readRoles, type Readings } from '../calc/readings';
+import { absentOptionalRoles, animationReadings, readRoles, type Readings } from '../calc/readings';
 import { configErrors } from '../config/options';
 import { resolveConfig, type ResolvedConfig } from '../config/resolve';
+import type { RolePath } from '../config/roles';
 import { SAMPLE_STATES } from '../config/sample';
 import { cabinetStyles, renderCabinet } from '../diagram/cabinet';
 import type { Taps } from '../diagram/component-info';
@@ -251,10 +252,16 @@ export class EcogeoCard extends LitElement {
   }
 
   /** The readings of every role: the sample states in sample mode, `hass.states` otherwise. */
-  private readings(resolved: ResolvedConfig): { readings: Readings; offline: boolean } {
+  private readings(resolved: ResolvedConfig): {
+    readings: Readings;
+    /** The optional roles without an entity, for the fallbacks of the drawing and the footer (add-htr-state D3). */
+    absent: ReadonlySet<RolePath>;
+    offline: boolean;
+  } {
     const states = resolved.sample ? SAMPLE_STATES : (this.hass?.states ?? {});
     return {
       readings: readRoles(states, resolved.entities),
+      absent: absentOptionalRoles(states, resolved.entities, resolved.defaulted),
       offline: isOffline(stateOf(states, resolved.entities['unit.connection'])),
     };
   }

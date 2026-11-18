@@ -30,6 +30,19 @@ describe('sample values for an empty config', () => {
   });
 });
 
+describe('optional roles in the sample values (add-htr-state)', () => {
+  test('every optional role takes its sample value, no fallback', () => {
+    const resolved = resolveConfig({ type: 'custom:ecogeo-card' });
+    const readings = readRoles(SAMPLE_STATES, resolved.entities);
+    expect(readings['heating.power']).toBe(readings['heating.capacity']);
+    expect(readings['htr.active']).toBe(false);
+    expect(readings['htr.power']).toBe(0);
+    expect(readings['dhw.power']).toBe(0);
+    expect(readings['unit.system_cop']).toBeCloseTo(readings['unit.cop'] ?? Number.NaN, 0);
+    expect(readings['unit.system_cop']).not.toBe(readings['unit.cop']);
+  });
+});
+
 describe('no mixing', () => {
   test('one override and no prefix: every other role shows no value, never a sample value', () => {
     const config = resolveConfig({ entities: { dhw: { temperature: 'sensor.boiler_top' } } });

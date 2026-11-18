@@ -13,6 +13,7 @@ import { ROLES } from '../../src/config/roles';
 import { fieldsWithPaths } from '../../src/editor/schema';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
+import { roleLabel } from '../../src/editor/role-labels';
 import { EDITOR } from '../../src/strings';
 import { firmwareHass, foreignHass } from './hass-fixtures';
 import { cleared, openEditor, StubForm } from './harness';
@@ -150,8 +151,7 @@ describe('device picker and suggestions', () => {
 
 /** The role's name as the editor words it. */
 function roleName(path: string): string {
-  const [group = '', name = ''] = path.split('.');
-  return `${EDITOR.roleGroups[group as keyof typeof EDITOR.roleGroups]}: ${EDITOR.roles[name as keyof typeof EDITOR.roles]}`;
+  return roleLabel(path);
 }
 
 describe('round trip with states and none', () => {

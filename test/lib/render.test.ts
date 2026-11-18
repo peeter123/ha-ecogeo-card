@@ -23,6 +23,15 @@ const base: HassLike = {
 const IDS = ['sensor.supply_temperature'];
 
 describe('hassChanged', () => {
+  test('add-htr-state: an optional default entity that appears or disappears re-renders', () => {
+    const dg1 = 'sensor.demo_ecogeo_heating_power_dg1';
+    const ids = [...IDS, dg1];
+    const next = { ...base, states: { ...base.states, [dg1]: state(dg1, '4000', 'W') } };
+    expect(hassChanged(base, next, ids)).toBe(true);
+    expect(hassChanged(next, base, ids)).toBe(true);
+    expect(hassChanged(next, { ...next }, ids)).toBe(false);
+  });
+
   test('card-bundle "Unrelated entity changes": another entity changing does not re-render', () => {
     const next = { ...base, states: { ...base.states, 'light.kitchen': state('light.kitchen', 'on') } };
     expect(hassChanged(base, next, IDS)).toBe(false);

@@ -256,6 +256,7 @@ export const EDITOR = {
     heating: 'Heating',
     cooling: 'Cooling',
     dhw: 'Domestic hot water',
+    htr: 'HTR recovery',
     source: 'Outer-loop source',
     unit: 'Unit status',
   },
@@ -292,7 +293,11 @@ export const EDITOR = {
     alarm: 'Alarm',
     connection: 'Connection',
     cop: 'COP',
+    active: 'Active',
+    system_cop: 'System COP',
   },
+  /** The label of the heat power roles (`heating.power`, `dhw.power`, `htr.power`), which share the leaf `power` with the compressor's. */
+  heatPower: 'Heat power',
   /** The labels of a colour stop row; `n` counts from 1. */
   colorRow: {
     temperature: (n: number): string => `Colour stop ${String(n)}: temperature`,

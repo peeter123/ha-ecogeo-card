@@ -196,6 +196,10 @@ still an entity setting, so the card does not show sample values.
 | `refrigerant.expansion_valve` | `sensor.<prefix>_expansion_valve_position` | %, 0 dec. | 12 |
 | `heating.capacity` | `sensor.<prefix>_condensation_capacity` | W, 0 dec. | 8 |
 | `cooling.capacity` | `sensor.<prefix>_evaporation_capacity` | W, 0 dec. | 7 |
+| `heating.power` | `sensor.<prefix>_heating_power_dg1` | W, 0 dec. | 1/2 |
+| `dhw.power` | `sensor.<prefix>_heating_power_dhw` | W, 0 dec. | 26 |
+| `htr.active` | `binary_sensor.<prefix>_htr_active` | on/off | 9 |
+| `htr.power` | `sensor.<prefix>_heating_power_htr` | W, 0 dec. | 9 |
 | `heating.demand` | `binary_sensor.<prefix>_dg1_demand` | on/off | 1/2 |
 | `heating.setpoint` | `sensor.<prefix>_heating_dg1_setpoint` | °C, 1 dec. | 1/2 |
 | `dhw.temperature` | `sensor.<prefix>_dhw_temperature` | °C, 1 dec. | tank (54 on C) |
@@ -211,6 +215,13 @@ still an entity setting, so the card does not show sample values.
 | `unit.alarm` | `binary_sensor.<prefix>_alarm` | on/off | footer |
 | `unit.connection` | `binary_sensor.<prefix>_status` | on/off | footer |
 | `unit.cop` | `sensor.<prefix>_cop` | 1 dec., no unit | footer |
+| `unit.system_cop` | `sensor.<prefix>_system_cop_display` | 1 dec., no unit | footer |
+
+`heating.power`, `dhw.power`, `htr.active`, `htr.power` and `unit.system_cop` are optional: they have no entity when set
+to `none`, or when they are not set in `entities` and their prefix defaults do not exist in Home Assistant (older firmware,
+another integration; without a prefix there is no default). An entity id set in `entities` is kept, and shows a dash
+while it is missing. A default entity that exists but is unavailable also shows a dash: the card does not fall back
+because of a state.
 
 A state that is `unavailable`, `unknown`, not a number or the firmware's -999.9 (an absent probe) is shown as no
 value.
@@ -320,8 +331,8 @@ no installation data. The mock entities use the demo prefix `demo_ecogeo`.
 - **Naming:** `firmware` (the default: the firmware's entity names under the demo prefix) or `foreign`, a second mock
   source for a heat pump integrated through another integration (`dev/foreign.ts`): entity ids such as
   `sensor.wp_3`, Dutch friendly names, pressures in kPa, the compressor speed in Hz, the compressor mode as an enum
-  (`Uit`, `Verwarmen`, `Tapwater`, `Ontdooien`), the on/off state as a switch, and the fan speed, the COP and the DG1
-  setpoint set to `none`. The card is configured with `entities` and `states` instead of a prefix, so every scenario
+  (`Uit`, `Verwarmen`, `Tapwater`, `Ontdooien`), the on/off state as a switch, and the fan speed, the COP, the DG1
+  setpoint and the five optional roles set to `none` for now. The card is configured with `entities` and `states` instead of a prefix, so every scenario
   works with both namings. Both namings also provide `hass.entities` and `hass.devices`.
 - **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default; on B external, unused or none, on C internal or unused; the other choices are
   disabled, and a value in the URL that the model rejects falls back to the default), each feature (the variant's preset, `true`, `false` or `unused`), the detail level

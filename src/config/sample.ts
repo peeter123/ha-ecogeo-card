@@ -10,7 +10,9 @@
 // outside 3.8 °C, air unit outlet 0.5 °C, fan 34.5 %, DG1 demand on, DHW demand off, winter on, alarm off.
 // Not in the snapshot, plausible values consistent with it: the DG1 setpoint (35 °C), the evaporation capacity
 // (3926 W: the condensation capacity less the compressor power), the compressor mode ("Balance", as seen live),
-// the on/off text ("ON"), summer off and the bridge connection on.
+// the on/off text ("ON"), summer off and the bridge connection on. The optional roles (add-htr-state) take sample values
+// too, never a fallback: DG1 power 4712 W (the condensation capacity), HTR off with 0 W, DHW power 0 W (no DHW cycle)
+// and a system COP of 5.8 (a little below the register COP of 6.0).
 import type { HassEntityState } from '../lib/hass';
 import { ROLE_BY_PATH, ROLE_PATHS, type RolePath } from './roles';
 
@@ -41,6 +43,10 @@ const VALUES: Readonly<Record<RolePath, string>> = {
   'refrigerant.expansion_valve': '58',
   'heating.capacity': '4712',
   'cooling.capacity': '3926',
+  'heating.power': '4712',
+  'dhw.power': '0',
+  'htr.active': 'off',
+  'htr.power': '0',
   'heating.demand': 'on',
   'heating.setpoint': '35',
   'dhw.temperature': '52.1',
@@ -56,6 +62,7 @@ const VALUES: Readonly<Record<RolePath, string>> = {
   'unit.alarm': 'off',
   'unit.connection': 'on',
   'unit.cop': '6',
+  'unit.system_cop': '5.8',
 };
 
 // The card reads no update time; one fixed time keeps the states stable.

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { readRoles } from '../../src/calc/readings';
+import { absentOptionalRoles, readRoles } from '../../src/calc/readings';
+import { SAMPLE_STATES } from '../../src/config/sample';
 import { resolveConfig } from '../../src/config/resolve';
 import { deriveMode } from '../../src/calc/mode';
 import { variantFeatures } from '../../src/config/variants';
@@ -155,5 +156,56 @@ describe('pressure units', () => {
   test('an unconvertible or missing pressure unit keeps the entity number', () => {
     expect(read([id('production.pressure'), '2.2', 'atm'])['production.pressure']).toBe(2.2);
     expect(read([id('production.pressure'), '2.2'])['production.pressure']).toBe(2.2);
+  });
+});
+
+describe('optional roles without an entity (add-htr-state D3)', () => {
+  const absent = (
+    config: Parameters<typeof resolveConfig>[0],
+    ...entries: readonly (readonly [string, string, string?])[]
+  ) => {
+    const resolved = resolveConfig(config);
+    return absentOptionalRoles(states(...entries), resolved.entities, resolved.defaulted);
+  };
+  const dg1 = 'sensor.demo_ecogeo_heating_power_dg1';
+
+  test('Older firmware: the default entities are not in hass.states', () => {
+    expect([...absent({ prefix: 'demo_ecogeo' })].sort()).toEqual(
+      ['dhw.power', 'heating.power', 'htr.active', 'htr.power', 'unit.system_cop'].sort(),
+    );
+  });
+
+  test('the default entity exists: the role has an entity', () => {
+    expect(absent({ prefix: 'demo_ecogeo' }, [dg1, '4000', 'W']).has('heating.power')).toBe(false);
+  });
+
+  test('Set to none: no entity even when the default exists', () => {
+    const config = { prefix: 'demo_ecogeo', entities: { unit: { system_cop: 'none' } } };
+    expect(absent(config, ['sensor.demo_ecogeo_system_cop_display', '5.1']).has('unit.system_cop')).toBe(true);
+  });
+
+  test('Explicit entity that does not exist: kept, no fallback, reads no value', () => {
+    const config = { prefix: 'demo_ecogeo', entities: { heating: { power: 'sensor.typo' } } };
+    expect(absent(config).has('heating.power')).toBe(false);
+    expect(readRoles(states(), resolveConfig(config).entities)['heating.power']).toBeUndefined();
+  });
+
+  test('Default entity unavailable: kept, reads no value', () => {
+    const config = { prefix: 'demo_ecogeo' };
+    const id = 'sensor.demo_ecogeo_heating_power_dhw';
+    expect(absent(config, [id, 'unavailable']).has('dhw.power')).toBe(false);
+    expect(absent(config, [id, 'unknown']).has('dhw.power')).toBe(false);
+    expect(readRoles(states([id, 'unavailable']), resolveConfig(config).entities)['dhw.power']).toBeUndefined();
+  });
+
+  test('No prefix: an unset optional role has no entity, a set one keeps it', () => {
+    const roles = absent({ entities: { heating: { power: 'sensor.mine' } } });
+    expect(roles.has('htr.power')).toBe(true);
+    expect(roles.has('heating.power')).toBe(false);
+  });
+
+  test('sample mode: no optional role is absent', () => {
+    const resolved = resolveConfig({ type: 'custom:ecogeo-card' });
+    expect(absentOptionalRoles(SAMPLE_STATES, resolved.entities, resolved.defaulted).size).toBe(0);
   });
 });

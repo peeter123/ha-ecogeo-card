@@ -131,13 +131,20 @@ The three heat power roles exclude a candidate named as electrical power (`elect
 the firmware also has `Electrical Power DG1/DHW` in W on the same device (card-editor "Suggestions for the HTR and
 power roles").
 
+Editor labels are keyed by a role's leaf name, and the leaf `power` reads "Power consumption" for `compressor.power`.
+The three heat power roles get a label override by path, "Heat power", so the editor reads "Heating: Heat power",
+"DHW: Heat power" and "HTR recovery: Heat power" in the pickers, the "Not present" list, the suggestion report and the
+binding warnings, and does not invite binding an electrical power (decided in the group 1 review).
+
 ### D7. Emulator
 
 - A "heating with HTR" scenario: heating, `htr_active` on, DG1 and HTR power, and a DHW temperature below 54 °C.
 - The firmware naming's other scenarios get values for the new roles (DG1 or DHW power by mode, `system_cop_display`),
   and the sample values (`src/config/sample.ts`) get them too.
 - The foreign naming leaves the new roles unbound, so it shows every fallback: the condensation capacity as DG1 or DHW,
-  the register COP, no HTR item, and the active-cooling rule.
+  the register COP, no HTR item, and the active-cooling rule. It binds `unit.cop` (a foreign COP entity), which it
+  set to `none` before this change, so the register COP fallback is visible; the fan speed and the DG1 setpoint stay
+  `none` for card-config "Roles not present" (decided in the group 1 review).
 
 ### D8. Docs
 
