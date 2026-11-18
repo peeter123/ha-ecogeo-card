@@ -12,8 +12,11 @@
 // geometry.ts `partState`); a drawn label with no value shows a muted dash and keeps its place.
 import { css, html, nothing, type TemplateResult } from 'lit';
 import { formatReading, type DisplayContext } from '../calc/display';
+import type { Mode } from '../calc/mode';
 import type { Readings } from '../calc/readings';
+import type { DhwStorage } from '../config/options';
 import type { RolePath } from '../config/roles';
+import type { Features } from '../config/variants';
 import { DHW_LABELS, FOOTER_LABELS, HEATING_LABELS, NO_VALUE, ON_OFF_LABELS } from '../strings';
 import { arrangementOf, partState, type DrawContext } from './geometry';
 import { STACKED_CAPTIONS, type Align, type LabelSpec, type Placement, type Tier } from './label-places';
@@ -195,18 +198,39 @@ export interface FooterItem {
 /** The footer items the compact layout keeps (add-compact-layout D2); the mode, the alarm and the offline indication are card texts that always show. */
 const FOOTER_KEY_ITEMS: ReadonlySet<string> = new Set(['outside_temperature', 'cop']);
 
+/** What the footer's power items and efficiency depend on besides the readings (add-htr-state D2, D4). */
+export interface FooterInputs {
+  /** The derived mode: it decides which power items show, and the efficiency's caption. */
+  mode: Mode;
+  /** The `htr` feature: the HTR item needs it `true`. */
+  features: Pick<Features, 'htr'>;
+  /** The DHW storage: the HTR item needs a tank in use (`external` or `internal`). */
+  dhw: DhwStorage;
+  /** The roles set to `none`: an item whose roles are all in it is left out. */
+  notPresent: ReadonlySet<RolePath>;
+  /** The optional roles without an entity (`absentOptionalRoles`): their consumers take the fallback. */
+  absent: ReadonlySet<RolePath>;
+}
+
 /**
- * The footer's values: the on/off state, the season, the outside temperature, the COP and the condensation and
- * evaporation capacity; with `compact` only the key ones (the outside temperature and the COP). The mode, the alarm
- * and the offline indication are texts of the card, not values.
+ * The footer's values: the on/off state, the season, the outside temperature, the efficiency and the mode's power items
+ * (add-htr-state D2): heating DG1 (`heating.power`, else `heating.capacity`) and HTR (`htr.power`), dhw DHW (`dhw.power`,
+ * else `heating.capacity`), active_cooling Cooling (`cooling.capacity`) and HTR, no power item in any other mode. HTR
+ * shows only with the feature `true`, a DHW tank in use and an `htr.power` entity, also at 0 W. The efficiency is
+ * `unit.system_cop`, else `unit.cop` (an optional role without an entity, `absent`); 0 shows as a dash; the caption is
+ * EER in active_cooling. With `compact` only the key items (outside temperature, efficiency). The mode, the alarm and the
+ * offline indication are texts of the card, not values. Inputs: the readings, the role entities, the display context,
+ * `inputs` (mode, features, DHW storage, `notPresent`: roles set to `none`, `absent`: optional roles without an
+ * entity) and `compact`. Pure.
  */
 export function footerItems(
   readings: Readings,
   entities: Entities,
   display: DisplayContext,
+  inputs: FooterInputs,
   compact = false,
-  notPresent: ReadonlySet<RolePath> = ALL_PRESENT,
 ): FooterItem[] {
+  const { notPresent, absent } = inputs;
   // An item is built from its roles and left out (undefined) when every one of them is not present (`none`); the roles
   // are given here only, so a new footer item cannot escape the hiding. The tap opens the first role's entity.
   const item = (
@@ -225,20 +249,20 @@ export function footerItems(
           missing: text === undefined,
           entityId: entities[roles[0]],
         };
-  const number = (id: string, role: RolePath, caption?: string): FooterItem | undefined => {
+  const textOf = (role: RolePath): string | undefined => {
     const value: unknown = readings[role];
-    return item(
-      id,
-      [role],
-      caption,
-      formatReading(
-        role,
-        typeof value === 'number' || typeof value === 'boolean' ? value : undefined,
-        entities[role],
-        display,
-      ),
+    return formatReading(
+      role,
+      typeof value === 'number' || typeof value === 'boolean' ? value : undefined,
+      entities[role],
+      display,
     );
   };
+  const number = (id: string, role: RolePath, caption: string): FooterItem | undefined =>
+    item(id, [role], caption, textOf(role));
+  /** The item of a role, or of its fallback role while the role has no entity. */
+  const withFallback = (id: string, role: RolePath, fallback: RolePath, caption: string): FooterItem | undefined =>
+    number(id, absent.has(role) ? fallback : role, caption);
   const onOff = readings['unit.on_off'];
   const season =
     readings['unit.summer'] === true
@@ -246,6 +270,30 @@ export function footerItems(
       : readings['unit.winter'] === true
         ? FOOTER_LABELS.winter
         : undefined;
+  // The efficiency: the system COP, else the register COP; 0 is no efficiency whichever role feeds it.
+  const efficiencyRole: RolePath = absent.has('unit.system_cop') ? 'unit.cop' : 'unit.system_cop';
+  const efficiency = item(
+    'cop',
+    [efficiencyRole],
+    inputs.mode === 'active_cooling' ? FOOTER_LABELS.eer : FOOTER_LABELS.cop,
+    readings[efficiencyRole] === 0 ? undefined : textOf(efficiencyRole),
+  );
+  const { mode } = inputs;
+  const htr =
+    (mode === 'heating' || mode === 'active_cooling') &&
+    inputs.features.htr === true &&
+    (inputs.dhw === 'external' || inputs.dhw === 'internal') &&
+    !absent.has('htr.power')
+      ? number('htr_power', 'htr.power', FOOTER_LABELS.htr)
+      : undefined;
+  const power =
+    mode === 'heating'
+      ? [withFallback('dg1_power', 'heating.power', 'heating.capacity', FOOTER_LABELS.dg1), htr]
+      : mode === 'dhw'
+        ? [withFallback('dhw_power', 'dhw.power', 'heating.capacity', FOOTER_LABELS.dhw)]
+        : mode === 'active_cooling'
+          ? [number('cooling_power', 'cooling.capacity', FOOTER_LABELS.cooling), htr]
+          : [];
   const items = [
     item(
       'on_off',
@@ -267,9 +315,8 @@ export function footerItems(
       season,
     ),
     number('outside_temperature', 'source.outside_temperature', FOOTER_LABELS.outside),
-    number('cop', 'unit.cop', FOOTER_LABELS.cop),
-    number('condensation_capacity', 'heating.capacity', FOOTER_LABELS.condensation),
-    number('evaporation_capacity', 'cooling.capacity', FOOTER_LABELS.evaporation),
+    efficiency,
+    ...power,
   ];
   const present = items.filter((entry) => entry !== undefined);
   return compact ? present.filter((entry) => entry.tier === 'key') : present;

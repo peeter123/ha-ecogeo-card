@@ -204,7 +204,9 @@ states:
 
 - A role the unit does not have is set to `none` (`entities: { brine: { pressure: none } }`): no default entity, no
   label or footer item, and no value for the mode. Its component stays drawn. An unknown or unavailable entity
-  keeps its label with a dash instead. `none` counts as an entity setting, so it does not give the sample.
+  keeps its label with a dash instead. `none` counts as an entity setting, so it does not give the sample. Hiding the
+  footer's efficiency takes both `unit.cop` and `unit.system_cop` set to `none`: a config with only `unit.cop: none`
+  shows the system COP once the firmware has `system_cop_display`.
 - Five roles are optional, because only newer firmware has their entities: `htr.active`, `htr.power`, `heating.power`,
   `dhw.power` and `unit.system_cop`. An optional role has no entity, and whatever uses it takes its fallback, when it is
   set to `none`, or when it is not set in `entities` and its prefix default does not exist in Home Assistant (without a
@@ -649,9 +651,38 @@ A value of a part that is not drawn is not shown (no DHW storage, or an unused t
 source values). A drawn value with no value shows a muted dash and keeps its place. A role set to `none` shows nothing
 (see Using another source).
 
-The footer shows the mode, the on/off state, the season, the outside temperature, the COP, the condensation and
-evaporation capacity, and the alarm and offline indications. An item whose role is `none` is left out; the season only
-when both summer and winter are `none`.
+The footer shows the mode, the on/off state, the season, the outside temperature, the efficiency (COP or EER), the
+power items of the mode, and the alarm and offline indications. An item whose role is `none` is left out; the season
+only when both summer and winter are `none`.
+
+The power items follow the mode, because the firmware's DHW power already includes the HTR heat: showing DG1, DHW and
+HTR together while heating would count that heat twice. By mode, the items of one mode add up to the useful heat (DG1
+plus HTR is the condensation capacity while heating). The condensation and evaporation capacities are no longer footer
+items of their own; their roles stay, and they are the fallbacks below.
+
+| Mode | Items (caption: role, fallback) |
+| --- | --- |
+| Heating | DG1: `heating.power`, else `heating.capacity`. HTR: `htr.power`, no fallback |
+| DHW | DHW: `dhw.power`, else `heating.capacity` |
+| Active cooling | Cooling: `cooling.capacity`. HTR: `htr.power`, no fallback |
+| Passive cooling, defrost, off, standby | none |
+
+- The HTR item shows in heating and active cooling whenever HTR can run there: the `htr` feature is `true`, the DHW
+  tank is in use (external or internal) and the HTR power role has an entity. It shows 0 W while HTR is idle, so the
+  footer changes with the mode and does not reflow on every HTR run. With `dhw: unused` the HTR group is drawn but
+  never runs, so there is no item.
+- The HTR power is the firmware's estimate: while the HTR coil is on, the condensation capacity minus the modelled
+  production flow times the production temperature difference, averaged over 30 samples and limited to 0 W up to the
+  capacity; in active cooling with HTR it equals the whole condensation capacity. It can read 0 W while HTR runs; the drawing's HTR state comes from `htr_active`, not from the power.
+- DG1 and DHW take the condensation capacity (`heating.capacity`) when their power role has no entity (older
+  firmware, another integration). That capacity also holds any HTR heat, so while HTR runs the fallback DG1 is
+  higher than the firmware's own DG1 power; with the firmware's split the figure is exact. An existing but
+  unavailable power entity shows a muted dash instead of the fallback.
+- The efficiency is the system COP (`unit.system_cop`, `system_cop_display`), else the register COP (`unit.cop`) when
+  the system COP role has no entity. The system COP is the firmware's figure over the useful heat and the measured
+  electricity, so it needs the installation's electricity meter; users without a meter, or without that entity, get the
+  register COP automatically. Whichever role feeds it, a value of 0 (compressor stopped, the first minute after a
+  start, defrost) shows as a muted dash. The caption is EER in active cooling and COP in every other mode.
 
 ### Formatting
 
@@ -702,8 +733,7 @@ window, so on a desktop screen the drawing would be taller than the screen and t
 drawing's width is therefore `drawingWidth` in `src/lib/layout.ts`: the card's width, or in a panel view at most
 `(window height - header height - footer allowance) * viewBox width / viewBox height`. The header height is Home
 Assistant's `--header-height` (56 px if unset) plus its `--safe-area-inset-top` (0 if unset); outside a panel view the card reads neither. The footer allowance is 64 px: one footer line is about 20 px with 8 + 12 px of
-padding, and the footer wraps to two lines for the longer modes (Passive cooling) at card widths of 600-620 px (the footer is as wide as the card), 60 px, so
-the allowance covers that case and the footer stays on screen even then; a one-line footer leaves up to 24 px of free
+padding. The longest footer (active cooling with HTR: mode, on/off, season, outside temperature, EER, Cooling and HTR) wraps to two lines at the narrowest widths of the full layout, measured at 624 px with `detail: simplified`: 60 px, within the allowance, so the footer stays on screen even then (at 664 px with `detail: full` and in a 1280 x 800 window it stays on one line); a one-line footer leaves up to 24 px of free
 space under it. The width is never below 320 px, the narrowest verified compact width (a window too short for that scrolls). In a 1280 x 800 px window the
 simplified arrangement (1000 x 545) is 1247 px wide; for a 1280 px wide card, a window about 820 px or more tall leaves the drawing at the card's width.
 
@@ -719,7 +749,7 @@ with `panel=1` (a control, a 56 px mock header, and a slot as wide as the window
 
 The schematic at the simplified detail level whatever `detail` says (the resolved config keeps the user's `detail`;
 only the drawing is told `simplified`, and its geometry does not change), only the key value labels, and a footer
-with the mode, the COP, the outside temperature and the alarm and offline indications.
+with the mode, the COP (or EER), the outside temperature and the alarm and offline indications.
 
 Every value label and every footer value has a tier, `key` or `detail` (value labels in `KEY_LABELS` in `src/diagram/label-places.ts`, footer values in `FOOTER_KEY_ITEMS` in `src/diagram/labels.ts`), and the
 compact layout draws only the key ones:
@@ -729,7 +759,7 @@ compact layout draws only the key ones:
 | Key | production outlet and return temperature (probes 33, 34), brine outlet and inlet temperature (31, 32), compressor speed in rpm (11), the DHW temperature, and the source's outlet: the air unit Out (air), the ground loop Out (ground), the ground loop Out in the hybrid (which has no air unit Out) |
 | Detail | pressures, pump speeds, the DG1 setpoint, compressor percentage and power, superheat, expansion valve opening, condensation and evaporation temperatures, the tank setpoint and start delta-T, the fan speed and outside temperature under the air unit, the source's In, every "Demand" caption |
 
-Footer: the COP and the outside temperature are the key items; the capacities, on/off and the season are detail. The
+Footer: the efficiency (COP or EER) and the outside temperature are the key items; the power items (DG1, DHW, Cooling, HTR), on/off and the season are detail. The
 mode, the alarm and the offline indication are texts of the card, not values, and always show, in both layouts, as
 does the sample-values note.
 
@@ -799,7 +829,7 @@ the compact layout and at least 8 px in the full one, and the footer wraps onto 
   compact layout draws no captions inside the drawing, which would render at about 4 px.
 - Footer: a wrapping flex row with row and column gaps, in both layouts.
 
-Browser tests (`test/card/compact.browser.test.ts`) measure these in Chromium and WebKit at 360 px, and the footer at 320 px.
+Browser tests (`test/card/compact.browser.test.ts`) measure these in Chromium and WebKit at 360 px, and the footer at 320 px, and at 624 px (`detail: simplified`) and 664 px (`detail: full`) with the longest footer; `test/card/panel.browser.test.ts` checks it in a 1280 x 800 window.
 
 ### The compact threshold
 

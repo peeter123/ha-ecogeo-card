@@ -190,7 +190,7 @@ describe('units, locale and precision', () => {
   test('locale: no thousands separator in 2803 rpm or 4712 W', async () => {
     const card = await mount({}, hassOf());
     expect(valueOf(card, 'compressor_speed')).toBe(`2803${NBSP}rpm`);
-    expect(footer(card, 'condensation_capacity')).toBe(`4712${NBSP}W`);
+    expect(footer(card, 'dg1_power')).toBe(`4712${NBSP}W`);
     card.remove();
   });
 
@@ -330,7 +330,7 @@ describe('roles not present', () => {
 
   test('No COP: the footer shows no COP item, the others stay', async () => {
     for (const layout of ['full', 'compact']) {
-      const card = await mount({ entities: { unit: { cop: 'none' } }, layout }, hassOf());
+      const card = await mount({ entities: { unit: { cop: 'none', system_cop: 'none' } }, layout }, hassOf());
       expect(root(card).querySelector('[data-footer="cop"]')).toBeNull();
       expect(root(card).querySelector('[data-footer="outside_temperature"]')).not.toBeNull();
       card.remove();
@@ -413,14 +413,16 @@ describe('roles not present', () => {
 });
 
 describe('footer', () => {
-  test('heating, winter, COP 6.0 and 4712 W', async () => {
+  test('heating, winter, system COP 5.8, DG1 4712 W and HTR 0 W', async () => {
     const card = await mount({}, hassOf());
     expect(root(card).querySelector('.mode')?.textContent.trim()).toBe('Heating');
     expect(footer(card, 'on_off')).toBe('On');
     expect(footer(card, 'season')).toBe(FOOTER_LABELS.winter);
-    expect(footer(card, 'cop')).toBe('6.0');
-    expect(footer(card, 'condensation_capacity')).toBe(nb('4712 W'));
-    expect(footer(card, 'evaporation_capacity')).toBe(nb('3926 W'));
+    expect(footer(card, 'cop')).toBe('5.8');
+    expect(footer(card, 'dg1_power')).toBe(nb('4712 W'));
+    expect(footer(card, 'htr_power')).toBe(nb('0 W'));
+    expect(root(card).querySelector('[data-footer="condensation_capacity"]')).toBeNull();
+    expect(root(card).querySelector('[data-footer="evaporation_capacity"]')).toBeNull();
     expect(footer(card, 'outside_temperature')).toBe(nb('3.8 °C'));
     card.remove();
   });
@@ -445,6 +447,13 @@ describe('footer', () => {
       rd,
       Object.fromEntries(ROLE_PATHS.map((role) => [role, undefined])) as Record<RolePath, undefined>,
       { locale: {} },
+      {
+        mode: 'heating',
+        features: mergeFeatures(4, {}),
+        dhw: 'external',
+        notPresent: new Set(),
+        absent: new Set(),
+      },
     );
     expect(items.map((item) => item.text)).toEqual(new Array(items.length).fill(NO_VALUE));
     expect(items.every((item) => item.missing)).toBe(true);
@@ -471,7 +480,7 @@ describe('tap opens more-info (read-only)', () => {
     const events: CustomEvent<{ entityId: string }>[] = [];
     card.addEventListener('hass-more-info', (event) => events.push(event as CustomEvent<{ entityId: string }>));
     root(card).querySelector<HTMLButtonElement>('[data-footer="cop"] button')?.click();
-    expect(events.map((event) => event.detail.entityId)).toEqual([idOf('unit.cop')]);
+    expect(events.map((event) => event.detail.entityId)).toEqual([idOf('unit.system_cop')]);
     card.remove();
   });
 
@@ -996,5 +1005,191 @@ describe('decimalsInState', () => {
     [undefined, 0],
   ])('"%s" has %s decimals', (text, decimals) => {
     expect(decimalsInState(text)).toBe(decimals);
+  });
+});
+
+describe('footer power items and efficiency (add-htr-state)', () => {
+  type Over = Parameters<typeof liveStates>[0];
+  const display = { locale: { language: 'en', number_format: 'language' } } as const;
+  const everyEntity = Object.fromEntries(ROLE_PATHS.map((role) => [role, idOf(role)])) as Record<
+    RolePath,
+    string | undefined
+  >;
+  /** The footer of a mode: the entity of every role in `absent` or `none` is left out, as the card does. */
+  function footerOf(
+    mode: Parameters<typeof footerItems>[3]['mode'],
+    over: Over = {},
+    options: {
+      htr?: boolean;
+      dhw?: 'external' | 'internal' | 'unused' | 'none';
+      absent?: readonly RolePath[];
+      none?: readonly RolePath[];
+      compact?: boolean;
+    } = {},
+  ) {
+    const absent = new Set<RolePath>([...(options.absent ?? []), ...(options.none ?? [])]);
+    const notPresent = new Set<RolePath>(options.none ?? []);
+    const entities = { ...everyEntity };
+    for (const role of absent) entities[role] = undefined;
+    const states = liveStates(over);
+    return footerItems(
+      readRoles(states, entities),
+      entities,
+      display,
+      {
+        mode,
+        features: mergeFeatures(4, { htr: options.htr ?? true }),
+        dhw: options.dhw ?? 'external',
+        notPresent,
+        absent,
+      },
+      options.compact ?? false,
+    );
+  }
+  const shown = (items: ReturnType<typeof footerOf>): string[] =>
+    items.map((item) => `${item.caption === undefined ? '' : `${item.caption} `}${item.text}`);
+  const power = (items: ReturnType<typeof footerOf>): string[] =>
+    items.filter((item) => item.tier === 'detail' && item.id.endsWith('_power')).map((item) => item.id);
+
+  test('Footer while heating: system COP, DG1 and HTR, no condensation or evaporation item', () => {
+    const items = footerOf('heating', {
+      'unit.winter': 'on',
+      'unit.system_cop': '4.6',
+      'heating.power': '5211',
+      'htr.power': '1835',
+    });
+    expect(shown(items)).toEqual([
+      'On',
+      FOOTER_LABELS.winter,
+      `Outside ${nb('3.8 °C')}`,
+      'COP 4.6',
+      `DG1 ${nb('5211 W')}`,
+      `HTR ${nb('1835 W')}`,
+    ]);
+    expect(items.map((item) => item.id)).not.toContain('condensation_capacity');
+    expect(items.map((item) => item.id)).not.toContain('evaporation_capacity');
+  });
+
+  test('DHW power: only DHW', () => {
+    const items = footerOf('dhw', { 'dhw.power': '5043' });
+    expect(shown(items).slice(-1)).toEqual([`DHW ${nb('5043 W')}`]);
+    expect(power(items)).toEqual(['dhw_power']);
+  });
+
+  test('Active cooling with HTR: Cooling, HTR and the EER caption', () => {
+    const items = footerOf(
+      'active_cooling',
+      { 'cooling.capacity': '4000', 'htr.power': '3200', 'unit.system_cop': '3.9' },
+      { dhw: 'internal' },
+    );
+    expect(shown(items).slice(-3)).toEqual(['EER 3.9', `Cooling ${nb('4000 W')}`, `HTR ${nb('3200 W')}`]);
+  });
+
+  test('HTR idle while heating shows 0 W', () => {
+    const items = footerOf('heating', { 'htr.active': 'off', 'htr.power': '0' });
+    expect(shown(items)).toContain(`HTR ${nb('0 W')}`);
+  });
+
+  test.each(['passive_cooling', 'defrost', 'off', 'standby'] as const)('no power item in %s', (mode) => {
+    expect(power(footerOf(mode))).toEqual([]);
+  });
+
+  test('DG1 without the firmware split shows the condensation capacity, and taps its entity', () => {
+    const items = footerOf('heating', { 'heating.capacity': '4712' }, { absent: ['heating.power'] });
+    const dg1 = items.find((item) => item.id === 'dg1_power');
+    expect(dg1?.caption).toBe(FOOTER_LABELS.dg1);
+    expect(dg1?.text).toBe(nb('4712 W'));
+    expect(dg1?.entityId).toBe(idOf('heating.capacity'));
+  });
+
+  test('DHW without the firmware split shows the condensation capacity', () => {
+    const items = footerOf('dhw', { 'heating.capacity': '4300' }, { absent: ['dhw.power'] });
+    expect(shown(items).slice(-1)).toEqual([`DHW ${nb('4300 W')}`]);
+  });
+
+  test('no HTR power role: no HTR item', () => {
+    expect(power(footerOf('heating', {}, { absent: ['htr.power'] }))).toEqual(['dg1_power']);
+    expect(power(footerOf('active_cooling', {}, { none: ['htr.power'] }))).toEqual(['cooling_power']);
+  });
+
+  test.each([
+    ['an unused tank', { dhw: 'unused' }],
+    ['no tank', { dhw: 'none' }],
+    ['HTR false', { htr: false }],
+  ] as const)('no HTR item with %s', (_name, options) => {
+    expect(power(footerOf('heating', {}, options))).toEqual(['dg1_power']);
+  });
+
+  test('power unavailable: a muted dash, not the fallback', () => {
+    const items = footerOf('heating', { 'heating.power': 'unavailable', 'heating.capacity': '4712' });
+    const dg1 = items.find((item) => item.id === 'dg1_power');
+    expect(dg1).toMatchObject({ text: NO_VALUE, missing: true });
+  });
+
+  test('an explicit entity Home Assistant does not know is not absent: it keeps its dash', () => {
+    const entities = { ...everyEntity, 'heating.power': 'sensor.typo' };
+    const items = footerItems(readRoles(liveStates(), entities), entities, display, {
+      mode: 'heating',
+      features: mergeFeatures(4, {}),
+      dhw: 'external',
+      notPresent: new Set(),
+      absent: new Set(),
+    });
+    expect(items.find((item) => item.id === 'dg1_power')).toMatchObject({ text: NO_VALUE, missing: true });
+  });
+
+  test('a capacity role set to none hides the item that falls back to it', () => {
+    const items = footerOf('heating', {}, { absent: ['heating.power'], none: ['heating.capacity'] });
+    expect(power(items)).toEqual(['htr_power']);
+  });
+
+  test('power items are detail tier, formatted like capacities; the efficiency is key tier', () => {
+    const items = footerOf('heating');
+    for (const id of ['dg1_power', 'htr_power']) expect(items.find((item) => item.id === id)?.tier).toBe('detail');
+    expect(items.find((item) => item.id === 'cop')?.tier).toBe('key');
+    expect(items.find((item) => item.id === 'dg1_power')?.text).toBe(nb('4712 W'));
+  });
+
+  test('Compact footer without power items', () => {
+    const items = footerOf('heating', {}, { compact: true });
+    expect(items.map((item) => item.id).sort()).toEqual(['cop', 'outside_temperature']);
+  });
+
+  test('System COP first, register COP as fallback', () => {
+    const live = { 'unit.system_cop': '4.6', 'unit.cop': '5.1' } as const;
+    expect(shown(footerOf('heating', live)).filter((text) => text.startsWith('COP'))).toEqual(['COP 4.6']);
+    const fallback = footerOf('heating', live, { absent: ['unit.system_cop'] });
+    expect(fallback.find((item) => item.id === 'cop')).toMatchObject({ text: '5.1', entityId: idOf('unit.cop') });
+  });
+
+  test('Zero is no efficiency, whichever role feeds it', () => {
+    const cop = (items: ReturnType<typeof footerOf>) => items.find((item) => item.id === 'cop');
+    expect(cop(footerOf('standby', { 'unit.system_cop': '0' }))).toMatchObject({ text: NO_VALUE, missing: true });
+    expect(cop(footerOf('standby', { 'unit.cop': '0' }, { absent: ['unit.system_cop'] }))).toMatchObject({
+      text: NO_VALUE,
+      missing: true,
+    });
+  });
+
+  test('EER while cooling, COP in every other mode', () => {
+    const caption = (mode: Parameters<typeof footerOf>[0]) => footerOf(mode).find((item) => item.id === 'cop')?.caption;
+    expect(caption('active_cooling')).toBe('EER');
+    for (const mode of ['heating', 'dhw', 'passive_cooling', 'defrost', 'off', 'standby'] as const)
+      expect(caption(mode), mode).toBe('COP');
+  });
+
+  test('System COP unavailable: a muted dash, not the register COP', () => {
+    const items = footerOf('heating', { 'unit.system_cop': 'unavailable', 'unit.cop': '5.1' });
+    expect(items.find((item) => item.id === 'cop')).toMatchObject({ text: NO_VALUE, missing: true });
+  });
+
+  test('No COP: both roles none show no COP item', () => {
+    const items = footerOf('heating', {}, { none: ['unit.cop', 'unit.system_cop'] });
+    expect(items.map((item) => item.id)).not.toContain('cop');
+  });
+
+  test('only the system COP set to none falls back to the register COP', () => {
+    const items = footerOf('heating', { 'unit.cop': '5.1' }, { none: ['unit.system_cop'] });
+    expect(items.find((item) => item.id === 'cop')?.text).toBe('5.1');
   });
 });

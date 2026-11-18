@@ -1,10 +1,10 @@
 // The emulator's second mock source (add-entity-discovery D11): a heat pump integrated by hand through another
 // integration, as a user of a KNX or Modbus bridge would have it. Other entity ids (`wp_<n>`), Dutch friendly names,
 // pressures in kPa, the compressor speed in Hz, an enum compressor mode with Dutch values, a switch for on/off, and
-// eight roles the installation does not have (`none`). The scenarios' values are mapped onto these entities, so every
+// two roles the installation does not have (`none`) and the five optional roles left unbound. The scenarios' values are mapped onto these entities, so every
 // scenario works with both namings. Exported for the suggestion tests: the fixture and the screenshots are one
 // source. The ids and names are invented; nothing here comes from a live installation.
-import { ROLE_BY_PATH, ROLE_PATHS, defaultEntityId, type RolePath } from '../src/config/roles';
+import { OPTIONAL_ROLE_PATHS, ROLE_BY_PATH, ROLE_PATHS, defaultEntityId, type RolePath } from '../src/config/roles';
 import type { HassDevice, HassEntityRegistryEntry, HassEntityState } from '../src/lib/hass';
 import { DEMO_PREFIX, scenarioStates, type StateMap } from './scenarios';
 
@@ -31,19 +31,17 @@ interface ForeignEntity {
   deviceClass?: string;
 }
 
-/** The roles the foreign installation has no entity for: `none` in the card config. */
-// The five optional roles (add-htr-state) are `none` here for now: the foreign installation has none of the firmware's
-// derived sensors. Task 3.2 (the footer group) leaves them unbound instead, so that the fallbacks show.
-export const FOREIGN_NONE: readonly RolePath[] = [
-  'source.fan_speed',
-  'unit.cop',
-  'heating.setpoint',
-  'heating.power',
-  'dhw.power',
-  'htr.active',
-  'htr.power',
-  'unit.system_cop',
-];
+/** The roles the foreign installation has no entity for and the config sets to `none`. */
+export const FOREIGN_NONE: readonly RolePath[] = ['source.fan_speed', 'heating.setpoint'];
+
+/**
+ * The optional roles (add-htr-state D3) the foreign installation leaves unbound: the config writes nothing for them, so
+ * the card shows their fallbacks (the condensation capacity as DG1 or DHW, the register COP, no HTR item).
+ */
+export const FOREIGN_UNBOUND: readonly RolePath[] = OPTIONAL_ROLE_PATHS;
+
+/** Every role the foreign naming has no entity for: the `none` roles and the unbound optional ones. */
+export const FOREIGN_EMPTY: readonly RolePath[] = [...FOREIGN_NONE, ...FOREIGN_UNBOUND];
 
 /** The `states` option of the foreign naming: its enum value for defrost (off is the switch, read as a boolean). */
 export const FOREIGN_STATES = { defrost: ['Ontdooien'] } as const;
@@ -112,6 +110,7 @@ const FOREIGN: Readonly<Partial<Record<RolePath, ForeignEntity>>> = {
   'unit.summer': { id: 'wp_31', name: 'Zomerbedrijf' },
   'unit.winter': { id: 'wp_32', name: 'Winterbedrijf' },
   'unit.alarm': { id: 'wp_33', name: 'Storing' },
+  'unit.cop': { id: 'wp_35', name: 'Rendement warmtepomp' },
   'unit.connection': { id: 'wp_34', name: 'Verbinding warmtepomp', deviceClass: 'connectivity' },
 };
 
@@ -156,12 +155,13 @@ export const FOREIGN_BINDING: Readonly<Partial<Record<RolePath, string>>> = Obje
   }),
 );
 
-/** The `entities` config of the foreign naming: every bound role by id, every `none` role `none`. */
+/** The `entities` config of the foreign naming: every bound role by id, every `none` role `none`, the optional roles left out. */
 export function foreignEntitiesConfig(): Record<string, Record<string, string>> {
   const groups: Record<string, Record<string, string>> = {};
   for (const path of ROLE_PATHS) {
     const [group = '', name = ''] = path.split('.');
-    (groups[group] ??= {})[name] = FOREIGN_BINDING[path] ?? 'none';
+    const bound = FOREIGN_BINDING[path];
+    if (bound !== undefined || !FOREIGN_UNBOUND.includes(path)) (groups[group] ??= {})[name] = bound ?? 'none';
   }
   return groups;
 }

@@ -7,7 +7,7 @@ import {
   FOREIGN_BINDING,
   FOREIGN_DEVICE_ID,
   FOREIGN_MODE_OPTIONS,
-  FOREIGN_NONE,
+  FOREIGN_EMPTY,
 } from '../../dev/foreign';
 import { ROLES } from '../../src/config/roles';
 import { fieldsWithPaths } from '../../src/editor/schema';
@@ -108,7 +108,7 @@ describe('device picker and suggestions', () => {
       EDITOR.suggest.filled(Object.keys(FOREIGN_BINDING).length),
       EDITOR.suggest.empty(
         ROLES.map((role) => role.path)
-          .filter((path) => (FOREIGN_NONE as readonly string[]).includes(path))
+          .filter((path) => (FOREIGN_EMPTY as readonly string[]).includes(path))
           .map(roleName),
       ),
     ]);

@@ -3,12 +3,15 @@ import { deriveMode } from '../../src/calc/mode';
 import { readRoles } from '../../src/calc/readings';
 import { statesOf } from '../../src/config/options';
 import { resolveConfig } from '../../src/config/resolve';
-import { ROLE_PATHS } from '../../src/config/roles';
+import { OPTIONAL_ROLE_PATHS, ROLE_PATHS } from '../../src/config/roles';
 import { mergeFeatures } from '../../src/config/variants';
 import {
   FOREIGN_BINDING,
+  FOREIGN_EMPTY,
   FOREIGN_NONE,
+  FOREIGN_UNBOUND,
   firmwareRegistry,
+  foreignEntitiesConfig,
   foreignRegistry,
   foreignStates,
   namingStates,
@@ -35,13 +38,38 @@ describe('foreign naming mock', () => {
     expect(readings('foreign', name).mode).toBe(readings('firmware', name).mode);
   });
 
-  test('every role is bound or `none`, ids are not firmware ids, and the none roles have no entity', () => {
+  test('every role is bound, `none` or an unbound optional role, ids are not firmware ids, and the none roles have no entity', () => {
     for (const path of ROLE_PATHS) {
       const bound = FOREIGN_BINDING[path];
-      expect(bound === undefined, path).toBe(FOREIGN_NONE.includes(path));
+      expect(bound === undefined, path).toBe(FOREIGN_EMPTY.includes(path));
       if (bound !== undefined) expect(bound, path).toMatch(/^(sensor|binary_sensor|number|switch)\.wp_\d+$/);
     }
     expect(new Set(Object.values(FOREIGN_BINDING)).size).toBe(Object.keys(FOREIGN_BINDING).length);
+  });
+
+  test('add-htr-state "Foreign naming": no optional role is bound or written, and unit.cop is bound', () => {
+    for (const path of OPTIONAL_ROLE_PATHS) {
+      expect(FOREIGN_BINDING[path], path).toBeUndefined();
+      expect(FOREIGN_NONE, path).not.toContain(path);
+    }
+    expect(FOREIGN_UNBOUND).toEqual(OPTIONAL_ROLE_PATHS);
+    expect(FOREIGN_BINDING['unit.cop']).toBe('sensor.wp_35');
+    expect(FOREIGN_NONE).not.toContain('unit.cop');
+    const entities = foreignEntitiesConfig();
+    const flat = Object.fromEntries(
+      Object.entries(entities).flatMap(([group, roles]) =>
+        Object.entries(roles).map(([name, id]) => [`${group}.${name}`, id]),
+      ),
+    );
+    for (const path of OPTIONAL_ROLE_PATHS) expect(flat, path).not.toHaveProperty(path);
+    expect(flat['unit.cop']).toBe(FOREIGN_BINDING['unit.cop']);
+    expect(flat['source.fan_speed']).toBe('none');
+  });
+
+  test('the foreign COP entity carries the scenario register COP, in Dutch', () => {
+    const cop = foreignStates(SCENARIOS.heating.states)[FOREIGN_BINDING['unit.cop'] ?? ''];
+    expect(cop?.state).toBe(SCENARIOS.heating.states['unit.cop']);
+    expect(cop?.attributes.friendly_name).toMatch(/[Rr]endement/);
   });
 
   test('values are converted: kPa, Hz, an enum mode and a switch', () => {
@@ -82,6 +110,6 @@ describe('foreign naming mock', () => {
 
   test('the none roles read no value on the foreign naming', () => {
     const { read } = readings('foreign', 'heating');
-    for (const path of FOREIGN_NONE) expect(read[path], path).toBeUndefined();
+    for (const path of FOREIGN_EMPTY) expect(read[path], path).toBeUndefined();
   });
 });

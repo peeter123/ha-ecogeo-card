@@ -3,7 +3,7 @@ import {
   FIRMWARE_DEVICE_ID,
   FOREIGN_BINDING,
   FOREIGN_DEVICE_ID,
-  FOREIGN_NONE,
+  FOREIGN_EMPTY,
   firmwareRegistry,
   foreignRegistry,
   namingStates,
@@ -190,7 +190,7 @@ describe('suggestions', () => {
     const { states, registry } = foreign();
     const result = run(states, registry, FOREIGN_DEVICE_ID);
     expect(flat(result.entities)).toEqual(FOREIGN_BINDING);
-    expect([...result.report.empty].sort()).toEqual([...FOREIGN_NONE].sort());
+    expect([...result.report.empty].sort()).toEqual([...FOREIGN_EMPTY].sort());
     expect(Object.values(flat(result.entities))).not.toContain('sensor.wp_diag_1');
     expect(Object.values(flat(result.entities))).not.toContain('sensor.wp_diag_2');
   });
@@ -302,9 +302,9 @@ describe('suggestions', () => {
   test('Report', () => {
     const { states, registry } = foreign();
     const result = run(states, registry, FOREIGN_DEVICE_ID);
-    expect(result.report.filled).toHaveLength(ROLES.length - FOREIGN_NONE.length);
-    expect(result.report.empty).toEqual(expect.arrayContaining([...FOREIGN_NONE]));
-    expect(result.report.empty).toHaveLength(FOREIGN_NONE.length);
+    expect(result.report.filled).toHaveLength(ROLES.length - FOREIGN_EMPTY.length);
+    expect(result.report.empty).toEqual(expect.arrayContaining([...FOREIGN_EMPTY]));
+    expect(result.report.empty).toHaveLength(FOREIGN_EMPTY.length);
   });
 });
 

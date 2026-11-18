@@ -124,8 +124,11 @@ export const VALUE_CAPTIONS = {
 export const FOOTER_LABELS = {
   outside: 'Outside',
   cop: 'COP',
-  condensation: 'Condensation',
-  evaporation: 'Evaporation',
+  eer: 'EER',
+  dg1: 'DG1',
+  dhw: 'DHW',
+  cooling: 'Cooling',
+  htr: 'HTR',
   summer: 'Summer',
   winter: 'Winter',
 } as const;

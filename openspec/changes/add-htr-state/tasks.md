@@ -73,7 +73,7 @@ with active cooling disabled it derives `heating`, and drawing HTR there is D1's
 
 ## 3. Footer: power items by mode and system COP
 
-- [ ] 3.1 Rework `footerItems()` in `src/diagram/labels.ts` (design D2, D4): remove the condensation and evaporation
+- [x] 3.1 Rework `footerItems()` in `src/diagram/labels.ts` (design D2, D4): remove the condensation and evaporation
   items; add the power items by mode with captions "DG1", "DHW", "Cooling" and "HTR" in `src/strings.ts`, the DG1 and
   DHW fallback to the condensation capacity, the HTR item only with HTR `true`, a DHW tank in use and an `htr.power`
   entity; the efficiency from `unit.system_cop` or else `unit.cop`, 0 as a muted dash, caption "EER" in
@@ -81,24 +81,30 @@ with active cooling disabled it derives `heating`, and drawing HTR there is D1's
   Verify: `test/diagram/labels.test.ts` covers every scenario of live-values "Footer", "Footer power items by mode",
   "Footer efficiency" and "Roles not present are hidden"; `test/card/compact.test.ts` covers "Compact footer without
   power items".
-- [ ] 3.2 Leave the optional roles unbound in the foreign naming (`dev/foreign.ts`), so it shows every fallback, and
+- [x] 3.2 Leave the optional roles unbound in the foreign naming (`dev/foreign.ts`), so it shows every fallback, and
   bind `unit.cop` to a foreign COP entity (design D7, decided in the group 1 review) so the register COP fallback
   shows; update the foreign naming's description in the README.
   Verify: `test/dev/foreign.test.ts` checks that no optional role is bound and `unit.cop` is; a subagent screenshots
   the foreign naming in the heating with HTR recovery scenario and confirms dev-emulator "Foreign fallbacks".
-- [ ] 3.3 Check the footer's wrap and the panel fit with the longest new footer (active cooling with HTR, EER) at
+- [x] 3.3 Check the footer's wrap and the panel fit with the longest new footer (active cooling with HTR, EER) at
   624 px (`detail: simplified`), 664 px (`detail: full`) and in the 1280 x 800 panel view.
   Verify: `test/card/compact.browser.test.ts` (footer wrap) and `test/card/panel.browser.test.ts` pass in Chromium and
   WebKit with that footer; if the footer needs more than the 64 px allowance, raise the allowance and record why in
   the docs.
-- [ ] 3.4 Update the footer snapshots and screenshot the emulator in the heating with HTR, DHW, active cooling with
+- [x] 3.4 Update the footer snapshots and screenshot the emulator in the heating with HTR, DHW, active cooling with
   HTR and standby scenarios, full and compact layout.
   Verify: a subagent confirms each footer against live-values (items, captions, units with a no-break space, a dash
   for COP 0 in standby) and that no condensation or evaporation item is shown.
-- [ ] 3.5 Update the footer section and the key/detail tier table of `docs/ecogeo-card.md` (the table of design D2,
+- [x] 3.5 Update the footer section and the key/detail tier table of `docs/ecogeo-card.md` (the table of design D2,
   the system COP and its meter dependency, the register COP fallback, the HTR power as the firmware's estimate) and the
   README's footer description.
   Verify: `test/docs.test.ts` and `test/readme.test.ts` pass; the docs no longer list the capacities as footer items.
+
+Note (group 3 review): `docs/images/heating.png` and `phone-heating.png` are refreshed in this group, as earlier
+groups that changed the look did. Hiding the efficiency takes both COP roles set to `none` (design D4, documented).
+The emulator keeps its condensation capacity slider; no DG1 or HTR power slider is added. The prefix mismatch of
+`test/card/hidden-labels.browser.test.ts` (`ecoforest_ecogeo` against the `demo_ecogeo` mock states, older than this
+change) is a follow-up; this group only makes its "No COP" assertion set both COP roles to `none`.
 
 ## 4. Editor: binding check and suggestions
 
@@ -134,3 +140,5 @@ with active cooling disabled it derives `heating`, and drawing HTR there is D1's
 - One fresh Opus review of the whole change before archiving.
 - Archive the change and merge its delta specs into `openspec/specs/`; name it in `AGENTS.md`.
 - Confirm HTR in active cooling on the live installation next summer and record it in `private/installation.md`.
+- Follow-up change: point `test/card/hidden-labels.browser.test.ts` at the `demo_ecogeo` mock states, so its overlap
+  checks measure real values, and fix any overlap that surfaces.

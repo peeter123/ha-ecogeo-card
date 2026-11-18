@@ -4,10 +4,10 @@ import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';
 import { MockHass } from '../../dev/mock-hass';
-import { SCENARIO_NAMES, SCENARIOS, scenarioStates } from '../../dev/scenarios';
+import { DEMO_PREFIX, SCENARIO_NAMES, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import type { CardConfig } from '../../src/lib/config';
-import { COMPACT_BELOW, COMPACT_HYSTERESIS } from '../../src/lib/layout';
+import { COMPACT_BELOW, COMPACT_HYSTERESIS, FOOTER_ALLOWANCE, compactBelow } from '../../src/lib/layout';
 
 afterEach(() => {
   document.body.replaceChildren();
@@ -21,7 +21,7 @@ async function show(
   const wrapper = document.createElement('div');
   wrapper.style.width = `${String(width)}px`;
   const card = document.createElement('ecogeo-card') as EcogeoCard;
-  card.setConfig({ type: 'custom:ecogeo-card', prefix: 'ecoforest_ecogeo', source: 'air', ...config });
+  card.setConfig({ type: 'custom:ecogeo-card', prefix: DEMO_PREFIX, source: 'air', ...config });
   card.hass = new MockHass().build(scenarioStates(SCENARIOS[scenario].states), false);
   wrapper.append(card);
   document.body.append(wrapper);
@@ -113,6 +113,32 @@ describe('Footer wraps', () => {
     // it wrapped: not every item is on the first line
     expect(new Set(items.map((item) => Math.round(item.getBoundingClientRect().top))).size).toBeGreaterThan(1);
   });
+
+  // add-htr-state: the longest footer (active cooling with HTR: mode, on/off, season, outside, EER, Cooling, HTR) at the
+  // narrowest width each detail level draws the full layout (its threshold plus the hysteresis) fits the panel allowance.
+  test.each([
+    ['simplified', compactBelow('simplified') + COMPACT_HYSTERESIS],
+    ['full', compactBelow('full') + COMPACT_HYSTERESIS],
+  ] as const)(
+    'the longest footer (active cooling with HTR, EER) at %s detail and %i px is inside the card and the allowance',
+    async (detail, width) => {
+      const { root } = await show(width, { detail, layout: 'full' }, 'active_cooling_htr');
+      expect(layoutOf(root)).toBe('full');
+      const ids = [...root.querySelectorAll('[data-footer]')].map((item) => item.getAttribute('data-footer'));
+      expect(ids).toEqual(['on_off', 'season', 'outside_temperature', 'cop', 'cooling_power', 'htr_power']);
+      expect(root.querySelector('[data-footer="cop"] .caption')?.textContent).toBe('EER');
+      const footer = root.querySelector('.footer');
+      const card = root.querySelector('ha-card');
+      if (footer === null || card === null) throw new Error('no footer');
+      const box = card.getBoundingClientRect();
+      for (const item of footer.children) {
+        const rect = item.getBoundingClientRect();
+        expect(rect.left, item.textContent).toBeGreaterThanOrEqual(box.left);
+        expect(rect.right, item.textContent).toBeLessThanOrEqual(box.right + 0.5);
+      }
+      expect(footer.getBoundingClientRect().height).toBeLessThanOrEqual(FOOTER_ALLOWANCE);
+    },
+  );
 
   test('the compact footer at 320 px is inside the card too', async () => {
     const { root } = await show(320);

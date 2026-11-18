@@ -143,14 +143,12 @@ describe('compact content', () => {
     expect(shown).not.toContain('expansion_valve');
   });
 
-  test('Compact footer: the outside temperature and the COP, not the capacities, on/off or season', async () => {
+  test('Compact footer without power items: the outside temperature and the COP, not the power items, on/off or season', async () => {
     const card = await show(360);
     expect(footerIds(card).sort()).toEqual(['cop', 'outside_temperature']);
     expect(root(card).querySelector('.mode')).not.toBeNull();
     const wide = await show(1000);
-    expect(footerIds(wide)).toEqual(
-      expect.arrayContaining(['on_off', 'season', 'cop', 'condensation_capacity', 'evaporation_capacity']),
-    );
+    expect(footerIds(wide)).toEqual(expect.arrayContaining(['on_off', 'season', 'cop', 'dg1_power', 'htr_power']));
   });
 
   test('Compact ignores full detail: no item number and no safety valve', async () => {

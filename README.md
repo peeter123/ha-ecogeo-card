@@ -22,7 +22,7 @@ for the explanation of what the card shows and where each part comes from.
   compressor, the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode
   are muted. `prefers-reduced-motion` stops all animation.
 - Live values beside their components (temperatures, pressures, pump and compressor speeds, power, the
-  tank's values; the superheat and the expansion valve's opening at `detail: full`) and a footer with the mode, season, outside temperature, COP and capacities. The card formats the
+  tank's values; the superheat and the expansion valve's opening at `detail: full`) and a footer with the mode, season, outside temperature, COP (EER while cooling) and the power items of the mode (DG1 and HTR while heating, DHW while producing DHW, Cooling and HTR in active cooling). The card formats the
   numbers itself with Home Assistant's locale and keeps every number joined to its unit by a no-break space.
 - A visual editor (add the card from the picker, or edit it) for the unit, the entity prefix, the features and the
   appearance; it writes only what you set and keeps every other key.
@@ -44,7 +44,7 @@ The card measures its own width and chooses a layout from it (the `layout` optio
 layout below that, which is what a phone gets. The compact layout shows the schematic at the simplified detail
 level, whatever `detail` says, without the captions inside the drawing and with only the key labels (production out and in, brine out and in, compressor
 speed, the DHW temperature and the source's outlet temperature), at least 10 px high and, for production and brine, captioned In and Out and the DHW temperature captioned DHW, and a shorter footer (mode,
-COP, outside temperature and the alarm and offline indications). Pipes and outlines never render thinner than 2 px
+COP or EER, outside temperature and the alarm and offline indications). Pipes and outlines never render thinner than 2 px
 and 1.25 px, and the footer wraps. Once compact, the card returns to full only at 624 px, or 664 px with `detail: full` (24 px of hysteresis), so a
 scrollbar appearing with the layout cannot make it flip back and forth. Set `layout: full` or `layout: compact` to
 force one. In a panel view the card also fits the screen: the drawing is kept within the window's height below Home Assistant's header (and above the footer), narrower and centred when the card is wider than that, and the layout and line widths follow the drawing's own width. A tall window or a sections view is not affected: the drawing fills the card. How the thresholds were measured, and what each tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
@@ -167,9 +167,9 @@ sensor.boiler_top } }`. The card shows its own unit for every role (°F, kW and 
 converted; a difference is shown in K). A number in a unit it cannot convert keeps the entity's unit, except
 temperatures, differences and power, which then have no value.
 
-A role the installation does not have (no pressure sensors, no COP) is set to `none`: `entities: { brine: { pressure:
+A role the installation does not have (no pressure sensors) is set to `none`: `entities: { brine: { pressure:
 none } }`. It gets no default entity, its label or footer item is not drawn (the component stays), and it counts as
-no value. A role bound to an entity that is unknown or unavailable keeps its label with a dash. `none` alone is
+no value. Hiding the efficiency in the footer takes both `unit.cop` and `unit.system_cop` set to `none`: with only `unit.cop` set to `none`, the system COP shows once the firmware provides it. A role bound to an entity that is unknown or unavailable keeps its label with a dash. `none` alone is
 still an entity setting, so the card does not show sample values.
 
 | Role | Default entity | Shown as | Manual item |
@@ -333,8 +333,9 @@ no installation data. The mock entities use the demo prefix `demo_ecogeo`.
 - **Naming:** `firmware` (the default: the firmware's entity names under the demo prefix) or `foreign`, a second mock
   source for a heat pump integrated through another integration (`dev/foreign.ts`): entity ids such as
   `sensor.wp_3`, Dutch friendly names, pressures in kPa, the compressor speed in Hz, the compressor mode as an enum
-  (`Uit`, `Verwarmen`, `Tapwater`, `Ontdooien`), the on/off state as a switch, and the fan speed, the COP, the DG1
-  setpoint and the five optional roles set to `none` for now. The card is configured with `entities` and `states` instead of a prefix, so every scenario
+  (`Uit`, `Verwarmen`, `Tapwater`, `Ontdooien`), the on/off state as a switch, the register COP as an entity of its own, and the fan speed and the DG1
+  setpoint set to `none`. It leaves the five optional roles unbound, so the card shows their fallbacks: the condensation
+  capacity as DG1 or DHW, the register COP, no HTR item. The card is configured with `entities` and `states` instead of a prefix, so every scenario
   works with both namings. Both namings also provide `hass.entities` and `hass.devices`.
 - **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default; on B external, unused or none, on C internal or unused; the other choices are
   disabled, and a value in the URL that the model rejects falls back to the default), each feature (the variant's preset, `true`, `false` or `unused`), the detail level
@@ -366,6 +367,6 @@ For example `dev/index.html?scenario=passive_cooling&source=ground`.
 `npm run capture` starts its own Vite server, opens every URL of the fixed list in `dev/captures.ts` in headless
 Chromium (Playwright, a dev dependency for this script only) and writes one PNG per URL to `build/captures/`. The list
 covers every scenario, each source, each DHW value, model C, each feature `false` and `unused`, the other variants, the dark
-theme, the foreign naming (heating, DHW, defrost and off, and heating at 360 px) and two full-detail captures (heating and model C). The first run needs the browser: `npx playwright install chromium`.
+theme, the foreign naming (heating, heating with HTR recovery, DHW, defrost and off, and heating at 360 px) and two full-detail captures (heating and model C). The first run needs the browser: `npx playwright install chromium`.
 
 `dist/ecogeo-card.js` is the committed, deployable bundle. `npm run format` rewrites files with Prettier.

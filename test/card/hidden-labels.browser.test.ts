@@ -49,7 +49,7 @@ describe('Roles not present', () => {
   test('absent labels do not break the overlap measurement in the compact layout', async () => {
     const root = await show(360, {
       layout: 'compact',
-      entities: { production: { outlet_temperature: 'none' }, unit: { cop: 'none' } },
+      entities: { production: { outlet_temperature: 'none' }, unit: { cop: 'none', system_cop: 'none' } },
     });
     expect(root.querySelector('.label[data-label="production_out"]')).toBeNull();
     expect(root.querySelector('[data-footer="cop"]')).toBeNull();

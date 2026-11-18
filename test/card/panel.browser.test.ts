@@ -6,8 +6,9 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';
 import { MockHass } from '../../dev/mock-hass';
-import { SCENARIOS, scenarioStates } from '../../dev/scenarios';
+import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
+import { FOOTER_ALLOWANCE } from '../../src/lib/layout';
 
 const HEADER = 56;
 
@@ -20,15 +21,19 @@ afterEach(() => {
 });
 
 /** A card below a 56 px header that sets `--header-height`, like Home Assistant's panel view. */
-async function showPanel(isPanel: boolean, width?: number): Promise<{ card: EcogeoCard; root: ShadowRoot }> {
+async function showPanel(
+  isPanel: boolean,
+  width?: number,
+  scenario: keyof typeof SCENARIOS = 'passive_cooling',
+): Promise<{ card: EcogeoCard; root: ShadowRoot }> {
   document.body.style.setProperty('--header-height', `${String(HEADER)}px`);
   const header = document.createElement('div');
   header.style.height = `${String(HEADER)}px`;
   const wrapper = document.createElement('div');
   if (width !== undefined) wrapper.style.width = `${String(width)}px`;
   const card = document.createElement('ecogeo-card') as EcogeoCard;
-  card.setConfig({ type: 'custom:ecogeo-card', prefix: 'ecoforest_ecogeo', source: 'air' });
-  card.hass = new MockHass().build(scenarioStates(SCENARIOS.passive_cooling.states), false);
+  card.setConfig({ type: 'custom:ecogeo-card', prefix: DEMO_PREFIX, source: 'air' });
+  card.hass = new MockHass().build(scenarioStates(SCENARIOS[scenario].states), false);
   card.isPanel = isPanel;
   wrapper.append(card);
   document.body.append(header, wrapper);
@@ -65,9 +70,20 @@ describe('Desktop panel', () => {
     expect(diagram.height + HEADER).toBeLessThanOrEqual(window.innerHeight);
   });
 
+  test('the longest footer (active cooling with HTR, EER) stays inside a 1280 x 800 window and its allowance', async () => {
+    await page.viewport(1280, 800);
+    const { card, root } = await showPanel(true, undefined, 'active_cooling_htr');
+    await expect.poll(() => window.innerHeight).toBe(800);
+    await card.updateComplete;
+    const footer = box(root, '.footer');
+    expect(root.querySelector('[data-footer="htr_power"]')).not.toBeNull();
+    expect(footer.bottom).toBeLessThanOrEqual(window.innerHeight);
+    expect(footer.height).toBeLessThanOrEqual(FOOTER_ALLOWANCE);
+  });
+
   test('the footer stays inside the window when it wraps to two lines (a short window, the longest mode)', async () => {
     await page.viewport(900, 600);
-    const { card, root } = await showPanel(true);
+    const { card, root } = await showPanel(true, undefined, 'active_cooling_htr');
     await expect.poll(() => window.innerHeight).toBe(600);
     await card.updateComplete;
     expect(box(root, '.footer').bottom).toBeLessThanOrEqual(window.innerHeight);

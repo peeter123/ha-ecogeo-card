@@ -21,7 +21,7 @@ condensation_temperature | label middle | left: 42.6%; top: 80.18348623853211%
 evaporation_temperature | label middle | left: 57.599999999999994%; top: 80.18348623853211%
 ground_in | label start | left: 13.3%; top: 27.522935779816514%
 ground_out | label end | left: 8.1%; top: 27.522935779816514%
-footer: on_off, season, outside_temperature, cop, condensation_capacity, evaporation_capacity
+footer: on_off, season, outside_temperature, cop, dg1_power
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 545" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #d7263d 10.5%, #f2711c); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3; --outline-width: 2">
           <g class="source" data-source-kind="ground">

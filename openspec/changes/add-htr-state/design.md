@@ -115,6 +115,9 @@ settled run (compressor stopped, the first minute after a start, defrost). The c
 
 - Why not change `unit.cop`'s default: a config that sets `unit.cop` explicitly, or relies on the register COP,
   would silently get another figure. A separate role keeps both and lets the fallback decide.
+- Accepted (group 3 review): a config that set `unit.cop: none` to hide the efficiency shows the system COP once the
+  firmware has `system_cop_display`; hiding the efficiency takes both `unit.cop` and `unit.system_cop` set to `none`.
+  The README and the docs say so.
 
 ### D5. Binding check
 

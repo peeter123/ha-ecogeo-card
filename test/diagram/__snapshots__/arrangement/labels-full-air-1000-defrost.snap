@@ -27,7 +27,7 @@ air_unit_out | label start | left: 15.2%; top: 27.741935483870968%
 tank_external_temperature | label middle emphasis | left: 89%; top: 53.5483870967742%
 tank_external_setpoint | label middle | left: 89%; top: 55.96774193548387%
 tank_external_start_delta | label middle | left: 89%; top: 58.225806451612904%
-footer: on_off, season, outside_temperature, cop, condensation_capacity, evaporation_capacity
+footer: on_off, season, outside_temperature, cop
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 620" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #d7263d 10.5%, #f2711c); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3; --outline-width: 2">
           <g class="source" data-source-kind="air">

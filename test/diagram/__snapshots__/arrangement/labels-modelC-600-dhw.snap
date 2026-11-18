@@ -24,7 +24,7 @@ tank_internal_temperature | label middle bare | left: 43.119166666666665%; top: 
 tank_internal_setpoint | label middle bare | left: 49.6315%; top: 27.522935779816514%
 tank_internal_start_delta | label middle bare | left: 56.143833333333326%; top: 27.522935779816514%
 tank_internal_demand | label middle bare | left: 49.6315%; top: 29.908256880733948%
-footer: on_off, season, outside_temperature, cop, condensation_capacity, evaporation_capacity
+footer: on_off, season, outside_temperature, cop, dhw_power
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 545" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #f2711c 91%, #e8a317); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3.4; --outline-width: 2.1">
           <g class="source" data-source-kind="ground">

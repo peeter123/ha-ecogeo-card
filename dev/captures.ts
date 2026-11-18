@@ -37,6 +37,8 @@ export const CAPTURES: readonly CaptureStep[] = [
   // add-entity-discovery D11: the foreign naming (other ids, kPa, Hz, an enum mode, `none` roles), also on a phone
   step('foreign-heating', 'scenario=heating&naming=foreign'),
   step('foreign-dhw', 'scenario=dhw&naming=foreign'),
+  // add-htr-state: the optional roles unbound, so the fallbacks show (DG1 from the condensation capacity, the register COP)
+  step('foreign-heating_htr', 'scenario=heating_htr&naming=foreign'),
   step('foreign-defrost', 'scenario=defrost&naming=foreign'),
   step('foreign-off', 'scenario=off&naming=foreign'),
   step('foreign-phone-heating', `scenario=heating&naming=foreign&width=${String(PHONE_WIDTH)}`),

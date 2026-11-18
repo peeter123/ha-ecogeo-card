@@ -61,7 +61,7 @@ describe('emulator URL state', () => {
     expect(config['states']).toEqual({ defrost: ['Ontdooien'] });
     expect(config['entities']).toMatchObject({
       source: { fan_speed: 'none' },
-      unit: { cop: 'none', on_off: 'switch.wp_30' },
+      unit: { cop: 'sensor.wp_35', on_off: 'switch.wp_30' },
       heating: { setpoint: 'none' },
     });
     expect(configOf(defaultState())['prefix']).toBe('demo_ecogeo');

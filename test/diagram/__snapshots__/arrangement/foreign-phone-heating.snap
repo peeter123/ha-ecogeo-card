@@ -7,7 +7,7 @@ brine_in | label start | left: 64.4%; top: 47.706422018348626%
 compressor_speed | label start | left: 44.4%; top: 56.513761467889914%
 ground_out | label middle | left: 10%; top: 48.440366972477065%
 tank_external_temperature | label start emphasis | left: 78%; top: 4.4036697247706424%
-footer: outside_temperature
+footer: outside_temperature, cop
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 545" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #d7263d 10.5%, #f2711c); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 5.6; --outline-width: 3.5">
           <g class="source" data-source-kind="ground">

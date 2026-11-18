@@ -3,7 +3,11 @@ import '../../src/index';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
-import { INDICATIONS, MODE_LABELS } from '../../src/strings';
+import { NBSP, INDICATIONS, MODE_LABELS } from '../../src/strings';
+import { absentOptionalRoles, readRoles } from '../../src/calc/readings';
+import { SAMPLE_ENTITIES, SAMPLE_STATES } from '../../src/config/sample';
+import { footerItems } from '../../src/diagram/labels';
+import { mergeFeatures } from '../../src/config/variants';
 import { state, states } from '../helpers';
 
 async function mount(config: CardConfig = { type: 'custom:ecogeo-card' }, hass?: HassLike): Promise<EcogeoCard> {
@@ -73,6 +77,31 @@ describe('sample mode', () => {
     expect(card.shadowRoot?.querySelector('.alarm')).toBeNull();
     expect(card.shadowRoot?.querySelector('.offline')).toBeNull();
     card.remove();
+  });
+
+  test('card-config "Sample footer": the sample DG1 power and system COP, not the capacity or the register COP', async () => {
+    const card = await mount();
+    const footer = (id: string) => text(card, `[data-footer="${id}"] .value`);
+    expect(footer('dg1_power')).toBe(`4712${NBSP}W`);
+    expect(footer('cop')).toMatch(/^5[.,]8$/);
+    expect(card.shadowRoot?.querySelector('[data-footer="condensation_capacity"]')).toBeNull();
+    card.remove();
+    // The sample's entities are not buttons, so the entity behind each item is read from the pure function.
+    const items = footerItems(
+      readRoles(SAMPLE_STATES, SAMPLE_ENTITIES),
+      SAMPLE_ENTITIES,
+      { locale: {} },
+      {
+        mode: 'heating',
+        features: mergeFeatures(4, {}),
+        dhw: 'external',
+        notPresent: new Set(),
+        absent: absentOptionalRoles(SAMPLE_STATES, SAMPLE_ENTITIES, new Set()),
+      },
+    );
+    expect(items.find((item) => item.id === 'dg1_power')?.entityId).toBe(SAMPLE_ENTITIES['heating.power']);
+    expect(items.find((item) => item.id === 'dg1_power')?.entityId).not.toBe(SAMPLE_ENTITIES['heating.capacity']);
+    expect(items.find((item) => item.id === 'cop')?.entityId).toBe(SAMPLE_ENTITIES['unit.system_cop']);
   });
 
   test('a prefix ends sample mode: no note, and with no entities in hass the mode is standby', async () => {
