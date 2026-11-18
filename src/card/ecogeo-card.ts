@@ -22,6 +22,7 @@ import { tankColor, type PipeView } from '../diagram/pipes';
 import { renderSource, sourceStyles } from '../diagram/source';
 import type { CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
+import { CARD_VERSION } from '../lib/version';
 import { localeFromHass } from '../lib/format';
 import { drawingWidth, nextCompact, strokeWidths, type StrokeWidths } from '../lib/layout';
 import { fireMoreInfo, stateOf, type HassLike } from '../lib/hass';
@@ -43,6 +44,9 @@ export interface GridOptions {
 let instances = 0;
 
 export class EcogeoCard extends LitElement {
+  /** The version of the bundle (from package.json); the release check reads it from the registered element. */
+  static readonly version: string = CARD_VERSION;
+
   static override styles = [
     cabinetStyles,
     sourceStyles,
@@ -331,4 +335,6 @@ export class EcogeoCard extends LitElement {
   }
 }
 
-defineOnce(CARD_TAG, EcogeoCard);
+// Plain text on purpose (no %c styling): it reads the same in every console, and the release check and tests rely on
+// the static `version` rather than this line.
+if (defineOnce(CARD_TAG, EcogeoCard)) console.info(`ecogeo-card ${CARD_VERSION}`);

@@ -336,7 +336,7 @@ npm run measure-layout  # re-measure the compact threshold (see docs/ecogeo-card
 npm run check     # typecheck, lint, format check, the Home Assistant quality checks (needs uv) and tests
 npm run lint:ha   # codespell, yamllint, the workflow schema check and the Markdown format check, through uvx
 npm run build     # bundle into build/ecogeo-card.js (git-ignored)
-npm run release   # check, build, verify that the bundle registers the card, copy it to dist/ecogeo-card.js
+npm run release   # check, build, verify the bundle registers the card and reports the package version, copy to dist/
 ```
 
 ### Emulator

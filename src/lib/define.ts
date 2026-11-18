@@ -5,13 +5,15 @@
 /**
  * Defines `tag` as `element` unless the tag is already defined. When another class already holds the tag (an
  * older copy of the bundle loaded under another URL), that class stays in use; the warning says so, because the
- * new code then seems not to be deployed.
+ * new code then seems not to be deployed. Returns whether this call defined the element.
  */
-export function defineOnce(tag: string, element: CustomElementConstructor): void {
+export function defineOnce(tag: string, element: CustomElementConstructor): boolean {
   const existing = customElements.get(tag);
   if (existing === undefined) {
     customElements.define(tag, element);
+    return true;
   } else if (existing !== element) {
     console.warn(`${tag} is already defined by another copy of the module; that copy stays in use.`);
   }
+  return false;
 }

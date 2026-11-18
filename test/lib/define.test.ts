@@ -10,8 +10,8 @@ describe('defineOnce', () => {
   test('defines a tag once; defining the same class again is silent', () => {
     class First extends HTMLElement {}
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    defineOnce('ecogeo-define-test-a', First);
-    defineOnce('ecogeo-define-test-a', First);
+    expect(defineOnce('ecogeo-define-test-a', First)).toBe(true);
+    expect(defineOnce('ecogeo-define-test-a', First)).toBe(false);
     expect(customElements.get('ecogeo-define-test-a')).toBe(First);
     expect(warn).not.toHaveBeenCalled();
   });
@@ -21,9 +21,11 @@ describe('defineOnce', () => {
     class Second extends HTMLElement {}
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     defineOnce('ecogeo-define-test-b', First);
+    let defined = true;
     expect(() => {
-      defineOnce('ecogeo-define-test-b', Second);
+      defined = defineOnce('ecogeo-define-test-b', Second);
     }).not.toThrow();
+    expect(defined).toBe(false);
     expect(customElements.get('ecogeo-define-test-b')).toBe(First);
     expect(warn).toHaveBeenCalledOnce();
   });

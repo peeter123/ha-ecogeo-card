@@ -11,6 +11,12 @@ describe('the bundle entry', () => {
     expect(CARD_ENTRY.preview).toBe(true);
   });
 
+  test('the picker entry links the documentation', () => {
+    const entries = window.customCards?.filter((entry) => entry.type === 'ecogeo-card') ?? [];
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.documentationURL).toMatch(/^https:[/][/]github[.]com[/]peeter123[/]ha-ecogeo-card/);
+  });
+
   test('adds the picker entry once, next to other cards', () => {
     const target: { customCards?: CustomCardEntry[] } = {
       customCards: [{ type: 'x', name: 'x', description: '', preview: false }],

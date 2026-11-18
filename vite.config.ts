@@ -1,9 +1,14 @@
+import { readFileSync } from 'node:fs';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
+
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 
 // Always builds into build/ (git-ignored, never deployed). `npm run release` then copies the checked build to
 // dist/ with scripts/check-release.mjs; do not build into dist/ directly.
 export default defineConfig({
+  // The card's version, stamped in from package.json (also for the tests: the projects extend this config).
+  define: { __ECOGEO_VERSION__: JSON.stringify(version) },
   build: {
     outDir: 'build',
     lib: {

@@ -26,6 +26,7 @@ export const CARD_PICKER = {
   name: 'ecoGEO Schematic',
   description:
     'The internal schematic of an Ecoforest ecoGEO heat pump, with live values and pipes coloured by temperature.',
+  documentationURL: 'https://github.com/peeter123/ha-ecogeo-card#readme',
 } as const;
 
 /** The accessible name of the schematic drawing. */

@@ -39,7 +39,8 @@ The first release is `1.0.0`.
 ### Requirement: Load message
 When the bundle defines the card's element, it SHALL log exactly one informational console line naming the card and
 its version, in plain text (no emoji, no styling escapes that hide the text). Loading the bundle a second time,
-which defines no element, SHALL log nothing.
+which defines no element, SHALL log no further informational line; the existing warning when another copy holds the
+tag stays.
 
 #### Scenario: First load logs the version
 - **WHEN** the bundle is loaded into a page where `ecogeo-card` is not defined and the version is `1.0.0`

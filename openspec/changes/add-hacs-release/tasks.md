@@ -38,28 +38,28 @@ this change's artifacts: values from `private/installation.md` are used only in 
 
 ## 2. Version, load message, picker link and HACS manifest
 
-- [ ] 2.1 Set `package.json` `version` to `1.0.0` (it stays `private`). In `vite.config.ts` read it and define
+- [x] 2.1 Set `package.json` `version` to `1.0.0` (it stays `private`). In `vite.config.ts` read it and define
   `__ECOGEO_VERSION__`. Declare the constant in a `.d.ts` under `src/`, and export it as `CARD_VERSION` from
   `src/lib/version.ts` (design D1). Expose it as a static `version` on the card class.
   Verify: a unit test checks that `CARD_VERSION` equals the `package.json` version and matches `MAJOR.MINOR.PATCH`
   (release-packaging "Bundle carries the package version", "Version is a semantic version").
-- [ ] 2.2 Make `defineOnce` (`src/lib/define.ts`) return whether it defined the element. Have the card module log
+- [x] 2.2 Make `defineOnce` (`src/lib/define.ts`) return whether it defined the element. Have the card module log
   `ecogeo-card <version>` with one plain `console.info` only then (design D2).
   Verify: unit tests with a `console.info` spy cover release-packaging "First load logs the version" (one call, with
   `ecogeo-card` and the version) and "Second load is silent". The existing `defineOnce` tests still pass.
-- [ ] 2.3 Add `documentationURL` (`https://github.com/peeter123/ha-ecogeo-card#readme`) to `CARD_PICKER` and the
+- [x] 2.3 Add `documentationURL` (`https://github.com/peeter123/ha-ecogeo-card#readme`) to `CARD_PICKER` and the
   optional member to `CustomCardEntry` (design D3).
   Verify: `test/index.test.ts` covers release-packaging "Picker entry".
-- [ ] 2.4 Add `hacs.json` at the root with `name` `ecoGEO Schematic Card` and `filename` `ecogeo-card.js`, and nothing
+- [x] 2.4 Add `hacs.json` at the root with `name` `ecoGEO Schematic Card` and `filename` `ecogeo-card.js`, and nothing
   else (design D3).
   Verify: a unit test reads `hacs.json` and covers release-packaging "Manifest names the bundle" and "Manifest holds
   no unsupported key".
-- [ ] 2.5 Extend `scripts/check-release.mjs`: move its pure checks into `scripts/release-checks.mjs` (exported, so
+- [x] 2.5 Extend `scripts/check-release.mjs`: move its pure checks into `scripts/release-checks.mjs` (exported, so
   tests import them), and after the registration check, compare the registered card's `version` with `package.json`.
   On a mismatch, refuse and name both versions (design D4).
   Verify: unit tests of `release-checks.mjs` cover release-packaging "Version mismatch" and "Matching build", and
   `npm run release` passes and copies the build.
-- [ ] 2.6 Release live. Run `npm run release`, deploy `dist/ecogeo-card.js` with the command in
+- [x] 2.6 Release live. Run `npm run release`, deploy `dist/ecogeo-card.js` with the command in
   `private/installation.md`, and bump the resource's `?v=` (id and current value there).
   Verify: the resource lists the new `?v=`. After a reload, system_log has no `frontend.js` error for the card. A
   subagent's verdict on a light-mode dashboard screenshot says the card renders as before. Record the deploy and the

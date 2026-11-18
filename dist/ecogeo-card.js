@@ -518,7 +518,8 @@ var w = {
 	list: "a list of texts"
 }, We = {
 	name: "ecoGEO Schematic",
-	description: "The internal schematic of an Ecoforest ecoGEO heat pump, with live values and pipes coloured by temperature."
+	description: "The internal schematic of an Ecoforest ecoGEO heat pump, with live values and pipes coloured by temperature.",
+	documentationURL: "https://github.com/peeter123/ha-ecogeo-card#readme"
 }, Ge = "ecoGEO heat pump schematic", T = {
 	celsius: "°C",
 	kelvin: "K",
@@ -3978,7 +3979,7 @@ function Ka(e) {
 // src/lib/define.ts
 function qa(e, t) {
 	let n = customElements.get(e);
-	n === void 0 ? customElements.define(e, t) : n !== t && console.warn(`${e} is already defined by another copy of the module; that copy stays in use.`);
+	return n === void 0 ? (customElements.define(e, t), !0) : (n !== t && console.warn(`${e} is already defined by another copy of the module; that copy stays in use.`), !1);
 }
 // src/config/keywords.ts
 var Z = (e) => e.split(/\s+/).filter((e) => e !== ""), Q = "temp temperature temperatuur temperatura temperatur", Ja = "pressure druk presion druck", Ya = "pump pomp bomba pumpe circulator", Xa = "heating verwarming heizung heizkreis calefaccion cv", Za = `production productie produccion produktion ${Xa}`, Qa = "brine glycol source bron brijn captacion salmuera sole", $a = "dhw sanitary sanitaria tapwater warmwater warmwasser acs caliente domestic hotwater boiler", eo = "demand vraag demanda anforderung bedarf request", to = "suction zuig saug ansaug succion aspiracion niederdruck lagedruk", no = "discharge pers druckgas heissgas descarga hochdruck hogedruk", ro = "capacity vermogen capacidad kapazitat leistung power", io = "valve ventiel valvula ventil position stand posicion stellung", ao = "compressor compresor kompressor verdichter", oo = "condens condensation condensatie condensacion kondensation kondens", so = "evaporat evaporation evaporacion verdamp verdampfung", co = `${Xa} dg verwarmen`, lo = "setpoint set target desired gewenst ingesteld soll wunsch consigna objetivo streef", uo = "superheat oververhitting oververhit sobrecalentamiento ueberhitzung uberhitzung", fo = "on off aan uit onoff encendido apagado ein aus", po = "alarm alarma storing stoerung storung fehler error fault malfunction", mo = "htr recovery recuperacion recuperatie rueckgewinnung", ho = "power vermogen potencia leistung", go = "electric elektr", _o = [
@@ -5069,30 +5070,32 @@ function Sc(e, t, n, r) {
     ${c ? xc(e, l, a[l], !n) : S``}
   </g>`;
 }
+// src/lib/version.ts
+var Cc = "1.0.0";
 // src/lib/render.ts
-function Cc(e, t) {
+function wc(e, t) {
 	return e === t || Array.isArray(e) && Array.isArray(t) && e.length === t.length && e.every((e, n) => e === t[n]);
 }
-function wc(e, t) {
+function Tc(e, t) {
 	if (e === t) return !0;
 	if (typeof e != "object" || typeof t != "object" || e === null || t === null) return !1;
 	let n = Object.keys(e), r = Object.keys(t);
-	return n.length === r.length && n.every((n) => Object.hasOwn(t, n) && Cc(e[n], t[n]));
+	return n.length === r.length && n.every((n) => Object.hasOwn(t, n) && wc(e[n], t[n]));
 }
-function Tc(e, t, n) {
-	return e === void 0 || e.locale !== t.locale || e.language !== t.language || e.localize !== t.localize || e.formatEntityState !== t.formatEntityState || e.themes?.darkMode !== t.themes?.darkMode || n.some((n) => e.states[n] !== t.states[n] || !wc(e.entities?.[n], t.entities?.[n]));
+function Ec(e, t, n) {
+	return e === void 0 || e.locale !== t.locale || e.language !== t.language || e.localize !== t.localize || e.formatEntityState !== t.formatEntityState || e.themes?.darkMode !== t.themes?.darkMode || n.some((n) => e.states[n] !== t.states[n] || !Tc(e.entities?.[n], t.entities?.[n]));
 }
-function Ec(e, t, n, r) {
-	return e.size === 1 && e.has("hass") ? t !== void 0 && Tc(n, t, r) : !0;
+function Dc(e, t, n, r) {
+	return e.size === 1 && e.has("hass") ? t !== void 0 && Ec(n, t, r) : !0;
 }
 // src/suggest/stub.ts
-function Dc(e, t, n) {
+function Oc(e, t, n) {
 	let r = jo(e.states, t, e.devices ?? {}, n), i = Po(r).replace(/_$/, "");
 	if (i === "") return;
 	let a = new Set(r.map((e) => e.entityId));
 	return M.filter((e) => a.has(Dt(e, i))).length * 2 >= M.length ? i : void 0;
 }
-function Oc(e) {
+function kc(e) {
 	if (e === void 0) return {};
 	let t = /* @__PURE__ */ new Map();
 	for (let n of Object.values(e.entities ?? {})) {
@@ -5100,12 +5103,15 @@ function Oc(e) {
 		let e = t.get(n.device_id) ?? {};
 		e[n.entity_id] = n, t.set(n.device_id, e);
 	}
-	let n = [...t].flatMap(([t, n]) => Dc(e, n, t) ?? []);
+	let n = [...t].flatMap(([t, n]) => Oc(e, n, t) ?? []);
 	return n.length === 1 ? { prefix: n[0] } : {};
 }
 // src/card/ecogeo-card.ts
-var kc = "ecogeo-card", Ac = 0;
-qa(kc, class extends He {
+var Ac = "ecogeo-card", jc = 0;
+qa("ecogeo-card", class extends He {
+	static {
+		this.version = Cc;
+	}
 	static {
 		this.styles = [
 			ua,
@@ -5150,10 +5156,10 @@ qa(kc, class extends He {
 		return document.createElement(tc);
 	}
 	static getStubConfig(e) {
-		return Oc(e);
+		return kc(e);
 	}
 	constructor() {
-		super(), this.renderedCompact = !1, this.renderedAutoCompact = !1, this.renderedStroke = Li(void 0), this.renderedDrawing = 0, this.entityIds = [], this.idPrefix = `ecogeo${String(++Ac)}`, this.onWindowResize = () => {
+		super(), this.renderedCompact = !1, this.renderedAutoCompact = !1, this.renderedStroke = Li(void 0), this.renderedDrawing = 0, this.entityIds = [], this.idPrefix = `ecogeo${String(++jc)}`, this.onWindowResize = () => {
 			this.inPanel && window.innerHeight !== this.viewportHeight && (this.viewportHeight = window.innerHeight);
 		}, this.width = 0, this.viewportHeight = window.innerHeight;
 	}
@@ -5209,7 +5215,7 @@ qa(kc, class extends He {
 			let e = this.shownLayout, t = Li(this.drawingWidthFor(this.arrangementViewBox(e)));
 			return e === "compact" !== this.renderedCompact || this.fittedWidth(e) !== this.renderedDrawing || t.pipe !== this.renderedStroke.pipe || t.outline !== this.renderedStroke.outline;
 		}
-		return Ec(e, this.hass, this.renderedHass, this.entityIds);
+		return Dc(e, this.hass, this.renderedHass, this.entityIds);
 	}
 	arrangementViewBox(e) {
 		return li(e === "compact" ? "simplified" : this.resolved?.detail ?? "simplified", e).viewBox;
@@ -5291,16 +5297,16 @@ qa(kc, class extends He {
       </div>
     </ha-card>`;
 	}
-});
+}) && console.info(`ecogeo-card ${Cc}`);
 // src/index.ts
-var jc = {
-	type: kc,
+var Mc = {
+	type: Ac,
 	...We,
 	preview: !0
 };
-function Mc(e = window) {
+function Nc(e = window) {
 	let t = e.customCards ??= [];
-	t.some((e) => e.type === jc.type) || t.push({ ...jc });
+	t.some((e) => e.type === Mc.type) || t.push({ ...Mc });
 }
-Mc();
-export { jc as CARD_ENTRY, Mc as registerCardPicker };
+Nc();
+export { Mc as CARD_ENTRY, Nc as registerCardPicker };

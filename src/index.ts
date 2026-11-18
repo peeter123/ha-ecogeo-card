@@ -11,6 +11,8 @@ export interface CustomCardEntry {
   description: string;
   /** The picker shows a live preview. */
   preview: boolean;
+  /** A help link that the card editor shows. */
+  documentationURL?: string;
 }
 
 declare global {
