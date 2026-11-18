@@ -86,12 +86,17 @@ symbol: it takes the colour of the water feeding it (the production outlet in DH
 HTR recovery) and is never animated.
 
 #### Scenario: Heating mode
-- **WHEN** the mode is `heating`
+- **WHEN** the mode is `heating` and the HTR circuit is not active
 - **THEN** the DHW loop pipes and coil are muted, and the tank still shows its temperature colour and values
 
 #### Scenario: HTR recovery
 - **WHEN** the mode is `active_cooling` and the HTR circuit is active
 - **THEN** the DHW loop pipes and coil are coloured and animated, and valve 26 still points to ports 1/2
+
+#### Scenario: HTR recovery while heating
+- **WHEN** the mode is `heating`, `dhw` is `external` and the HTR circuit is active
+- **THEN** the DHW loop pipes and coil are coloured with the DHW temperature and animated, and valve 26 still points
+  to ports 1/2
 
 ### Requirement: No DHW
 With `dhw: none`, the card SHALL draw no tank, no DHW pipes, no connections 5 and 6 and no valve 26.

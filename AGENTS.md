@@ -32,7 +32,10 @@ editor's entity suggestions from a device, binding check and filled stub config)
 `openspec/changes/archive/2026-11-13-add-entity-discovery/`. The sixth, `refine-simplified-layout` (its own
 arrangement for the simplified level, the pipe-, caption- and outline-aware overlap check, label places and a compact
 threshold per detail level, the compact layout on the simplified arrangement, and the panel view fit), is archived in
-`openspec/changes/archive/2026-11-17-refine-simplified-layout/`.
+`openspec/changes/archive/2026-11-17-refine-simplified-layout/`. The seventh, `add-htr-state` (HTR recovery from
+`htr_active` in heating and active cooling, optional roles with a fallback when their prefix default is absent, the
+footer's power items by mode and the system COP, and the heat power labels and suggestions in the editor), is
+archived in `openspec/changes/archive/2026-11-18-add-htr-state/`.
 
 ## Rules in short
 
