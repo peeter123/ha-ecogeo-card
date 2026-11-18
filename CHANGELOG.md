@@ -3,7 +3,7 @@
 All notable changes to the ecoGEO heat pump card, newest first, in the style of Keep a Changelog. A release's heading
 is `## <version> - <YYYY-MM-DD>`; the heading has no date until the release is made, and the release adds it.
 
-## 1.0.0
+## 1.0.0 - 2026-11-18
 
 The first release. A Lovelace card for Ecoforest ecoGEO heat pumps that draws the unit's internal schematic as inline
 SVG, with live values and pipes coloured by temperature. It is read-only: it calls no service and writes no entity.
