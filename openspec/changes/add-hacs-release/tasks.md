@@ -132,18 +132,18 @@ this change's artifacts: values from `private/installation.md` are used only in 
 
 ## 6. Publication (orchestrator, each outward step confirmed)
 
-- [ ] 6.1 Set the repository's description and topics with `gh repo edit` (design D7).
+- [x] 6.1 Set the repository's description and topics with `gh repo edit` (design D7).
   Verify: `gh repo view peeter123/ha-ecogeo-card --json description,repositoryTopics` shows them.
-- [ ] 6.2 Add `origin` (`https://github.com/peeter123/ha-ecogeo-card.git`) and push `main`.
+- [x] 6.2 Add `origin` (`https://github.com/peeter123/ha-ecogeo-card.git`) and push `main`.
   Verify: both workflows run on `main` and pass (`gh run list`). If the dist check fails only because the Linux
   build differs, stop and bring the diff to the user (design, Risks).
-- [ ] 6.3 Date the `1.0.0` section of `CHANGELOG.md`, heading form `## 1.0.0 - YYYY-MM-DD` as its intro states
+- [x] 6.3 Date the `1.0.0` section of `CHANGELOG.md`, heading form `## 1.0.0 - YYYY-MM-DD` as its intro states
   (a Sonnet subagent edits it; `npm run check` green; committed as
   a small fix within this group). Push it. Create and push the annotated tag `v1.0.0`, and create the release:
   `gh release create v1.0.0 dist/ecogeo-card.js` with that section as notes.
   Verify: `gh release view v1.0.0` lists `ecogeo-card.js`. The tag's `dist/ecogeo-card.js` equals the local one.
   `validate.yml`, run on demand, passes.
-- [ ] 6.4 Check the release as a HACS user would, read-only: the repository page shows the README, the release and
+- [x] 6.4 Check the release as a HACS user would, read-only: the repository page shows the README, the release and
   `hacs.json`. Record the release in `private/installation.md` (the live installation keeps the manual deploy).
   Verify: the Opus review of group 6 reads the published state (`gh` output, workflow results) and is clean.
   Afterwards, the group's check-off commit is pushed as the last confirmed step.
@@ -155,3 +155,9 @@ this change's artifacts: values from `private/installation.md` are used only in 
   push the archive commit only on the user's request.
 - Later change: submit the card to the HACS default list (`hacs/default`) once the custom repository has been in use
   for a while.
+- Before archiving (from the group 6 review, 2026-11-18): in `check.yml`, give the Playwright install step
+  `timeout-minutes: 10` and the job 15 instead of 30 (the first run on d575f3a spent 29 minutes on a slow Ubuntu
+  mirror), and run `apt-get update` in the Roboto step itself. Decision points for the user: GitHub's immutable
+  releases setting, and whether tag pushes should also run the workflows.
+- Investigate why 13 Chromium overlap browser tests fail locally on Windows since the evening of 2026-11-18 while
+  WebKit and CI pass on the same code (the user chose to release on CI's result).
