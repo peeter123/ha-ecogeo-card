@@ -9,6 +9,8 @@ import type { RolePath } from './roles';
 export interface RoleKeywords {
   subject: readonly string[];
   role: readonly string[];
+  /** Words that disqualify a candidate by its names (not by the `_<suffix>` id rule): it is named as something else. */
+  exclude?: readonly string[];
 }
 
 /** Splits a space separated word list. */
@@ -36,6 +38,13 @@ const SUPERHEAT = 'superheat oververhitting oververhit sobrecalentamiento ueberh
 const ON_OFF = 'on off aan uit onoff encendido apagado ein aus';
 const ALARM = 'alarm alarma storing stoerung storung fehler error fault malfunction';
 const HTR = 'htr recovery recuperacion recuperatie rueckgewinnung';
+const POWER = 'power vermogen potencia leistung';
+/** Electrical power (a W entity of the same device): not heat, so the heat power roles exclude it. */
+const ELECTRICAL = 'electric elektr';
+const NOT_DG1 = [ELECTRICAL, DHW, HTR].join(' ');
+const NOT_DHW = [ELECTRICAL, HTR].join(' ');
+const NOT_HTR = [ELECTRICAL, DHW].join(' ');
+const SYSTEM = 'system systeem sistema';
 const COP = 'cop scop coefficient rendimiento rendement wirkungsgrad efficiency';
 
 /* prettier-ignore */
@@ -76,13 +85,14 @@ export const KEYWORDS: Readonly<Record<RolePath, RoleKeywords>> = {
   'unit.winter': { subject: w('winter invierno'), role: w('winter invierno mode bedrijf modo betrieb') },
   'unit.alarm': { subject: w(ALARM), role: w(ALARM) },
   'unit.connection': { subject: w('connection connected connectivity conexion verbinding verbindung online communication'), role: w('connection connected connectivity conexion verbinding verbindung status online communication') },
-  'unit.cop': { subject: w(COP), role: w(COP) },
-  // The optional roles of add-htr-state D6 (the electrical-power exclusion comes with the editor group).
-  'heating.power': { subject: w(`${HEATING} dg1`), role: w(CAPACITY) },
-  'dhw.power': { subject: w(DHW), role: w(CAPACITY) },
+  'unit.cop': { subject: w(COP), role: w(COP), exclude: w(SYSTEM) },
+  // The optional roles of add-htr-state D6. The heat power roles exclude electrical power and each other's subjects
+  // (the firmware entities of the three heat powers share words), so names alone tell them apart.
+  'heating.power': { subject: w(HEATING), role: w(POWER), exclude: w(NOT_DG1) },
+  'dhw.power': { subject: w(DHW), role: w(POWER), exclude: w(NOT_DHW) },
   'htr.active': { subject: w(HTR), role: w('active actief activo aktiv') },
-  'htr.power': { subject: w(HTR), role: w(CAPACITY) },
-  'unit.system_cop': { subject: w('system systeem sistema'), role: w(COP) },
+  'htr.power': { subject: w(HTR), role: w(POWER), exclude: w(NOT_HTR) },
+  'unit.system_cop': { subject: w(SYSTEM), role: w(COP) },
 };
 
 /** Direction words, shared by all roles (a word of four or more letters also hits inside a compound word). */

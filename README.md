@@ -261,7 +261,9 @@ The editor is Home Assistant's own form and has six sections:
   many roles were filled and which stayed empty (no match, a weak match or a tie; fill them with the pickers); it
   stays until the next edit. The picked device is never written to the config, and the button is disabled without
   one. Pressing it turns **Advanced settings** on. Suggestions only reach entities that belong to a device;
-  entities without one (often YAML-configured Modbus or KNX) are bound with the pickers.
+  entities without one (often YAML-configured Modbus or KNX) are bound with the pickers. The HTR state, the heat
+  power roles and the system COP are matched by name too; an entity named as electrical power (for example "Electrical
+  Power DHW") is never taken as heat power.
 - **Features:** passive cooling, active cooling, HTR and backup heater, each On, Off, Unused or, left at the first
   choice, the variant's default (the choice names it, for example "Variant default: on").
 - **Appearance:** detail level, exchanger fill, layout and the colour stops (see below).
@@ -277,7 +279,8 @@ The editor is Home Assistant's own form and has six sections:
   equal to its default is not written, and an empty list removes the key.
 
 Under the form, an **Entity check** list warns about each role bound (by `entities` or by the prefix) to an entity
-Home Assistant does not know, and each bound to an entity whose unit or kind does not fit the role. It names the role
+Home Assistant does not know, and each bound to an entity whose unit or kind does not fit the role. A missing prefix default of an optional
+role (HTR state, heat power, system COP) is not warned about; an optional role you set to an unknown entity is. It names the role
 and the entity, and changes nothing.
 
 The colour stops are one row per stop, a temperature (°C) and a colour, plus an empty row to add one. With no

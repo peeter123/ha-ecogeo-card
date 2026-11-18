@@ -214,8 +214,9 @@ export function score(role: RoleSpec, candidate: Candidate, prefix: string): num
   ];
   const isSetpoint = hits(SETPOINT_WORDS, found);
   if (isSetpoint !== SETPOINT_ROLES.has(role.path as RolePath)) return 0;
-  let total = 0;
   const keywords = KEYWORDS[role.path as RolePath];
+  if (keywords.exclude !== undefined && hits(keywords.exclude, found)) return 0;
+  let total = 0;
   if (hits(keywords.subject, found)) total += SCORE.subject;
   if (hits(keywords.role, found)) total += SCORE.role;
   if (role.direction !== undefined) {

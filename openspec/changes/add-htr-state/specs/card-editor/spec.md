@@ -47,3 +47,8 @@ device's entities by their names, like every other role. A candidate named as el
 #### Scenario: Electrical power kept apart
 - **WHEN** the device's only W entity named for the DHW is "Electrical Power DHW"
 - **THEN** the DHW power is left empty
+
+#### Scenario: Firmware names without firmware ids
+- **WHEN** a device's entities are named "Heating Power DG1", "Heating Power DHW", "Heating Power HTR", "COP" and
+  "System COP", with ids that follow no firmware suffix
+- **THEN** the suggestions fill the DG1, DHW and HTR power, the COP and the system COP each with its own entity

@@ -9,7 +9,7 @@ import {
   FOREIGN_MODE_OPTIONS,
   FOREIGN_EMPTY,
 } from '../../dev/foreign';
-import { ROLES } from '../../src/config/roles';
+import { OPTIONAL_ROLE_PATHS, ROLES } from '../../src/config/roles';
 import { fieldsWithPaths } from '../../src/editor/schema';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
@@ -339,9 +339,33 @@ describe('binding check', () => {
     const config = { ...BASE, prefix: 'nothing_here', entities: { unit: { cop: 'none' } } };
     const { editor } = await open(config, foreignHass());
     const found = warnings(editor);
-    expect(found).toHaveLength(ROLES.length - 1);
+    // The optional roles' absent defaults are not warned about (add-htr-state D5).
+    expect(found).toHaveLength(ROLES.length - 1 - OPTIONAL_ROLE_PATHS.length);
     expect(found).toContain(EDITOR.suggest.unknown(roleName('production.pump'), 'sensor.nothing_here_production_pump'));
     expect(found.join('\n')).not.toContain('nothing_here_cop');
+  });
+
+  test('card-editor "Optional default absent": no warning for an absent optional prefix default', async () => {
+    const hass = firmwareHass('demo');
+    const states = Object.fromEntries(
+      Object.entries(hass.states).filter(([id]) => id !== 'sensor.demo_system_cop_display'),
+    );
+    const { editor } = await open({ ...BASE, prefix: 'demo' }, { ...hass, states });
+    expect(warnings(editor)).toEqual([]);
+  });
+
+  test('card-editor "Optional role set explicitly": an unknown explicit optional entity is warned about', async () => {
+    const config = { ...BASE, entities: { htr: { power: 'sensor.old_htr' } } };
+    const { editor } = await open(config, foreignHass());
+    expect(warnings(editor)).toEqual([EDITOR.suggest.unknown(roleName('htr.power'), 'sensor.old_htr')]);
+  });
+
+  test('an optional default that exists with a wrong unit is still warned about', async () => {
+    const hass = firmwareHass('demo');
+    const id = 'sensor.demo_heating_power_htr';
+    const states = { ...hass.states, [id]: { entity_id: id, state: '3', attributes: { unit_of_measurement: '°C' } } };
+    const { editor } = await open({ ...BASE, prefix: 'demo' }, { ...hass, states });
+    expect(warnings(editor)).toEqual([EDITOR.suggest.unit(roleName('htr.power'), id)]);
   });
 
   test('card-editor "Wrong unit": an entity whose unit does not fit the role gets a warning, with no change', async () => {

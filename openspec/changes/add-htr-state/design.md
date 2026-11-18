@@ -130,9 +130,16 @@ apply to every bound role as before.
 The five roles appear in the advanced entity pickers in the groups of their path (`htr` becomes a group with two
 roles). Each gets keywords in `src/config/keywords.ts` for the device suggestions, in the existing languages (for
 example `htr recovery recuperacion recuperatie` with `active actief activo`, and `power vermogen potencia leistung`).
-The three heat power roles exclude a candidate named as electrical power (`electrical elektrisch electrico`), since
-the firmware also has `Electrical Power DG1/DHW` in W on the same device (card-editor "Suggestions for the HTR and
-power roles").
+The three heat power roles exclude a candidate named as electrical power (the stems `electric elektr`, which catch
+electrical, elektrisch, electrico and eléctrica), since the firmware also has `Electrical Power DG1/DHW` in W on the same
+device (card-editor "Suggestions for the HTR and power roles"). A role's `exclude` words disqualify a candidate after
+the exact-id and suffix rules, so a firmware id is never excluded by its name.
+
+By names alone the firmware's "Heating Power DG1", "Heating Power DHW" and "Heating Power HTR" share their words, so
+the heat power roles also exclude each other's service words: DG1 power excludes the DHW and HTR words, DHW power the
+HTR words, HTR power the DHW words. A name that mixes DHW and HTR words fits neither and stays empty rather than being
+bound to the wrong role. `unit.cop` excludes the system words (`system systeem sistema`), so a plain "COP" and a
+"System COP" each fill their own role by names alone (decided in the group 4 review).
 
 Editor labels are keyed by a role's leaf name, and the leaf `power` reads "Power consumption" for `compressor.power`.
 The three heat power roles get a label override by path, "Heat power", so the editor reads "Heating: Heat power",

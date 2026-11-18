@@ -108,11 +108,11 @@ change) is a follow-up; this group only makes its "No COP" assertion set both CO
 
 ## 4. Editor: binding check and suggestions
 
-- [ ] 4.1 Skip the "does not exist" warning in `src/editor/binding-check.ts` for an optional role whose entity comes
+- [x] 4.1 Skip the "does not exist" warning in `src/editor/binding-check.ts` for an optional role whose entity comes
   from the prefix default (design D5).
   Verify: `test/editor/entity-discovery.test.ts` (or the binding check's own test) covers card-editor "Optional default
   absent" and "Optional role set explicitly", and the existing "Unknown entity" and "Wrong unit".
-- [ ] 4.2 Add keywords for the five roles in `src/config/keywords.ts` (design D6), with the electrical-power exclusion
+- [x] 4.2 Add keywords for the five roles in `src/config/keywords.ts` (design D6), with the electrical-power exclusion
   for `heating.power`, `dhw.power` and `htr.power`.
   Verify: `test/suggest/suggest.test.ts` covers card-editor "Firmware device" and "Electrical power kept apart", and a
   device with Dutch names for the HTR power and state.
@@ -120,7 +120,7 @@ change) is a follow-up; this group only makes its "No COP" assertion set both CO
   completes them. By names alone a plain "COP" and a "System COP" entity still tie for `unit.cop` (only the `_cop`
   suffix rule separates them); the exclusion mechanism of 4.2 should also keep "system systeem sistema" away from
   `unit.cop`.
-- [ ] 4.3 Document the binding check exception and the new suggestions in the editor section of
+- [x] 4.3 Document the binding check exception and the new suggestions in the editor section of
   `docs/ecogeo-card.md`, and the README's editor notes if they list roles.
   Verify: `test/docs.test.ts` passes.
 

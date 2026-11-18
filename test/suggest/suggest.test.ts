@@ -178,6 +178,84 @@ describe('suggestions', () => {
     expect(result['unit.system_cop']).toBe('sensor.hp_sys');
   });
 
+  test('card-editor "Firmware device": the five add-htr-state roles take the firmware entities', () => {
+    const { states, registry } = firmware();
+    const result = flat(run(states, registry, FIRMWARE_DEVICE_ID).entities);
+    expect(result['htr.active']).toBe('binary_sensor.demo_ecogeo_htr_active');
+    expect(result['htr.power']).toBe('sensor.demo_ecogeo_heating_power_htr');
+    expect(result['heating.power']).toBe('sensor.demo_ecogeo_heating_power_dg1');
+    expect(result['dhw.power']).toBe('sensor.demo_ecogeo_heating_power_dhw');
+    expect(result['unit.system_cop']).toBe('sensor.demo_ecogeo_system_cop_display');
+  });
+
+  test('names alone (ids without the suffix rule) fill the heat power roles and keep electrical power apart', () => {
+    const { states, registry } = device([
+      ['x1', 'Heating Power DG1', 'W'],
+      ['x2', 'Heating Power DHW', 'W'],
+      ['x3', 'Heating Power HTR', 'W'],
+      ['x4', 'Electrical Power DG1', 'W'],
+      ['x5', 'Electrical Power DHW', 'W'],
+    ]);
+    const result = flat(run(states, registry, 'dev').entities);
+    expect(result['heating.power']).toBe('sensor.x1');
+    expect(result['dhw.power']).toBe('sensor.x2');
+    expect(result['htr.power']).toBe('sensor.x3');
+  });
+
+  test('card-editor "Electrical power kept apart": only "Electrical Power DHW" leaves the DHW power empty', () => {
+    const { states, registry } = device([['x5', 'Electrical Power DHW', 'W']]);
+    const run1 = run(states, registry, 'dev');
+    expect(flat(run1.entities)['dhw.power']).toBeUndefined();
+    expect(run1.report.empty).toContain('dhw.power');
+    const nl = device([['y1', 'Elektrisch vermogen DHW', 'W']]);
+    expect(flat(run(nl.states, nl.registry, 'dev').entities)['dhw.power']).toBeUndefined();
+  });
+
+  test('Dutch names fill the HTR state and the HTR power', () => {
+    const states: States = {};
+    const entities: Record<string, HassEntityRegistryEntry> = {};
+    const add = (id: string, name: string, unit?: string) => {
+      states[id] = {
+        entity_id: id,
+        state: 'on',
+        attributes: { friendly_name: name, ...(unit === undefined ? {} : { unit_of_measurement: unit }) },
+      };
+      entities[id] = { entity_id: id, device_id: 'dev' };
+    };
+    add('binary_sensor.wp_a', 'Recuperatie actief');
+    add('sensor.wp_b', 'Recuperatie vermogen', 'W');
+    add('sensor.wp_c', 'Elektrisch vermogen recuperatie', 'W');
+    const result = flat(run(states, { entities, devices: { dev: { id: 'dev', name: 'Warmtepomp' } } }, 'dev').entities);
+    expect(result['htr.active']).toBe('binary_sensor.wp_a');
+    expect(result['htr.power']).toBe('sensor.wp_b');
+  });
+
+  test('card-editor "Firmware names without firmware ids": names alone separate the heat powers and the COPs', () => {
+    const { states, registry } = device([
+      ['x1', 'Heating Power DG1', 'W'],
+      ['x2', 'Heating Power DHW', 'W'],
+      ['x3', 'Heating Power HTR', 'W'],
+      ['x4', 'COP', undefined],
+      ['x5', 'System COP', undefined],
+    ]);
+    const result = flat(run(states, registry, 'dev').entities);
+    expect(result['heating.power']).toBe('sensor.x1');
+    expect(result['dhw.power']).toBe('sensor.x2');
+    expect(result['htr.power']).toBe('sensor.x3');
+    expect(result['unit.cop']).toBe('sensor.x4');
+    expect(result['unit.system_cop']).toBe('sensor.x5');
+  });
+
+  test.each(['Systeem COP', 'COP del sistema'])('names alone: a plain COP and a system COP (%s)', (system) => {
+    const { states, registry } = device([
+      ['x4', 'COP', undefined],
+      ['x5', system, undefined],
+    ]);
+    const result = flat(run(states, registry, 'dev').entities);
+    expect(result['unit.cop']).toBe('sensor.x4');
+    expect(result['unit.system_cop']).toBe('sensor.x5');
+  });
+
   test('Renamed device', () => {
     const { states, registry } = device(
       ROLES.map((r) => [`hp_basement_${r.suffix}`, r.suffix, 'unit' in r ? r.unit : undefined]),
