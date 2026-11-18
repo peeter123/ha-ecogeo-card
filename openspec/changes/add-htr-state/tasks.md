@@ -126,19 +126,25 @@ change) is a follow-up; this group only makes its "No COP" assertion set both CO
 
 ## 5. Release and live check
 
-- [ ] 5.1 Run `npm run release`, deploy `dist/ecogeo-card.js` with the command in `private/installation.md`, and bump
+- [x] 5.1 Run `npm run release`, deploy `dist/ecogeo-card.js` with the command in `private/installation.md`, and bump
   the dashboard resource's `?v=`.
   Verify: the resource lists the new `?v=`; system_log has no `frontend.js` error for the card after a reload.
-- [ ] 5.2 Check the live card (agent screenshot in light mode, plus the states of `htr_active`, the DG1, DHW and HTR
+- [x] 5.2 Check the live card (agent screenshot in light mode, plus the states of `htr_active`, the DG1, DHW and HTR
   power and `system_cop_display`): the footer shows the power items of the current mode and the system COP (or a dash
   at 0); when HTR runs during heating, exchanger 9 and pump 17 are active; the dashboard config is unchanged.
   Verify: a subagent's verdict on the screenshot matches the states read at the same moment; record the deploy, the
   `?v=` and the result in `private/installation.md`.
+  Note (group 5 review): checked on 2026-11-18 while heating with HTR idle (DG1 and HTR items, system COP, HTR drawn
+  idle). HTR running during heating was not caught; that observation moves to the workflow follow-up. The dashboard
+  config hash changed during the check through edits in other views; the Schematic view's card config is unchanged.
 
 ## Workflow follow-up
 
 - One fresh Opus review of the whole change before archiving.
 - Archive the change and merge its delta specs into `openspec/specs/`; name it in `AGENTS.md`.
+- Capture the live card while HTR runs during heating (exchanger 9 and pump 17 active, the DHW lines in the DHW colour,
+  the HTR item above 0 W) and record it in `private/installation.md`; HTR runs several times a day in the heating
+  season.
 - Confirm HTR in active cooling on the live installation next summer and record it in `private/installation.md`.
 - Follow-up change: point `test/card/hidden-labels.browser.test.ts` at the `demo_ecogeo` mock states, so its overlap
   checks measure real values, and fix any overlap that surfaces.

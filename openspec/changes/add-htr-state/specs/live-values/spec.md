@@ -41,7 +41,8 @@ optional role whose prefix default does not exist (card-config "Optional roles")
 ## ADDED Requirements
 
 ### Requirement: Footer power items by mode
-In the full layout the footer SHALL show, in W without decimals: in `heating` "DG1" (the DG1 power) and "HTR" (the
+In the full layout the footer SHALL show, in W (0 decimals by default; an entity's display precision applies, see
+"Locale and precision"): in `heating` "DG1" (the DG1 power) and "HTR" (the
 HTR power); in `dhw` "DHW" (the DHW power); in `active_cooling` "Cooling" (the evaporation capacity) and "HTR"; in
 every other mode no power item. "DG1" and "DHW" SHALL show the condensation capacity when their role has no entity
 (card-config "Optional roles"). "HTR" SHALL show only when HTR is `true`, `dhw` is `external` or `internal` and the

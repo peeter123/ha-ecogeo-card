@@ -69,7 +69,9 @@ the condensation and evaporation capacity items are removed:
 The HTR item shows in `heating` and `active_cooling` whenever HTR can run there: HTR `true` and a DHW tank in use
 (`external` or `internal`; with `unused` the HTR group is drawn but never active, so there is no item). It shows also
 at 0 W while HTR is idle, so the footer's items change only with the mode and do not reflow on every HTR run. All power
-items are in the detail tier, formatted like the capacities today (W, no decimals, a no-break space).
+items are in the detail tier, formatted like the capacities today (W, 0 decimals unless the entity has a display
+precision, a no-break space). The firmware's power entities carry a display precision of 1, so they read for example
+"6435.0 W", as in Home Assistant (live-values "Locale and precision"; confirmed in the group 5 review).
 
 - Why by mode: the firmware's DHW power includes the HTR heat, so showing DG1, DHW and HTR together while heating would
   count the HTR heat twice. By mode, the items of one mode add up to the useful heat: DG1 + HTR is the condensation
