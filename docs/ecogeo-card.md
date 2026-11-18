@@ -1013,6 +1013,25 @@ layout's key set is unchanged.
 The card is one JavaScript module, `ecogeo-card.js`, built from `src/` and committed as `dist/ecogeo-card.js`
 (`npm run release` checks, builds and copies it).
 
+The card is read-only: it calls no service and writes no entity, so it needs no permissions beyond those of the
+dashboard it sits on.
+
+### With HACS
+
+1. In HACS, open the menu, choose Custom repositories, add `https://github.com/peeter123/ha-ecogeo-card` with the
+   category Dashboard, and select Add.
+2. Find the ecoGEO Schematic Card in HACS and download it. HACS reads `hacs.json` (the name and the file
+   `ecogeo-card.js`) and takes the file from the latest GitHub release.
+3. HACS adds the dashboard resource `/hacsfiles/ha-ecogeo-card/ecogeo-card.js` of type `module` itself. With
+   dashboards in YAML mode, add it by hand under `resources:` as `url: /hacsfiles/ha-ecogeo-card/ecogeo-card.js`
+   with `type: module`.
+4. Hard-refresh the browser and add the card to a view, as in step 3 of the manual installation below.
+
+The browser console shows the loaded version as `ecogeo-card <version>`, and the card editor's help link opens the
+README. HACS offers an update when a new release is published.
+
+### By hand
+
 1. Copy `dist/ecogeo-card.js` to `/config/www/custom/ecogeo-card/ecogeo-card.js` on the Home Assistant host. Files
    under `/config/www/` are served as `/local/`.
 2. Register it as a dashboard resource, type `module`, in Settings, Dashboards, Resources (or with
@@ -1039,8 +1058,25 @@ The card is one JavaScript module, `ecogeo-card.js`, built from `src/` and commi
    `?v=2`), then hard-refresh the browser: `/local/` is cached for a long time, and only a changed URL makes the
    browser fetch the new file.
 
-The card is read-only: it calls no service and writes no entity, so it needs no permissions beyond those of the
-dashboard it sits on.
+## Releases
+
+The version is the `version` in `package.json`: semantic versioning, a minor version for new behaviour and a patch
+version for fixes. The card logs it once to the browser console when it loads, as `ecogeo-card <version>`.
+
+- `CHANGELOG.md` has one section per version, newest first; its top section is the `package.json` version.
+- `npm run release` runs `npm run check` and builds, then checks that the build is the single, current
+  `ecogeo-card.js` (nothing else in `build/`, not older than `src/`), that it registers the card and its editor and
+  that it reports the `package.json` version, and only then copies it to `dist/ecogeo-card.js`; otherwise `dist/` is
+  left untouched.
+- `npm run verify-dist` builds and runs the same build checks (not `npm run check`), then fails if the committed
+  `dist/ecogeo-card.js` differs byte for byte from the build, so a release cannot ship a stale bundle.
+- `.github/workflows/check.yml` runs the project check and then `verify-dist`; `.github/workflows/validate.yml` runs
+  the HACS validation. Both run on every push and pull request and on demand; `validate.yml` also runs daily.
+- A release is the tag `v<version>` and a GitHub release of that tag with `dist/ecogeo-card.js` attached, which is the
+  file HACS downloads. Pushing, tagging and creating the release are done only when the maintainer asks for that
+  release; a change's release group only bumps the version, adds the changelog entry and runs `npm run release`.
+
+The checks and the pinned tool versions behind the workflows are in Development below.
 
 ## Development
 

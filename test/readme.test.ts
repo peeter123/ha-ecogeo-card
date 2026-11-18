@@ -68,3 +68,17 @@ describe('README configuration reference', () => {
     expect(text).toContain('Variant default');
   });
 });
+
+describe('README installation and releases', () => {
+  test('the HACS steps name the repository and the hacsfiles resource', () => {
+    const text = section('### With HACS').replace(/\s+/g, ' ');
+    expect(text).toContain('https://github.com/peeter123/ha-ecogeo-card');
+    expect(text).toContain('category Dashboard');
+    expect(text).toContain('/hacsfiles/ha-ecogeo-card/ecogeo-card.js');
+  });
+
+  test('the HACS steps come before the manual ones', () => {
+    expect(README.indexOf('### With HACS')).toBeGreaterThan(0);
+    expect(README.indexOf('### With HACS')).toBeLessThan(README.indexOf('### By hand'));
+  });
+});

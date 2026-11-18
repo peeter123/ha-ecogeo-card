@@ -102,3 +102,19 @@ describe('the compact places in the docs', () => {
     expect(named.sort()).toEqual([...ON_PIPE_COMPACT].sort());
   });
 });
+
+describe('docs installation and releases', () => {
+  test('the HACS installation comes before the manual one and names the resource', () => {
+    const text = section('## Installation');
+    expect(text.indexOf('### With HACS')).toBeGreaterThan(-1);
+    expect(text.indexOf('### With HACS')).toBeLessThan(text.indexOf('### By hand'));
+    expect(text).toContain('/hacsfiles/ha-ecogeo-card/ecogeo-card.js');
+  });
+
+  test('the Releases section names the checks, both workflows and the tag', () => {
+    const text = section('## Releases');
+    for (const name of ['npm run release', 'verify-dist', 'CHANGELOG.md', 'check.yml', 'validate.yml', 'v<version>']) {
+      expect(text, name).toContain(name);
+    }
+  });
+});

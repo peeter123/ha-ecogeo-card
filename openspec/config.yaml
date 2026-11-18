@@ -76,6 +76,13 @@ context: |
   Live-installation steps (uploading, bumping the resource, changing a dashboard) follow the workspace's rules
   for live changes.
 
+  Releases: the card is distributed through HACS as a custom repository (hacs.json, GitHub releases carrying
+  dist/ecogeo-card.js). A change's release group bumps the version in package.json (minor for new behaviour, patch
+  for fixes), adds the version's CHANGELOG.md entry and runs npm run release. Pushing, tagging and creating the
+  GitHub release happen only when the user explicitly asks for that release; the "never push" above stays the
+  default for task groups. npm run check includes npm run lint:ha (codespell, yamllint, the workflow schema and the
+  Markdown format check, see docs/ecogeo-card.md), and the CI workflows in .github/workflows/ repeat the checks.
+
 rules:
   proposal:
     - State explicitly what is out of scope and which follow-up change (or firmware repo change) covers it.
@@ -97,6 +104,11 @@ rules:
       Include verification in the dev emulator (agent screenshot and verdict) for every visible change, and on the live
       installation (agent screenshot plus state check) once the card is deployed.
     - Include updating README.md and docs/ecogeo-card.md for every behaviour change.
+    - >-
+      End a change that alters the shipped card with a release group: bump the version in package.json, add the
+      CHANGELOG.md entry, run npm run release (dist/ecogeo-card.js is committed). The push, tag and GitHub release are
+      not tasks unless the user asked for that release when the change was planned (as for add-hacs-release); either
+      way they run only on the user's explicit request.
 
 operations:
   apply:

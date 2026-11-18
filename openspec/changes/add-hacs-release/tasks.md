@@ -89,24 +89,24 @@ this change's artifacts: values from `private/installation.md` are used only in 
 
 ## 4. Documentation and release procedure
 
-- [ ] 4.1 README.md: an Installation section with HACS first (add `https://github.com/peeter123/ha-ecogeo-card` as
+- [x] 4.1 README.md: an Installation section with HACS first (add `https://github.com/peeter123/ha-ecogeo-card` as
   a custom repository of category Dashboard, install, and the resource that HACS adds,
   `/hacsfiles/ha-ecogeo-card/ecogeo-card.js`, or how to add it by hand in YAML mode), then the manual steps. Add a
   note that the browser console shows the loaded version and that the card editor links to the README. In the
   status paragraph, drop `add-hacs-release` from the planned follow-ups.
   Verify: `test/readme.test.ts` passes, and a new README test checks that the HACS steps name the repository URL and
   the `hacsfiles` path.
-- [ ] 4.2 docs/ecogeo-card.md: the same HACS installation ahead of the manual one, which stays, and a Releases
+- [x] 4.2 docs/ecogeo-card.md: the same HACS installation ahead of the manual one, which stays, and a Releases
   section. It covers the version in `package.json`, the load message, `CHANGELOG.md`, `npm run release`,
   `npm run verify-dist`, the two workflows, and the tag and GitHub release (design D8).
   Verify: `test/docs.test.ts` passes. The Releases section names `verify-dist` and both workflow files.
-- [ ] 4.3 Add `CHANGELOG.md` with a `1.0.0` section (dated on release, filled in by group 6) summarizing what the card
+- [x] 4.3 Add `CHANGELOG.md` with a `1.0.0` section (dated on release, filled in by group 6) summarizing what the card
   does: the schematic for models B and C and variants 1-4, the sources and DHW storage, temperature colouring and
   flow, live values and more-info, the compact layout, the visual editor with entity suggestions, HTR recovery and
   the footer's power items. No emoji. Every number keeps its unit with a no-break space where it is UI text.
   Verify: `npm run lint:ha` passes on it, and a unit test checks that its top section is the `package.json`
   version.
-- [ ] 4.4 AGENTS.md and `openspec/config.yaml`: record the release procedure (design D8) and the quality checks. A
+- [x] 4.4 AGENTS.md and `openspec/config.yaml`: record the release procedure (design D8) and the quality checks. A
   change's release group bumps the version and adds a `CHANGELOG.md` entry. Pushing, tagging and the GitHub release
   happen only on the user's explicit request for that release. In AGENTS.md's Layout, name `hacs.json`,
   `CHANGELOG.md`, `.github/workflows/`, `.codespellrc`, `.yamllint` and `lint:ha`. The orchestrator may edit these
@@ -137,7 +137,8 @@ this change's artifacts: values from `private/installation.md` are used only in 
 - [ ] 6.2 Add `origin` (`https://github.com/peeter123/ha-ecogeo-card.git`) and push `main`.
   Verify: both workflows run on `main` and pass (`gh run list`). If the dist check fails only because the Linux
   build differs, stop and bring the diff to the user (design, Risks).
-- [ ] 6.3 Date the `1.0.0` section of `CHANGELOG.md` (a Sonnet subagent edits it; `npm run check` green; committed as
+- [ ] 6.3 Date the `1.0.0` section of `CHANGELOG.md`, heading form `## 1.0.0 - YYYY-MM-DD` as its intro states
+  (a Sonnet subagent edits it; `npm run check` green; committed as
   a small fix within this group). Push it. Create and push the annotated tag `v1.0.0`, and create the release:
   `gh release create v1.0.0 dist/ecogeo-card.js` with that section as notes.
   Verify: `gh release view v1.0.0` lists `ecogeo-card.js`. The tag's `dist/ecogeo-card.js` equals the local one.

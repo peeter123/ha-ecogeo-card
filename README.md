@@ -36,14 +36,32 @@ for the explanation of what the card shows and where each part comes from.
 
 Released and in use. The card validates its configuration, resolves its entities (or shows built-in sample values),
 reads them, derives the operating mode and draws the schematic with coloured, flowing pipes and live values. The visual
-editor is built (see Visual editor below). Planned follow-up changes: `add-hacs-release` and `add-browser-tests`. Extra
+editor is built (see Visual editor below). The planned follow-up change is `add-browser-tests`. Extra
 circuits (DG2, DG3, the pool) are a long-term idea only: they are external to the unit and need their own valves, so the
 card does not draw them.
 
 ## Installation
 
+### With HACS
+
+1. In HACS, open the menu, choose Custom repositories, add `https://github.com/peeter123/ha-ecogeo-card` with the
+   category Dashboard, and select Add.
+2. Find the ecoGEO Schematic Card in HACS and download it.
+3. HACS adds the dashboard resource `/hacsfiles/ha-ecogeo-card/ecogeo-card.js` of type `module` itself. If your
+   dashboards are in YAML mode, add it by hand under `resources:` as `url: /hacsfiles/ha-ecogeo-card/ecogeo-card.js`
+   with `type: module`.
+4. Hard-refresh the browser, then add the card to a view (see Configuration below).
+
+### By hand
+
 Copy `dist/ecogeo-card.js` to the Home Assistant `www` folder, register it as a `module` dashboard resource and add
 the card to a view. The steps are in the Installation section of [docs/ecogeo-card.md](docs/ecogeo-card.md).
+
+### After installing
+
+The browser console shows the version that loaded (`ecogeo-card <version>`), which tells you which build a dashboard
+runs. In the card editor, the help link opens this README. How a release is made is in the Releases section of
+[docs/ecogeo-card.md](docs/ecogeo-card.md), and what each one changed is in [CHANGELOG.md](CHANGELOG.md).
 
 The card measures its own width and chooses a layout from it (the `layout` option, see Options). With `layout: auto`
 (the default) it shows the full layout from 600 px wide (from 640 px wide with `detail: full`), which is a panel view or
@@ -337,6 +355,7 @@ npm run check     # typecheck, lint, format check, the Home Assistant quality ch
 npm run lint:ha   # codespell, yamllint, the workflow schema check and the Markdown format check, through uvx
 npm run build     # bundle into build/ecogeo-card.js (git-ignored)
 npm run release   # check, build, verify the bundle registers the card and reports the package version, copy to dist/
+npm run verify-dist  # build and fail if the committed dist/ecogeo-card.js differs from the build
 ```
 
 ### Emulator

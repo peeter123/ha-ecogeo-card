@@ -14,6 +14,10 @@ its rules are binding. Read it, and the active change in `openspec/changes/`, be
 - `test/`: Vitest, two projects: `unit` (happy-dom, `*.test.ts`) and `browser` (Chromium and WebKit through
   Playwright, `*.browser.test.ts`) for anything that depends on real layout (widths, rendered sizes, overlaps).
   `npm test` runs both. `dev/`: the emulator (`npm run dev`) with a mock `hass`.
+- `hacs.json` (HACS manifest), `CHANGELOG.md` (one section per version), `.github/workflows/` (`check.yml`: project
+  check and `npm run verify-dist`; `validate.yml`: HACS validation), `.codespellrc` and `.yamllint` (configs of the
+  quality checks), `scripts/lint-ha.mjs` (`npm run lint:ha`: codespell, yamllint, the workflow schema and the
+  Markdown format check, part of `npm run check`; needs uv on the PATH).
 - `scripts/check-on-edit.mjs`: the quality hook (`.claude/settings.json`), run after every edit of a TypeScript file
   under `src/`, `test/` or `dev/`. Keep it green.
 - `docs/ecogeo-card.md`: the public explanation. `README.md`: features, install and configuration.
@@ -48,6 +52,14 @@ archived in `openspec/changes/archive/2026-11-18-add-htr-state/`.
 - Helpers from the hrv-ventilation repo (local path in `private/installation.md`) are copied, never imported.
 - The apply session orchestrates only: Sonnet subagents implement, an Opus subagent reviews, one commit per task
   group, never push (details in `openspec/config.yaml`).
+
+## Releases
+
+- A change's release group bumps `version` in `package.json` (minor for new behaviour, patch for fixes), adds the
+  version's section to `CHANGELOG.md` and runs `npm run release`.
+- Pushing, tagging (`v<version>`) and creating the GitHub release with `dist/ecogeo-card.js` attached happen only on
+  the user's explicit request for that release. "Never push" stays the default for task groups.
+- The steps are in the Releases section of `docs/ecogeo-card.md`.
 
 ## Deploy (live installation)
 
