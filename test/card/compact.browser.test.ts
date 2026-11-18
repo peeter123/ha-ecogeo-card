@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';
+import { EMULATOR_FONT } from '../../dev/overlaps';
 import { MockHass } from '../../dev/mock-hass';
 import { DEMO_PREFIX, SCENARIO_NAMES, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
@@ -20,6 +21,9 @@ async function show(
 ): Promise<{ card: EcogeoCard; wrapper: HTMLElement; root: ShadowRoot }> {
   const wrapper = document.createElement('div');
   wrapper.style.width = `${String(width)}px`;
+  // The emulator's font, as in the overlap tests: the footer's wrapping depends on it.
+  wrapper.style.fontFamily = EMULATOR_FONT.family;
+  wrapper.style.fontSize = EMULATOR_FONT.size;
   const card = document.createElement('ecogeo-card') as EcogeoCard;
   card.setConfig({ type: 'custom:ecogeo-card', prefix: DEMO_PREFIX, source: 'air', ...config });
   card.hass = new MockHass().build(scenarioStates(SCENARIOS[scenario].states), false);

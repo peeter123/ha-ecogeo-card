@@ -109,14 +109,18 @@ have no installable file.
 ### D5. Two workflows, pinned like hot-water-tank-estimator's
 
 - `.github/workflows/validate.yml`: the workflow from the HACS docs, with `category: plugin`. It runs on push, pull
-  request, daily and on demand, with `permissions: {}`, using `hacs/action@main` (the HACS docs' recommendation:
-  it tracks HACS's current rules; it has no release tags).
+  request, daily and on demand, with `permissions: {}`, using `hacs/action@main` (the HACS docs' example: it tracks
+  HACS's current rules; its last tagged release, 22.5.0, dates from 2022).
 - `.github/workflows/check.yml`: `ubuntu-latest` and Node 24 (inside `engines`, the version used locally). Steps:
   1. `actions/checkout@v7` and `actions/setup-node` at its latest major (checked at implementation and recorded in
      docs), with the npm cache.
   2. `astral-sh/setup-uv` pinned by SHA to v10.3.3 with `version: 0.13.1`, copied from hot-water-tank-estimator's
      `lint.yml`.
-  3. `npm ci` and `npx playwright install --with-deps chromium webkit`.
+  3. `npm ci` and `npx playwright install --with-deps chromium webkit`, then Ubuntu's `fonts-roboto` (`apt-get`,
+     no recommends): the browser tests measure text in Roboto (`EMULATOR_FONT` in `dev/overlaps.ts`), which the
+     runner lacks (the author's machine has it installed; Windows does not ship it). Without it the overlap tests
+     fail in bulk (settled in group 3; vendoring the font as a dev dependency was the alternative, left for a later
+     change if a contributor needs it).
   4. `npm run check`, then `npm run verify-dist`.
 
   It runs on push, pull request and on demand, with `permissions: contents: read`.
@@ -226,7 +230,10 @@ Alternatives: run codespell and yamllint through npm ports (not the tools core p
   `private/installation.md`, and the Opus review of group 5 checks the list against that file before anything is
   pushed.
 - [Browser tests are slower or flaky on CI (WebKit on Linux)] → They run with the same config as locally. A
-  flaky test is a should-fix for the group that owns it, not a reason to drop WebKit.
+  flaky test is a should-fix for the group that owns it, not a reason to drop WebKit. Group 3 owns the ones a Linux
+  simulation found, because their changes are archived and `check.yml` cannot pass without them: a measuring test
+  that sets no font family gets `EMULATOR_FONT`, and the browser project's `expect.poll` timeout is raised from the
+  1 s default so WebKit's first ResizeObserver delivery is not missed on a slower runner.
 
 ## Migration Plan
 

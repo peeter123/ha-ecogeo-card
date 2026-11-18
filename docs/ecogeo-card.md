@@ -1074,7 +1074,14 @@ yamllint on an edited YAML file, so a finding shows at once.
 | yamllint              | 1.38.0  | same                                                                           |
 | check-jsonschema      | 0.39.0  | the latest release when the checks were added (2026-11-18); core does not pin it |
 | Markdown format check | none    | `scripts/md-format.mjs`, a Node port of the checker of hot-water-tank-estimator |
-| uv                    | 0.13.1  | the version used locally and, once there are workflows, in CI                  |
+| uv                    | 0.13.1  | the version used locally and in CI (`astral-sh/setup-uv` v10.3.3, pinned by SHA) |
+| actions/checkout      | v7      | as used by hot-water-tank-estimator's workflows (2026-11-18)                    |
+| actions/setup-node    | v7      | the latest release, v7.1.0, on its GitHub releases page (2026-11-18)            |
+| hacs/action           | main    | the HACS docs' example; its last tagged release, 22.5.0, dates from 2022 (hacs.xyz, GitHub, 2026-11-18)    |
 
 The codespell and yamllint versions are core's, as recorded in hot-water-tank-estimator on 2026-10-31. When the pins
-change, update `scripts/lint-ha.mjs` and this table together.
+change, update `scripts/lint-ha.mjs`, `.github/workflows/check.yml`, `.github/workflows/validate.yml` and this table
+together.
+
+The browser tests measure label and footer boxes in Roboto (`EMULATOR_FONT` in `dev/overlaps.ts`), so Roboto must be
+installed for them to pass. CI installs it (`fonts-roboto`, a step of `check.yml`); install it locally too.

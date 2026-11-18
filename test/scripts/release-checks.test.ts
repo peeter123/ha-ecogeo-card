@@ -74,4 +74,31 @@ describe('releaseBuild', () => {
     expect(stale.failure).toContain('older than src/');
     expect(dist()).toBe('old bundle');
   });
+
+  test('Stale bundle: --verify-dist fails naming dist/ecogeo-card.js and leaves dist untouched', async () => {
+    const result = await releaseBuild({ ...options(), verifyDist: true, load: () => registry('1.0.0') });
+    expect(result.failure).toContain('dist/ecogeo-card.js');
+    expect(dist()).toBe('old bundle');
+  });
+
+  test('--verify-dist fails naming dist/ecogeo-card.js when it is missing', async () => {
+    rmSync(join(distDir, 'ecogeo-card.js'));
+    const result = await releaseBuild({ ...options(), verifyDist: true, load: () => registry('1.0.0') });
+    expect(result.failure).toContain('dist/ecogeo-card.js');
+    expect(result.failure).toContain('missing');
+  });
+
+  test('--verify-dist runs the version check first: a mismatch names both versions, dist untouched', async () => {
+    const result = await releaseBuild({ ...options(), verifyDist: true, load: () => registry('0.9.0') });
+    expect(result.failure).toContain('0.9.0');
+    expect(result.failure).toContain('1.0.0');
+    expect(dist()).toBe('old bundle');
+  });
+
+  test('Current bundle: --verify-dist passes when dist is byte for byte the build', async () => {
+    writeFileSync(join(distDir, 'ecogeo-card.js'), 'new bundle');
+    const result = await releaseBuild({ ...options(), verifyDist: true, load: () => registry('1.0.0') });
+    expect(result.failure).toBe('');
+    expect(dist()).toBe('new bundle');
+  });
 });

@@ -2,7 +2,7 @@
 // older than src/, whether the registered elements are the card and its editor, and whether the card reports the
 // version of package.json. They are plain functions so that tests import them; scripts/check-release.mjs is the
 // command-line entry that loads the bundle and copies it. Adapted from hrv-ventilation scripts/check-release.mjs.
-import { copyFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const CARDS = ['ecogeo-card', 'ecogeo-card-editor'];
@@ -48,14 +48,40 @@ export function registrationProblem(registry, expectedVersion) {
 }
 
 /**
+ * @param {string} built the build, build/ecogeo-card.js
+ * @param {string} committed the committed bundle, dist/ecogeo-card.js
+ * @returns {string} why the committed bundle is not the build of the current sources, or '' when it is
+ */
+export function distProblem(built, committed) {
+  let current;
+  try {
+    current = readFileSync(committed);
+  } catch {
+    return 'dist/ecogeo-card.js is missing; run npm run release';
+  }
+  if (!readFileSync(built).equals(current)) {
+    return 'dist/ecogeo-card.js differs from the build of the current sources; run npm run release and commit it';
+  }
+  return '';
+}
+
+/**
  * Runs every check on a build and, unless `dryRun`, copies it to dist/ only when all pass.
  * @param {{
- *   buildDir: string, distDir: string, srcDir: string, expectedVersion: string, dryRun?: boolean,
+ *   buildDir: string, distDir: string, srcDir: string, expectedVersion: string, dryRun?: boolean, verifyDist?: boolean,
  *   load: (bundle: string) => Promise<{ get(tag: string): unknown }>,
  * }} options `load` imports the bundle and returns the custom element registry it filled
  * @returns {Promise<{ failure: string, message: string }>} the failure ('' when none) and the line to print
  */
-export async function releaseBuild({ buildDir, distDir, srcDir, expectedVersion, dryRun = false, load }) {
+export async function releaseBuild({
+  buildDir,
+  distDir,
+  srcDir,
+  expectedVersion,
+  dryRun = false,
+  verifyDist = false,
+  load,
+}) {
   const built = join(buildDir, BUNDLE);
   let failure = buildDirProblem(buildDir, srcDir);
   if (!failure) {
@@ -65,8 +91,10 @@ export async function releaseBuild({ buildDir, distDir, srcDir, expectedVersion,
       failure = `the build failed to load: ${String(error)}`;
     }
   }
+  if (!failure && verifyDist) failure = distProblem(built, join(distDir, BUNDLE));
   if (failure) return { failure, message: `release: ${failure}; dist/ was not touched.\n` };
   const checked = `custom:ecogeo-card and ecogeo-card-editor registered, version ${expectedVersion}`;
+  if (verifyDist) return { failure, message: `release: ${checked}; dist/ecogeo-card.js is current.\n` };
   if (dryRun) return { failure, message: `release: ${checked} (dry run, dist/ not touched).\n` };
   mkdirSync(distDir, { recursive: true });
   copyFileSync(built, join(distDir, BUNDLE));

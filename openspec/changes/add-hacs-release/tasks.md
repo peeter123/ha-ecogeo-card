@@ -67,23 +67,25 @@ this change's artifacts: values from `private/installation.md` are used only in 
 
 ## 3. Dist check and continuous checks
 
-- [ ] 3.1 Add `--verify-dist` to `scripts/check-release.mjs`. It runs the checks of group 2 on
+- [x] 3.1 Add `--verify-dist` to `scripts/check-release.mjs`. It runs the checks of group 2 on
   `build/ecogeo-card.js`, then compares it byte for byte with `dist/ecogeo-card.js`. It copies nothing and fails
   naming `dist/ecogeo-card.js` when they differ. Add the npm script `verify-dist` (`vite build` and then this mode)
   (design D4).
   Verify: unit tests of the comparison cover release-packaging "Stale bundle" and "Current bundle", and
   `npm run verify-dist` passes on the working tree.
-- [ ] 3.2 Add `.github/workflows/validate.yml`: the HACS validation workflow with `category: plugin`, on push, pull
+- [x] 3.2 Add `.github/workflows/validate.yml`: the HACS validation workflow with `category: plugin`, on push, pull
   request, a daily schedule and workflow_dispatch, with `permissions: {}` (design D5).
   Verify: `npm run lint:ha` passes, including yamllint and the workflow schema check on the new file. The review
   compares it with the HACS docs' example.
-- [ ] 3.3 Add `.github/workflows/check.yml` (design D5): `actions/checkout@v7`, `actions/setup-node` at its latest
+- [x] 3.3 Add `.github/workflows/check.yml` (design D5): `actions/checkout@v7`, `actions/setup-node` at its latest
   major with Node 24 and the npm cache, `astral-sh/setup-uv` pinned by SHA with uv 0.13.1 (as in
   hot-water-tank-estimator's `lint.yml`), `npm ci`, the Playwright Chromium and WebKit install with system
   dependencies, `npm run check`, `npm run verify-dist`. It runs on push, pull request and workflow_dispatch, with
   `permissions: contents: read`. Record the action versions in the docs' tool table.
   Verify: `npm run lint:ha` passes on it. The review walks each step against the local commands, which pass on the
   working tree. The workflow first runs on GitHub in group 6.
+  Note (review round 1): a Linux simulation showed the browser tests need Roboto and a longer `expect.poll` timeout
+  on WebKit; the font install step and those test fixes belong to this task (design D5 and Risks).
 
 ## 4. Documentation and release procedure
 

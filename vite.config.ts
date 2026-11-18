@@ -36,6 +36,8 @@ export default defineConfig({
         test: {
           name: 'browser',
           include: ['test/**/*.browser.test.ts'],
+          // WebKit's first ResizeObserver delivery can take longer than the 1 s default on a loaded runner.
+          expect: { poll: { timeout: 5000 } },
           browser: {
             enabled: true,
             headless: true,

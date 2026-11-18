@@ -11,6 +11,7 @@
     "dev": "vite --open /dev/index.html",
     "build": "vite build",
     "release": "npm run check && npm run build && node scripts/check-release.mjs",
+    "verify-dist": "vite build && node scripts/check-release.mjs --verify-dist",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
     "test:browser": "vitest run --project browser",

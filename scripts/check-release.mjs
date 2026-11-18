@@ -4,7 +4,8 @@
 // version, cannot replace the one that is deployed from dist/; whether the card works is up to the tests that
 // `npm run check` runs first. It refuses a build that is older than src/ (a stale build from an earlier
 // `npm run build`) and a build of more than one file (the bundle must be self-contained). The checks themselves are
-// in scripts/release-checks.mjs. `--dry-run` checks without copying. Adapted from hrv-ventilation
+// in scripts/release-checks.mjs. `--dry-run` checks without copying; `--verify-dist`
+// also compares the build byte for byte with dist/ecogeo-card.js (and copies nothing). Adapted from hrv-ventilation
 // scripts/check-release.mjs.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -34,6 +35,7 @@ const { failure, message } = await releaseBuild({
   srcDir: fileURLToPath(new URL('src/', root)),
   expectedVersion: version,
   dryRun: process.argv.includes('--dry-run'),
+  verifyDist: process.argv.includes('--verify-dist'),
   load,
 });
 // Exit explicitly (a timer started by the bundle would keep Node alive), after the message is flushed.
