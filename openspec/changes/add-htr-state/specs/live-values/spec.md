@@ -13,7 +13,7 @@ The card SHALL show a footer with:
 The footer SHALL NOT show the condensation or the evaporation capacity under those names.
 
 In the compact layout (responsive-layout) the footer SHALL show only the derived mode, the outside temperature,
-the COP, and the alarm and offline indications when they apply.
+the efficiency (COP or EER), and the alarm and offline indications when they apply.
 
 #### Scenario: Footer while heating
 - **WHEN** the mode is `heating`, winter is on, the system COP is 4.6, the DG1 power is 5211 W, HTR is `true` with an
@@ -24,7 +24,8 @@ the COP, and the alarm and offline indications when they apply.
 ### Requirement: Roles not present are hidden
 A role set to `none` (card-config) SHALL show nothing: no label, no dash and no footer item. Its component SHALL
 still be drawn. A role bound to an entity Home Assistant does not know SHALL still show a muted dash, except an
-optional role whose prefix default does not exist (card-config "Optional roles"): its fallback shows instead.
+optional role whose prefix default does not exist (card-config "Optional roles"): its fallback shows instead. An
+optional role set to `none` likewise hands its footer item to its fallback role.
 
 #### Scenario: No pressure sensors
 - **WHEN** the config sets both pressure roles of the production and brine groups to `none`, in the full layout
@@ -45,8 +46,7 @@ In the full layout the footer SHALL show, in W (0 decimals by default; an entity
 "Locale and precision"): in `heating` "DG1" (the DG1 power) and "HTR" (the
 HTR power); in `dhw` "DHW" (the DHW power); in `active_cooling` "Cooling" (the evaporation capacity) and "HTR"; in
 every other mode no power item. "DG1" and "DHW" SHALL show the condensation capacity when their role has no entity
-(card-config "Optional roles"). "HTR" SHALL show only when HTR is `true`, `dhw` is `external` or `internal` and the
-HTR power role has an entity.
+(card-config "Optional roles"). The HTR item follows "Footer HTR item".
 
 #### Scenario: DHW power
 - **WHEN** the mode is `dhw` and the DHW power is 5043 W, in the full layout
@@ -69,14 +69,6 @@ HTR power role has an entity.
 - **WHEN** the mode is `heating`, the DG1 power role has no entity and the condensation capacity is 4712 W
 - **THEN** the footer shows "DG1 4712 W"
 
-#### Scenario: No HTR power role
-- **WHEN** the mode is `heating`, HTR is `true` with an external tank, and the HTR power role has no entity
-- **THEN** the footer shows no HTR item
-
-#### Scenario: No HTR item with an unused tank
-- **WHEN** the mode is `heating`, HTR is `true` and `dhw` is `unused`
-- **THEN** the footer shows no HTR item
-
 #### Scenario: Power unavailable
 - **WHEN** the mode is `heating` and the DG1 power entity exists and is `unavailable`
 - **THEN** the DG1 item shows a muted dash, not the condensation capacity
@@ -84,6 +76,18 @@ HTR power role has an entity.
 #### Scenario: Compact footer without power items
 - **WHEN** the mode is `heating` with HTR running, in the compact layout
 - **THEN** the footer shows no DG1 or HTR item
+
+### Requirement: Footer HTR item
+In `heating` and `active_cooling` the footer's "HTR" item SHALL show only when HTR is `true`, `dhw` is `external` or
+`internal` and the HTR power role has an entity; it SHALL show also at 0 W while HTR is idle.
+
+#### Scenario: No HTR power role
+- **WHEN** the mode is `heating`, HTR is `true` with an external tank, and the HTR power role has no entity
+- **THEN** the footer shows no HTR item
+
+#### Scenario: No HTR item with an unused tank
+- **WHEN** the mode is `heating`, HTR is `true` and `dhw` is `unused`
+- **THEN** the footer shows no HTR item
 
 ### Requirement: Footer efficiency
 The footer's efficiency SHALL come from the system COP role, or from the COP role when the system COP role has no

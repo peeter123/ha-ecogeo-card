@@ -148,3 +148,11 @@ change) is a follow-up; this group only makes its "No COP" assertion set both CO
 - Confirm HTR in active cooling on the live installation next summer and record it in `private/installation.md`.
 - Follow-up change: point `test/card/hidden-labels.browser.test.ts` at the `demo_ecogeo` mock states, so its overlap
   checks measure real values, and fix any overlap that surfaces.
+
+Note (pre-archive review, 2026-11-18): the fresh Opus review of the whole change was clean (no blocking or should-fix
+finding; `dist/ecogeo-card.js` identical to a fresh build). Its nits are settled: the HTR condition of live-values
+"Footer power items by mode" became its own requirement "Footer HTR item" (strict validation), "Roles not present are
+hidden" says that an optional role set to `none` hands its footer item to its fallback, the compact footer names the
+efficiency (COP or EER), dev-emulator "Foreign naming in the capture list" includes heating with HTR recovery, and the
+README lists the full-detail captures and orders the new roles as `src/config/roles.ts` does. The responsive-layout
+spec keeps its wording "the COP" for the compact footer.

@@ -196,16 +196,16 @@ still an entity setting, so the card does not show sample values.
 | `refrigerant.expansion_valve` | `sensor.<prefix>_expansion_valve_position` | %, 0 dec. | 12 |
 | `heating.capacity` | `sensor.<prefix>_condensation_capacity` | W, 0 dec. | 8 |
 | `cooling.capacity` | `sensor.<prefix>_evaporation_capacity` | W, 0 dec. | 7 |
-| `heating.power` | `sensor.<prefix>_heating_power_dg1` | W, 0 dec. | 1/2 |
-| `dhw.power` | `sensor.<prefix>_heating_power_dhw` | W, 0 dec. | 26 |
-| `htr.active` | `binary_sensor.<prefix>_htr_active` | on/off | 9 |
-| `htr.power` | `sensor.<prefix>_heating_power_htr` | W, 0 dec. | 9 |
 | `heating.demand` | `binary_sensor.<prefix>_dg1_demand` | on/off | 1/2 |
 | `heating.setpoint` | `sensor.<prefix>_heating_dg1_setpoint` | °C, 1 dec. | 1/2 |
+| `heating.power` | `sensor.<prefix>_heating_power_dg1` | W, 0 dec. | 1/2 |
 | `dhw.temperature` | `sensor.<prefix>_dhw_temperature` | °C, 1 dec. | tank (54 on C) |
 | `dhw.setpoint` | `number.<prefix>_dhw_setpoint` | °C, 0 dec. | tank |
 | `dhw.start_delta` | `number.<prefix>_delta_t_start_dhw` | K, 0 dec. | tank |
 | `dhw.demand` | `binary_sensor.<prefix>_dhw_demand` | on/off | 26 |
+| `dhw.power` | `sensor.<prefix>_heating_power_dhw` | W, 0 dec. | 26 |
+| `htr.active` | `binary_sensor.<prefix>_htr_active` | on/off | 9 |
+| `htr.power` | `sensor.<prefix>_heating_power_htr` | W, 0 dec. | 9 |
 | `source.fan_speed` | `sensor.<prefix>_aerothermal_fan_speed` | %, 1 dec. | air unit |
 | `source.air_unit_outlet_temperature` | `sensor.<prefix>_brine_temperature_air_unit_outlet` | °C, 1 dec. | air unit |
 | `source.outside_temperature` | `sensor.<prefix>_outside_temperature` | °C, 1 dec. | air unit / footer |
@@ -370,6 +370,6 @@ For example `dev/index.html?scenario=passive_cooling&source=ground`.
 `npm run capture` starts its own Vite server, opens every URL of the fixed list in `dev/captures.ts` in headless
 Chromium (Playwright, a dev dependency for this script only) and writes one PNG per URL to `build/captures/`. The list
 covers every scenario, each source, each DHW value, model C, each feature `false` and `unused`, the other variants, the dark
-theme, the foreign naming (heating, heating with HTR recovery, DHW, defrost and off, and heating at 360 px) and two full-detail captures (heating and model C). The first run needs the browser: `npx playwright install chromium`.
+theme, the foreign naming (heating, heating with HTR recovery, DHW, defrost and off, and heating at 360 px) and full-detail captures (heating, heating with HTR recovery, model C, an air and a hybrid source, no DHW and variant 1). The first run needs the browser: `npx playwright install chromium`.
 
 `dist/ecogeo-card.js` is the committed, deployable bundle. `npm run format` rewrites files with Prettier.

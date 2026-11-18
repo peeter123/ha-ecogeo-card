@@ -64,3 +64,11 @@ unbound, so the card shows their fallbacks, and SHALL bind `unit.cop`, so the re
 - **WHEN** the developer picks the heating with HTR recovery scenario with the foreign naming, in the full layout
 - **THEN** the footer shows the condensation capacity as "DG1", the register COP and no HTR item, and exchanger 9
   and pump 17 are drawn without flow
+
+### Requirement: Foreign naming in the capture list
+The capture list SHALL include the foreign naming in the heating, heating with HTR recovery, DHW, defrost and off
+scenarios, and in the heating scenario at a phone width (360 px).
+
+#### Scenario: Captures
+- **WHEN** a capture script runs the capture list
+- **THEN** it captures the five foreign scenarios and the foreign heating scenario at 360 px
