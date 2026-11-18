@@ -108,9 +108,9 @@ With `dhw: none`, the card SHALL draw no tank, no DHW pipes, no connections 5 an
 
 ### Requirement: Unused DHW storage
 With `dhw: unused`, the card SHALL draw the model's tank (on model B the external tank with connections 5 and 6, on
-model C tank 50 with coil 51) and valve 26 in the muted style: the tank body (fill and outline), the coil, valve 26
-and the DHW pipes muted and never animated. The tank SHALL show no values. HTR SHALL follow its own feature state, as with a tank in use, but
-the HTR circuit and the DHW coil SHALL never be active (see operating-mode).
+model C tank 50 with coil 51) and valve 26 in the muted style: the tank body (fill and outline), the coil, valve 26 and
+the DHW pipes muted and never animated. The tank SHALL show no values. HTR SHALL follow its own feature state, as with a
+tank in use, but the HTR circuit and the DHW coil SHALL never be active (see operating-mode).
 
 #### Scenario: Unused external tank
 - **WHEN** the config sets `model: B` and `dhw: unused`

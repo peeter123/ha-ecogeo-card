@@ -8,29 +8,29 @@ this change's artifacts: values from `private/installation.md` are used only in 
 
 ## 1. Home Assistant quality checks
 
-- [ ] 1.1 Add `.codespellrc` and `.yamllint` (design D9), and `scripts/lint-ha.mjs` with the npm script `lint:ha`,
+- [x] 1.1 Add `.codespellrc` and `.yamllint` (design D9), and `scripts/lint-ha.mjs` with the npm script `lint:ha`,
   added to `npm run check` after `format:check`. It runs `uvx codespell@2.4.3`, `uvx yamllint@1.38.0`,
   `uvx check-jsonschema` (pinned to its current version) with `vendor.github-workflows` when
   `.github/workflows/` exists, and the Markdown format check. It fails on any finding, and with a message naming uv
   when `uvx` is missing.
   Verify: `npm run lint:ha` runs every tool. A unit test or a scripted run with a temporary file covers
   release-packaging "Misspelling" and "Invalid workflow".
-- [ ] 1.2 Add `scripts/md-format.mjs`, a Node port of hot-water-tank-estimator's `scripts/md_format.py` (design D9:
+- [x] 1.2 Add `scripts/md-format.mjs`, a Node port of hot-water-tank-estimator's `scripts/md_format.py` (design D9:
   scope, rules, exemptions, `--fix` for line endings and final newline only). Name the source and the deviation in
   its header.
   Verify: unit tests of its line check cover release-packaging "Long Markdown line" and "Table rows and code
   blocks", plus CRLF and a missing final newline.
-- [ ] 1.3 Fix the existing findings. Rename the identifiers codespell flags (`colorIn`, `positionOf`, `onOther`).
+- [x] 1.3 Fix the existing findings. Rename the identifiers codespell flags (`colorIn`, `positionOf`, `onOther`).
   Accept the intended foreign keywords in `.codespellrc` with comments. Wrap `openspec/config.yaml`'s long lines as
   folded scalars without changing their text. Rewrap README.md, docs/ecogeo-card.md, AGENTS.md and the accepted
   specs to 120 characters without changing their wording or tables.
   Verify: `npm run check` (with `lint:ha`) passes. `test/readme.test.ts` and `test/docs.test.ts` pass. `git diff
   --word-diff` on the Markdown shows line breaks only. `openspec validate --specs` passes.
-- [ ] 1.4 Extend `scripts/check-on-edit.mjs`: an edited `.md` file gets the Markdown format check on that file, and
+- [x] 1.4 Extend `scripts/check-on-edit.mjs`: an edited `.md` file gets the Markdown format check on that file, and
   an edited YAML file gets yamllint, with findings exiting 2 like the TypeScript checks (design D9).
   Verify: editing a Markdown file to have a 121-character prose line makes the hook report it, and undoing the edit
   clears it.
-- [ ] 1.5 Document the checks in docs/ecogeo-card.md's development section: what each tool checks, the pinned
+- [x] 1.5 Document the checks in docs/ecogeo-card.md's development section: what each tool checks, the pinned
   versions with their source (a table as in hot-water-tank-estimator), and that `npm run check` needs uv. Mention
   them in README.md's development notes.
   Verify: `test/docs.test.ts` passes, and the table lists codespell, yamllint, check-jsonschema and the Markdown

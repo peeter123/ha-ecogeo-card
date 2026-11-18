@@ -323,7 +323,7 @@ export function footerItems(
 }
 
 /** The position of a label in percent of the drawing's width and height. */
-export const positionOf = (
+export const cssPosition = (
   label: Pick<ShownLabel, 'x' | 'y'>,
   viewBox: { width: number; height: number },
 ): { left: string; top: string } => ({
@@ -359,7 +359,7 @@ export function renderLabels(
   viewBox: { width: number; height: number },
 ): TemplateResult {
   return html`${labels.map((label) => {
-    const { left, top } = positionOf(label, viewBox);
+    const { left, top } = cssPosition(label, viewBox);
     return html`<span
       class="label ${label.align}${label.emphasis ? ' emphasis' : ''}${label.bare === true ? ' bare' : ''}${label.stacked === true ? ' stacked' : ''}"
       data-label=${label.id}

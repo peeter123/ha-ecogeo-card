@@ -24,13 +24,13 @@ the cabinet's top line.
 - **THEN** the top of the air unit's housing (air, hybrid) or the ground line (ground) is at the cabinet's top line
 
 ### Requirement: Air unit
-With `source: air`, the card SHALL draw an air unit: a housing with a finned coil block, through which the brine
-tube winds as a serpentine across the fins, and a fan drawn as blades inside a ring. The brine SHALL enter and
-leave the coil on the same side of the unit, the side facing the cabinet. The fan SHALL rotate while its speed is
-above 0 %, faster at higher speed. A fan speed in another unit (such as rpm) above 0 SHALL rotate the fan at a fixed medium speed. The air unit SHALL show the fan speed and the outside temperature under its
-housing, and the brine temperature entering and leaving it at its two ports. In the compact layout
-(responsive-layout) the air unit SHALL show only the brine temperature leaving it (Out), and the fan SHALL still
-rotate by its speed.
+With `source: air`, the card SHALL draw an air unit: a housing with a finned coil block, through which the brine tube
+winds as a serpentine across the fins, and a fan drawn as blades inside a ring. The brine SHALL enter and leave the coil
+on the same side of the unit, the side facing the cabinet. The fan SHALL rotate while its speed is above 0 %, faster at
+higher speed. A fan speed in another unit (such as rpm) above 0 SHALL rotate the fan at a fixed medium speed. The air
+unit SHALL show the fan speed and the outside temperature under its housing, and the brine temperature entering and
+leaving it at its two ports. In the compact layout (responsive-layout) the air unit SHALL show only the brine
+temperature leaving it (Out), and the fan SHALL still rotate by its speed.
 
 #### Scenario: Running fan
 - **WHEN** the source is `air` and the fan speed is 34.5 %, in the full layout

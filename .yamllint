@@ -1,0 +1,18 @@
+# yamllint settings for the YAML in this repository (GitHub workflows, OpenSpec config and change metadata).
+# Copied from the hot-water-tank-estimator repository and adapted: more ignored folders.
+extends: default
+ignore: |
+  .claude/
+  node_modules/
+  build/
+  dist/
+  private/
+rules:
+  line-length:
+    max: 120
+    allow-non-breakable-words: true
+  document-start: disable
+  truthy:
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1

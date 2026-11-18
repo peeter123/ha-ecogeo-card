@@ -53,6 +53,6 @@ archived in `openspec/changes/archive/2026-11-18-add-htr-state/`.
 
 A private Home Assistant workspace owns the deploy script (its path and the exact deploy command are in
 `private/installation.md`). Its `$Mappings` uploads `dist/` to `/config/www/custom/ecogeo-card/`. The deploy hook in
-`.claude/settings.local.json` runs it after every edit, but `npm run release` writes `dist/` without an edit, so
-deploy `dist/ecogeo-card.js` explicitly afterwards. Then bump the dashboard resource's `?v=` (resource id and current value in `private/installation.md`) and
-hard-refresh the browser.
+`.claude/settings.local.json` runs it after every edit, but `npm run release` writes `dist/` without an edit, so deploy
+`dist/ecogeo-card.js` explicitly afterwards. Then bump the dashboard resource's `?v=` (resource id and current value in
+`private/installation.md`) and hard-refresh the browser.

@@ -183,7 +183,10 @@ on any finding:
     comment naming the file that needs it.
 
   The identifiers it flags (`colorIn`, `positionOf`, `onOther`) are renamed, not ignored, because a clearer name is
-  cheap.
+  cheap. An `ignore-regex` accepts exactly those words, and `recieve`, when they stand in backticks, because this
+  change's artifacts and the merged `release-packaging` spec quote them (the "Misspelling" scenario needs a
+  misspelling). Skipping `openspec/changes/` instead would drop the archive from the check (settled in group 1).
+- `tsconfig.json` sets `allowJs` (no `checkJs`), so tests can import the `.mjs` scripts' exported checks.
 - `uvx yamllint@1.38.0` with `.yamllint` copied from hot-water-tank-estimator (default rules, 120 characters,
   `document-start` off, `truthy` keys unchecked). It covers `.github/workflows/`, `openspec/config.yaml` and the
   change metadata. The long lines in `openspec/config.yaml` are wrapped as folded scalars.

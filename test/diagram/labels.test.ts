@@ -8,7 +8,7 @@ import { ROLE_BY_PATH, ROLE_PATHS, defaultEntityId, type RolePath } from '../../
 import { mergeFeatures } from '../../src/config/variants';
 import { drawnSegments, partState, arrangementFor } from '../../src/diagram/geometry';
 import { COIL_51_SHAPE } from '../../src/diagram/symbols';
-import { footerItems, labelsFor, positionOf, type LabelSpec } from '../../src/diagram/labels';
+import { footerItems, labelsFor, cssPosition, type LabelSpec } from '../../src/diagram/labels';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
 import {
@@ -915,7 +915,7 @@ describe('DHW tank labels', () => {
 
 describe('label positions', () => {
   test('positions are percentages of the viewBox', () => {
-    expect(positionOf({ x: 500, y: full.viewBox.height / 2 }, full.viewBox)).toEqual({ left: '50%', top: '50%' });
+    expect(cssPosition({ x: 500, y: full.viewBox.height / 2 }, full.viewBox)).toEqual({ left: '50%', top: '50%' });
   });
 
   test('every label has a unique id and lies inside the viewBox', () => {

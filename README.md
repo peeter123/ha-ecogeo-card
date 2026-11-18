@@ -13,26 +13,32 @@ for the explanation of what the card shows and where each part comes from.
 ## Features
 
 - The unit's internal schematic drawn as inline SVG after the manual's figures B1 to B4 and C, with the item number of
-  every component shown only with `detail: full` (components show their name on hover), for any model, variant, outer-loop source (air, ground or hybrid) and DHW storage.
-- Pipes coloured by temperature on an absolute scale (blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at 30 °C, orange at
-  50 °C, red at 70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe with no probe value is muted. The plate exchangers are
-  filled on each side with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves
-  it (`exchanger_fill: none` turns that off).
+  every component shown only with `detail: full` (components show their name on hover), for any model, variant,
+  outer-loop source (air, ground or hybrid) and DHW storage.
+- Pipes coloured by temperature on an absolute scale (blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at
+  30 °C, orange at 50 °C, red at 70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe
+  with no probe value is muted. The plate exchangers are filled on each side with a gradient from the colour of the pipe
+  that enters it to the colour of the pipe that leaves it (`exchanger_fill: none` turns that off).
 - The active circuits move: dashes run in the direction of the flow at a speed that follows the pump or the
   compressor, the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode
   are muted. `prefers-reduced-motion` stops all animation.
-- Live values beside their components (temperatures, pressures, pump and compressor speeds, power, the
-  tank's values; the superheat and the expansion valve's opening at `detail: full`) and a footer with the mode, season, outside temperature, COP (EER while cooling) and the power items of the mode (DG1 and HTR while heating, DHW while producing DHW, Cooling and HTR in active cooling). The card formats the
-  numbers itself with Home Assistant's locale and keeps every number joined to its unit by a no-break space.
+- Live values beside their components (temperatures, pressures, pump and compressor speeds, power, the tank's values;
+  the superheat and the expansion valve's opening at `detail: full`) and a footer with the mode, season, outside
+  temperature, COP (EER while cooling) and the power items of the mode (DG1 and HTR while heating, DHW while producing
+  DHW, Cooling and HTR in active cooling). The card formats the numbers itself with Home Assistant's locale and keeps
+  every number joined to its unit by a no-break space.
 - A visual editor (add the card from the picker, or edit it) for the unit, the entity prefix, the features and the
   appearance; it writes only what you set and keeps every other key.
-- Read-only: tapping a value, or a component with an entity of its own, opens the entity's more-info dialog; the card calls no service and writes no entity.
+- Read-only: tapping a value, or a component with an entity of its own, opens the entity's more-info dialog; the card
+  calls no service and writes no entity.
 
 ## Status
 
 Released and in use. The card validates its configuration, resolves its entities (or shows built-in sample values),
-reads them, derives the operating mode and draws the schematic with coloured, flowing pipes and live values.
-The visual editor is built (see Visual editor below). Planned follow-up changes: `add-hacs-release` and `add-browser-tests`. Extra circuits (DG2, DG3, the pool) are a long-term idea only: they are external to the unit and need their own valves, so the card does not draw them.
+reads them, derives the operating mode and draws the schematic with coloured, flowing pipes and live values. The visual
+editor is built (see Visual editor below). Planned follow-up changes: `add-hacs-release` and `add-browser-tests`. Extra
+circuits (DG2, DG3, the pool) are a long-term idea only: they are external to the unit and need their own valves, so the
+card does not draw them.
 
 ## Installation
 
@@ -40,14 +46,19 @@ Copy `dist/ecogeo-card.js` to the Home Assistant `www` folder, register it as a 
 the card to a view. The steps are in the Installation section of [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
 The card measures its own width and chooses a layout from it (the `layout` option, see Options). With `layout: auto`
-(the default) it shows the full layout from 600 px wide (from 640 px wide with `detail: full`), which is a panel view or a wide section, and the compact
-layout below that, which is what a phone gets. The compact layout shows the schematic at the simplified detail
-level, whatever `detail` says, without the captions inside the drawing and with only the key labels (production out and in, brine out and in, compressor
-speed, the DHW temperature and the source's outlet temperature), at least 10 px high and, for production and brine, captioned In and Out and the DHW temperature captioned DHW, and a shorter footer (mode,
-COP or EER, outside temperature and the alarm and offline indications). Pipes and outlines never render thinner than 2 px
-and 1.25 px, and the footer wraps. Once compact, the card returns to full only at 624 px, or 664 px with `detail: full` (24 px of hysteresis), so a
-scrollbar appearing with the layout cannot make it flip back and forth. Set `layout: full` or `layout: compact` to
-force one. In a panel view the card also fits the screen: the drawing is kept within the window's height below Home Assistant's header (and above the footer), narrower and centred when the card is wider than that, and the layout and line widths follow the drawing's own width. A tall window or a sections view is not affected: the drawing fills the card. How the thresholds were measured, and what each tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
+(the default) it shows the full layout from 600 px wide (from 640 px wide with `detail: full`), which is a panel view or
+a wide section, and the compact layout below that, which is what a phone gets. The compact layout shows the schematic at
+the simplified detail level, whatever `detail` says, without the captions inside the drawing and with only the key
+labels (production out and in, brine out and in, compressor speed, the DHW temperature and the source's outlet
+temperature), at least 10 px high and, for production and brine, captioned In and Out and the DHW temperature captioned
+DHW, and a shorter footer (mode, COP or EER, outside temperature and the alarm and offline indications). Pipes and
+outlines never render thinner than 2 px and 1.25 px, and the footer wraps. Once compact, the card returns to full only
+at 624 px, or 664 px with `detail: full` (24 px of hysteresis), so a scrollbar appearing with the layout cannot make it
+flip back and forth. Set `layout: full` or `layout: compact` to force one. In a panel view the card also fits the
+screen: the drawing is kept within the window's height below Home Assistant's header (and above the footer), narrower
+and centred when the card is wider than that, and the layout and line widths follow the drawing's own width. A tall
+window or a sections view is not affected: the drawing fills the card. How the thresholds were measured, and what each
+tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
 ![The card on a 360 px wide phone: the compact layout with its seven key values](docs/images/phone-heating.png)
 
@@ -167,10 +178,11 @@ sensor.boiler_top } }`. The card shows its own unit for every role (°F, kW and 
 converted; a difference is shown in K). A number in a unit it cannot convert keeps the entity's unit, except
 temperatures, differences and power, which then have no value.
 
-A role the installation does not have (no pressure sensors) is set to `none`: `entities: { brine: { pressure:
-none } }`. It gets no default entity, its label or footer item is not drawn (the component stays), and it counts as
-no value. Hiding the efficiency in the footer takes both `unit.cop` and `unit.system_cop` set to `none`: with only `unit.cop` set to `none`, the system COP shows once the firmware provides it. A role bound to an entity that is unknown or unavailable keeps its label with a dash. `none` alone is
-still an entity setting, so the card does not show sample values.
+A role the installation does not have (no pressure sensors) is set to `none`: `entities: { brine: { pressure: none } }`.
+It gets no default entity, its label or footer item is not drawn (the component stays), and it counts as no value.
+Hiding the efficiency in the footer takes both `unit.cop` and `unit.system_cop` set to `none`: with only `unit.cop` set
+to `none`, the system COP shows once the firmware provides it. A role bound to an entity that is unknown or unavailable
+keeps its label with a dash. `none` alone is still an entity setting, so the card does not show sample values.
 
 | Role | Default entity | Shown as | Manual item |
 |---|---|---|---|
@@ -218,10 +230,10 @@ still an entity setting, so the card does not show sample values.
 | `unit.system_cop` | `sensor.<prefix>_system_cop_display` | 1 dec., no unit | footer |
 
 `heating.power`, `dhw.power`, `htr.active`, `htr.power` and `unit.system_cop` are optional: they have no entity when set
-to `none`, or when they are not set in `entities` and their prefix defaults do not exist in Home Assistant (older firmware,
-another integration; without a prefix there is no default). An entity id set in `entities` is kept, and shows a dash
-while it is missing. A default entity that exists but is unavailable also shows a dash: the card does not fall back
-because of a state.
+to `none`, or when they are not set in `entities` and their prefix defaults do not exist in Home Assistant (older
+firmware, another integration; without a prefix there is no default). An entity id set in `entities` is kept, and shows
+a dash while it is missing. A default entity that exists but is unavailable also shows a dash: the card does not fall
+back because of a state.
 
 A state that is `unavailable`, `unknown`, not a number or the firmware's -999.9 (an absent probe) is shown as no
 value.
@@ -229,10 +241,11 @@ value.
 ### Colours
 
 `colors` is an ascending list of 2 to 8 stops, each a `temperature` in °C and a CSS `color`. Between two stops the
-colour is mixed; below the first and above the last stop it is that stop's colour. A list that is too short or long,
-not ascending, or with a value that is not a number or a CSS colour is a configuration error. Without the option the
-card uses blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at 30 °C, orange at 50 °C and red at 70 °C (no green). The
-plate exchangers take the colours of their pipes unless `exchanger_fill` is `none` (see the explanation below).
+colour is mixed; below the first and above the last stop it is that stop's colour. A list that is too short or long, not
+ascending, or with a value that is not a number or a CSS colour is a configuration error. Without the option the card
+uses blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at 30 °C, orange at 50 °C and red at 70 °C (no
+green). The plate exchangers take the colours of their pipes unless `exchanger_fill` is `none` (see the explanation
+below).
 
 ```yaml
 colors:
@@ -278,10 +291,10 @@ The editor is Home Assistant's own form and has six sections:
   own. When the bound entity lists its options (an enum sensor or select), they are offered, with the default. A list
   equal to its default is not written, and an empty list removes the key.
 
-Under the form, an **Entity check** list warns about each role bound (by `entities` or by the prefix) to an entity
-Home Assistant does not know, and each bound to an entity whose unit or kind does not fit the role. A missing prefix default of an optional
-role (HTR state, heat power, system COP) is not warned about; an optional role you set to an unknown entity is. It names the role
-and the entity, and changes nothing.
+Under the form, an **Entity check** list warns about each role bound (by `entities` or by the prefix) to an entity Home
+Assistant does not know, and each bound to an entity whose unit or kind does not fit the role. A missing prefix default
+of an optional role (HTR state, heat power, system COP) is not warned about; an optional role you set to an unknown
+entity is. It names the role and the entity, and changes nothing.
 
 The colour stops are one row per stop, a temperature (°C) and a colour, plus an empty row to add one. With no
 `colors` key the rows show the default stops. Rows are written to `colors` in ascending temperature order, a row with
@@ -304,8 +317,8 @@ The card derives one mode from the values, shown in the footer: Off, Defrost, DH
 cooling or Standby. The bridge connection (`unit.connection`) never changes the mode; it only adds an Offline
 indication, and an active alarm adds an Alarm indication. HTR recovery (exchanger 9 and pump 17 with the DHW lines) is
 drawn active in heating and active cooling while the unit's HTR state (`htr.active`) is on, and idle in every other
-mode; without that entity, active cooling with a condensation capacity above 0 W stands in for it. The derivation and its inputs are in
-[docs/ecogeo-card.md](docs/ecogeo-card.md#operating-mode).
+mode; without that entity, active cooling with a condensation capacity above 0 W stands in for it. The derivation and
+its inputs are in [docs/ecogeo-card.md](docs/ecogeo-card.md#operating-mode).
 
 ## Development
 
@@ -320,7 +333,8 @@ npm test          # both test projects: unit (Vitest, happy-dom) and browser (he
 npm run test:unit     # unit tests only
 npm run test:browser  # browser tests only (layout at real widths, no label overlaps at the threshold)
 npm run measure-layout  # re-measure the compact threshold (see docs/ecogeo-card.md)
-npm run check     # typecheck, lint, format check and tests
+npm run check     # typecheck, lint, format check, the Home Assistant quality checks (needs uv) and tests
+npm run lint:ha   # codespell, yamllint, the workflow schema check and the Markdown format check, through uvx
 npm run build     # bundle into build/ecogeo-card.js (git-ignored)
 npm run release   # check, build, verify that the bundle registers the card, copy it to dist/ecogeo-card.js
 ```
@@ -330,20 +344,22 @@ npm run release   # check, build, verify that the bundle registers the card, cop
 `npm run dev` opens the emulator (`dev/index.html`): the card on a mock `hass`, with no Home Assistant, no network and
 no installation data. The mock entities use the demo prefix `demo_ecogeo`.
 
-- **Scenario:** off, standby, heating, heating with HTR recovery, DHW, active cooling (all heat to the outer loop), active cooling with HTR
-  recovery, passive cooling, defrost, alarm while heating, bridge offline and sensors unavailable. Each is a complete
-  set of states (`dev/scenarios.ts`).
+- **Scenario:** off, standby, heating, heating with HTR recovery, DHW, active cooling (all heat to the outer loop),
+  active cooling with HTR recovery, passive cooling, defrost, alarm while heating, bridge offline and sensors
+  unavailable. Each is a complete set of states (`dev/scenarios.ts`).
 - **Naming:** `firmware` (the default: the firmware's entity names under the demo prefix) or `foreign`, a second mock
-  source for a heat pump integrated through another integration (`dev/foreign.ts`): entity ids such as
-  `sensor.wp_3`, Dutch friendly names, pressures in kPa, the compressor speed in Hz, the compressor mode as an enum
-  (`Uit`, `Verwarmen`, `Tapwater`, `Ontdooien`), the on/off state as a switch, the register COP as an entity of its own, and the fan speed and the DG1
-  setpoint set to `none`. It leaves the five optional roles unbound, so the card shows their fallbacks: the condensation
-  capacity as DG1 or DHW, the register COP, no HTR item. The card is configured with `entities` and `states` instead of a prefix, so every scenario
-  works with both namings. Both namings also provide `hass.entities` and `hass.devices`.
-- **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default; on B external, unused or none, on C internal or unused; the other choices are
-  disabled, and a value in the URL that the model rejects falls back to the default), each feature (the variant's preset, `true`, `false` or `unused`), the detail level
-  (simplified or full), the exchanger fill (gradient or none, the card's `exchanger_fill` option) and
-  the light or dark theme.
+  source for a heat pump integrated through another integration (`dev/foreign.ts`): entity ids such as `sensor.wp_3`,
+  Dutch friendly names, pressures in kPa, the compressor speed in Hz, the compressor mode as an enum (`Uit`,
+  `Verwarmen`, `Tapwater`, `Ontdooien`), the on/off state as a switch, the register COP as an entity of its own, and the
+  fan speed and the DG1 setpoint set to `none`. It leaves the five optional roles unbound, so the card shows their
+  fallbacks: the condensation capacity as DG1 or DHW, the register COP, no HTR item. The card is configured with
+  `entities` and `states` instead of a prefix, so every scenario works with both namings. Both namings also provide
+  `hass.entities` and `hass.devices`.
+- **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default; on
+  B external, unused or none, on C internal or unused; the other choices are disabled, and a value in the URL that the
+  model rejects falls back to the default), each feature (the variant's preset, `true`, `false` or `unused`), the detail
+  level (simplified or full), the exchanger fill (gradient or none, the card's `exchanger_fill` option) and the light or
+  dark theme.
 - **Live values:** sliders for production out and in, brine out and in, DHW temperature, discharge, suction, both
   pumps, the compressor percentage (it moves the speed too), the fan speed and the condensation capacity. Picking a
   scenario resets them. Slider values are not part of the URL state.
@@ -369,7 +385,14 @@ For example `dev/index.html?scenario=passive_cooling&source=ground`.
 
 `npm run capture` starts its own Vite server, opens every URL of the fixed list in `dev/captures.ts` in headless
 Chromium (Playwright, a dev dependency for this script only) and writes one PNG per URL to `build/captures/`. The list
-covers every scenario, each source, each DHW value, model C, each feature `false` and `unused`, the other variants, the dark
-theme, the foreign naming (heating, heating with HTR recovery, DHW, defrost and off, and heating at 360 px) and full-detail captures (heating, heating with HTR recovery, model C, an air and a hybrid source, no DHW and variant 1). The first run needs the browser: `npx playwright install chromium`.
+covers every scenario, each source, each DHW value, model C, each feature `false` and `unused`, the other variants, the
+dark theme, the foreign naming (heating, heating with HTR recovery, DHW, defrost and off, and heating at 360 px) and
+full-detail captures (heating, heating with HTR recovery, model C, an air and a hybrid source, no DHW and variant 1).
+The first run needs the browser: `npx playwright install chromium`.
 
 `dist/ecogeo-card.js` is the committed, deployable bundle. `npm run format` rewrites files with Prettier.
+
+`npm run check` includes the Home Assistant quality checks (`npm run lint:ha`): codespell and yamllint at the versions
+Home Assistant core pins, a schema check of GitHub workflows, and a Markdown format check (LF, one final newline, lines
+of at most 120 characters). They run through `uvx`, so [uv](https://docs.astral.sh/uv/) must be installed. The tool
+versions are in the Development section of [docs/ecogeo-card.md](docs/ecogeo-card.md#development).

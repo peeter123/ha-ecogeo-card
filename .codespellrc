@@ -1,0 +1,9 @@
+[codespell]
+skip = ./.git,./private,./.claude,./node_modules,./build,./dist,./.env*,./.vitest,*.json,*.png,*.jpg,*.svg
+# hass: Home Assistant's name for the hass object.
+# compresor, produktion: foreign-language keywords the card matches on (src/config/keywords.ts).
+# ue, te: foreign keywords in src/config/keywords.ts (ue) and the foreign mock naming in dev/foreign.ts (te).
+ignore-words-list = hass,compresor,produktion,ue,te
+# Identifiers and words quoted in backticks that Markdown names on purpose: the renamed identifiers in the
+# add-hacs-release change, and the deliberate misspelling in the release-packaging spec's "Misspelling" scenario.
+ignore-regex = `(recieve|colorIn|positionOf|onOther)`

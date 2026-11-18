@@ -21,7 +21,8 @@
     "capture": "node scripts/capture.mjs",
     "measure-layout": "node scripts/measure-layout.mjs",
     "search-places": "node scripts/search-places.mjs",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
+    "lint:ha": "node scripts/lint-ha.mjs",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run lint:ha && npm test"
   },
   "dependencies": {
     "lit": "^3.3.3"

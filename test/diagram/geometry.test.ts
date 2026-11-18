@@ -231,7 +231,7 @@ describe('integrity in every configuration', () => {
       for (const end of [segment.points[0], segment.points[segment.points.length - 1]]) {
         if (end === undefined) throw new Error('no point');
         const atPort = ports.some((port) => port[0] === end[0] && port[1] === end[1]);
-        const onOther = segments.some(
+        const touchesOther = segments.some(
           (other) =>
             other !== segment &&
             (other.shape === undefined
@@ -242,7 +242,7 @@ describe('integrity in every configuration', () => {
         const stub =
           segment.stub === true &&
           (end[1] < arrangementOf(context).cabinet.y || onInternalTank(end, arrangementOf(context)));
-        expect(atPort || onOther || stub, `${segment.id} at ${end.join(',')}`).toBe(true);
+        expect(atPort || touchesOther || stub, `${segment.id} at ${end.join(',')}`).toBe(true);
       }
     }
 

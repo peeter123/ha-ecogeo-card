@@ -456,17 +456,17 @@ describe('mode-dependent roles (add-schematic-card D7)', () => {
   });
 
   test('model C: the coil 51 symbol takes the dhw_coil state, never animated', () => {
-    const colorIn = (mode: Mode, values: Partial<Record<RolePath, number | boolean>> = HEATING): string =>
+    const colorForMode = (mode: Mode, values: Partial<Record<RolePath, number | boolean>> = HEATING): string =>
       coilColor(scenario({ mode, dhw: 'internal' }, values).view);
-    expect(colorIn('dhw')).toBe(color(25.2));
+    expect(colorForMode('dhw')).toBe(color(25.2));
     // HTR recovery: the coil is fed with HTR water, so it takes the DHW temperature like the DHW lines
-    expect(colorIn('active_cooling', HTR_ON)).toBe(color(52.1));
-    expect(colorIn('active_cooling', { ...HTR_ON, 'dhw.temperature': 48 })).toBe(color(48));
-    expect(colorIn('active_cooling')).toBe(MUTED_COLOR);
+    expect(colorForMode('active_cooling', HTR_ON)).toBe(color(52.1));
+    expect(colorForMode('active_cooling', { ...HTR_ON, 'dhw.temperature': 48 })).toBe(color(48));
+    expect(colorForMode('active_cooling')).toBe(MUTED_COLOR);
     // HTR recovery while heating
-    expect(colorIn('heating', { ...HTR_ON, 'dhw.temperature': 46 })).toBe(color(46));
-    expect(colorIn('heating')).toBe(MUTED_COLOR);
-    expect(colorIn('standby', HTR_ON)).toBe(MUTED_COLOR);
+    expect(colorForMode('heating', { ...HTR_ON, 'dhw.temperature': 46 })).toBe(color(46));
+    expect(colorForMode('heating')).toBe(MUTED_COLOR);
+    expect(colorForMode('standby', HTR_ON)).toBe(MUTED_COLOR);
     expect(COMPONENTS.some((component) => component.item === 51 && component.kind === 'coil')).toBe(true);
     expect(SEGMENTS.some((segment) => segment.id === 'coil_51')).toBe(false);
   });

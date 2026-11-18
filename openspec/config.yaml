@@ -87,19 +87,45 @@ rules:
   specs:
     - Write scenarios that a unit test or an emulator screenshot can check; no scenario depends on the live unit.
   tasks:
-    - "Organize tasks into numbered groups (## 1., ## 2., ...) that can each be implemented and reviewed in a fresh session, relying only on the change artifacts and the repository."
-    - Size each task group as one coherent commit that leaves the repository consistent (npm run check passes once it exists); do not add commit tasks, since the apply workflow commits each group.
-    - Include verification in the dev emulator (agent screenshot and verdict) for every visible change, and on the live installation (agent screenshot plus state check) once the card is deployed.
+    - >-
+      Organize tasks into numbered groups (## 1., ## 2., ...) that can each be implemented and reviewed in a fresh
+      session, relying only on the change artifacts and the repository.
+    - >-
+      Size each task group as one coherent commit that leaves the repository consistent (npm run check passes once it
+      exists); do not add commit tasks, since the apply workflow commits each group.
+    - >-
+      Include verification in the dev emulator (agent screenshot and verdict) for every visible change, and on the live
+      installation (agent screenshot plus state check) once the card is deployed.
     - Include updating README.md and docs/ecogeo-card.md for every behaviour change.
 
 operations:
   apply:
     guidance:
-      - Read AGENTS.md before editing; run implementation sessions from this folder so the quality hook and /opsx commands load.
+      - >-
+        Read AGENTS.md before editing; run implementation sessions from this folder so the quality hook and /opsx
+        commands load.
       - Check git status first and preserve unrelated working-tree changes.
-      - Work one task group at a time, starting at the first group in tasks.md with unchecked tasks. tasks.md is the only progress state carried between sessions.
-      - Delegate all implementation to a subagent running the Sonnet model (Agent tool, subagent_type general-purpose, model "sonnet"; never a fork). Never edit implementation files yourself; your role is to brief the subagent and review its work. This is binding; see "Implementation workflow" in context.
-      - Brief the subagent with the change id, the task group, the relevant proposal/design/spec excerpts, AGENTS.md and the rules above (NBSP, no emoji, nothing installation-specific, read-only card, docs in sync). Instruct it to keep the quality hook green and to check off completed tasks in tasks.md only after npm run check passes (once it exists).
-      - 'Review only once the whole group is done, through a review subagent on Opus (subagent_type general-purpose, model "opus", read-only) that reads the diff against the group''s tasks and specs and runs npm run check. Follow the "Review loop" in context: round 1 reports every finding ranked blocking, should-fix or nit; settle decision points in the plan before fixing; later rounds check only the fix diff; clean means no blocking or should-fix finding; stop and ask the user after round 3.'
-      - 'After the group passes review, commit it as its own commit (see "Implementation workflow" in context: explicit paths only, the group''s tasks.md check-offs included, no push).'
-      - After the commit, report a short summary with the commit hash and stop. Do not start the next group. Tell the user to run /clear and re-run apply to continue with the next group.
+      - >-
+        Work one task group at a time, starting at the first group in tasks.md with unchecked tasks. tasks.md is the
+        only progress state carried between sessions.
+      - >-
+        Delegate all implementation to a subagent running the Sonnet model (Agent tool, subagent_type general-purpose,
+        model "sonnet"; never a fork). Never edit implementation files yourself; your role is to brief the subagent and
+        review its work. This is binding; see "Implementation workflow" in context.
+      - >-
+        Brief the subagent with the change id, the task group, the relevant proposal/design/spec excerpts, AGENTS.md and
+        the rules above (NBSP, no emoji, nothing installation-specific, read-only card, docs in sync). Instruct it to
+        keep the quality hook green and to check off completed tasks in tasks.md only after npm run check passes (once
+        it exists).
+      - >-
+        Review only once the whole group is done, through a review subagent on Opus (subagent_type general-purpose,
+        model "opus", read-only) that reads the diff against the group's tasks and specs and runs npm run check. Follow
+        the "Review loop" in context: round 1 reports every finding ranked blocking, should-fix or nit; settle decision
+        points in the plan before fixing; later rounds check only the fix diff; clean means no blocking or should-fix
+        finding; stop and ask the user after round 3.
+      - >-
+        After the group passes review, commit it as its own commit (see "Implementation workflow" in context: explicit
+        paths only, the group's tasks.md check-offs included, no push).
+      - >-
+        After the commit, report a short summary with the commit hash and stop. Do not start the next group. Tell the
+        user to run /clear and re-run apply to continue with the next group.

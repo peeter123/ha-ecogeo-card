@@ -1,5 +1,7 @@
 // PostToolUse hook for Claude Code: checks a TypeScript file under src/, test/ or dev/ after every edit.
 // Formats it with Prettier, lints it with ESLint, type-checks the project and runs the related unit tests.
+// An edited Markdown file in scope of scripts/md-format.mjs gets that format check, and an edited YAML file gets
+// yamllint (through uvx, at the version of scripts/lint-ha.mjs).
 // Exits 2 with the output on failure so the agent sees it. On success it only speaks up when Prettier changed
 // the file, so the agent knows its copy is stale. Any other file exits 0 silently. An unreadable payload exits 1
 // (a non-blocking error the user sees), so a broken hook does not pass every edit silently.
@@ -8,7 +10,10 @@ import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { YAMLLINT_VERSION } from './lint-ha.mjs';
+import { inScope } from './md-format.mjs';
 
+const UV_HINT = 'uv is not installed (`uvx` not found): https://docs.astral.sh/uv/';
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const CHECKED_DIRS = ['src', 'test', 'dev'];
 const CHECKED_EXTENSIONS = /\.(ts|mts|cts|tsx)$/i;
@@ -18,6 +23,27 @@ const TSC_CACHE = join(root, 'node_modules', '.cache', 'check-on-edit.tsbuildinf
 const normalise = (path) => (process.platform === 'win32' ? path.toLowerCase() : path);
 
 /**
+ * Runs a command in the repository root; resolves to null on success or to the labelled output on failure.
+ * @param {string} label
+ * @param {string} command
+ * @param {string[]} args
+ * @param {string} [hint] added to the failure when the command cannot be started
+ * @returns {Promise<string | null>}
+ */
+function runCommand(label, command, args, hint = '') {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, { cwd: root });
+    let output = '';
+    child.stdout.on('data', (chunk) => (output += chunk));
+    child.stderr.on('data', (chunk) => (output += chunk));
+    child.on('error', (error) =>
+      resolve(`${label} failed:\n${output.trim()}\n${String(error)}${hint ? `\n${hint}` : ''}`),
+    );
+    child.on('close', (status) => resolve(status === 0 ? null : `${label} failed:\n${output.trim()}`));
+  });
+}
+
+/**
  * Runs a tool from node_modules; resolves to null on success or to the labelled output on failure.
  * @param {string} label
  * @param {string} script path below node_modules
@@ -25,14 +51,7 @@ const normalise = (path) => (process.platform === 'win32' ? path.toLowerCase() :
  * @returns {Promise<string | null>}
  */
 function run(label, script, args) {
-  return new Promise((resolve) => {
-    const child = spawn(process.execPath, [join(root, 'node_modules', script), ...args], { cwd: root });
-    let output = '';
-    child.stdout.on('data', (chunk) => (output += chunk));
-    child.stderr.on('data', (chunk) => (output += chunk));
-    child.on('error', (error) => resolve(`${label} failed:\n${output.trim()}\n${String(error)}`));
-    child.on('close', (status) => resolve(status === 0 ? null : `${label} failed:\n${output.trim()}`));
-  });
+  return runCommand(label, process.execPath, [join(root, 'node_modules', script), ...args]);
 }
 
 /** @returns {Promise<number>} the exit code */
@@ -50,6 +69,20 @@ async function main() {
   const absolute = isAbsolute(path) ? path : join(root, path);
   const rel = relative(root, absolute);
   const topDir = normalise(rel.split(sep)[0] ?? '');
+
+  // Non-code files: the Markdown format check and yamllint, on the edited file only.
+  const isMarkdown = /\.md$/i.test(rel);
+  const isYaml = /\.ya?ml$/i.test(rel);
+  if ((isMarkdown || isYaml) && !rel.startsWith('..') && !isAbsolute(rel) && existsSync(absolute)) {
+    if (isMarkdown && !inScope(rel)) return 0;
+    const failure = isMarkdown
+      ? await runCommand('Markdown format', process.execPath, [join(root, 'scripts', 'md-format.mjs'), rel])
+      : await runCommand('yamllint', 'uvx', [`yamllint@${YAMLLINT_VERSION}`, '--strict', rel], UV_HINT);
+    if (!failure) return 0;
+    process.stderr.write(`check-on-edit: ${rel}\n\n${failure}\n`);
+    return 2;
+  }
+
   if (!CHECKED_EXTENSIONS.test(rel) || rel.startsWith('..') || !CHECKED_DIRS.includes(topDir)) return 0;
 
   // A file removed after the edit (rename, checkout) has nothing left to check.
