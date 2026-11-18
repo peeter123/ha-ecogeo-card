@@ -111,10 +111,15 @@ blocks and unbreakable lines) and a schema check of the GitHub workflow files. A
 
 ### Requirement: Nothing installation-specific is published
 No tracked file and no commit in the published history SHALL contain a value listed in the git-ignored
-`private/installation.md` (entity ids of the live installation, resource and dashboard ids or paths, hostnames, local
-paths, bridge hardware).
+`private/installation.md` that identifies the installation (entity ids of the live installation, resource and
+dashboard ids or paths, hostnames, local paths, bridge hardware).
+
+#### Scenario: Public values are named
+- **WHEN** a value listed in `private/installation.md` is public or generic (the firmware's default prefix and
+  release versions, Home Assistant's standard paths, the live readings that seed the emulator)
+- **THEN** it may appear, and the scan list or its notes in `private/` name it and why
 
 #### Scenario: History scan
-- **WHEN** every value from `private/installation.md` is searched for in the tree and in every commit's diff and
-  message of the history to be pushed
+- **WHEN** every identifying value from `private/installation.md` is searched for in the tree and in every commit's
+  diff and message of the history to be pushed
 - **THEN** no value is found

@@ -116,15 +116,15 @@ this change's artifacts: values from `private/installation.md` are used only in 
 
 ## 5. History scrub before publication
 
-- [ ] 5.1 Check that `uvx git-filter-repo --version` runs, and record its output in `private/`. Save the full history
+- [x] 5.1 Check that `uvx git-filter-repo --version` runs, and record its output in `private/`. Save the full history
   with `git bundle create private/pre-hacs-rewrite.bundle --all`, and note the old HEAD hash in `private/`.
   Verify: `git bundle verify private/pre-hacs-rewrite.bundle` passes.
-- [ ] 5.2 Build the scan list in `private/` from every installation value in `private/installation.md` (design D6).
+- [x] 5.2 Build the scan list in `private/` from every installation value in `private/installation.md` (design D6).
   Run the scan over the tree and every commit's diff and message, and write the hits (commit, file, value name, never
   the value) to `private/`.
   Verify: the list covers each kind named in design D6. The hits are the two known early commits and nothing else, or
   every other hit is reported to the orchestrator before 5.3.
-- [ ] 5.3 Write the replacement expressions in `private/` and rewrite with `uvx git-filter-repo --replace-text` and
+- [x] 5.3 Write the replacement expressions in `private/` and rewrite with `uvx git-filter-repo --replace-text` and
   `--replace-message`, with `--force` (design D6).
   Verify: the commit count is unchanged, `git diff <old HEAD> HEAD` is empty, and the scan of 5.2 finds nothing
   (release-packaging "History scan"). `npm run check` and `npm run verify-dist` pass.
