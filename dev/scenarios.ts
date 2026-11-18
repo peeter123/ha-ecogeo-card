@@ -1,4 +1,4 @@
-// The emulator's scenarios (add-schematic-card D9, dev-emulator spec): eleven complete state maps by role path, resolved to
+// The emulator's scenarios (add-schematic-card D9, dev-emulator spec): twelve complete state maps by role path, resolved to
 // entity ids through the fixed demo prefix `demo_ecogeo`, so no installation id appears. The heating scenario is the
 // card's sample (src/config/sample.ts: rounded numbers from a live heating snapshot); every other scenario is that
 // map with the values that differ, so each one still gives every role a state.
@@ -14,6 +14,7 @@ export const SCENARIO_NAMES = [
   'off',
   'standby',
   'heating',
+  'heating_htr',
   'dhw',
   'active_cooling',
   'active_cooling_htr',
@@ -59,6 +60,11 @@ const STOPPED: Partial<Record<RolePath, string>> = {
   'cooling.capacity': '0',
   'heating.demand': 'off',
   'unit.cop': '0',
+  'unit.system_cop': '0',
+  'heating.power': '0',
+  'dhw.power': '0',
+  'htr.active': 'off',
+  'htr.power': '0',
   'production.pump': '0',
   'brine.pump': '0',
   'production.outlet_temperature': '24.5',
@@ -106,6 +112,8 @@ const ACTIVE_COOLING: Partial<Record<RolePath, string>> = {
   'cooling.capacity': '3900',
   'source.air_unit_outlet_temperature': '28.5',
   'unit.cop': '5.6',
+  'unit.system_cop': '5.3',
+  'heating.power': '0',
   'source.fan_speed': '70',
 };
 
@@ -113,6 +121,18 @@ export const SCENARIOS: Readonly<Record<ScenarioName, Scenario>> = {
   off: { label: 'Off', mode: 'off', states: heating({ ...STOPPED, 'unit.on_off': 'OFF' }) },
   standby: { label: 'Standby', mode: 'standby', states: heating(STOPPED) },
   heating: { label: 'Heating', mode: 'heating', states: HEATING },
+  heating_htr: {
+    label: 'Heating with HTR recovery',
+    mode: 'heating',
+    // The firmware's DHW power includes the HTR heat, so it equals the HTR power; DG1 + DHW is the condensation capacity.
+    states: heating({
+      'htr.active': 'on',
+      'htr.power': '800',
+      'dhw.power': '800',
+      'heating.power': '3912',
+      'dhw.temperature': '46',
+    }),
+  },
   dhw: {
     label: 'DHW',
     mode: 'dhw',
@@ -131,17 +151,29 @@ export const SCENARIOS: Readonly<Record<ScenarioName, Scenario>> = {
       'heating.capacity': '5300',
       'cooling.capacity': '3850',
       'unit.cop': '3.7',
+      'unit.system_cop': '3.5',
+      'heating.power': '0',
+      'dhw.power': '5300',
     }),
   },
   active_cooling: {
     label: 'Active cooling (all heat to the outer loop)',
     mode: 'active_cooling',
-    states: heating({ ...ACTIVE_COOLING, 'heating.capacity': '0' }),
+    states: heating({ ...ACTIVE_COOLING, 'heating.capacity': '0', 'dhw.power': '0' }),
   },
   active_cooling_htr: {
     label: 'Active cooling with HTR recovery',
     mode: 'active_cooling',
-    states: heating({ ...ACTIVE_COOLING, 'heating.capacity': '1200', 'dhw.temperature': '47' }),
+    states: heating({
+      ...ACTIVE_COOLING,
+      'heating.capacity': '1200',
+      'dhw.temperature': '47',
+      'htr.active': 'on',
+      'htr.power': '1200',
+      'dhw.power': '1200',
+      // (cooling + HTR heat) / electricity: (3900 + 1200) W / about 736 W
+      'unit.system_cop': '6.9',
+    }),
   },
   passive_cooling: {
     label: 'Passive cooling',

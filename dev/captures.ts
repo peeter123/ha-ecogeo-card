@@ -55,6 +55,7 @@ export const CAPTURES: readonly CaptureStep[] = [
   step('dhw-internal-modelC', 'scenario=dhw&model=C&dhw=internal'),
   // model C
   step('model-C-heating', 'scenario=heating&model=C&dhw=internal'),
+  step('model-C-heating_htr', 'scenario=heating_htr&model=C&dhw=internal'),
   step('model-C-dhw-unused', 'scenario=heating&model=C&dhw=unused'),
   step('model-C-dhw-unused-htr', 'scenario=active_cooling_htr&model=C&dhw=unused'),
   step('model-C-active_cooling_htr', 'scenario=active_cooling_htr&model=C'),
@@ -71,6 +72,7 @@ export const CAPTURES: readonly CaptureStep[] = [
   ),
   // full detail: every part of the manual figure with its item number
   step('detail-full-heating', 'scenario=heating&detail=full'),
+  step('detail-full-heating_htr', 'scenario=heating_htr&detail=full'),
   step('detail-full-modelC', 'scenario=dhw&model=C&dhw=internal&detail=full'),
   step('detail-full-air', 'scenario=heating&source=air&detail=full'),
   step('detail-full-hybrid', 'scenario=heating&source=hybrid&detail=full'),

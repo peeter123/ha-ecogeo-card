@@ -2,12 +2,18 @@ import { describe, expect, test } from 'vitest';
 import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
 import type { CardConfig } from '../../src/lib/config';
-import type { HassLike } from '../../src/lib/hass';
+import type { HassEntityState, HassLike } from '../../src/lib/hass';
 import { COIL_51_SHAPE } from '../../src/diagram/symbols';
 import { helixHalves } from '../../src/diagram/geometry';
 import { helixExtent, arrangementFor } from '../../src/diagram/geometry';
 import { cabinetStyles } from '../../src/diagram/cabinet';
-import { COIL_MUTED_LIGHT, MUTED_COLOR, coilMutedColor } from '../../src/diagram/colors';
+import {
+  COIL_MUTED_LIGHT,
+  DEFAULT_STOPS,
+  MUTED_COLOR,
+  coilMutedColor,
+  temperatureColor,
+} from '../../src/diagram/colors';
 import { DHW_LABELS } from '../../src/strings';
 import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 
@@ -437,11 +443,65 @@ describe('unused DHW storage', () => {
     }
   });
 
+  // dhw-storage "HTR recovery while heating"
+  test('heating with HTR recovery: the DHW loop is coloured with the DHW temperature and animated, valve 26 to ports 1/2', async () => {
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'B', dhw: 'external' }, hassOfScenario('heating_htr'));
+    expect(root(card).querySelector('.mode')?.textContent.trim()).toBe('Heating');
+    const hot = temperatureColor(46, DEFAULT_STOPS);
+    for (const id of ['dhw_ext_in', 'dhw_ext_coil', 'dhw_ext_out']) {
+      expect(root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('style'), id).toContain(hot);
+      expect(root(card).querySelector(`[data-flow="${id}"]`), id).not.toBeNull();
+    }
+    expect(root(card).querySelector('[data-segment="dhw_sup_a"]')?.classList.contains('muted')).toBe(true);
+    card.remove();
+  });
+
+  test('heating with HTR recovery on model C: coil 51 takes the DHW temperature and is never animated', async () => {
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'C', dhw: 'internal' }, hassOfScenario('heating_htr'));
+    expect(root(card).querySelector('[data-item="51"]')?.getAttribute('style')).toContain(
+      temperatureColor(46, DEFAULT_STOPS),
+    );
+    expect(root(card).querySelectorAll('[data-flow="coil_51"]')).toHaveLength(0);
+    card.remove();
+  });
+
   test('HTR recovery with an unused tank does not animate the DHW pipes or the coil', async () => {
     const card = await mount({ prefix: DEMO_PREFIX, model: 'C', dhw: 'unused' }, hassOfScenario('active_cooling_htr'));
     expect(root(card).querySelectorAll('[data-flow^="dhw_"], [data-flow^="htr_"], [data-flow^="tap_"]')).toHaveLength(
       0,
     );
+    card.remove();
+  });
+});
+
+// operating-mode "HTR recovery": the card passes whether `htr.active` has an entity (card-config "Optional roles")
+describe('HTR recovery without the HTR state entity', () => {
+  const HTR_ENTITY = `binary_sensor.${DEMO_PREFIX}_htr_active`;
+  const hassWith = (htr: 'absent' | 'unavailable'): HassLike => {
+    // active cooling, condensation capacity 1200 W
+    const others = Object.entries(scenarioStates(SCENARIOS.active_cooling_htr.states))
+      .filter(([id]) => id !== HTR_ENTITY)
+      .map(([id, value]): [string, HassEntityState] => [id, { entity_id: id, ...value }]);
+    if (htr === 'unavailable')
+      others.push([HTR_ENTITY, { entity_id: HTR_ENTITY, state: 'unavailable', attributes: {} }]);
+    return { states: Object.fromEntries(others) };
+  };
+  const flows = (card: EcogeoCard): number =>
+    root(card).querySelectorAll('[data-flow^="htr_"], [data-flow^="dhw_ext"]').length;
+
+  test('no entity: the condensation capacity rule shows the HTR segments and the DHW coil active', async () => {
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'B', dhw: 'external' }, hassWith('absent'));
+    expect(root(card).querySelector('.mode')?.textContent.trim()).toBe('Active cooling');
+    expect(root(card).querySelector('[data-flow="htr_riser"]')).not.toBeNull();
+    expect(root(card).querySelector('[data-flow="dhw_ext_coil"]')).not.toBeNull();
+    card.remove();
+  });
+
+  test('the entity present but unavailable: HTR idle, no fallback because of a state', async () => {
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'B', dhw: 'external' }, hassWith('unavailable'));
+    expect(root(card).querySelector('.mode')?.textContent.trim()).toBe('Active cooling');
+    expect(flows(card)).toBe(0);
+    expect(root(card).querySelector('[data-segment="htr_riser"]')?.classList.contains('muted')).toBe(true);
     card.remove();
   });
 });

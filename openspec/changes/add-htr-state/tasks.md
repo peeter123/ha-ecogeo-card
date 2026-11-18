@@ -43,26 +43,33 @@ nothing is released before group 5. The foreign naming writes the optional roles
 
 ## 2. HTR state in heating and active cooling
 
-- [ ] 2.1 Extend `circuitsFor()` in `src/calc/circuits.ts` (design D1): in `heating` and `active_cooling`, with HTR
+- [x] 2.1 Extend `circuitsFor()` in `src/calc/circuits.ts` (design D1): in `heating` and `active_cooling`, with HTR
   `true` and `dhw` `external` or `internal`, add `htr` and `dhw_coil` while `htr.active` is on; when `htr.active` has
   no entity, keep the condensation capacity rule in `active_cooling` only; ignore the role in every other mode. Update
   the doc comment with the inputs.
   Verify: `test/calc/circuits.test.ts` covers every scenario of operating-mode "HTR recovery" and "Active circuits
   follow the mode".
-- [ ] 2.2 Check the HTR water on the DHW lines and coil while heating (dhw-storage "HTR recovery while heating"),
+- [x] 2.2 Check the HTR water on the DHW lines and coil while heating (dhw-storage "HTR recovery while heating"),
   external and internal tank and model C coil 51; no drawing change is expected (`src/diagram/pipes.ts` reads only
   the circuits).
   Verify: `test/diagram/pipes.test.ts` and `test/diagram/dhw.test.ts` assert the DHW temperature colour and the
   fixed HTR speed on the HTR segments in `heating` with `htr.active` on.
-- [ ] 2.3 Add the "heating with HTR recovery" scenario to `dev/scenarios.ts` (design D7: heating, `htr_active` on, DG1
+- [x] 2.3 Add the "heating with HTR recovery" scenario to `dev/scenarios.ts` (design D7: heating, `htr_active` on, DG1
   and HTR power, a DHW temperature below 54 °C) and give every firmware scenario values for the new roles (DG1 or
   DHW power by mode, HTR power, `system_cop_display`); add the scenario to the screenshot cycle in `dev/captures.ts`.
   Verify: `test/dev/scenarios.test.ts` checks the scenario list of dev-emulator "Scenario presets"; a subagent
   screenshots the emulator in the heating with HTR scenario at both detail levels and confirms exchanger 9 and pump
   17 active, the DHW lines in the DHW temperature colour and animated, valve 26 towards connections 1/2.
-- [ ] 2.4 Update the operating-mode section of `docs/ecogeo-card.md` (HTR in heating and active cooling, the 25-30 s
+- [x] 2.4 Update the operating-mode section of `docs/ecogeo-card.md` (HTR in heating and active cooling, the 25-30 s
   tail at the start of a DHW cycle and why DHW mode ignores it, the fallback rule) and the README's HTR line.
   Verify: `test/docs.test.ts` passes; the docs no longer say HTR runs only in active cooling.
+
+Note (group 2 review): `circuitsFor()` takes whether `htr.active` has an entity as a required argument (no default),
+so a caller cannot lose the fallback silently; `brinePumpPresent` is left as it is. A card-level test covers the
+fallback end to end (no `htr_active` entity: the condensation capacity rule in active cooling; the entity present and
+`unavailable`: HTR idle). The `feature-active_cooling-{false,unused}` captures keep the `active_cooling_htr` scenario:
+with active cooling disabled it derives `heating`, and drawing HTR there is D1's behaviour. No DHW scenario with the
+`htr_active` tail is added.
 
 ## 3. Footer: power items by mode and system COP
 

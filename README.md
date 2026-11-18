@@ -299,7 +299,9 @@ form. The editor changes only the card's config; it calls no service and writes 
 
 The card derives one mode from the values, shown in the footer: Off, Defrost, DHW, Active cooling, Heating, Passive
 cooling or Standby. The bridge connection (`unit.connection`) never changes the mode; it only adds an Offline
-indication, and an active alarm adds an Alarm indication. The derivation and its inputs are in
+indication, and an active alarm adds an Alarm indication. HTR recovery (exchanger 9 and pump 17 with the DHW lines) is
+drawn active in heating and active cooling while the unit's HTR state (`htr.active`) is on, and idle in every other
+mode; without that entity, active cooling with a condensation capacity above 0 W stands in for it. The derivation and its inputs are in
 [docs/ecogeo-card.md](docs/ecogeo-card.md#operating-mode).
 
 ## Development
@@ -325,7 +327,7 @@ npm run release   # check, build, verify that the bundle registers the card, cop
 `npm run dev` opens the emulator (`dev/index.html`): the card on a mock `hass`, with no Home Assistant, no network and
 no installation data. The mock entities use the demo prefix `demo_ecogeo`.
 
-- **Scenario:** off, standby, heating, DHW, active cooling (all heat to the outer loop), active cooling with HTR
+- **Scenario:** off, standby, heating, heating with HTR recovery, DHW, active cooling (all heat to the outer loop), active cooling with HTR
   recovery, passive cooling, defrost, alarm while heating, bridge offline and sensors unavailable. Each is a complete
   set of states (`dev/scenarios.ts`).
 - **Naming:** `firmware` (the default: the firmware's entity names under the demo prefix) or `foreign`, a second mock
@@ -347,7 +349,7 @@ All state is in the URL query string, so every combination is addressable. Param
 
 | Parameter                                                      | Values                                                                       | Default    |
 | -------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---------- |
-| `scenario`                                                     | `off`, `standby`, `heating`, `dhw`, `active_cooling`, `active_cooling_htr`, `passive_cooling`, `defrost`, `alarm_heating`, `offline`, `unavailable` | `heating`  |
+| `scenario`                                                     | `off`, `standby`, `heating`, `heating_htr`, `dhw`, `active_cooling`, `active_cooling_htr`, `passive_cooling`, `defrost`, `alarm_heating`, `offline`, `unavailable` | `heating`  |
 | `naming`                                                       | `firmware`, `foreign`                                                        | `firmware` |
 | `model`                                                        | `B`, `C`                                                                     | `B`        |
 | `variant`                                                      | `1` to `4`                                                                   | `4`        |

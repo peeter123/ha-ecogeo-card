@@ -103,9 +103,12 @@ describe('cabinet wiring', () => {
     expect(group(dhw, 51)?.getAttribute('style')).toContain(color(25.2));
     expect(group(dhw, 51)?.getAttribute('style')).toContain('color:');
     dhw.remove();
-    const htr = await mount({ model: 'C' }, hassOf(COOLING));
+    const htr = await mount({ model: 'C' }, hassOf({ ...COOLING, 'htr.active': 'on' }));
     expect(group(htr, 51)?.getAttribute('style')).toContain(color(52.1));
     htr.remove();
+    const heatingHtr = await mount({ model: 'C' }, hassOf({ 'htr.active': 'on' }));
+    expect(group(heatingHtr, 51)?.getAttribute('style')).toContain(color(52.1));
+    heatingHtr.remove();
     const heating = await mount({ model: 'C' }, hassOf());
     expect(group(heating, 51)?.getAttribute('style')).toContain('var(--disabled-text-color)');
     heating.remove();

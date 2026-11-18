@@ -1,8 +1,18 @@
 import { describe, expect, test } from 'vitest';
-import { circuitsFor, type CircuitId } from '../../src/calc/circuits';
+import { circuitsFor as circuitsForRaw, type CircuitId } from '../../src/calc/circuits';
 import type { Mode } from '../../src/calc/mode';
 import { variantFeatures } from '../../src/config/variants';
 import { readings } from '../helpers';
+
+/** The role has an entity and the brine pump is present, unless a test says otherwise (the card passes both explicitly). */
+const circuitsFor = (
+  mode: Parameters<typeof circuitsForRaw>[0],
+  features: Parameters<typeof circuitsForRaw>[1],
+  dhw: Parameters<typeof circuitsForRaw>[2],
+  r: Parameters<typeof circuitsForRaw>[3],
+  brinePumpPresent = true,
+  htrActivePresent = true,
+) => circuitsForRaw(mode, features, dhw, r, brinePumpPresent, htrActivePresent);
 
 const v4 = variantFeatures(4);
 const running = readings({ 'brine.pump': 100, 'heating.capacity': 4712 });
@@ -116,49 +126,109 @@ describe('circuits limited by pumps and feature states', () => {
   });
 });
 
-describe('HTR recovery in active cooling', () => {
+// operating-mode "HTR recovery": the fallback rule, for a `htr.active` role without an entity
+describe('HTR recovery without the HTR state (fallback)', () => {
   const brineOn = (capacity: number | undefined, pump = 100) =>
     readings({ 'brine.pump': pump, 'heating.capacity': capacity });
+  const fallback = (
+    mode: Mode,
+    r: ReturnType<typeof brineOn>,
+    features: Parameters<typeof circuitsFor>[1] = v4,
+    dhw: Parameters<typeof circuitsFor>[2] = 'external',
+  ) => circuitsFor(mode, features, dhw, r, true, false);
 
   test('heat partly into the tank: htr, coil and brine active, valve 26 to ports 1/2', () => {
-    const c = circuitsFor('active_cooling', v4, 'external', brineOn(1200));
+    const c = fallback('active_cooling', brineOn(1200));
     expect(c.active.has('htr') && c.active.has('dhw_coil') && c.active.has('brine')).toBe(true);
     expect(c.valve26).toBe('production');
   });
 
   test('all heat into the tank: htr and coil active, brine muted', () => {
-    const c = circuitsFor('active_cooling', v4, 'external', brineOn(3000, 0));
+    const c = fallback('active_cooling', brineOn(3000, 0));
     expect(c.active.has('htr') && c.active.has('dhw_coil')).toBe(true);
     expect(c.active.has('brine')).toBe(false);
   });
 
   test('condensation capacity 0 W or unknown: no htr', () => {
-    expect(circuitsFor('active_cooling', v4, 'external', brineOn(0)).active.has('htr')).toBe(false);
-    expect(circuitsFor('active_cooling', v4, 'external', brineOn(undefined)).active.has('htr')).toBe(false);
+    expect(fallback('active_cooling', brineOn(0)).active.has('htr')).toBe(false);
+    expect(fallback('active_cooling', brineOn(undefined)).active.has('htr')).toBe(false);
+  });
+
+  test('no HTR while heating without the state, whatever the capacity', () => {
+    const c = fallback('heating', brineOn(4712));
+    expect(c.active.has('htr') || c.active.has('dhw_coil')).toBe(false);
+  });
+
+  test('the HTR state is not read in the fallback', () => {
+    const c = circuitsFor(
+      'active_cooling',
+      v4,
+      'external',
+      readings({ 'brine.pump': 100, 'heating.capacity': 1200, 'htr.active': false }),
+      true,
+      false,
+    );
+    expect(c.active.has('htr')).toBe(true);
   });
 
   test('htr unused or false, or no DHW storage: no htr', () => {
-    expect(circuitsFor('active_cooling', { ...v4, htr: 'unused' }, 'external', brineOn(1200)).active.has('htr')).toBe(
-      false,
-    );
-    expect(circuitsFor('active_cooling', { ...v4, htr: false }, 'external', brineOn(1200)).active.has('htr')).toBe(
-      false,
-    );
-    expect(circuitsFor('active_cooling', v4, 'none', brineOn(1200)).active.has('htr')).toBe(false);
+    expect(fallback('active_cooling', brineOn(1200), { ...v4, htr: 'unused' }).active.has('htr')).toBe(false);
+    expect(fallback('active_cooling', brineOn(1200), { ...v4, htr: false }).active.has('htr')).toBe(false);
+    expect(fallback('active_cooling', brineOn(1200), v4, 'none').active.has('htr')).toBe(false);
   });
 
-  // operating-mode "HTR idle with an unused tank"
-  test('an unused tank: no htr circuit and no DHW coil, even with HTR true and condensation capacity', () => {
-    const c = circuitsFor('active_cooling', v4, 'unused', brineOn(1200));
-    expect(c.active.has('htr')).toBe(false);
-    expect(c.active.has('dhw_coil')).toBe(false);
+  test('an unused tank: no htr circuit and no DHW coil', () => {
+    const c = fallback('active_cooling', brineOn(1200), v4, 'unused');
+    expect(c.active.has('htr') || c.active.has('dhw_coil')).toBe(false);
     expect(c.valve26).toBe('production');
-    expect(circuitsFor('active_cooling', v4, 'unused', brineOn(3000, 0)).active.has('htr')).toBe(false);
+    expect(fallback('active_cooling', brineOn(3000, 0), v4, 'unused').active.has('htr')).toBe(false);
+  });
+});
+
+describe('HTR recovery follows the HTR state', () => {
+  const state = (htr: boolean | undefined, capacity = 4712) =>
+    readings({ 'brine.pump': 100, 'heating.capacity': capacity, 'htr.active': htr });
+
+  test('HTR while heating: htr, coil and DG1 active, valve 26 to ports 1/2', () => {
+    for (const dhw of ['external', 'internal'] as const) {
+      const c = circuitsFor('heating', v4, dhw, state(true));
+      expect(active(c.active)).toEqual(['brine', 'dhw_coil', 'htr', 'production_dg1', 'refrigerant']);
+      expect(c.valve26).toBe('production');
+    }
   });
 
-  test('HTR idle while heating, in dhw and in the other modes', () => {
-    for (const mode of ['heating', 'dhw', 'passive_cooling', 'defrost', 'standby', 'off'] as const) {
-      expect(circuitsFor(mode, v4, 'external', brineOn(4712)).active.has('htr'), mode).toBe(false);
+  test('HTR idle while heating: off, unknown (unavailable) leave htr and the coil out', () => {
+    for (const htr of [false, undefined]) {
+      expect(active(circuitsFor('heating', v4, 'external', state(htr)).active)).toEqual([
+        'brine',
+        'production_dg1',
+        'refrigerant',
+      ]);
     }
+  });
+
+  test('the HTR state decides in active cooling: off with 1200 W gives no htr, on gives htr and coil', () => {
+    const off = circuitsFor('active_cooling', v4, 'external', state(false, 1200));
+    expect(off.active.has('htr') || off.active.has('dhw_coil')).toBe(false);
+    const on = circuitsFor('active_cooling', v4, 'external', state(true, 0));
+    expect(on.active.has('htr') && on.active.has('dhw_coil')).toBe(true);
+    expect(on.valve26).toBe('production');
+  });
+
+  test('the HTR state is ignored in dhw, passive cooling, defrost, off and standby', () => {
+    const dhw = circuitsFor('dhw', v4, 'external', state(true));
+    expect(dhw.active.has('htr')).toBe(false);
+    expect(active(dhw.active)).toEqual(['brine', 'dhw_coil', 'production_dhw', 'refrigerant']);
+    for (const mode of ['passive_cooling', 'defrost', 'standby', 'off'] as const) {
+      expect(circuitsFor(mode, v4, 'external', state(true)).active.has('htr'), mode).toBe(false);
+    }
+  });
+
+  test('HTR idle with an unused tank, or with htr unused, false or no tank, while on', () => {
+    const unused = circuitsFor('heating', v4, 'unused', state(true));
+    expect(unused.active.has('htr') || unused.active.has('dhw_coil')).toBe(false);
+    expect(circuitsFor('heating', v4, 'none', state(true)).active.has('htr')).toBe(false);
+    expect(circuitsFor('heating', { ...v4, htr: 'unused' }, 'external', state(true)).active.has('htr')).toBe(false);
+    expect(circuitsFor('heating', { ...v4, htr: false }, 'external', state(true)).active.has('htr')).toBe(false);
   });
 });

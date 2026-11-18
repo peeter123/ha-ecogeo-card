@@ -22,13 +22,13 @@ function derive(name: ScenarioName) {
     mode: deriveMode(readings, features),
     offline: isOffline(connection === undefined ? undefined : states[connection]),
     alarm: isAlarm(readings['unit.alarm']),
-    circuits: circuitsFor(deriveMode(readings, features), features, 'external', readings),
+    circuits: circuitsFor(deriveMode(readings, features), features, 'external', readings, true, true),
   };
 }
 
 describe('emulator scenarios', () => {
-  test('there are eleven, each with a state for every role', () => {
-    expect(SCENARIO_NAMES).toHaveLength(11);
+  test('there are twelve, each with a state for every role', () => {
+    expect(SCENARIO_NAMES).toHaveLength(12);
     for (const name of SCENARIO_NAMES) {
       expect(Object.keys(SCENARIOS[name].states).sort(), name).toEqual([...ROLE_PATHS].sort());
     }
@@ -44,6 +44,7 @@ describe('emulator scenarios', () => {
     ['off', 'off'],
     ['standby', 'standby'],
     ['heating', 'heating'],
+    ['heating_htr', 'heating'],
     ['dhw', 'dhw'],
     ['active_cooling', 'active_cooling'],
     ['active_cooling_htr', 'active_cooling'],
@@ -67,6 +68,27 @@ describe('emulator scenarios', () => {
   test('the HTR scenario has condensation capacity, the plain active cooling scenario has none', () => {
     expect(derive('active_cooling_htr').readings['heating.capacity']).toBeGreaterThan(0);
     expect(derive('active_cooling').readings['heating.capacity']).toBe(0);
+  });
+
+  test('the heating with HTR scenario: HTR on, DHW power is the HTR heat, DG1 and DHW add up to the capacity', () => {
+    const { readings, circuits } = derive('heating_htr');
+    expect(readings['htr.active']).toBe(true);
+    expect(readings['htr.power']).toBeGreaterThan(0);
+    expect(readings['dhw.power']).toBe(readings['htr.power']);
+    expect((readings['heating.power'] ?? 0) + (readings['dhw.power'] ?? 0)).toBe(readings['heating.capacity']);
+    expect(readings['dhw.temperature']).toBeLessThan(54);
+    expect(circuits.valve26).toBe('production');
+    for (const id of ['htr', 'dhw_coil', 'production_dg1'] as const) expect(circuits.active.has(id), id).toBe(true);
+    expect(derive('heating').circuits.active.has('htr')).toBe(false);
+  });
+
+  test('the DHW scenario has no HTR power and no DG1 power; the stopped scenarios have no power and COP 0', () => {
+    const dhw = derive('dhw').readings;
+    expect([dhw['htr.power'], dhw['heating.power'], dhw['dhw.power']]).toEqual([0, 0, dhw['heating.capacity']]);
+    for (const name of ['off', 'standby', 'passive_cooling', 'defrost'] as const) {
+      const r = derive(name).readings;
+      expect([r['unit.system_cop'], r['heating.power'], r['dhw.power'], r['htr.power']], name).toEqual([0, 0, 0, 0]);
+    }
   });
 
   test('the unavailable scenario has no sensor value', () => {

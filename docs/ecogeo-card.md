@@ -149,7 +149,7 @@ Valves and circuits follow the mode (also pure, in `src/calc/circuits.ts`):
 
 | Mode | Valve 26 | Valve 14 | Valves 27/28 | Active circuits |
 |---|---|---|---|---|
-| Heating | ports 1/2 | normal | closed | refrigerant, brine, production to ports 1/2 |
+| Heating | ports 1/2 | normal | closed | refrigerant, brine, production to ports 1/2; with HTR recovery also HTR and the DHW coil |
 | DHW | ports 5/6 | normal | closed | refrigerant, brine, production to ports 5/6, DHW coil |
 | Active cooling | ports 1/2 | reversed | closed | refrigerant, brine, production to ports 1/2; with HTR recovery also HTR and the DHW coil |
 | Passive cooling | ports 1/2 | normal | exchanger 10 | brine, production to ports 1/2, exchanger 10 |
@@ -159,9 +159,21 @@ Valves and circuits follow the mode (also pure, in `src/calc/circuits.ts`):
 - The brine circuit is active only while the brine pump runs.
 - A circuit whose part is `false` or `unused` is never active, except exchanger 10 with valves 27/28 in a defrost
   (and not at all when `passive_cooling` is `false`).
-- HTR recovery: in active cooling, with `htr` `true`, a DHW storage in use (external or internal) and `heating.capacity` (the condensation
-  capacity) above 0 W, the HTR circuit (exchanger 9, pump 17) and the DHW coil are active and valve 26 stays towards
-  ports 1/2. In every other mode HTR is drawn idle: its state is not known (coil 210 is not exposed by the firmware).
+- HTR recovery: in heating and active cooling, with `htr` `true`, a DHW storage in use (external or internal) and
+  `htr.active` on (item 9), the HTR circuit (exchanger 9, pump 17) and the DHW coil are active and valve 26 stays
+  towards ports 1/2. Any other state of `htr.active` (off, unknown, unavailable) leaves HTR drawn idle. The firmware's
+  flag is the one its HTR power estimate uses, so the drawing and that power agree.
+  - Live observation: on the live installation HTR ran during heating (DG1 demand) and `htr_active` switched on and off
+    with each run; it never ran during a DHW cycle.
+  - DHW mode ignores the role: `htr_active` stays on for 25 to 30 s after DHW demand starts, so trusting it there
+    would draw pump 17 and exchanger 9 next to the DHW production circuit at the start of every DHW cycle. Passive
+    cooling, defrost, off and standby ignore it too: the compressor delivers no discharge heat to exchanger 9 there.
+  - Fallback: when `htr.active` has no entity (older firmware, `none`, see the optional roles below), the previous rule
+    applies in active cooling only: `heating.capacity` (the condensation capacity, item 8) above 0 W. The capacity
+    is above 0 W for the whole heating run, so it cannot tell HTR apart there, and heating never shows HTR in the
+    fallback.
+  - HTR in active cooling follows the firmware's description; a cooling season has not been observed with
+    `htr_active`.
 - Without DHW storage (`dhw: none`, model B only) or with an unused tank (`dhw: unused`) there is no DHW loop, so the DHW
   mode has no DHW circuits (no circuit to ports 5/6, no DHW coil) and HTR is never active. The DHW mode is still derived
   and labelled, and valve 26 follows it.
@@ -538,7 +550,7 @@ The mode changes some of these (they are looked up when drawing; the geometry do
   suction and the drain) take the outlet temperature, as does the leg from exchanger 10 (`prod_10_out`, after
   valve 27), but only while valves 27/28 are in the exchanger position: without exchanger 10 the water runs through
   the bypass and the legs keep the return colour.
-- **HTR recovery** (active cooling with HTR active): the DHW lines between valve 26 and the tank, outside the arm of
+- **HTR recovery** (heating or active cooling with HTR active): the DHW lines between valve 26 and the tank, outside the arm of
   valve 26, and the pipes to and in an external tank carry HTR water, so they take the DHW temperature.
 - **The tank** body takes the DHW temperature on the same scale (a 25 % tint of the colour). Model C's coil 51 is a
   symbol: it takes the colour of the water feeding it: the production outlet colour in DHW mode, the DHW

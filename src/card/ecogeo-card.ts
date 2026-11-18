@@ -286,7 +286,7 @@ export class EcogeoCard extends LitElement {
     const resolved: ResolvedConfig & Pick<DrawContext, 'captions' | 'arrangement'> = compact
       ? { ...config, detail, captions: false, arrangement }
       : { ...config, arrangement };
-    const { readings, offline } = this.readings(resolved);
+    const { readings, absent, offline } = this.readings(resolved);
     const mode = deriveMode(readings, resolved.features, resolved.states);
     const circuits = circuitsFor(
       mode,
@@ -294,6 +294,7 @@ export class EcogeoCard extends LitElement {
       resolved.dhw,
       readings,
       !resolved.notPresent.has('brine.pump'),
+      !absent.has('htr.active'),
     );
     const states = resolved.sample ? SAMPLE_STATES : (this.hass?.states ?? {});
     const moving = animationReadings(readings, resolved.entities, states);

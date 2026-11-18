@@ -49,7 +49,7 @@ function scenario(
   const rd = base ?? readings(values);
   const view: PipeView = {
     mode: options.mode,
-    circuits: circuitsFor(options.mode, features, dhw, rd),
+    circuits: circuitsFor(options.mode, features, dhw, rd, true, true),
     readings: rd,
     stops: DEFAULT_STOPS,
   };
@@ -85,6 +85,9 @@ const HEATING = {
   'dhw.temperature': 52.1,
   'heating.capacity': 4712,
 } as const;
+
+/** The same readings with the HTR state on (item 9): HTR recovery in heating and active cooling. */
+const HTR_ON = { ...HEATING, 'htr.active': true };
 
 describe('segment colours by probe (temperature-coloring spec)', () => {
   test('heating: the supply to connection 1 has the outlet colour, the return from connection 2 the return colour', () => {
@@ -135,7 +138,7 @@ describe('segment colours by probe (temperature-coloring spec)', () => {
   });
 
   test('the HTR water segments take the DHW temperature', () => {
-    const { get } = scenario({ mode: 'active_cooling' }, { ...HEATING, 'dhw.temperature': 48 });
+    const { get } = scenario({ mode: 'active_cooling' }, { ...HTR_ON, 'dhw.temperature': 48 });
     for (const id of ['htr_in', 'htr_pump', 'htr_to_9', 'htr_riser']) expect(get(id).color, id).toBe(color(48));
   });
 });
@@ -280,7 +283,7 @@ describe('flow animation', () => {
   });
 
   test('HTR water segments animate at the fixed medium speed whatever the pump speeds', () => {
-    const { get } = scenario({ mode: 'active_cooling' }, { ...HEATING, 'production.pump': 0, 'brine.pump': 0 });
+    const { get } = scenario({ mode: 'active_cooling' }, { ...HTR_ON, 'production.pump': 0, 'brine.pump': 0 });
     for (const id of ['htr_in', 'htr_pump', 'htr_to_9', 'htr_riser']) {
       expect(get(id), id).toMatchObject({ animated: true, duration: HTR_FLOW_SECONDS });
     }
@@ -347,7 +350,7 @@ describe('mode-dependent roles (add-schematic-card D7)', () => {
   });
 
   test('HTR water on the DHW lines takes the DHW temperature and the fixed speed, outside the arm of valve 26', () => {
-    const { get } = scenario({ mode: 'active_cooling' }, { ...HEATING, 'dhw.temperature': 48 });
+    const { get } = scenario({ mode: 'active_cooling' }, { ...HTR_ON, 'dhw.temperature': 48 });
     for (const id of [
       'dhw_sup_b',
       'dhw_sup_c',
@@ -367,14 +370,49 @@ describe('mode-dependent roles (add-schematic-card D7)', () => {
   test('HTR recovery with no DHW temperature mutes the DHW lines', () => {
     const { get } = scenario(
       { mode: 'active_cooling' },
-      { ...HEATING, 'dhw.temperature': undefined as unknown as number },
+      { ...HTR_ON, 'dhw.temperature': undefined as unknown as number },
     );
     expect(get('dhw_ext_in').muted).toBe(true);
   });
 
-  test('HTR recovery needs the capacity: with 0 W the DHW lines are muted and still', () => {
-    const { get } = scenario({ mode: 'active_cooling' }, { ...HEATING, 'heating.capacity': 0 });
-    expect(get('dhw_ext_in')).toMatchObject({ muted: true, animated: false });
+  test('HTR state off or unknown: the DHW lines are muted and still, in active cooling and in heating', () => {
+    for (const mode of ['active_cooling', 'heating'] as const) {
+      for (const htr of [{ 'htr.active': false }, {}]) {
+        const { get } = scenario({ mode }, { ...HEATING, ...htr });
+        expect(get('dhw_ext_in'), `${mode} ${JSON.stringify(htr)}`).toMatchObject({ muted: true, animated: false });
+        expect(get('htr_riser'), `${mode} ${JSON.stringify(htr)}`).toMatchObject({ muted: true, animated: false });
+      }
+    }
+  });
+
+  // dhw-storage "HTR recovery while heating": the same drawing as in active cooling, valve 26 stays towards ports 1/2
+  test('heating with HTR on: the DHW lines take the DHW temperature at the fixed HTR speed, external and internal', () => {
+    for (const dhw of ['external', 'internal'] as const) {
+      const { get, view } = scenario({ mode: 'heating', dhw }, { ...HTR_ON, 'dhw.temperature': 46 });
+      expect(view.circuits.valve26).toBe('production');
+      for (const id of ['htr_in', 'htr_pump', 'htr_to_9', 'htr_riser']) {
+        expect(get(id), `${dhw} ${id}`).toMatchObject({ color: color(46), animated: true, duration: HTR_FLOW_SECONDS });
+      }
+    }
+    const { get } = scenario({ mode: 'heating' }, { ...HTR_ON, 'dhw.temperature': 46 });
+    for (const id of [
+      'dhw_sup_b',
+      'dhw_sup_c',
+      'dhw_ret_b',
+      'dhw_ret_c',
+      'dhw_ext_in',
+      'dhw_ext_coil',
+      'dhw_ext_out',
+    ]) {
+      expect(get(id), id).toMatchObject({ color: color(46), animated: true, duration: HTR_FLOW_SECONDS });
+    }
+    // the arm of valve 26 is the production DHW circuit, which is idle; DG1 production keeps its own colour
+    expect(get('dhw_sup_a')).toMatchObject({ muted: true, animated: false });
+    expect(get('dhw_ret_a')).toMatchObject({ muted: true, animated: false });
+  });
+
+  test('DHW mode ignores the HTR state: no HTR water on the DHW lines', () => {
+    const { get } = scenario({ mode: 'dhw' }, HTR_ON);
     expect(get('htr_riser')).toMatchObject({ muted: true, animated: false });
   });
 
@@ -382,7 +420,7 @@ describe('mode-dependent roles (add-schematic-card D7)', () => {
     const features = mergeFeatures(4, { passive_cooling: false });
     const rd = readings(HEATING);
     for (const mode of ['passive_cooling', 'defrost'] as const) {
-      const view = { mode, circuits: circuitsFor(mode, features, 'external', rd) };
+      const view = { mode, circuits: circuitsFor(mode, features, 'external', rd, true, true) };
       expect(view.circuits.valves2728).toBe('closed');
       const segment = SEGMENTS.find((item) => item.id === 'prod_15_8');
       if (segment === undefined) throw new Error('no prod_15_8');
@@ -418,15 +456,17 @@ describe('mode-dependent roles (add-schematic-card D7)', () => {
   });
 
   test('model C: the coil 51 symbol takes the dhw_coil state, never animated', () => {
-    const colorIn = (mode: Mode, values: Partial<Record<RolePath, number>> = HEATING): string =>
+    const colorIn = (mode: Mode, values: Partial<Record<RolePath, number | boolean>> = HEATING): string =>
       coilColor(scenario({ mode, dhw: 'internal' }, values).view);
     expect(colorIn('dhw')).toBe(color(25.2));
     // HTR recovery: the coil is fed with HTR water, so it takes the DHW temperature like the DHW lines
-    expect(colorIn('active_cooling')).toBe(color(52.1));
-    expect(colorIn('active_cooling', { ...HEATING, 'dhw.temperature': 48 })).toBe(color(48));
-    expect(colorIn('active_cooling', { ...HEATING, 'heating.capacity': 0 })).toBe(MUTED_COLOR);
+    expect(colorIn('active_cooling', HTR_ON)).toBe(color(52.1));
+    expect(colorIn('active_cooling', { ...HTR_ON, 'dhw.temperature': 48 })).toBe(color(48));
+    expect(colorIn('active_cooling')).toBe(MUTED_COLOR);
+    // HTR recovery while heating
+    expect(colorIn('heating', { ...HTR_ON, 'dhw.temperature': 46 })).toBe(color(46));
     expect(colorIn('heating')).toBe(MUTED_COLOR);
-    expect(colorIn('standby')).toBe(MUTED_COLOR);
+    expect(colorIn('standby', HTR_ON)).toBe(MUTED_COLOR);
     expect(COMPONENTS.some((component) => component.item === 51 && component.kind === 'coil')).toBe(true);
     expect(SEGMENTS.some((segment) => segment.id === 'coil_51')).toBe(false);
   });

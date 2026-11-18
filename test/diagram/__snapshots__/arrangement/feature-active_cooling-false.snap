@@ -92,10 +92,10 @@ svg:
       <stop offset="1" style="stop-color: color-mix(in srgb, #f2711c 50%, #e8a317)">
 </stop>
     </linearGradient>
-<linearGradient x1="0" x2="0" id="ecogeoN-x9-left" y1="1" y2="0" data-muted="true">
-      <stop offset="0" style="stop-color: var(--disabled-text-color)">
+<linearGradient x1="0" x2="0" id="ecogeoN-x9-left" y1="1" y2="0" data-muted="false">
+      <stop offset="0" style="stop-color: color-mix(in srgb, #f2711c 85%, #e8a317)">
 </stop>
-      <stop offset="1" style="stop-color: var(--disabled-text-color)">
+      <stop offset="1" style="stop-color: color-mix(in srgb, #f2711c 85%, #e8a317)">
 </stop>
     </linearGradient>
 <linearGradient x1="0" x2="0" id="ecogeoN-x9-right" y1="0" y2="1" data-muted="false">
@@ -170,54 +170,71 @@ svg:
 </path>
 <path class="pipe muted" data-segment="dhw_sup_a" d="M246 172 L347 172">
 </path>
-<path class="pipe muted" data-segment="dhw_sup_b" d="M347 172 L414 172">
+<path class="pipe " data-segment="dhw_sup_b" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M347 172 L414 172">
 </path>
-<path class="pipe muted" data-segment="dhw_sup_c" d="M414 172 L768 172 L768 130">
+<path class="flow " data-flow="dhw_sup_b" style="--flow-duration: 3s" d="M347 172 L414 172">
 </path>
-<path class="pipe muted" data-segment="dhw_ret_c" d="M800 130 L800 198 L414 198">
+<path class="pipe " data-segment="dhw_sup_c" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M414 172 L768 172 L768 130">
 </path>
-<path class="pipe muted" data-segment="dhw_ret_b" d="M414 198 L326 198">
+<path class="flow " data-flow="dhw_sup_c" style="--flow-duration: 3s" d="M414 172 L768 172 L768 130">
+</path>
+<path class="pipe " data-segment="dhw_ret_c" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M800 130 L800 198 L414 198">
+</path>
+<path class="flow " data-flow="dhw_ret_c" style="--flow-duration: 3s" d="M800 130 L800 198 L414 198">
+</path>
+<path class="pipe " data-segment="dhw_ret_b" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M414 198 L326 198">
+</path>
+<path class="flow " data-flow="dhw_ret_b" style="--flow-duration: 3s" d="M414 198 L326 198">
 </path>
 <path class="pipe muted" data-segment="dhw_ret_a" d="M326 198 L288 198">
 </path>
-<path class="pipe muted" data-segment="htr_in" d="M326 198 L326 214">
+<path class="pipe " data-segment="htr_in" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M326 198 L326 214">
 </path>
-<path class="pipe muted" data-segment="htr_pump" d="M326 238 L326 247">
+<path class="flow " data-flow="htr_in" style="--flow-duration: 3s" d="M326 198 L326 214">
 </path>
-<path class="pipe muted" data-segment="htr_to_9" d="M326 265 L326 296 L347 296">
+<path class="pipe " data-segment="htr_pump" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M326 238 L326 247">
 </path>
-<path class="pipe muted" data-segment="htr_drain" d="M326 296 L326 309">
+<path class="flow " data-flow="htr_pump" style="--flow-duration: 3s" d="M326 238 L326 247">
 </path>
-<path class="pipe muted" data-segment="htr_riser" d="M347 250 L347 205 M347 191 L347 172">
+<path class="pipe " data-segment="htr_to_9" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M326 265 L326 296 L347 296">
 </path>
-<path class="pipe muted" data-segment="dhw_ext_in" d="M768 130 L768 50 L960 50 L960 180">
+<path class="flow " data-flow="htr_to_9" style="--flow-duration: 3s" d="M326 265 L326 296 L347 296">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M768 130 L768 50 L960 50 L960 180">
+<path class="pipe " data-segment="htr_drain" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M326 296 L326 309">
 </path>
-<g class="helix muted" data-segment="dhw_ext_coil">
-    <path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M880 187.44 C880 177.52 960 184.96 960 194.89">
+<path class="pipe " data-segment="htr_riser" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M347 250 L347 205 M347 191 L347 172">
 </path>
-<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M880 202.33 C880 192.41 960 199.85 960 209.78">
+<path class="flow " data-flow="htr_riser" style="--flow-duration: 3s" d="M347 250 L347 205 M347 191 L347 172">
 </path>
-<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M880 217.22 C880 207.3 960 214.74 960 224.67">
+<path class="pipe " data-segment="dhw_ext_in" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M768 130 L768 50 L960 50 L960 180">
 </path>
-<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M880 232.11 C880 222.19 960 229.63 960 239.56">
+<path class="flow " data-flow="dhw_ext_in" style="--flow-duration: 3s" d="M768 130 L768 50 L960 50 L960 180">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M960 180 C960 189.93 880 197.37 880 187.44">
+<g class="helix " data-segment="dhw_ext_coil" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)">
+    <path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" stroke-linecap="butt" opacity="0.35" d="M880 187.44 C880 177.52 960 184.96 960 194.89">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M960 194.89 C960 204.81 880 212.26 880 202.33">
+<path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" stroke-linecap="butt" opacity="0.35" d="M880 202.33 C880 192.41 960 199.85 960 209.78">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M960 209.78 C960 219.7 880 227.15 880 217.22">
+<path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" stroke-linecap="butt" opacity="0.35" d="M880 217.22 C880 207.3 960 214.74 960 224.67">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M960 224.67 C960 234.59 880 242.04 880 232.11">
+<path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" stroke-linecap="butt" opacity="0.35" d="M880 232.11 C880 222.19 960 229.63 960 239.56">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M960 239.56 C960 249.48 904 247 880 247">
+<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" stroke-linecap="round" d="M960 180 C960 189.93 880 197.37 880 187.44">
 </path>
-    
+<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" stroke-linecap="round" d="M960 194.89 C960 204.81 880 212.26 880 202.33">
+</path>
+<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" stroke-linecap="round" d="M960 209.78 C960 219.7 880 227.15 880 217.22">
+</path>
+<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" stroke-linecap="round" d="M960 224.67 C960 234.59 880 242.04 880 232.11">
+</path>
+<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" stroke-linecap="round" d="M960 239.56 C960 249.48 904 247 880 247">
+</path>
+    <path class="flow " data-flow="dhw_ext_coil" style="--flow-duration: 3s" d="M960 180 C960 189.93 880 197.37 880 187.44 M960 194.89 C960 204.81 880 212.26 880 202.33 M960 209.78 C960 219.7 880 227.15 880 217.22 M960 224.67 C960 234.59 880 242.04 880 232.11 M960 239.56 C960 249.48 904 247 880 247">
+</path>
   </g>
-<path class="pipe muted" data-segment="dhw_ext_out" d="M880 247 L864 247 L864 85 L800 85 L800 130">
+<path class="pipe " data-segment="dhw_ext_out" style="stroke: color-mix(in srgb, #f2711c 85%, #e8a317)" d="M880 247 L864 247 L864 85 L800 85 L800 130">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M880 247 L864 247 L864 85 L800 85 L800 130">
+<path class="flow " data-flow="dhw_ext_out" style="--flow-duration: 3s" d="M880 247 L864 247 L864 85 L800 85 L800 130">
 </path>
 <path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #f2711c 15%, #e8a317)" d="M638 130 L638 85 L198 85">
 </path>
