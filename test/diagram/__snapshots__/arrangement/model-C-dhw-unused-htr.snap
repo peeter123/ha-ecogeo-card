@@ -1,4 +1,4 @@
-layout: full
+layout: horizontal
 labels:
 production_out | label end | left: 19.7%; top: 41.8348623853211%
 production_in | label middle | left: 26.1%; top: 45.321100917431195%
@@ -270,7 +270,6 @@ svg:
 </rect>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="2" data-kind="port" aria-label="Production return (2)">
     <title>Production return (2)</title>
@@ -280,7 +279,6 @@ svg:
 </rect>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="3" data-kind="port" aria-label="Brine outlet (3)">
     <title>Brine outlet (3)</title>
@@ -290,7 +288,6 @@ svg:
 </rect>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="4" data-kind="port" aria-label="Brine inlet (4)">
     <title>Brine inlet (4)</title>
@@ -300,7 +297,6 @@ svg:
 </rect>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group muted" data-item="47" data-kind="port" aria-label="Tap water inlet (47)">
     <title>Tap water inlet (47)</title>
@@ -310,7 +306,6 @@ svg:
 </rect>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group muted" data-item="48" data-kind="port" aria-label="DHW outlet (48)">
     <title>DHW outlet (48)</title>
@@ -320,7 +315,6 @@ svg:
 </rect>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group muted" data-item="49" data-kind="port" aria-label="DHW recirculation (49)">
     <title>DHW recirculation (49)</title>
@@ -330,7 +324,6 @@ svg:
 </rect>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="7" data-kind="exchanger" aria-label="Evaporator (7)" role="button" tabindex="0">
     <title>Evaporator (7)</title>
@@ -354,7 +347,6 @@ svg:
 </circle>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="8" data-kind="exchanger" aria-label="Condenser (8)" role="button" tabindex="0">
     <title>Condenser (8)</title>
@@ -378,7 +370,6 @@ svg:
 </circle>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="9" data-kind="exchanger" aria-label="HTR system exchanger (9)">
     <title>HTR system exchanger (9)</title>
@@ -402,7 +393,6 @@ svg:
 </circle>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="11" data-kind="compressor" aria-label="Compressor (11)" role="button" tabindex="0">
     <title>Compressor (11)</title>
@@ -414,7 +404,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="12" data-kind="expansion_valve" aria-label="Electronic expansion valve (12)" role="button" tabindex="0">
     <title>Electronic expansion valve (12)</title>
@@ -424,7 +413,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="13" data-kind="filter_dryer" aria-label="Filter dryer (13)">
     <title>Filter dryer (13)</title>
@@ -434,7 +422,6 @@ svg:
 </rect>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="14" data-kind="inversion_valve" aria-label="Cycle inversion valve (14)">
     <title>Cycle inversion valve (14)</title>
@@ -448,7 +435,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="29" data-kind="probe_t" aria-label="Suction temperature probe (29)" role="button" tabindex="0">
     <title>Suction temperature probe (29)</title>
@@ -461,7 +447,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(0)">T</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="30" data-kind="probe_t" aria-label="Discharge temperature probe (30)" role="button" tabindex="0">
     <title>Discharge temperature probe (30)</title>
@@ -474,7 +459,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(0)">T</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="35" data-kind="transducer_p" aria-label="Suction pressure transducer (35)" role="button" tabindex="0">
     <title>Suction pressure transducer (35)</title>
@@ -487,7 +471,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(0)">P</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="36" data-kind="transducer_p" aria-label="Discharge pressure transducer (36)" role="button" tabindex="0">
     <title>Discharge pressure transducer (36)</title>
@@ -500,7 +483,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(0)">P</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="10" data-kind="exchanger" aria-label="Passive cooling / defrosting exchanger (10)">
     <title>Passive cooling / defrosting exchanger (10)</title>
@@ -524,7 +506,6 @@ svg:
 </circle>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="15" data-kind="pump" aria-label="Production circulator pump (15)" role="button" tabindex="0">
     <title>Production circulator pump (15)</title>
@@ -536,7 +517,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="16" data-kind="pump" aria-label="Brine circulator pump (16)" role="button" tabindex="0">
     <title>Brine circulator pump (16)</title>
@@ -548,7 +528,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="17" data-kind="pump" aria-label="HTR circulator pump (17)">
     <title>HTR circulator pump (17)</title>
@@ -560,7 +539,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="22" data-kind="valve" aria-label="HTR system retention valve (22)">
     <title>HTR system retention valve (22)</title>
@@ -570,7 +548,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="25" data-kind="drain_valve" aria-label="HTR system discharge valve (25)">
     <title>HTR system discharge valve (25)</title>
@@ -580,7 +557,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group muted" data-item="26" data-kind="valve3" aria-label="DHW valve (26)" role="button" tabindex="0">
     <title>DHW valve (26)</title>
@@ -598,7 +574,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="27" data-kind="valve3" aria-label="Passive cooling production valve (27)">
     <title>Passive cooling production valve (27)</title>
@@ -616,7 +591,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="28" data-kind="valve3" aria-label="Passive cooling brine valve (28)">
     <title>Passive cooling brine valve (28)</title>
@@ -634,7 +608,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="31" data-kind="probe_t" aria-label="Brine outlet temperature probe (31)" role="button" tabindex="0">
     <title>Brine outlet temperature probe (31)</title>
@@ -647,7 +620,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">T</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="32" data-kind="probe_t" aria-label="Brine inlet temperature probe (32)" role="button" tabindex="0">
     <title>Brine inlet temperature probe (32)</title>
@@ -660,7 +632,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">T</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="33" data-kind="probe_t" aria-label="Production outlet temperature probe (33)" role="button" tabindex="0">
     <title>Production outlet temperature probe (33)</title>
@@ -673,7 +644,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">T</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="34" data-kind="probe_t" aria-label="Production return temperature probe (34)" role="button" tabindex="0">
     <title>Production return temperature probe (34)</title>
@@ -686,7 +656,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">T</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="37" data-kind="transducer_p" aria-label="Brine pressure transducer (37)" role="button" tabindex="0">
     <title>Brine pressure transducer (37)</title>
@@ -699,7 +668,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">P</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="38" data-kind="transducer_p" aria-label="Production pressure transducer (38)" role="button" tabindex="0">
     <title>Production pressure transducer (38)</title>
@@ -712,7 +680,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-90)">P</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="44" data-kind="resistor" aria-label="Outlet resistor (44)">
     <title>Outlet resistor (44)</title>
@@ -724,7 +691,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group normal" data-item="45" data-kind="thermostat" aria-label="Safety thermostat (45)">
     <title>Safety thermostat (45)</title>
@@ -737,7 +703,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-90)">T</text>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group muted" data-item="50" data-kind="tank" aria-label="DHW tank (50)" role="button" tabindex="0">
     <title>DHW tank (50)</title>
@@ -747,7 +712,6 @@ svg:
 </rect>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group muted" data-item="51" data-kind="coil" aria-label="DHW coil (51)" style="color: var(--ecogeo-coil-muted, var(--disabled-text-color))">
     <title>DHW coil (51)</title>
@@ -789,7 +753,6 @@ svg:
 </path>
 </g>
 </g>
-    
   </g>
 <g class="symbol-group muted" data-item="54" data-kind="probe_t" aria-label="DHW temperature probe (54)" role="button" tabindex="0">
     <title>DHW temperature probe (54)</title>
@@ -802,7 +765,6 @@ svg:
 <text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">T</text>
 </g>
 </g>
-    
   </g>
   </g>
         </svg>

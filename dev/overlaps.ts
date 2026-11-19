@@ -1,4 +1,4 @@
-// The overlap check of the compact threshold (add-compact-layout D6, D7), shared by scripts/measure-layout.mjs (which
+// The overlap check of the vertical threshold (add-compact-layout D6, D7), shared by scripts/measure-layout.mjs (which
 // sets the threshold) and test/card/overlaps.browser.test.ts (which guards it), so that the two cannot drift. It
 // reads real layout, so it runs in a browser. Boxes: a label's box is its element's box without the half-leading above
 // and below its text (line-height minus font-size, halved), because rows that stack at a fixed pitch share that
@@ -221,9 +221,9 @@ export function overlapPairs({ labels, parts, pipes = [], captions = [], drawing
 }
 
 /**
- * The side of the cabinet outline a value label stays on in the compact layout (add-compact-layout D8): the labels of
- * the production and brine circuits, the compressor and the integrated tank 50 inside it, those of the source and of the
- * external DHW tank outside it. Only the key labels, which are the ones the compact layout shows.
+ * The side of the cabinet outline a value label stays on (add-compact-layout D8): the labels of the production and brine
+ * circuits, the compressor and the integrated tank 50 inside it, those of the source and of the external DHW tank outside
+ * it. Only scripts/search-places.mjs reads it, until group 3 of rework-layouts replaces that script's rules.
  */
 export const LABEL_SIDES: Readonly<Record<string, 'inside' | 'outside'>> = {
   production_out: 'inside',
@@ -238,25 +238,7 @@ export const LABEL_SIDES: Readonly<Record<string, 'inside' | 'outside'>> = {
   hybrid_ground_out: 'outside',
 };
 
-/** The labels that are not on their side of the cabinet outline, as texts: an inside label must lie within it, an outside one clear of it. */
-export function sidePairs({ labels, cabinet }: Measurement): string[] {
-  if (cabinet === undefined) return ['no cabinet outline'];
-  return labels.flatMap((label) => {
-    const side = LABEL_SIDES[label.id];
-    if (side === undefined) return [];
-    const within =
-      label.left >= cabinet.left - TOLERANCE &&
-      label.right <= cabinet.right + TOLERANCE &&
-      label.top >= cabinet.top - TOLERANCE &&
-      label.bottom <= cabinet.bottom + TOLERANCE;
-    if (side === 'inside') return within ? [] : [`label ${label.id} is not inside the cabinet`];
-    return overlaps(label, cabinet) ? [`label ${label.id} is not outside the cabinet`] : [];
-  });
-}
-
-/**
- * The Out and In values that read as a pair in the compact layout (refine-simplified-layout D7, group 5), production and brine.
- */
+/** The Out and In values that read as a pair (refine-simplified-layout D7, group 5), production and brine; read by scripts/search-places.mjs only. */
 export const OUT_IN_PAIRS: readonly (readonly [string, string])[] = [
   ['production_out', 'production_in'],
   ['brine_out', 'brine_in'],
@@ -270,14 +252,4 @@ export const OUT_IN_PAIRS: readonly (readonly [string, string])[] = [
 export function inOrder(out: Box, inn: Box): boolean {
   if (out.right <= inn.left) return true;
   return Math.min(out.right, inn.right) - Math.max(out.left, inn.left) > 0 && out.bottom <= inn.top;
-}
-
-/** The Out and In pairs that are not in order (see inOrder), as texts. */
-export function pairOrderPairs({ labels }: Measurement): string[] {
-  return OUT_IN_PAIRS.flatMap(([outId, inId]) => {
-    const out = labels.find((label) => label.id === outId);
-    const inn = labels.find((label) => label.id === inId);
-    if (out === undefined || inn === undefined) return [];
-    return inOrder(out, inn) ? [] : [`${outId} is not left of or above ${inId}`];
-  });
 }

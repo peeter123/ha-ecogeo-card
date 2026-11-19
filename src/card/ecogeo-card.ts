@@ -24,7 +24,7 @@ import type { CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { CARD_VERSION } from '../lib/version';
 import { localeFromHass } from '../lib/format';
-import { drawingWidth, nextCompact, strokeWidths, type StrokeWidths } from '../lib/layout';
+import { drawingWidth, nextVertical, strokeWidths, type StrokeWidths } from '../lib/layout';
 import { fireMoreInfo, stateOf, type HassLike } from '../lib/hass';
 import { shouldRender } from '../lib/render';
 import { stubConfig } from '../suggest/stub';
@@ -113,9 +113,9 @@ export class EcogeoCard extends LitElement {
   declare viewportHeight: number;
   private resolved?: ResolvedConfig;
   private observer?: ResizeObserver;
-  private renderedCompact = false;
-  /** Whether the layout last rendered was compact because `auto` chose it: only that counts for the hysteresis. */
-  private renderedAutoCompact = false;
+  private renderedVertical = false;
+  /** Whether the layout last rendered was vertical because `auto` chose it: only that counts for the hysteresis. */
+  private renderedAutoVertical = false;
   private renderedStroke: StrokeWidths = strokeWidths(undefined);
   private renderedDrawing = 0;
   private entityIds: string[] = [];
@@ -161,27 +161,22 @@ export class EcogeoCard extends LitElement {
   }
 
   /**
-   * The width the layout is decided on: the drawing's width with the arrangement the full layout would show (the viewBox of
-   * the configured detail level). The compact layout's arrangement is the simplified one, whose ratio gives a width at
-   * least as large, so deciding on this width keeps the choice from depending on the choice (D9).
+   * The width the layout is decided on: the drawing's width with the horizontal arrangement's viewBox. The vertical
+   * arrangement is taller, so in a panel it would give a width at most as large; deciding on the horizontal one keeps the
+   * choice from depending on the choice (D9).
    */
   private layoutWidth(): number {
-    return this.drawingWidthFor(arrangementFor(this.resolved?.detail ?? 'simplified', 'full').viewBox);
+    return this.drawingWidthFor(arrangementFor('horizontal').viewBox);
   }
 
   /**
-   * The layout the card shows now: compact or full, from the `layout` option, the measured width and, with `auto`, the
-   * layout it showed so far (the hysteresis of add-compact-layout D1).
+   * The layout the card shows now: horizontal or vertical, from the `layout` option, the measured width and, with `auto`, the
+   * layout it showed so far (responsive-layout "Layout hysteresis").
    */
-  get shownLayout(): 'compact' | 'full' {
-    return nextCompact(
-      this.resolved?.layout ?? 'auto',
-      this.layoutWidth(),
-      this.renderedAutoCompact,
-      this.resolved?.detail ?? 'simplified',
-    )
-      ? 'compact'
-      : 'full';
+  get shownLayout(): ShownLayout {
+    return nextVertical(this.resolved?.layout ?? 'auto', this.layoutWidth(), this.renderedAutoVertical)
+      ? 'vertical'
+      : 'horizontal';
   }
 
   override connectedCallback(): void {
@@ -224,7 +219,7 @@ export class EcogeoCard extends LitElement {
 
   protected override shouldUpdate(changed: PropertyValues): boolean {
     // A change of the card's width, the window's height, `isPanel` or `layout` alone renders only when it flips the layout or changes
-    // the drawing's width or the stroke widths (add-compact-layout D1, D4; refine-simplified-layout D9).
+    // the drawing's width or the stroke widths (responsive-layout "Layout hysteresis", "Minimum rendered sizes"; refine-simplified-layout D9).
     if (
       changed.size > 0 &&
       [...changed.keys()].every(
@@ -234,7 +229,7 @@ export class EcogeoCard extends LitElement {
       const layout = this.shownLayout;
       const stroke = strokeWidths(this.drawingWidthFor(this.arrangementViewBox(layout)));
       return (
-        (layout === 'compact') !== this.renderedCompact ||
+        (layout === 'vertical') !== this.renderedVertical ||
         this.fittedWidth(layout) !== this.renderedDrawing ||
         stroke.pipe !== this.renderedStroke.pipe ||
         stroke.outline !== this.renderedStroke.outline
@@ -244,8 +239,7 @@ export class EcogeoCard extends LitElement {
   }
 
   private arrangementViewBox(layout: ShownLayout): { width: number; height: number } {
-    const compact = layout === 'compact';
-    return arrangementFor(compact ? 'simplified' : (this.resolved?.detail ?? 'simplified'), layout).viewBox;
+    return arrangementFor(layout).viewBox;
   }
 
   /** The `max-width` in px the drawing gets in a panel view (0: none, the drawing fills the card). */
@@ -273,23 +267,18 @@ export class EcogeoCard extends LitElement {
   protected override render(): TemplateResult {
     this.renderedHass = this.hass;
     const layout = this.shownLayout;
-    const compact = layout === 'compact';
-    this.renderedCompact = compact;
-    this.renderedAutoCompact = compact && this.resolved?.layout === 'auto';
+    const vertical = layout === 'vertical';
+    this.renderedVertical = vertical;
+    this.renderedAutoVertical = vertical && this.resolved?.layout === 'auto';
     const stroke = strokeWidths(this.drawingWidthFor(this.arrangementViewBox(layout)));
     this.renderedStroke = stroke;
     const fitted = this.fittedWidth(layout);
     this.renderedDrawing = fitted;
     const config = this.resolved;
     if (config === undefined) return html`<ha-card data-layout=${layout}><div class="diagram"></div></ha-card>`;
-    // The compact layout draws the simplified detail level whatever `detail` says; the resolved config keeps the user's (D3).
-    // It also leaves out the captions inside the drawing, which would render at about 4 px.
-    const detail = compact ? 'simplified' : config.detail;
-    const arrangement = arrangementFor(detail, layout);
+    const arrangement = arrangementFor(layout);
     const { viewBox } = arrangement;
-    const resolved: ResolvedConfig & Pick<DrawContext, 'captions' | 'arrangement'> = compact
-      ? { ...config, detail, captions: false, arrangement }
-      : { ...config, arrangement };
+    const resolved: ResolvedConfig & Pick<DrawContext, 'arrangement'> = { ...config, arrangement };
     const { readings, absent, offline } = this.readings(resolved);
     const mode = deriveMode(readings, resolved.features, resolved.states);
     const circuits = circuitsFor(
@@ -322,11 +311,11 @@ export class EcogeoCard extends LitElement {
         >
           ${svg`${renderSource(resolved, moving, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix }, stroke.pipe)}`}
         </svg>
-        ${renderLabels(labelsFor(resolved, readings, resolved.entities, display, compact, resolved.notPresent), onTap, viewBox)}
+        ${renderLabels(labelsFor(resolved, readings, resolved.entities, display, resolved.notPresent), onTap, viewBox)}
       </div>
       <div class="footer">
         <span class="mode">${MODE_LABELS[mode]}</span>
-        ${renderFooterItems(footerItems(readings, resolved.entities, display, { mode, features: resolved.features, dhw: resolved.dhw, notPresent: resolved.notPresent, absent }, compact), onTap)}
+        ${renderFooterItems(footerItems(readings, resolved.entities, display, { mode, features: resolved.features, dhw: resolved.dhw, notPresent: resolved.notPresent, absent }), onTap)}
         ${isAlarm(readings['unit.alarm']) ? html`<span class="alarm">${INDICATIONS.alarm}</span>` : nothing}
         ${offline ? html`<span class="offline">${INDICATIONS.offline}</span>` : nothing}
         ${resolved.sample ? html`<span class="sample">${INDICATIONS.sampleValues}</span>` : nothing}

@@ -1,4 +1,7 @@
-// `npm run search-places`: searches the compact layout's label places (refine-simplified-layout D7; the first search was
+// NOTE (rework-layouts group 2): the compact layout is gone, so this script now searches the horizontal layout with the
+// rules it had for the compact one (the labels of LABEL_SIDES, no on-pipe exception). Group 3 of rework-layouts reworks it
+// (design D7: `--layout=horizontal|vertical`, every one of the 19 labels); until then its output is not to be pasted anywhere.
+// `npm run search-places`: searches the former compact layout's label places (refine-simplified-layout D7; the first search was
 // add-compact-layout D8). For every key label (the ones LABEL_SIDES lists) it finds, over every emulator scenario,
 // installation and naming at 320 px, the places where the label overlaps no component, no pipe (except for the labels of
 // ON_PIPE_COMPACT, which are placed with pipes ignored, design D7 group 5), no caption and no
@@ -202,7 +205,7 @@ try {
   const overlaps = await server.ssrLoadModule('/dev/overlaps.ts');
   const foreign = await server.ssrLoadModule('/dev/foreign.ts');
   const geometry = await server.ssrLoadModule('/src/diagram/geometry.ts');
-  onPipeLabels = [...(await server.ssrLoadModule('/src/diagram/label-places.ts'))['ON_PIPE_COMPACT']];
+  onPipeLabels = [];
   const names = /** @type {readonly string[]} */ (scenarios['SCENARIO_NAMES']);
   const installations = /** @type {readonly { name: string; query: string }[]} */ (overlaps['INSTALLATIONS']);
   const namings = /** @type {readonly string[]} */ (foreign['NAMINGS']);
@@ -210,7 +213,7 @@ try {
   outInPairs = overlaps['OUT_IN_PAIRS'];
   loadedInOrder = overlaps['inOrder'];
   // each label's own place in the non-compact drawing of the arrangement the compact layout draws (its probe or component)
-  for (const spec of geometry['arrangementFor']('simplified', 'compact').labels.specs) {
+  for (const spec of geometry['arrangementFor']('horizontal').labels.specs) {
     homes[spec.id] = { x: spec.x, y: spec.y, align: spec.align };
   }
 
@@ -222,7 +225,7 @@ try {
   for (const naming of namings) {
     for (const installation of installations) {
       for (const name of names) {
-        const query = `scenario=${name}&${installation.query}&naming=${naming}&layout=compact&detail=simplified`;
+        const query = `scenario=${name}&${installation.query}&naming=${naming}&layout=horizontal`;
         await page.goto(new URL(`dev/index.html?${query}`, base).href);
         await page.locator('#cards[data-ready]').waitFor();
         if (await page.locator('.error:not([hidden])').count()) {

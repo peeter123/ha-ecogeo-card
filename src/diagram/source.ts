@@ -7,7 +7,7 @@
 //
 // The live values (labels.ts): the air unit's fan speed and outside temperature go under the housing, its In and Out
 // beside its two ports on the housing's right; the ground loop's In and Out sit at the ground line, beside the legs.
-import { css, nothing, svg, type SVGTemplateResult } from 'lit';
+import { css, svg, type SVGTemplateResult } from 'lit';
 import type { AnimationReadings } from '../calc/readings';
 import { AIR_UNIT_FAN_NAME, SOURCE_LABELS } from '../strings';
 import { FAN_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
@@ -118,7 +118,6 @@ function airUnit(
   speed: number | boolean | undefined,
   muted: boolean,
   taps: Taps | undefined,
-  captions: boolean,
   scale: number | undefined,
 ): SVGTemplateResult {
   const { x, y, width, height, fanX, fanY, fanRadius, coil, fins: fin, slats: slat, dividerY } = unit;
@@ -127,7 +126,7 @@ function airUnit(
   const slatYs = Array.from({ length: slat.count }, (_, index) => round2(slat.y0 + index * slat.step));
   const [gutterLeft, gutterRight] = [round2(x + 6), round2(fanX + fanRadius + 6)];
   const gutter = round2(fanX - fanRadius - 6 - gutterLeft);
-  // the blades keep the full arrangement's proportions to the ring: a smaller air unit scales them with it
+  // the blades keep the frame's proportions to the ring: a smaller air unit scales them with it
   const fanScale = round2(scale ?? 1);
   const tap = tapBindings(tapTarget(FAN_ROLE, taps), taps?.onTap);
   return svg`<g class="air-unit${muted ? ' muted' : ''}" data-source="air">
@@ -144,7 +143,7 @@ function airUnit(
         <g class=${duration === undefined ? 'fan-rotor still' : 'fan-rotor'} style=${duration === undefined ? '' : `--fan-duration: ${String(duration)}s`}>${BLADES}<circle class="fan-hub" r="5" fill="var(--primary-text-color)" /></g>
       </g>
     </g>
-    ${captions ? svg`<text class="source-caption" x=${unit.captionX} y=${unit.captionY} text-anchor="middle">${SOURCE_LABELS.air}</text>` : nothing}
+    <text class="source-caption" x=${unit.captionX} y=${unit.captionY} text-anchor="middle">${SOURCE_LABELS.air}</text>
   </g>`;
 }
 
@@ -173,7 +172,7 @@ function groundLine(context: DrawContext, kind: 'ground' | 'hybrid', lineY: numb
   return svg`<g class="ground-loop${muted ? ' muted' : ''}" data-source="ground">
     <path class="source-ground" d="M${groundLineX.start} ${lineY} H${groundLineX.end}" />
     ${ticks.map((tick) => svg`<path class="source-ground" d="M${tick} ${lineY} l-6 8" />`)}
-    ${context.captions === false ? nothing : svg`<text class="source-caption" x=${groundCaption.x} y=${captionY} text-anchor="middle">${SOURCE_LABELS.ground}</text>`}
+    <text class="source-caption" x=${groundCaption.x} y=${captionY} text-anchor="middle">${SOURCE_LABELS.ground}</text>
   </g>`;
 }
 
@@ -192,7 +191,7 @@ export function renderSource(
   const ground = context.source === 'ground' || context.source === 'hybrid';
   const kind = context.source === 'hybrid' ? 'hybrid' : 'ground';
   return svg`<g class="source" data-source-kind=${context.source}>
-    ${air ? airUnit(unit, readings['source.fan_speed'], !brineActive, taps, context.captions !== false, scale) : svg``}
+    ${air ? airUnit(unit, readings['source.fan_speed'], !brineActive, taps, scale) : svg``}
     ${ground ? groundLine(context, kind, groundLineY[kind], !brineActive) : svg``}
   </g>`;
 }

@@ -1,15 +1,13 @@
 // The emulator's state and its URL query string (add-schematic-card D9): scenario, naming, model, variant, source, dhw, every feature,
-// detail, fill, layout, width, panel, theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
+// fill, layout, width, panel, theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
 // hrv-ventilation dev/preview.ts (state in the query string); the parameters are this card's own.
 import {
   DEFAULT_VARIANT,
-  DETAIL_LEVELS,
   DHW_STORAGES,
   EXCHANGER_FILLS,
   LAYOUTS,
   MODELS,
   SOURCES,
-  type Detail,
   type DhwStorage,
   type ExchangerFill,
   type Layout,
@@ -44,11 +42,9 @@ export interface EmulatorState {
   /** `default` leaves `dhw` out of the config: external on model B, internal on model C. */
   dhw: 'default' | DhwStorage;
   features: Record<FeatureKey, FeatureChoice>;
-  /** The card's `detail` option: `simplified` (the default) or `full`. */
-  detail: Detail;
   /** The card's `exchanger_fill` option (URL `fill=`): `gradient` (the default) or `none`. */
   fill: ExchangerFill;
-  /** The card's `layout` option (URL `layout=`): `auto` (the default), `full` or `compact`. */
+  /** The card's `layout` option (URL `layout=`): `auto` (the default), `horizontal` or `vertical`. An old `layout=full` or `layout=compact` is not a choice and keeps the default. */
   layout: Layout;
   /** The width of the card's slot in px (URL `width=`). */
   width: number;
@@ -80,7 +76,6 @@ export const defaultState = (): EmulatorState => ({
   source: 'ground',
   dhw: 'default',
   features: { active_cooling: 'default', passive_cooling: 'default', htr: 'default', backup_heater: 'default' },
-  detail: 'simplified',
   fill: 'gradient',
   layout: 'auto',
   width: DEFAULT_WIDTH,
@@ -93,7 +88,7 @@ export const defaultState = (): EmulatorState => ({
 const pick = <T extends string>(choices: readonly T[], value: string | null, fallback: T): T =>
   choices.find((choice) => choice === value) ?? fallback;
 
-/** The state a query string describes; a missing or invalid parameter keeps its default. */
+/** The state a query string describes; a missing or invalid parameter keeps its default, and an old `detail=` is ignored. */
 export function parseState(search: string): EmulatorState {
   const params = new URLSearchParams(search);
   const base = defaultState();
@@ -113,7 +108,6 @@ export function parseState(search: string): EmulatorState {
     features: Object.fromEntries(
       FEATURE_KEYS.map((key) => [key, pick(FEATURE_CHOICES, params.get(key), 'default')]),
     ) as Record<FeatureKey, FeatureChoice>,
-    detail: pick(DETAIL_LEVELS, params.get('detail'), base.detail),
     fill: pick(EXCHANGER_FILLS, params.get('fill'), base.fill),
     layout: pick(LAYOUTS, params.get('layout'), base.layout),
     width: Number.isInteger(width) && width >= MIN_WIDTH && width <= MAX_WIDTH ? width : base.width,
@@ -139,7 +133,6 @@ export function toSearch(state: EmulatorState): string {
   });
   if (state.naming !== 'firmware') params.set('naming', state.naming);
   if (state.dhw !== 'default') params.set('dhw', state.dhw);
-  if (state.detail !== 'simplified') params.set('detail', state.detail);
   if (state.fill !== 'gradient') params.set('fill', state.fill);
   if (state.layout !== 'auto') params.set('layout', state.layout);
   if (state.width !== DEFAULT_WIDTH) params.set('width', String(state.width));
@@ -170,7 +163,6 @@ export function configOf(state: EmulatorState): CardConfig {
     model: state.model,
     variant: state.variant,
     source: state.source,
-    detail: state.detail,
     exchanger_fill: state.fill,
     layout: state.layout,
     ...(state.dhw === 'default' ? {} : { dhw: state.dhw }),

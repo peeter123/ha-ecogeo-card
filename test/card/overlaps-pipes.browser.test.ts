@@ -10,7 +10,7 @@ import { SCENARIO_NAMES, SCENARIOS } from '../../dev/scenarios';
 import { NAMINGS, namingStates, registryOf } from '../../dev/foreign';
 import { configOf, parseState } from '../../dev/url-state';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
-import { COMPACT_BELOW } from '../../src/lib/layout';
+import { VERTICAL_BELOW } from '../../src/lib/layout';
 
 afterEach(() => {
   document.body.replaceChildren();
@@ -21,7 +21,7 @@ async function render(
   width = 900,
   name: (typeof SCENARIO_NAMES)[number] = SCENARIO_NAMES[0],
 ): Promise<ShadowRoot> {
-  const state = parseState(`?scenario=${name}&${query}&layout=full&detail=simplified`);
+  const state = parseState(`?scenario=${name}&${query}&layout=horizontal`);
   const wrapper = document.createElement('div');
   wrapper.style.fontFamily = EMULATOR_FONT.family;
   wrapper.style.fontSize = EMULATOR_FONT.size;
@@ -98,9 +98,9 @@ describe('Pipe and caption overlaps', () => {
     expect(added(root, before)).toEqual(['label compressor_speed x edge']);
   });
 
-  test("the ground loop's Out value stays at least 2 px inside the drawing at the compact threshold", async () => {
+  test("the ground loop's Out value stays at least 2 px inside the drawing at the vertical threshold", async () => {
     for (const source of ['ground', 'hybrid']) {
-      const root = await render(`source=${source}`, COMPACT_BELOW, 'defrost');
+      const root = await render(`source=${source}`, VERTICAL_BELOW, 'defrost');
       const label = root.querySelector(
         `.label[data-label="${source === 'ground' ? 'ground_out' : 'hybrid_ground_out'}"]`,
       );
@@ -127,7 +127,7 @@ describe('Pipe and caption overlaps', () => {
   });
 
   test('a caption box is no taller than its rendered text', async () => {
-    for (const width of [400, 900]) {
+    for (const width of [VERTICAL_BELOW, 900]) {
       const root = await render('source=ground', width);
       const captions = measureCard(root, { pipes: true }).captions ?? [];
       expect(captions.length).toBeGreaterThan(0);

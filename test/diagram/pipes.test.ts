@@ -24,10 +24,9 @@ import {
 import { cabinetStyles } from '../../src/diagram/cabinet';
 import { readings } from '../helpers';
 
-// the scenarios draw detail full
-const full = arrangementFor('full', 'full');
-const COMPONENTS = full.components;
-const SEGMENTS = full.segments;
+const horizontal = arrangementFor('horizontal');
+const COMPONENTS = horizontal.components;
+const SEGMENTS = horizontal.segments;
 
 interface Options {
   mode: Mode;
@@ -45,7 +44,7 @@ function scenario(
   const features = mergeFeatures(4, options.features ?? {});
   const dhw = options.dhw ?? 'external';
   const model = dhw === 'internal' ? 'C' : 'B';
-  const context = { model, dhw, source: options.source ?? 'air', features, detail: 'full' } as const;
+  const context = { model, dhw, source: options.source ?? 'air', features } as const;
   const rd = base ?? readings(values);
   const view: PipeView = {
     mode: options.mode,
@@ -274,7 +273,7 @@ describe('flow animation', () => {
 
   test('stubs are coloured but never animated', () => {
     const { get } = scenario({ mode: 'heating' }, HEATING);
-    for (const id of ['p1_stub', 'p2_stub', 'prod_tap_a', 'prod_drain', 'brine_tap_a', 'brine_drain', 'htr_drain']) {
+    for (const id of ['p1_stub', 'p2_stub', 'prod_tap_a', 'brine_tap_a', 'htr_drain']) {
       const state = SEGMENTS.find((segment) => segment.id === id);
       expect(state?.stub, id).toBe(true);
       expect(get(id).animated, id).toBe(false);

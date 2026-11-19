@@ -104,8 +104,6 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
       return svg`<circle r="9" />${stem(16, 9)}${letter('T', rotation)}`;
     case 'transducer_p':
       return svg`<circle r="9" />${stem(16, 9)}${letter('P', rotation)}`;
-    case 'pressure_switch':
-      return svg`<rect x="-7" y="-7" width="14" height="14" />${stem(16, 7)}${letter('P', rotation)}`;
     case 'thermostat':
       return svg`<rect x="-7" y="-7" width="14" height="14" />${stem(16, 7)}${letter('T', rotation)}`;
     case 'exchanger': {
@@ -117,10 +115,6 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
       // the standard compressor symbol: a circle and two straight lines that start on it at the suction side and
       // converge towards the discharge side. Drawn with the suction at +x and the discharge at -x, turned by the rotation.
       return svg`<circle r="14" /><path class="compressor-lines" d="${COMPRESSOR_LINES}" />`;
-    case 'vessel':
-      return svg`<circle r="12" /><path d="M-12 2 H12" />`;
-    case 'safety_valve':
-      return svg`<path d="M0 16 V6 M-6 6 H6 L0 -4 Z M0 -4 L-3 -7 L3 -10 L0 -13" />`;
     case 'valve':
       return svg`<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z" />`;
     case 'drain_valve':
@@ -131,8 +125,6 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
       return svg`<rect x="-14" y="-5" width="28" height="10" rx="5" />`;
     case 'expansion_valve':
       return svg`<path d="M-12 -6 V6 L0 0 L12 -6 V6 L0 0 Z" />`;
-    case 'service_outlet':
-      return svg`<rect x="-3" y="-3" width="6" height="6" />${stem(10, 3)}`;
     case 'port':
       return svg`<rect x="-5" y="-6" width="10" height="6" />`;
     case 'tank':

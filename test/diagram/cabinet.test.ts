@@ -8,9 +8,9 @@ import { CIRCUIT_LABELS, MODE_LABELS } from '../../src/strings';
 import { states } from '../helpers';
 
 // the default config draws the simplified level
-const full = arrangementFor('simplified', 'full');
-const COMPONENTS = full.components;
-const SEGMENTS = full.segments;
+const horizontal = arrangementFor('horizontal');
+const COMPONENTS = horizontal.components;
+const SEGMENTS = horizontal.segments;
 
 const P = 'demo_ecogeo';
 
@@ -127,31 +127,28 @@ describe('cabinet drawing', () => {
     card.remove();
   });
 
-  test('with detail full every component carries its item number as text', async () => {
-    const card = await mount({ variant: 4, detail: 'full' });
-    for (const group of root(card).querySelectorAll('[data-item]')) {
-      expect(group.querySelector('text.item')?.textContent.trim()).toBe(group.getAttribute('data-item'));
-    }
+  test('no component carries an item number as text', async () => {
+    const card = await mount({ variant: 4 });
+    expect(root(card).querySelectorAll('[data-item]').length).toBeGreaterThan(0);
+    expect(root(card).querySelectorAll('[data-item] text:not(.glyph)')).toHaveLength(0);
     card.remove();
   });
 
-  test('variant 4 with every feature true and detail full draws the refrigerant and hydraulic items', async () => {
-    const card = await mount({ variant: 4, detail: 'full' });
+  test('variant 4 with every feature true draws the refrigerant and hydraulic items, and none of the service and safety parts', async () => {
+    const card = await mount({ variant: 4 });
     const drawn = new Set(items(card));
-    for (const item of [7, 8, 11, 12, 13, 14, 29, 30, 35, 36, 39, 40, 41])
-      expect(drawn.has(item), String(item)).toBe(true);
-    for (const item of [
-      9, 10, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33, 34, 37, 38, 44, 45,
-    ]) {
+    for (const item of [7, 8, 11, 12, 13, 14, 29, 30, 35, 36]) expect(drawn.has(item), String(item)).toBe(true);
+    for (const item of [9, 10, 15, 16, 17, 22, 25, 26, 27, 28, 31, 32, 33, 34, 37, 38, 44, 45]) {
       expect(drawn.has(item), String(item)).toBe(true);
     }
+    for (const item of [18, 19, 20, 21, 23, 24, 39, 40, 41]) expect(drawn.has(item), String(item)).toBe(false);
     card.remove();
   });
 
   test('every declared crossing breaks the pipe under it', async () => {
-    const card = await mount({ variant: 4, dhw: 'external', detail: 'full' });
+    const card = await mount({ variant: 4, dhw: 'external' });
     const path = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
-    const CROSSINGS = arrangementFor('full', 'full').crossings;
+    const CROSSINGS = arrangementFor('horizontal').crossings;
     const unders = [...new Set(CROSSINGS.map((crossing) => crossing.under))];
     for (const id of unders) {
       const wanted = CROSSINGS.filter((crossing) => crossing.under === id).length;

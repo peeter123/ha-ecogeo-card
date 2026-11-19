@@ -12,7 +12,7 @@ import { AIR_UNIT_FAN_NAME, COMPONENT_NAMES, DHW_LABELS, componentLabel } from '
 import { states } from '../helpers';
 
 // the default config draws the simplified level
-const simplified = arrangementFor('simplified', 'full');
+const simplified = arrangementFor('horizontal');
 const COMPONENTS = simplified.components;
 
 const P = 'demo_ecogeo';
@@ -58,7 +58,7 @@ describe('component names', () => {
   });
 
   test('connections carry their name too', async () => {
-    const card = await mount({ detail: 'simplified' });
+    const card = await mount();
     expect(group(card, 1).querySelector('title')?.textContent).toBe('Production outlet (1)');
     expect(group(card, 4).getAttribute('aria-label')).toBe('Brine inlet (4)');
     card.remove();
@@ -68,10 +68,10 @@ describe('component names', () => {
     ['B', 'external'],
     ['B', 'none'],
     ['C', 'internal'],
-  ] as const)('every component named: model %s, dhw %s, detail full, every feature true', async (model, dhw) => {
-    const card = await mount({ model, dhw, detail: 'full', features: ALL_TRUE });
+  ] as const)('every component named: model %s, dhw %s, every feature true', async (model, dhw) => {
+    const card = await mount({ model, dhw, features: ALL_TRUE });
     const groups = [...root(card).querySelectorAll<SVGElement>('[data-item]')];
-    expect(groups.length).toBeGreaterThan(30);
+    expect(groups.length).toBeGreaterThan(25);
     for (const element of groups) {
       const item = element.getAttribute('data-item') ?? '';
       const title = element.querySelector('title')?.textContent ?? '';
@@ -110,7 +110,7 @@ describe('component-to-role table', () => {
   });
 
   test('every drawn item with exactly one role in the role table has that role as its entry', async () => {
-    const card = await mount({ model: 'C', detail: 'full', features: ALL_TRUE });
+    const card = await mount({ model: 'C', features: ALL_TRUE });
     const drawn = [...root(card).querySelectorAll('[data-item]')].map((e) => Number(e.getAttribute('data-item')));
     for (const item of drawn) {
       const sameItem = ROLES.filter((spec) => spec.item === String(item));
@@ -189,7 +189,7 @@ describe('tap a component', () => {
   });
 
   test('every entry of the table opens the entity of its role', async () => {
-    const card = await mount({ model: 'C', dhw: 'internal', detail: 'full', features: ALL_TRUE, ...live }, hass);
+    const card = await mount({ model: 'C', dhw: 'internal', features: ALL_TRUE, ...live }, hass);
     const seen = listen(card);
     const entities = ROLES.filter((spec) => Object.values(COMPONENT_ROLES).includes(spec.path));
     for (const [item, role] of Object.entries(COMPONENT_ROLES)) {
@@ -227,7 +227,7 @@ describe('tap a component', () => {
   });
 
   test('only the components of the table are buttons', async () => {
-    const card = await mount({ ...live, model: 'C', detail: 'full', features: ALL_TRUE }, hass);
+    const card = await mount({ ...live, model: 'C', features: ALL_TRUE }, hass);
     for (const element of root(card).querySelectorAll<SVGElement>('[data-item]')) {
       const item = Number(element.getAttribute('data-item'));
       expect(element.getAttribute('role') === 'button', String(item)).toBe(item in COMPONENT_ROLES);
@@ -244,7 +244,7 @@ describe('tap a component', () => {
   });
 
   test('sample mode: no component is tappable', async () => {
-    const card = await mount({ model: 'C', detail: 'full', features: ALL_TRUE });
+    const card = await mount({ model: 'C', features: ALL_TRUE });
     const seen = listen(card);
     expect(root(card).querySelectorAll('[role="button"]')).toHaveLength(0);
     expect(root(card).querySelectorAll('[tabindex]')).toHaveLength(0);

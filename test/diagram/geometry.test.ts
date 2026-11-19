@@ -1,14 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { CircuitId, Circuits } from '../../src/calc/circuits';
-import {
-  DETAIL_LEVELS,
-  DHW_STORAGES,
-  SOURCES,
-  type Detail,
-  type DhwStorage,
-  type Model,
-  type Source,
-} from '../../src/config/options';
+import { DHW_STORAGES, SOURCES, type DhwStorage, type Model, type Source } from '../../src/config/options';
 import type { RolePath } from '../../src/config/roles';
 import { FEATURE_KEYS, type FeatureKey, type FeatureState, type Features } from '../../src/config/variants';
 import {
@@ -37,24 +29,25 @@ import {
   arrangementOf,
 } from '../../src/diagram/geometry';
 
-const fullArr = arrangementFor('full', 'full');
-const AIR_PORT_Y = fullArr.airPortY;
-const AIR_UNIT_WALL_X = fullArr.airUnitWallX;
-const CABINET = fullArr.cabinet;
-const GROUND_CAPTION = fullArr.groundCaption;
-const GROUND_LINE_Y = fullArr.groundLineY;
-const GROUND_LOOP = fullArr.groundLoop;
-const COMPONENTS = fullArr.components;
-const AIR_UNIT = fullArr.airUnit;
-const CROSSINGS = fullArr.crossings;
-const EXTERNAL_TANK = fullArr.externalTank;
-const INTERNAL_TANK = fullArr.internalTank;
-const SEGMENTS = fullArr.segments;
-const viewBox = fullArr.viewBox;
+const arrangement = arrangementFor('horizontal');
+const AIR_PORT_Y = arrangement.airPortY;
+const AIR_UNIT_WALL_X = arrangement.airUnitWallX;
+const CABINET = arrangement.cabinet;
+const GROUND_CAPTION = arrangement.groundCaption;
+const GROUND_LINE_Y = arrangement.groundLineY;
+const GROUND_LOOP = arrangement.groundLoop;
+const COMPONENTS = arrangement.components;
+const AIR_UNIT = arrangement.airUnit;
+const CROSSINGS = arrangement.crossings;
+const EXTERNAL_TANK = arrangement.externalTank;
+const INTERNAL_TANK = arrangement.internalTank;
+const SEGMENTS = arrangement.segments;
+const viewBox = arrangement.viewBox;
+const portX = (item: number): number => COMPONENTS.find((component) => component.item === item)?.x ?? Number.NaN;
 
 const STATES: readonly FeatureState[] = [true, false, 'unused'];
 
-/** Every combination of the four features, the two models, the DHW storages, the three sources and the two levels of detail. */
+/** Every combination of the four features, the two models, the DHW storages, and the three sources. */
 function contexts(): DrawContext[] {
   const result: DrawContext[] = [];
   const build = (index: number, features: Partial<Record<FeatureKey, FeatureState>>): void => {
@@ -63,9 +56,7 @@ function contexts(): DrawContext[] {
       for (const model of ['B', 'C'] as const) {
         for (const dhw of DHW_STORAGES) {
           for (const source of SOURCES) {
-            for (const detail of DETAIL_LEVELS) {
-              result.push({ model, dhw, source, detail, features: features as Features });
-            }
+            result.push({ model, dhw, source, features: features as Features });
           }
         }
       }
@@ -81,17 +72,15 @@ const ALL = contexts();
 const full = (
   dhw: DhwStorage = 'external',
   source: Source = 'ground',
-  detail: Detail = 'full',
   model: Model = dhw === 'internal' ? 'C' : 'B',
 ): DrawContext => ({
   model,
   dhw,
   source,
-  detail,
   features: { active_cooling: true, passive_cooling: true, htr: true, backup_heater: true },
 });
 const label = (context: DrawContext): string =>
-  `${context.detail} ${context.model} ${context.dhw} ${context.source} ${JSON.stringify(context.features)}`;
+  `${context.model} ${context.dhw} ${context.source} ${JSON.stringify(context.features)}`;
 const items = (context: DrawContext): number[] => drawnComponents(context).map((entry) => entry.part.item);
 const ids = (context: DrawContext): string[] => drawnSegments(context).map((entry) => entry.part.id);
 const circuits = (valves2728: Circuits['valves2728'], active: readonly CircuitId[]): Circuits => ({
@@ -113,10 +102,10 @@ const enters = (points: readonly Point[], rect: { x: number; y: number; width: n
   });
 
 describe('geometry data', () => {
-  test('the viewBox and the cabinet fit the zones of add-schematic-card D5', () => {
-    expect(viewBox).toEqual({ width: 1000, height: 620 });
-    expect(CABINET.x).toBe(240);
-    expect(CABINET.x + CABINET.width).toBe(760);
+  test('the viewBox and the cabinet fit the zones of the arrangement (refine-simplified-layout D2)', () => {
+    expect(viewBox).toEqual({ width: 1000, height: 545 });
+    expect(CABINET.x).toBe(200);
+    expect(CABINET.x + CABINET.width).toBe(820);
     expect(CABINET.y).toBe(130);
   });
 
@@ -181,7 +170,7 @@ describe('geometry data', () => {
     }
   });
 
-  test.each([fullArr, arrangementFor('simplified', 'full')])(
+  test.each([arrangement])(
     'every crossing lies strictly inside the cabinet and at least a hop from the corners of the pipe it breaks ($id)',
     (arr) => {
       const segmentPoints = (id: string): readonly Point[] =>
@@ -214,9 +203,12 @@ describe('geometry data', () => {
 
   test('gapsIn: no gap when the pipe on top is not drawn', () => {
     const idsOf = (context: DrawContext): Set<string> => new Set(ids(context));
-    expect(gapsIn(fullArr, 'p2_in', idsOf(full('external')))).toContainEqual([312, 172]);
-    expect(gapsIn(fullArr, 'p2_in', idsOf(full('none')))).toEqual([]);
-    expect(pathData(segmentPoints('p2_in'), gapsIn(fullArr, 'p2_in', idsOf(full('none'))))).toBe('M312 130 L312 198');
+    const [x, y0, y1] = [portX(2), CABINET.y, segmentPoints('p2_in').at(-1)?.[1] ?? 0];
+    expect(gapsIn(arrangement, 'p2_in', idsOf(full('external')))).toContainEqual([x, 172]);
+    expect(gapsIn(arrangement, 'p2_in', idsOf(full('none')))).toEqual([]);
+    expect(pathData(segmentPoints('p2_in'), gapsIn(arrangement, 'p2_in', idsOf(full('none'))))).toBe(
+      `M${String(x)} ${String(y0)} L${String(x)} ${String(y1)}`,
+    );
   });
 });
 
@@ -297,12 +289,10 @@ describe('integrity in every configuration', () => {
     expect(has('dhw_ext_'), 'external').toBe(drawnStorage(context) === 'external');
     expect(has('tap_'), 'taps').toBe(drawnStorage(context) === 'internal');
     const drawnItems = components.map((component) => component.item);
-    for (const item of [47, 48, 49, 50, 51, 52, 53, 54]) {
-      const serviceOnly = item === 52 || item === 53;
-      expect(drawnItems.includes(item), `item ${String(item)}`).toBe(
-        drawnStorage(context) === 'internal' && (!serviceOnly || context.detail === 'full'),
-      );
+    for (const item of [47, 48, 49, 50, 51, 54]) {
+      expect(drawnItems.includes(item), `item ${String(item)}`).toBe(drawnStorage(context) === 'internal');
     }
+    for (const item of [52, 53]) expect(drawnItems.includes(item), `item ${String(item)}`).toBe(false);
 
     // the source and external DHW pipes stay above y 100 outside the cabinet (the circuit labels' glyphs reach about
     // y 104)
@@ -411,11 +401,12 @@ describe('feature states', () => {
     expect(ids(full('none'))).not.toContain('p1_up');
   });
 
-  test('the internal tank of model C has no ports 5/6 and items 47 to 54', () => {
+  test('the internal tank of model C has no ports 5/6 and items 47 to 51 and 54 (52 and 53 are not drawn)', () => {
     expect(items(full('internal'))).not.toContain(5);
     expect(items(full('internal'))).not.toContain(6);
     expect(items(full('internal'))).toContain(26);
-    for (const item of [47, 48, 49, 50, 51, 52, 53, 54]) expect(items(full('internal'))).toContain(item);
+    for (const item of [47, 48, 49, 50, 51, 54]) expect(items(full('internal'))).toContain(item);
+    for (const item of [52, 53]) expect(items(full('internal'))).not.toContain(item);
   });
 
   test('the segments that carry HTR water are the DHW lines outside the arm of valve 26 and the external tank pipes', () => {
@@ -475,10 +466,10 @@ describe('feature states', () => {
   test('the source pipes leave from ports 3 and 4 and the DHW pipes from ports 5 and 6', () => {
     const start = (id: string): Point | undefined => segmentPoints(id)[0];
     const end = (id: string): Point | undefined => segmentPoints(id).at(-1);
-    expect(start('src_out')).toEqual([630, 130]);
-    expect(end('src_in')).toEqual([690, 130]);
-    expect(start('dhw_ext_in')).toEqual([722, 130]);
-    expect(end('dhw_ext_out')).toEqual([748, 130]);
+    expect(start('src_out')).toEqual([portX(3), 130]);
+    expect(end('src_in')).toEqual([portX(4), 130]);
+    expect(start('dhw_ext_in')).toEqual([portX(5), 130]);
+    expect(end('dhw_ext_out')).toEqual([portX(6), 130]);
   });
 
   test('the source parts follow the source option', () => {
@@ -881,35 +872,25 @@ describe('exchanger sides in every configuration', () => {
   );
 });
 
-describe('arrangementFor (refine-simplified-layout D1, D7)', () => {
-  test('the compact layout draws the simplified arrangement at either level', () => {
-    const simplified = arrangementFor('simplified', 'full');
-    expect(simplified.id).toBe('simplified');
-    expect(arrangementFor('simplified', 'compact')).toBe(simplified);
-    expect(arrangementFor('full', 'compact')).toBe(simplified);
+describe('arrangementFor (rework-layouts D2)', () => {
+  test('both layouts draw the one arrangement until the vertical one is built', () => {
+    const horizontal = arrangementFor('horizontal');
+    expect(horizontal.id).toBe('horizontal');
+    expect(arrangementFor('vertical')).toBe(horizontal);
   });
 
-  test('the simplified level in the full layout has its own arrangement', () => {
-    expect(arrangementFor('simplified', 'full').id).toBe('simplified');
-    expect(arrangementFor('simplified', 'full')).not.toBe(arrangementFor('full', 'full'));
-  });
-
-  test('it is a pure function: the same inputs give the same value', () => {
-    for (const level of DETAIL_LEVELS) {
-      for (const layout of ['full', 'compact'] as const) {
-        expect(arrangementFor(level, layout)).toBe(arrangementFor(level, layout));
-      }
+  test('it is a pure function: the same input gives the same value', () => {
+    for (const layout of ['horizontal', 'vertical'] as const) {
+      expect(arrangementFor(layout)).toBe(arrangementFor(layout));
     }
   });
 
-  test('a draw context without an arrangement gets the full layout one of its detail level', () => {
-    for (const detail of DETAIL_LEVELS) {
-      expect(arrangementOf({ detail })).toBe(arrangementFor(detail, 'full'));
-    }
+  test('a draw context without an arrangement gets the horizontal one', () => {
+    expect(arrangementOf({})).toBe(arrangementFor('horizontal'));
   });
 
   test('a draw context with an arrangement keeps it', () => {
-    const arrangement = arrangementFor('full', 'full');
-    expect(arrangementOf({ detail: 'simplified', arrangement })).toBe(arrangement);
+    const own = { ...arrangementFor('horizontal') };
+    expect(arrangementOf({ arrangement: own })).toBe(own);
   });
 });

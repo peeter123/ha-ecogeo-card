@@ -35,35 +35,35 @@ async function expectLayout(card: EcogeoCard, layout: string): Promise<void> {
 }
 
 describe('layout at real widths', () => {
-  test('Auto on a phone: 360 px is compact', async () => {
+  test('Auto on a phone: 360 px is vertical', async () => {
     const { card } = await show(360);
-    await expectLayout(card, 'compact');
+    await expectLayout(card, 'vertical');
   });
 
-  test('Auto on a wide card: 1000 px is full', async () => {
+  test('Auto on a wide card: 1000 px is horizontal', async () => {
     const { card } = await show(1000);
-    await expectLayout(card, 'full');
+    await expectLayout(card, 'horizontal');
   });
 
-  test('Forced full: layout full at 360 px is full', async () => {
-    const { card } = await show(360, { layout: 'full' });
+  test('Forced horizontal: layout horizontal at 360 px is horizontal', async () => {
+    const { card } = await show(360, { layout: 'horizontal' });
     await expect.poll(() => card.width).toBe(360);
-    await expectLayout(card, 'full');
+    await expectLayout(card, 'horizontal');
   });
 
-  test('Forced compact at 1000 px is compact', async () => {
-    const { card } = await show(1000, { layout: 'compact' });
+  test('Forced vertical at 1000 px is vertical', async () => {
+    const { card } = await show(1000, { layout: 'vertical' });
     await expect.poll(() => card.width).toBe(1000);
-    await expectLayout(card, 'compact');
+    await expectLayout(card, 'vertical');
   });
 
   test('resizing the wrapper switches the layout both ways', async () => {
     const { card, wrapper } = await show(360);
-    await expectLayout(card, 'compact');
+    await expectLayout(card, 'vertical');
     wrapper.style.width = '1000px';
-    await expectLayout(card, 'full');
+    await expectLayout(card, 'horizontal');
     wrapper.style.width = '360px';
-    await expectLayout(card, 'compact');
+    await expectLayout(card, 'vertical');
   });
 });
 
@@ -77,6 +77,6 @@ describe('the layout property Home Assistant assigns', () => {
       expect(() => {
         assign(value);
       }).not.toThrow();
-    await expectLayout(card, 'compact');
+    await expectLayout(card, 'vertical');
   });
 });

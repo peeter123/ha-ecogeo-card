@@ -23,7 +23,7 @@ function widthOf(css: string, selector: string): number {
 describe('line weights (schematic-drawing spec)', () => {
   test('pipe stroke: every pipe base stroke is 3 units or more and every component outline 2 units or more', async () => {
     const card = document.createElement('ecogeo-card') as EcogeoCard;
-    card.setConfig({ type: 'custom:ecogeo-card', source: 'hybrid', detail: 'full' });
+    card.setConfig({ type: 'custom:ecogeo-card', source: 'hybrid' });
     document.body.append(card);
     await card.updateComplete;
     const root = card.shadowRoot;
@@ -40,7 +40,7 @@ describe('line weights (schematic-drawing spec)', () => {
 
     // every component symbol carries its outline width on the group
     const symbols = [...root.querySelectorAll('.symbol')];
-    expect(symbols.length).toBeGreaterThan(40);
+    expect(symbols.length).toBeGreaterThan(30);
     for (const symbol of symbols) {
       expect(Number(symbol.getAttribute('stroke-width')), symbol.getAttribute('class') ?? '').toBeGreaterThanOrEqual(2);
     }

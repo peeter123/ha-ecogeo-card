@@ -8,20 +8,23 @@ import type { HassLike } from '../../src/lib/hass';
 import { SOURCE_LABELS } from '../../src/strings';
 import { states } from '../helpers';
 
-// the literal coordinates below are the full arrangement's (the simplified one has its own, test/diagram/simplified.test.ts)
-const full = arrangementFor('full', 'full');
-const AIR_PORT_Y = full.airPortY;
-const AIR_UNIT = full.airUnit;
-const CABINET = full.cabinet;
-const GROUND_CAPTION = full.groundCaption;
-const GROUND_LINE_Y = full.groundLineY;
-const GROUND_LOOP = full.groundLoop;
+// the coordinates below come from the arrangement (the manual-figure frame's are in test/diagram/simplified.test.ts)
+const horizontal = arrangementFor('horizontal');
+const AIR_PORT_Y = horizontal.airPortY;
+const AIR_UNIT = horizontal.airUnit;
+const CABINET = horizontal.cabinet;
+const GROUND_CAPTION = horizontal.groundCaption;
+const GROUND_LINE_Y = horizontal.groundLineY;
+const GROUND_LOOP = horizontal.groundLoop;
+const GROUND_LINE_X = horizontal.groundLineX;
+const portX = (item: number): number =>
+  horizontal.components.find((component) => component.item === item)?.x ?? Number.NaN;
 
 const P = 'demo_ecogeo';
 
 async function mount(config: CardConfig = {}, hass?: HassLike): Promise<EcogeoCard> {
   const card = document.createElement('ecogeo-card') as EcogeoCard;
-  card.setConfig({ type: 'custom:ecogeo-card', detail: 'full', ...config });
+  card.setConfig({ type: 'custom:ecogeo-card', ...config });
   if (hass !== undefined) card.hass = hass;
   document.body.append(card);
   await card.updateComplete;
@@ -48,8 +51,11 @@ describe('outer-loop source', () => {
       const card = await mount({ source });
       expect(segments(card), source).toEqual(expect.arrayContaining(['src_out', 'src_in']));
       const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
-      expect(d('src_out').startsWith('M630 130 L630 85'), source).toBe(true);
-      expect(d('src_in').endsWith('L690 130'), source).toBe(true);
+      expect(
+        d('src_out').startsWith(`M${String(portX(3))} 130 L${String(portX(3))} ${String(horizontal.run.outY)}`),
+        source,
+      ).toBe(true);
+      expect(d('src_in').endsWith(`L${String(portX(4))} 130`), source).toBe(true);
       card.remove();
     }
   });
@@ -147,12 +153,16 @@ describe('outer-loop source', () => {
       const line = root(card).querySelector('.ground-loop path.source-ground');
       if (source === 'ground') {
         expect(housing).toBeNull();
-        expect(line?.getAttribute('d')).toBe(`M8 ${String(CABINET.y)} H220`);
+        expect(line?.getAttribute('d')).toBe(
+          `M${String(GROUND_LINE_X.start)} ${String(CABINET.y)} H${String(GROUND_LINE_X.end)}`,
+        );
       } else {
         expect(Number(housing?.getAttribute('y')), source).toBe(CABINET.y);
         if (source === 'hybrid') {
           // the ground loop moves down with the air unit: its line is under the housing
-          expect(line?.getAttribute('d')).toBe(`M8 ${String(GROUND_LINE_Y.hybrid)} H220`);
+          expect(line?.getAttribute('d')).toBe(
+            `M${String(GROUND_LINE_X.start)} ${String(GROUND_LINE_Y.hybrid)} H${String(GROUND_LINE_X.end)}`,
+          );
           expect(GROUND_LINE_Y.hybrid).toBeGreaterThan(CABINET.y + AIR_UNIT.height);
         }
       }
@@ -264,7 +274,7 @@ describe('fan speed in another unit', () => {
     const hass: HassLike = {
       states: states([`sensor.${P}_aerothermal_fan_speed`, '900', 'rpm']),
     };
-    const card = await mount({ prefix: P, source: 'air', layout: 'full' }, hass);
+    const card = await mount({ prefix: P, source: 'air', layout: 'horizontal' }, hass);
     expect(fan(card)?.classList.contains('still')).toBe(false);
     expect(fan(card)?.getAttribute('style') ?? '').toContain('--fan-duration: 3s');
     expect(root(card).querySelector('[data-label="fan_speed"] .value')?.textContent.trim()).toBe('900 rpm');

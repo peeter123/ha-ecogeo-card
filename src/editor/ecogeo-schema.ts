@@ -9,7 +9,6 @@ import {
   prefixOf,
   defaultDhw,
   DHW_STORAGES,
-  DETAIL_OPTION,
   DHW_OPTION,
   EXCHANGER_FILL_OPTION,
   LAYOUT_OPTION,
@@ -232,7 +231,6 @@ export function editorSchema(
       name: 'appearance',
       flatten: true,
       schema: [
-        choiceField('detail', DETAIL_OPTION, EDITOR.choices.detail),
         choiceField('exchanger_fill', EXCHANGER_FILL_OPTION, EDITOR.choices.exchanger_fill),
         choiceField('layout', LAYOUT_OPTION, EDITOR.choices.layout),
         ...colorRowFields(colorRows),

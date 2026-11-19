@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { FEATURE_KEYS, variantFeatures, VARIANTS } from '../src/config/variants';
 import { TOP_LEVEL_OPTIONS } from '../src/config/options';
-import { COMPACT_BELOW, COMPACT_BELOW_FULL, COMPACT_HYSTERESIS } from '../src/lib/layout';
+import { VERTICAL_BELOW, VERTICAL_HYSTERESIS } from '../src/lib/layout';
 import { ROLES } from '../src/config/roles';
 import { EDITOR, MODE_LABELS } from '../src/strings';
 import { README, rowCells, section, tableNames } from './readme';
@@ -50,16 +50,17 @@ describe('README configuration reference', () => {
     for (const label of Object.values(MODE_LABELS)) expect(text, label).toContain(label);
   });
 
-  test('the README names the compact threshold and the width where the card returns to full', () => {
+  test('the README names the vertical threshold and the width where the card returns to horizontal', () => {
     const text = README.replace(/\s+/g, ' ');
-    expect(text).toContain(`from ${String(COMPACT_BELOW)} px wide`);
-    expect(text).toContain(`narrower than ${String(COMPACT_BELOW)} px`);
-    expect(text).toContain(`only at ${String(COMPACT_BELOW + COMPACT_HYSTERESIS)} px`);
-    expect(text).toContain(`from ${String(COMPACT_BELOW_FULL)} px wide with \`detail: full\``);
-    expect(text).toContain(
-      `narrower than ${String(COMPACT_BELOW)} px (${String(COMPACT_BELOW_FULL)} px with \`detail: full\`)`,
-    );
-    expect(text).toContain(`${String(COMPACT_BELOW_FULL + COMPACT_HYSTERESIS)} px with \`detail: full\``);
+    expect(text).toContain(`from ${String(VERTICAL_BELOW)} px wide`);
+    expect(text).toContain(`narrower than ${String(VERTICAL_BELOW)} px`);
+    expect(text).toContain(`only at ${String(VERTICAL_BELOW + VERTICAL_HYSTERESIS)} px`);
+  });
+
+  test('the README documents the layout values and no detail option', () => {
+    const text = section('### Options');
+    expect(rowCells(text, 'layout')[1]).toBe('`auto`, `horizontal`, `vertical`');
+    expect([...tableNames(text)]).not.toContain('detail');
   });
 
   test('the visual editor section names every section of the editor', () => {

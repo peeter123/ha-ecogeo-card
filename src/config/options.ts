@@ -16,20 +16,11 @@ export const SOURCES = ['air', 'ground', 'hybrid'] as const;
 export type Source = (typeof SOURCES)[number];
 export const DHW_STORAGES = ['external', 'internal', 'unused', 'none'] as const;
 export type DhwStorage = (typeof DHW_STORAGES)[number];
-export const DETAIL_LEVELS = ['simplified', 'full'] as const;
-export type Detail = (typeof DETAIL_LEVELS)[number];
 
 export const MODEL_OPTION: ChoiceOption = { kind: 'choice', path: 'model', default: 'B', choices: MODELS };
 export const SOURCE_OPTION: ChoiceOption = { kind: 'choice', path: 'source', default: 'ground', choices: SOURCES };
 // The default of dhw depends on the model (defaultDhw); this default is not used.
 export const DHW_OPTION: ChoiceOption = { kind: 'choice', path: 'dhw', default: 'external', choices: DHW_STORAGES };
-/** The level of detail of the drawing (refine-schematic-drawing D1): without the service and safety parts and the item numbers, or all. */
-export const DETAIL_OPTION: ChoiceOption = {
-  kind: 'choice',
-  path: 'detail',
-  default: 'simplified',
-  choices: DETAIL_LEVELS,
-};
 export const EXCHANGER_FILLS = ['gradient', 'none'] as const;
 export type ExchangerFill = (typeof EXCHANGER_FILLS)[number];
 /** How the plate exchangers 7-10 are filled (refine-schematic-drawing D4): a gradient per side from the pipes' colours, or not at all. */
@@ -39,16 +30,15 @@ export const EXCHANGER_FILL_OPTION: ChoiceOption = {
   default: 'gradient',
   choices: EXCHANGER_FILLS,
 };
-export const LAYOUTS = ['auto', 'full', 'compact'] as const;
+export const LAYOUTS = ['auto', 'horizontal', 'vertical'] as const;
 export type Layout = (typeof LAYOUTS)[number];
-/** The layout of the card (add-compact-layout D1): `auto` picks by the card's width, `full` and `compact` force one. */
+/** The layout of the card (rework-layouts D8): `auto` picks by the card's width, `horizontal` and `vertical` force one. */
 export const LAYOUT_OPTION: ChoiceOption = { kind: 'choice', path: 'layout', default: 'auto', choices: LAYOUTS };
 /** The choice options, checked by lib/options.ts. */
 export const CHOICE_OPTIONS: readonly OptionSpec[] = [
   MODEL_OPTION,
   SOURCE_OPTION,
   DHW_OPTION,
-  DETAIL_OPTION,
   EXCHANGER_FILL_OPTION,
   LAYOUT_OPTION,
 ];
@@ -67,7 +57,6 @@ export const TOP_LEVEL_OPTIONS: readonly string[] = [
   'entities',
   'states',
   'colors',
-  'detail',
   'exchanger_fill',
   'layout',
   'view_layout',
@@ -118,9 +107,6 @@ export function installationOf(config: CardConfig): { model: Model; source: Sour
     dhw: dhwSet ? (optionValue(config, DHW_OPTION) as DhwStorage) : defaultDhw(model),
   };
 }
-
-/** The level of detail, `simplified` unless set. Call after configErrors found no problem. */
-export const detailOf = (config: CardConfig): Detail => optionValue(config, DETAIL_OPTION) as Detail;
 
 /** The exchanger fill, `gradient` unless set. Call after configErrors found no problem. */
 export const exchangerFillOf = (config: CardConfig): ExchangerFill =>

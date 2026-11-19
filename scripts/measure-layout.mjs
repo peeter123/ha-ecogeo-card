@@ -1,9 +1,9 @@
-// `npm run measure-layout`: measures the compact threshold (add-compact-layout D6). Opens every emulator scenario in
-// the forced full layout at the chosen detail level (`--detail=full|simplified`, default simplified), sets the card's width from 320 to 800 px in 20 px steps and,
+// `npm run measure-layout`: measures the vertical threshold (add-compact-layout D6, rework-layouts D8). Opens every emulator scenario in
+// the forced horizontal layout, sets the card's width from 320 to 800 px in 20 px steps and,
 // per width, checks overlaps in the DOM: the bounding boxes of the value labels (the card's `.label` elements)
 // against each other and against the component groups of the drawing (`g.symbol-group`, `g.dhw-storage`,
 // `g.air-unit`, and the marks of `g.ground-loop`). The threshold is the narrowest width at which every case has zero overlaps and
-// every wider measured width does too (a width of the 20 px grid). Paste it into COMPACT_BELOW (simplified) or COMPACT_BELOW_FULL (full) in src/lib/layout.ts.
+// every wider measured width does too (a width of the 20 px grid). Paste it into VERTICAL_BELOW in src/lib/layout.ts.
 //
 // The check counts pipes and captions too (dev/overlaps.ts) and prints the most frequent pairs; `--no-pipes` leaves them
 // out, which is the measurement of before refine-simplified-layout.
@@ -24,10 +24,6 @@ const WIDTHS = only === undefined ? GRID : only.slice('--widths='.length).split(
 const quiet = process.argv.includes('--quiet');
 // Pipes and captions count by default (refine-simplified-layout D4); `--no-pipes` measures labels and components only.
 const pipes = !process.argv.includes('--no-pipes');
-// `--detail=full|simplified` picks the detail level measured (refine-simplified-layout D11); the default is simplified.
-const detailArg = process.argv.find((arg) => arg.startsWith('--detail='));
-const detail = detailArg === undefined ? 'simplified' : detailArg.slice('--detail='.length);
-if (detail !== 'full' && detail !== 'simplified') throw new Error(`--detail must be full or simplified, got ${detail}`);
 
 /** Runs in the page: the shared check of dev/overlaps.ts, served by the Vite dev server. */
 async function measureInPage(/** @type {boolean} */ withPipes) {
@@ -64,7 +60,7 @@ try {
   page.on('pageerror', (error) => problems.push(error.message));
   for (const installation of INSTALLATIONS) {
     for (const name of names) {
-      const query = `scenario=${name}&${installation.query}&layout=full&detail=${detail}`;
+      const query = `scenario=${name}&${installation.query}&layout=horizontal`;
       await page.goto(new URL(`dev/index.html?${query}`, base).href);
       await page.locator('#cards[data-ready]').waitFor();
       if (await page.locator('.error:not([hidden])').count()) {

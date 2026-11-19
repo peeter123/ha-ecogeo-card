@@ -117,7 +117,7 @@ export const VALUE_CAPTIONS = {
   /** The source ports, from the device's point of view: In where the brine enters it, Out where it leaves. */
   portIn: 'In',
   portOut: 'Out',
-  /** The compact layout's short caption of the DHW tank's temperature (add-compact-layout D8), so it is not read as a brine value. */
+  /** The short caption of the DHW tank's temperature, so it is not read as a brine value. */
   dhw: 'DHW',
 } as const;
 
@@ -143,7 +143,7 @@ export const ON_OFF_LABELS: Readonly<Record<string, string>> = {
 
 /**
  * The names of the drawn components and connections by manual item (manual-figure, section 3.1 component list), the
- * tooltip and accessible name of each (see `componentLabel`). Items 42, 43 and 46 are not drawn and have no name.
+ * tooltip and accessible name of each (see `componentLabel`). Items 18-21, 23, 24, 39-43, 46, 52 and 53 are not drawn and have no name.
  */
 export const COMPONENT_NAMES: Readonly<Record<number, string>> = {
   1: 'Production outlet',
@@ -163,13 +163,7 @@ export const COMPONENT_NAMES: Readonly<Record<number, string>> = {
   15: 'Production circulator pump',
   16: 'Brine circulator pump',
   17: 'HTR circulator pump',
-  18: 'Brine expansion vessel',
-  19: 'Production expansion vessel',
-  20: 'Brine safety valve',
-  21: 'Production safety valve',
   22: 'HTR system retention valve',
-  23: 'Brine drain valve',
-  24: 'Production discharge valve',
   25: 'HTR system discharge valve',
   26: 'DHW valve',
   27: 'Passive cooling production valve',
@@ -184,9 +178,6 @@ export const COMPONENT_NAMES: Readonly<Record<number, string>> = {
   36: 'Discharge pressure transducer',
   37: 'Brine pressure transducer',
   38: 'Production pressure transducer',
-  39: 'Suction mini-pressure switch',
-  40: 'Discharge mini-pressure switch',
-  41: 'Service outlet',
   44: 'Outlet resistor',
   45: 'Safety thermostat',
   47: 'Tap water inlet',
@@ -194,8 +185,6 @@ export const COMPONENT_NAMES: Readonly<Record<number, string>> = {
   49: 'DHW recirculation',
   50: 'DHW tank',
   51: 'DHW coil',
-  52: 'Manual trap',
-  53: 'Tank drain valve',
   54: 'DHW temperature probe',
 };
 
@@ -229,7 +218,6 @@ export const EDITOR = {
     active_cooling: 'Active cooling',
     htr: 'HTR',
     backup_heater: 'Backup heater',
-    detail: 'Detail level',
     exchanger_fill: 'Exchanger fill',
     layout: 'Layout',
     _device: 'Device',
@@ -313,9 +301,8 @@ export const EDITOR = {
     variant: { '1': 'Variant 1', '2': 'Variant 2', '3': 'Variant 3', '4': 'Variant 4' },
     source: { air: 'Air unit', ground: 'Ground loop', hybrid: 'Air unit and ground loop' },
     dhw: { external: 'External tank', internal: 'Internal tank', unused: 'Tank not in use', none: 'None' },
-    detail: { simplified: 'Simplified', full: 'Full' },
     exchanger_fill: { gradient: 'Gradient', none: 'None' },
-    layout: { auto: 'Auto (by width)', full: 'Full', compact: 'Compact' },
+    layout: { auto: 'Auto (by width)', horizontal: 'Horizontal', vertical: 'Vertical' },
   },
   /** The choices of a feature: the empty one names what the variant does, so leaving it empty is a clear choice. */
   featureChoices: {

@@ -180,8 +180,8 @@ describe('colour rows typed one keystroke at a time', () => {
 
   test('a row without a temperature does not count as cleared, so the row fields never stay emptied', async () => {
     const opened = await openEditor({ ...BASE, source: 'air' });
-    opened.form.change({ ...opened.form.data, layout: 'full' });
-    expect(opened.saved).toStrictEqual([{ ...BASE, source: 'air', layout: 'full' }]);
+    opened.form.change({ ...opened.form.data, layout: 'horizontal' });
+    expect(opened.saved).toStrictEqual([{ ...BASE, source: 'air', layout: 'horizontal' }]);
   });
 });
 

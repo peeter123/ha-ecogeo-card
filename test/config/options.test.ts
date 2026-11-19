@@ -10,20 +10,28 @@ describe('card type and options', () => {
     expect(configErrors(config)).toEqual([]);
     const resolved = resolveConfig(config);
     expect([resolved.model, resolved.variant, resolved.source, resolved.dhw]).toEqual(['B', 4, 'ground', 'external']);
-    expect(resolved.detail).toBe('simplified');
+    expect(resolved.layout).toBe('auto');
     expect(resolved.exchangerFill).toBe('gradient');
   });
 
-  test('invalid detail names the option and its allowed values', () => {
-    const [message, ...rest] = errors({ detail: 'minimal' });
-    expect(rest).toEqual([]);
-    expect(message).toContain('detail');
-    expect(message).toContain('simplified, full');
+  test('the removed detail option is an unknown option, whatever its value', () => {
+    for (const detail of ['full', 'simplified', 'minimal']) {
+      const [message, ...rest] = errors({ detail });
+      expect(rest).toEqual([]);
+      expect(message).toContain('detail');
+    }
   });
 
-  test('detail full is valid and resolves', () => {
-    expect(errors({ detail: 'full' })).toEqual([]);
-    expect(resolveConfig({ detail: 'full' }).detail).toBe('full');
+  test.each(['full', 'compact', 'portrait'])('invalid layout %s names the option and its allowed values', (layout) => {
+    const [message, ...rest] = errors({ layout });
+    expect(rest).toEqual([]);
+    expect(message).toContain('layout');
+    expect(message).toContain('auto, horizontal, vertical');
+  });
+
+  test.each(['auto', 'horizontal', 'vertical'])('layout %s is valid and resolves', (layout) => {
+    expect(errors({ layout })).toEqual([]);
+    expect(resolveConfig({ layout }).layout).toBe(layout);
   });
 
   test('invalid option value names the option and its allowed values', () => {

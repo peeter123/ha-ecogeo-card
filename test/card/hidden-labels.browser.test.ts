@@ -34,8 +34,7 @@ async function show(width: number, config: CardConfig): Promise<ShadowRoot> {
 describe('Roles not present', () => {
   test('no label is rendered at items 37 and 38 with both pressure roles none, the probes stay drawn', async () => {
     const root = await show(900, {
-      layout: 'full',
-      detail: 'full',
+      layout: 'horizontal',
       entities: { production: { pressure: 'none' }, brine: { pressure: 'none' } },
     });
     expect(root.querySelectorAll('.label').length).toBeGreaterThan(0);
@@ -46,9 +45,9 @@ describe('Roles not present', () => {
     expect(overlapPairs(measureCard(root))).toEqual([]);
   });
 
-  test('absent labels do not break the overlap measurement in the compact layout', async () => {
-    const root = await show(360, {
-      layout: 'compact',
+  test('absent labels do not break the overlap measurement in the horizontal layout', async () => {
+    const root = await show(900, {
+      layout: 'horizontal',
       entities: { production: { outlet_temperature: 'none' }, unit: { cop: 'none', system_cop: 'none' } },
     });
     expect(root.querySelector('.label[data-label="production_out"]')).toBeNull();

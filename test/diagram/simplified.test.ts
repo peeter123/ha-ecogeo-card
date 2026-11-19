@@ -1,9 +1,9 @@
-// The simplified arrangement (refine-simplified-layout D2, D3; schematic-drawing "Simplified arrangement"): its own zone
-// constants for the source and the external tank, the cabinet's contents under the monotone maps, and every topology
-// rule of the full level checked on it for every source, DHW storage and model.
+// The arrangement (refine-simplified-layout D2, D3, rework-layouts D1, D2): its own zone constants for the source and the
+// external tank, the cabinet's contents under the monotone maps (compared with the manual-figure frame, `FRAME`), and every
+// topology rule checked on it for every source, DHW storage and model.
 import { describe, expect, test } from 'vitest';
 import { DHW_STORAGES, SOURCES } from '../../src/config/options';
-import { SIMPLIFIED_PLACES, labelPlacesFor } from '../../src/diagram/label-places';
+import { SIMPLIFIED_PLACES } from '../../src/diagram/label-places';
 import type { FeatureState, Features } from '../../src/config/variants';
 import {
   MAX_CROSSINGS,
@@ -11,6 +11,7 @@ import {
   SIMPLIFIED_MAP_X,
   SIMPLIFIED_MAP_Y,
   SIMPLIFIED_ZONE_SCALE,
+  FRAME,
   arrangementFor,
   crossingPoints,
   drawnComponents,
@@ -25,8 +26,9 @@ import {
   type Point,
 } from '../../src/diagram/geometry';
 
-const full = arrangementFor('full', 'full');
-const simplified = arrangementFor('simplified', 'full');
+/** The manual-figure frame the arrangement is mapped from. */
+const frame = FRAME;
+const simplified = arrangementFor('horizontal');
 
 const featuresOf = (state: FeatureState): Features => ({
   active_cooling: state,
@@ -44,7 +46,6 @@ const CONTEXTS: DrawContext[] = (['B', 'C'] as const).flatMap((model) =>
         dhw,
         source,
         features: featuresOf(state),
-        detail: 'simplified',
       })),
     ),
   ),
@@ -58,7 +59,6 @@ const VARIANT_4: DrawContext = {
   dhw: 'external',
   source: 'ground',
   features: featuresOf(true),
-  detail: 'simplified',
 };
 
 interface Box {
@@ -81,7 +81,6 @@ function localBox(part: Component): [number, number, number, number] {
     case 'probe_t':
     case 'transducer_p':
       return [-9, -9, 9, 16];
-    case 'pressure_switch':
     case 'thermostat':
       return [-7, -7, 7, 16];
     case 'exchanger': {
@@ -146,21 +145,23 @@ const last = (context: DrawContext, id: string): Point => pointsOf(context, id).
 
 describe('arrangementFor: the simplified arrangement', () => {
   test('Wider, shorter cabinet: a wider and less tall cabinet and a wider drawing', () => {
-    expect(simplified.id).toBe('simplified');
+    expect(simplified.id).toBe('horizontal');
     expect(simplified.viewBox.width).toBe(1000);
-    expect(simplified.cabinet.width).toBeGreaterThan(full.cabinet.width);
+    expect(simplified.cabinet.width).toBeGreaterThan(frame.zones.cabinet.width);
     expect(simplified.cabinet.width).toBe(620);
-    expect(simplified.cabinet.height).toBeLessThan(full.cabinet.height);
-    expect(simplified.viewBox.height / simplified.viewBox.width).toBeLessThan(full.viewBox.height / full.viewBox.width);
-    expect(simplified.cabinet.y).toBe(full.cabinet.y);
+    expect(simplified.cabinet.height).toBeLessThan(frame.zones.cabinet.height);
+    expect(simplified.viewBox.height / simplified.viewBox.width).toBeLessThan(
+      frame.zones.viewBox.height / frame.zones.viewBox.width,
+    );
+    expect(simplified.cabinet.y).toBe(frame.zones.cabinet.y);
   });
 
-  test('the full arrangement is as it was', () => {
-    expect(full.viewBox).toEqual({ width: 1000, height: 620 });
-    expect(full.cabinet).toEqual({ x: 240, y: 130, width: 520, height: 475 });
+  test("the frame is the manual figure's: the coordinates of add-schematic-card", () => {
+    expect(frame.zones.viewBox).toEqual({ width: 1000, height: 620 });
+    expect(frame.zones.cabinet).toEqual({ x: 240, y: 130, width: 520, height: 475 });
   });
 
-  test('the maps are monotone, ascending and start the cabinet where the full one does', () => {
+  test("the maps are monotone, ascending and start the cabinet where the frame's does", () => {
     for (const map of [SIMPLIFIED_MAP_X, SIMPLIFIED_MAP_Y]) {
       map.slice(1).forEach(([from, to], index) => {
         const [from0, to0] = map[index] ?? [0, 0];
@@ -169,17 +170,17 @@ describe('arrangementFor: the simplified arrangement', () => {
         expect(to - to0).toBeGreaterThanOrEqual(from - from0);
       });
     }
-    expect(mapAxis(SIMPLIFIED_MAP_X, full.cabinet.x)).toBe(simplified.cabinet.x);
-    expect(mapAxis(SIMPLIFIED_MAP_X, full.cabinet.x + full.cabinet.width)).toBe(
+    expect(mapAxis(SIMPLIFIED_MAP_X, frame.zones.cabinet.x)).toBe(simplified.cabinet.x);
+    expect(mapAxis(SIMPLIFIED_MAP_X, frame.zones.cabinet.x + frame.zones.cabinet.width)).toBe(
       simplified.cabinet.x + simplified.cabinet.width,
     );
     for (let x = 200; x < 800; x += 7)
       expect(mapAxis(SIMPLIFIED_MAP_X, x + 1)).toBeGreaterThan(mapAxis(SIMPLIFIED_MAP_X, x));
   });
 
-  test('every symbol keeps its size: each pair of ports of a component is as far apart as in the full arrangement', () => {
+  test('every symbol keeps its size: each pair of ports of a component is as far apart as in the frame', () => {
     for (const part of simplified.components) {
-      const twin = full.components.find((candidate) => candidate.item === part.item && candidate.kind === part.kind);
+      const twin = frame.components.find((candidate) => candidate.item === part.item && candidate.kind === part.kind);
       if (twin === undefined || part.item === 50) continue;
       const [a, b] = [portsOf(part), portsOf(twin)];
       expect(a.length).toBe(b.length);
@@ -206,26 +207,26 @@ describe('arrangementFor: the simplified arrangement', () => {
   test('the exceptions to the maps are named with a reason', () => {
     expect(Object.keys(SIMPLIFIED_EXCEPTIONS).sort()).toEqual([
       'component 38',
-      'crossing prod_10_in x prod_tap_a',
       'label production_pressure',
       'segment prod_tap_a',
     ]);
     for (const reason of Object.values(SIMPLIFIED_EXCEPTIONS)) expect(reason.length).toBeGreaterThan(10);
   });
 
-  test('every cabinet point is the full point under the maps, except the named exceptions', () => {
+  test("every cabinet point is the frame's point under the maps, except the named exceptions", () => {
     const fx = (x: number): number => mapAxis(SIMPLIFIED_MAP_X, x);
     const fy = (y: number): number => mapAxis(SIMPLIFIED_MAP_Y, y);
-    const inCabinet = (x: number): boolean => x >= full.cabinet.x && x <= full.cabinet.x + full.cabinet.width;
+    const inCabinet = (x: number): boolean =>
+      x >= frame.zones.cabinet.x && x <= frame.zones.cabinet.x + frame.zones.cabinet.width;
     for (const part of simplified.components) {
       if (part.item === 50 || part.item === 51 || part.item === 38) continue;
-      const twin = full.components.find((candidate) => candidate.item === part.item && candidate.kind === part.kind);
+      const twin = frame.components.find((candidate) => candidate.item === part.item && candidate.kind === part.kind);
       expect(twin, `item ${String(part.item)}`).toBeDefined();
       expect([part.x, part.y], `item ${String(part.item)}`).toEqual([fx(twin?.x ?? NaN), fy(twin?.y ?? NaN)]);
     }
     for (const segment of simplified.segments) {
       if (segment.id === 'prod_tap_a') continue;
-      const twin = full.segments.find((candidate) => candidate.id === segment.id);
+      const twin = frame.segments.find((candidate) => candidate.id === segment.id);
       expect(twin, segment.id).toBeDefined();
       if (segment.id.startsWith('src_') || segment.id.startsWith('dhw_ext_')) {
         // zone pipes: only their points at the cabinet's columns are mapped
@@ -240,12 +241,12 @@ describe('arrangementFor: the simplified arrangement', () => {
       expect(segment.points, segment.id).toEqual((twin?.points ?? []).map(([x, y]) => [fx(x), fy(y)]));
     }
     const kept = simplified.crossings;
-    for (const crossing of full.crossings) {
+    for (const crossing of frame.crossings) {
       const twin = kept.find((candidate) => candidate.over === crossing.over && candidate.under === crossing.under);
       if (twin === undefined) continue;
       expect(twin.at).toEqual([fx(crossing.at[0]), fy(crossing.at[1])]);
     }
-    full.circuitLabels.forEach((label, index) => {
+    frame.circuitLabels.forEach((label, index) => {
       expect([simplified.circuitLabels[index]?.x, simplified.circuitLabels[index]?.y]).toEqual([
         fx(label.x),
         fy(label.y),
@@ -268,16 +269,14 @@ describe('arrangementFor: the simplified arrangement', () => {
       'compressor_speed',
       'compressor_percentage',
       'compressor_power',
-      'superheat',
-      'expansion_valve',
       'condensation_temperature',
       'evaporation_temperature',
     ];
     // the labels with a place of their own (SIMPLIFIED_PLACES) are checked below
     for (const id of cabinetLabels.filter((label) => SIMPLIFIED_PLACES[label] === undefined)) {
       const [a, b] = [
-        // the full arrangement's own places (FULL_PLACES) do not carry over: the maps start from the table's defaults
-        labelPlacesFor(full, {}).specs.find((spec) => spec.id === id),
+        // the maps start from the frame's default places
+        frame.labels.specs.find((spec) => spec.id === id),
         simplified.labels.specs.find((spec) => spec.id === id),
       ];
       expect([b?.x, b?.y], id).toEqual([fx(a?.x ?? NaN), fy(a?.y ?? NaN)]);
@@ -300,9 +299,7 @@ describe('arrangementFor: the simplified arrangement', () => {
     expect(simplified.airUnit.x + simplified.airUnit.width).toBeLessThan(240);
   });
 
-  test('the parts and pipes that only the full level draws are not in the simplified arrangement', () => {
-    expect(simplified.components.some((part) => part.detail === 'full')).toBe(false);
-    expect(simplified.segments.some((segment) => segment.detail === 'full')).toBe(false);
+  test('every crossing is between two segments of the arrangement', () => {
     const ids = new Set(simplified.segments.map((segment) => segment.id));
     for (const crossing of simplified.crossings) {
       expect(ids.has(crossing.over) && ids.has(crossing.under)).toBe(true);
@@ -350,9 +347,10 @@ describe('the source and the external tank (outer-loop-source, dhw-storage on th
     }
   });
 
-  test('the source and the tank are the full ones at a uniform scale of about 0.8', () => {
+  test("the source and the tank are the frame's at a uniform scale of about 0.8", () => {
     expect(SIMPLIFIED_ZONE_SCALE).toBe(0.8);
     const ratio = (a: number, b: number): number => a / b;
+    const full = frame.zones;
     expect(ratio(simplified.airUnit.width, full.airUnit.width)).toBeCloseTo(0.8, 1);
     expect(ratio(simplified.airUnit.height, full.airUnit.height)).toBeCloseTo(0.8, 1);
     expect(ratio(simplified.airUnit.fanRadius, full.airUnit.fanRadius)).toBeCloseTo(0.8, 1);

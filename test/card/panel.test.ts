@@ -128,12 +128,12 @@ describe('isPanel', () => {
     expect(card.viewportHeight).toBe(700);
   });
 
-  test('the layout follows the drawing width: a panel in a short window is compact with auto although the card is wide', async () => {
+  test('the layout follows the drawing width: a panel in a short window is vertical with auto although the card is wide', async () => {
     // (420 - 56 - 64) * 1000 / 545 = 550 px, below the 600 px threshold
     const card = await show(1280, 420, true);
-    expect(card.shownLayout).toBe('compact');
-    expect(card.shadowRoot?.querySelector('ha-card')?.getAttribute('data-layout')).toBe('compact');
+    expect(card.shownLayout).toBe('vertical');
+    expect(card.shadowRoot?.querySelector('ha-card')?.getAttribute('data-layout')).toBe('vertical');
     const tall = await show(1280, 800, true);
-    expect(tall.shownLayout).toBe('full');
+    expect(tall.shownLayout).toBe('horizontal');
   });
 });

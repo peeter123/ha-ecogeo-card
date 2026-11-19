@@ -5,19 +5,21 @@
 // zone) and of the external DHW tank (right zone), and the stubs of connections 47-49. No Lit here: this file is
 // data plus small pure helpers that the renderer and the integrity tests share.
 //
-// An `Arrangement` (arrangementFor) holds all of it for one detail level and layout; the numbers below describe the full
-// arrangement. Layout in viewBox units (1000 x 620): source zone x 0-240, cabinet x 240-760, DHW zone x 790-1000, the pipe run
+// The component and segment lists are authored in the manual-figure frame (cabinet x 240-760, y 130-605); the one drawn arrangement
+// (`arrangementFor`, the horizontal layout's; the vertical layout shares it until its own is built) maps them to its own units
+// (rework-layouts D1, D2). Only the parts the drawing shows are in the lists: the service and safety parts of the figure (items
+// 18-21, 23, 24, 39-41, 52, 53) are not drawn. In the frame, in viewBox units: source zone x 0-240, cabinet x 240-760, DHW zone x 790-1000, the pipe run
 // above the cabinet y 0-110, the cabinet's top edge at y 130. Ports 1-6 sit on the top edge in the manual's order.
 // Inside, from the top: the DHW supply (y 172) and return (y 198) lines of valve 26, the probe row, the discharge
 // line of compressor 11 (y 250) through HTR exchanger 9 to inversion valve 14, condenser 8 and evaporator 7, the
-// valve 27 / pump 15 / valve 28 row (y 416), exchanger 10 and, at the bottom, the vessels and drain valves.
+// valve 27 / pump 15 / valve 28 row (y 416) and exchanger 10.
 //
 // Pipe points run in the direction of the flow in heating (`direction` 1) so that the renderer can animate them.
 import type { CircuitId, Circuits } from '../calc/circuits';
-import type { Detail, DhwStorage, Model, Source } from '../config/options';
+import type { DhwStorage, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
-import { COMPACT_PLACES, FULL_PLACES, SIMPLIFIED_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
+import { SIMPLIFIED_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
 
 /** A rectangle in viewBox units. */
 interface Rect {
@@ -27,7 +29,7 @@ interface Rect {
   readonly height: number;
 }
 
-/** The air unit's housing, fan, coil block, fins, slats and serpentine (see `FULL_ZONES`). */
+/** The air unit's housing, fan, coil block, fins, slats and serpentine (see `SIMPLIFIED_ZONES`). */
 export interface AirUnitShape {
   readonly x: number;
   readonly y: number;
@@ -65,7 +67,7 @@ export interface AirUnitShape {
 interface ZoneBase {
   readonly viewBox: { readonly width: number; readonly height: number };
   /**
-   * The uniform scale of the source and the external tank relative to the full arrangement (1 when left out): it sizes
+   * The uniform scale of the source and the external tank relative to the manual-figure frame (1 when left out): it sizes
    * the offsets `deriveZones` adds to them (the external coil, the hybrid's ground line) and the air unit's fan blades.
    */
   readonly scale?: number;
@@ -73,7 +75,7 @@ interface ZoneBase {
   readonly cabinet: Rect;
   /**
    * The integrated tank of model C (item 50), inside the cabinet under the top edge: coil 51 (its ports are where the DHW
-   * lines of valve 26 end), probe 54 and drain valve 53 sit on or in it. The figure's tank is tall; this one is squat so
+   * lines of valve 26 end), probe 54 sits on or in it. The figure's tank is tall; this one is squat so
    * that it fits above the probe row.
    */
   readonly internalTank: Rect;
@@ -186,40 +188,45 @@ export function externalTankBody({ externalTank }: Pick<ZoneBase, 'externalTank'
   return `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x + width)} ${String(y + dome)} V${String(y + height - dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x)} ${String(y + height - dome)} Z`;
 }
 
-const FULL_CABINET = { x: 240, y: 130, width: 520, height: 475 } as const;
+/** The manual-figure frame's cabinet; the maps of the arrangement start from it. */
+const FRAME_CABINET = { x: 240, y: 130, width: 520, height: 475 } as const;
 
-/** The full arrangement's zones: the coordinates of the drawing since add-schematic-card. */
-const FULL_ZONES: Zones = deriveZones({
+/**
+ * The manual-figure frame's zones: the coordinates the component and segment lists are authored in (add-schematic-card D5). Not drawn
+ * (rework-layouts D1): the arrangement's own zones derive from them, and `FRAME` lets the tests compare the two.
+ */
+const FRAME_ZONES: Zones = deriveZones({
   viewBox: { width: 1000, height: 620 },
-  cabinet: FULL_CABINET,
+  cabinet: FRAME_CABINET,
   internalTank: { x: 408, y: 138, width: 182, height: 66 },
   coil51: { x: 495, y: 185 },
-  externalTank: { x: 806, y: FULL_CABINET.y, width: 168, height: 180, dome: 14 },
+  externalTank: { x: 806, y: FRAME_CABINET.y, width: 168, height: 180, dome: 14 },
   airUnit: {
     x: 26,
-    y: FULL_CABINET.y,
+    y: FRAME_CABINET.y,
     width: 124,
     height: 210,
     fanX: 88,
-    fanY: FULL_CABINET.y + 162,
+    fanY: FRAME_CABINET.y + 162,
     fanRadius: 34,
     // the coil block's frame (the brine serpentine runs inside it, over the fins)
-    coil: { x: 36, y: FULL_CABINET.y + 16, width: 104, height: 74 },
+    coil: { x: 36, y: FRAME_CABINET.y + 16, width: 104, height: 74 },
     // the coil's fins: the first x, the step, how many, and where they start and end
-    fins: { x: 52, step: 6, count: 13, y0: FULL_CABINET.y + 20, y1: FULL_CABINET.y + 86 },
+    fins: { x: 52, step: 6, count: 13, y0: FRAME_CABINET.y + 20, y1: FRAME_CABINET.y + 86 },
     // the slats of the housing's front, in the gutters left and right of the fan: the first y, the step and how many
-    slats: { y0: FULL_CABINET.y + 134, step: 9, count: 8 },
+    slats: { y0: FRAME_CABINET.y + 134, step: 9, count: 8 },
     // where the fan section starts (a divider under the coil block) and where the caption sits
-    dividerY: FULL_CABINET.y + 114,
+    dividerY: FRAME_CABINET.y + 114,
     captionX: 88,
-    captionY: FULL_CABINET.y - 8,
+    captionY: FRAME_CABINET.y - 8,
     // the serpentine: four passes (an even number, so that it enters and leaves on the right), 15 apart, bending at x `left` and `right`
-    passes: { y0: FULL_CABINET.y + 30, step: 15, count: 4, left: 44, right: 132 },
+    passes: { y0: FRAME_CABINET.y + 30, step: 15, count: 4, left: 44, right: 132 },
   },
   groundLoop: { downX: 166, upX: 106, depth: 140 },
   groundLineX: { start: 8, end: 220 },
   run: { outY: 85, inY: 50, feedX: 226, returnX: 206, hybridReturnX: 12 },
 });
+
 export type Point = readonly [x: number, y: number];
 export type Rotation = 0 | 90 | 180 | 270;
 
@@ -230,18 +237,14 @@ export type ComponentKind =
   | 'inversion_valve'
   | 'probe_t'
   | 'transducer_p'
-  | 'pressure_switch'
   | 'thermostat'
   | 'exchanger'
   | 'compressor'
-  | 'vessel'
-  | 'safety_valve'
   | 'valve'
   | 'drain_valve'
   | 'resistor'
   | 'filter_dryer'
   | 'expansion_valve'
-  | 'service_outlet'
   | 'tank'
   | 'coil';
 
@@ -252,8 +255,7 @@ export type ComponentKind =
  * (`any` means external or internal, or the model's tank while it is `unused`; with `dhw: unused` the parts that
  * are specific to the model's tank, and those with `unusedMuted`, are drawn muted). `source`: only for those
  * outer-loop sources. HTR also needs DHW storage: with `dhw: none` it counts as `false`; with `unused` it follows
- * its feature. `detail: 'full'` (refine-schematic-drawing D1): a service or safety part, or a stub pipe that only
- * leads to one, drawn only at the `full` level of detail.
+ * its feature.
  */
 export interface Visibility {
   feature?: FeatureKey;
@@ -263,11 +265,7 @@ export interface Visibility {
   /** Drawn muted while `dhw` is `unused`, though it also serves a tank in use (valve 26). */
   unusedMuted?: true;
   source?: readonly Source[];
-  detail?: 'full';
 }
-
-/** Where an item number is written, relative to the component: dx, dy and the text anchor. */
-export type Tag = readonly [dx: number, dy: number, anchor?: 'start' | 'middle' | 'end'];
 
 /**
  * One side of a plate exchanger (refine-schematic-drawing D4): the half of the symbol it fills, the segments that enter and leave it
@@ -282,7 +280,7 @@ export interface ExchangerSide {
   reversible?: true;
 }
 
-export interface Component extends Pick<Visibility, 'feature' | 'dhw' | 'detail' | 'unusedMuted'> {
+export interface Component extends Pick<Visibility, 'feature' | 'dhw' | 'unusedMuted'> {
   /** The manual's item number, 1-54. */
   item: number;
   kind: ComponentKind;
@@ -294,7 +292,6 @@ export interface Component extends Pick<Visibility, 'feature' | 'dhw' | 'detail'
   size?: number;
   /** An exchanger's two sides (manual items 7, 8, 9, 10), filled from the pipes that enter and leave them. */
   sides?: readonly ExchangerSide[];
-  tag: Tag;
 }
 
 /**
@@ -330,7 +327,7 @@ export interface Segment extends Visibility {
   bend?: number;
   /** The base stroke ends in a round cap: it closes the seam where the ground loop's half circle is split in two segments. */
   roundEnd?: true;
-  /** A dead-end tap (vessel, drain, safety valve): coloured, never animated. */
+  /** A dead-end tap (a transducer's stub, the HTR drain): coloured, never animated. */
   stub?: boolean;
   /** The pipe carries water only in this position of valves 27/28 (the legs behind a closed arm). */
   onlyWhen?: { valves2728: Circuits['valves2728'] };
@@ -349,25 +346,24 @@ const c = (
   x: number,
   y: number,
   rotation: Rotation,
-  tag: Tag,
-  extra: Partial<Pick<Component, 'feature' | 'dhw' | 'detail' | 'size' | 'sides' | 'unusedMuted'>> = {},
-): Component => ({ item, kind, x, y, rotation, tag, ...extra });
+  extra: Partial<Pick<Component, 'feature' | 'dhw' | 'size' | 'sides' | 'unusedMuted'>> = {},
+): Component => ({ item, kind, x, y, rotation, ...extra });
 
 /** Components. Items 1-6 are the ports on the top edge. */
 const componentsFor = (z: Zones): readonly Component[] => [
   // ports, left to right in the manual's order
-  c(1, 'port', 270, 130, 0, [-7, -8, 'end']),
-  c(2, 'port', 312, 130, 0, [-7, -8, 'end']),
-  c(3, 'port', 630, 130, 0, [-7, -8, 'end']),
-  c(4, 'port', 690, 130, 0, [-7, -8, 'end']),
-  c(5, 'port', 722, 130, 0, [-7, -8, 'end'], { dhw: 'external' }),
-  c(6, 'port', 748, 130, 0, [-7, -8, 'end'], { dhw: 'external' }),
+  c(1, 'port', 270, 130, 0),
+  c(2, 'port', 312, 130, 0),
+  c(3, 'port', 630, 130, 0),
+  c(4, 'port', 690, 130, 0),
+  c(5, 'port', 722, 130, 0, { dhw: 'external' }),
+  c(6, 'port', 748, 130, 0, { dhw: 'external' }),
   // model C: tap water inlet, DHW outlet and recirculation of the integrated tank, on the top edge
-  c(47, 'port', 440, 130, 0, [-7, -8, 'end'], { dhw: 'internal' }),
-  c(48, 'port', 490, 130, 0, [-7, -8, 'end'], { dhw: 'internal' }),
-  c(49, 'port', 540, 130, 0, [-7, -8, 'end'], { dhw: 'internal' }),
+  c(47, 'port', 440, 130, 0, { dhw: 'internal' }),
+  c(48, 'port', 490, 130, 0, { dhw: 'internal' }),
+  c(49, 'port', 540, 130, 0, { dhw: 'internal' }),
   // refrigerant circuit
-  c(7, 'exchanger', 572, 382, 0, [-26, 6, 'end'], {
+  c(7, 'exchanger', 572, 382, 0, {
     size: 34,
     sides: [
       // refrigerant (left): expansion valve in at the bottom, suction line out at the top
@@ -382,7 +378,7 @@ const componentsFor = (z: Zones): readonly Component[] => [
       { half: 'right', entering: ['br_feed7'], leaving: ['brine_7_28', 'brine_bypass28'], enters: 'top' },
     ],
   }),
-  c(8, 'exchanger', 432, 382, 0, [-26, 6, 'end'], {
+  c(8, 'exchanger', 432, 382, 0, {
     size: 34,
     sides: [
       // production water (left): from pump 15 in at the bottom, towards resistor 44 out at the top
@@ -397,7 +393,7 @@ const componentsFor = (z: Zones): readonly Component[] => [
       },
     ],
   }),
-  c(9, 'exchanger', 373, 273, 0, [26, -2, 'start'], {
+  c(9, 'exchanger', 373, 273, 0, {
     size: 23,
     feature: 'htr',
     sides: [
@@ -407,20 +403,16 @@ const componentsFor = (z: Zones): readonly Component[] => [
       { half: 'right', entering: ['ref_discharge'], leaving: ['ref_9_14'], enters: 'top' },
     ],
   }),
-  c(11, 'compressor', 510, 250, 0, [0, -26, 'middle']),
-  c(12, 'expansion_valve', 527, 416, 0, [0, -14, 'middle']),
-  c(13, 'filter_dryer', 487, 416, 0, [0, -14, 'middle']),
-  c(14, 'inversion_valve', 430, 296, 0, [-16, 22, 'end'], { feature: 'active_cooling' }),
-  c(29, 'probe_t', 542, 234, 0, [0, -14, 'middle']),
-  c(30, 'probe_t', 430, 234, 0, [0, -14, 'middle']),
-  c(35, 'transducer_p', 564, 234, 0, [0, -14, 'middle']),
-  c(36, 'transducer_p', 474, 234, 0, [0, -14, 'middle']),
-  c(39, 'pressure_switch', 586, 234, 0, [0, -14, 'middle'], { detail: 'full' }),
-  c(40, 'pressure_switch', 452, 234, 0, [0, -14, 'middle'], { detail: 'full' }),
-  c(41, 'service_outlet', 464, 406, 0, [0, 28, 'middle'], { detail: 'full' }),
-  c(41, 'service_outlet', 620, 270, 90, [0, 14, 'middle'], { detail: 'full' }),
+  c(11, 'compressor', 510, 250, 0),
+  c(12, 'expansion_valve', 527, 416, 0),
+  c(13, 'filter_dryer', 487, 416, 0),
+  c(14, 'inversion_valve', 430, 296, 0, { feature: 'active_cooling' }),
+  c(29, 'probe_t', 542, 234, 0),
+  c(30, 'probe_t', 430, 234, 0),
+  c(35, 'transducer_p', 564, 234, 0),
+  c(36, 'transducer_p', 474, 234, 0),
   // hydraulic circuits
-  c(10, 'exchanger', 520, 470, 0, [28, 4, 'start'], {
+  c(10, 'exchanger', 520, 470, 0, {
     size: 22,
     feature: 'passive_cooling',
     sides: [
@@ -430,45 +422,29 @@ const componentsFor = (z: Zones): readonly Component[] => [
       { half: 'right', entering: ['br_10_in'], leaving: ['br_10_28'], enters: 'top' },
     ],
   }),
-  c(15, 'pump', 385, 416, 0, [0, -19, 'middle']),
-  c(16, 'pump', 690, 300, 90, [19, 4, 'start']),
-  c(17, 'pump', 340, 226, 90, [-14, 4, 'end'], { feature: 'htr', dhw: 'any' }),
-  c(18, 'vessel', 725, 520, 0, [-16, 4, 'end'], { detail: 'full' }),
-  c(19, 'vessel', 368, 556, 0, [-16, 4, 'end'], { detail: 'full' }),
-  c(20, 'safety_valve', 741, 440, 90, [0, -14, 'middle'], { detail: 'full' }),
-  c(21, 'safety_valve', 384, 520, 90, [0, -14, 'middle'], { detail: 'full' }),
-  c(22, 'valve', 340, 256, 0, [-10, 4, 'end'], { feature: 'htr', dhw: 'any' }),
-  c(23, 'drain_valve', 630, 572, 0, [14, 4, 'start'], { detail: 'full' }),
-  c(24, 'drain_valve', 404, 572, 0, [14, 4, 'start'], { detail: 'full' }),
-  c(25, 'drain_valve', 340, 318, 0, [-10, 4, 'end'], { feature: 'htr', dhw: 'any' }),
-  c(26, 'valve3', 270, 172, 270, [-14, 22, 'end'], { dhw: 'any', unusedMuted: true }),
-  c(27, 'valve3', 350, 416, 0, [0, -24, 'middle'], { feature: 'passive_cooling' }),
-  c(28, 'valve3', 610, 416, 0, [0, -24, 'middle'], { feature: 'passive_cooling' }),
-  c(31, 'probe_t', 614, 228, 270, [0, -14, 'middle']),
-  c(32, 'probe_t', 674, 228, 270, [0, -14, 'middle']),
-  c(33, 'probe_t', 254, 228, 270, [0, -14, 'middle']),
-  c(34, 'probe_t', 296, 228, 270, [0, -14, 'middle']),
-  c(37, 'transducer_p', 709, 440, 270, [0, -14, 'middle']),
-  c(38, 'transducer_p', 352, 520, 270, [0, -14, 'middle']),
-  c(44, 'resistor', 270, 320, 90, [12, 6, 'start'], { feature: 'backup_heater' }),
-  c(45, 'thermostat', 286, 282, 90, [0, -12, 'middle'], { feature: 'backup_heater' }),
-  // model C's integrated tank (50) with its coil (51, ports where the DHW lines of valve 26 end), manual trap (52) on
-  // the supply line, drain valve (53) and DHW probe (54), the last two on the tank wall
-  c(
-    50,
-    'tank',
-    z.internalTank.x + z.internalTank.width / 2,
-    z.internalTank.y + z.internalTank.height / 2,
-    0,
-    [-96, -26, 'end'],
-    {
-      dhw: 'internal',
-    },
-  ),
-  c(51, 'coil', z.coil51.x, z.coil51.y, 0, [-74, 3, 'middle'], { dhw: 'internal' }),
-  c(52, 'service_outlet', 395, 162, 0, [-8, 4, 'end'], { dhw: 'internal', detail: 'full' }),
-  c(53, 'drain_valve', 599, 196, 270, [0, -12, 'middle'], { dhw: 'internal', detail: 'full' }),
-  c(54, 'probe_t', 574, 171, 270, [26, -11, 'start'], { dhw: 'internal' }),
+  c(15, 'pump', 385, 416, 0),
+  c(16, 'pump', 690, 300, 90),
+  c(17, 'pump', 340, 226, 90, { feature: 'htr', dhw: 'any' }),
+  c(22, 'valve', 340, 256, 0, { feature: 'htr', dhw: 'any' }),
+  c(25, 'drain_valve', 340, 318, 0, { feature: 'htr', dhw: 'any' }),
+  c(26, 'valve3', 270, 172, 270, { dhw: 'any', unusedMuted: true }),
+  c(27, 'valve3', 350, 416, 0, { feature: 'passive_cooling' }),
+  c(28, 'valve3', 610, 416, 0, { feature: 'passive_cooling' }),
+  c(31, 'probe_t', 614, 228, 270),
+  c(32, 'probe_t', 674, 228, 270),
+  c(33, 'probe_t', 254, 228, 270),
+  c(34, 'probe_t', 296, 228, 270),
+  c(37, 'transducer_p', 709, 440, 270),
+  c(38, 'transducer_p', 352, 520, 270),
+  c(44, 'resistor', 270, 320, 90, { feature: 'backup_heater' }),
+  c(45, 'thermostat', 286, 282, 90, { feature: 'backup_heater' }),
+  // model C's integrated tank (50) with its coil (51, ports where the DHW lines of valve 26 end) and DHW probe (54) on
+  // the tank wall
+  c(50, 'tank', z.internalTank.x + z.internalTank.width / 2, z.internalTank.y + z.internalTank.height / 2, 0, {
+    dhw: 'internal',
+  }),
+  c(51, 'coil', z.coil51.x, z.coil51.y, 0, { dhw: 'internal' }),
+  c(54, 'probe_t', 574, 171, 270, { dhw: 'internal' }),
 ];
 
 /** Points from text: "x,y x,y ...". */
@@ -581,10 +557,8 @@ const segmentsFor = (z: Zones): readonly Segment[] => [
     feature: 'passive_cooling',
     speedRole: PP,
   }),
-  // production taps as in the figure: vessel 19, transducer 38 and safety valve 21 on pump 15's suction, drain 24 after it
+  // production tap as in the figure: transducer 38 on pump 15's suction (the figure's vessel, safety valve and drain are not drawn)
   seg('prod_tap_a', TRUNK, '368,416 368,520', RET, { stub: true }),
-  seg('prod_tap_b', TRUNK, '368,520 368,544', RET, { stub: true, detail: 'full' }),
-  seg('prod_drain', TRUNK, '404,416 404,563', RET, { stub: true, detail: 'full' }),
   // DHW lines of valve 26: supply to port 5, return from port 6 (or to and from the integrated tank of model C)
   seg('dhw_sup_a', ['production_dhw'], '282,172 361,172', OUT, { dhw: 'any', speedRole: PP }),
   seg('dhw_sup_b', ['dhw_coil'], '361,172 420,172', OUT, { dhw: 'any', speedRole: PP }),
@@ -821,17 +795,15 @@ const segmentsFor = (z: Zones): readonly Segment[] => [
     feature: 'passive_cooling',
     speedRole: BP,
   }),
-  // brine taps as in the figure: vessel 18, transducer 37 and safety valve 20 on port 4's line before pump 16; drain 23 on port 3's line
+  // brine tap as in the figure: transducer 37 on port 4's line before pump 16 (the figure's vessel, safety valve and drain are not drawn)
   seg('brine_tap_a', ['brine'], '690,270 725,270 725,440', BIN, { stub: true }),
-  seg('brine_tap_b', ['brine'], '725,440 725,508', BIN, { stub: true, detail: 'full' }),
-  seg('brine_drain', ['brine'], '630,416 630,563', BOUT, { stub: true, detail: 'full' }),
 ];
 
 /** The most crossings inside the cabinet (add-schematic-card D5): the manual's figure has 15 (14 hops and the return line behind resistor 44). */
 export const MAX_CROSSINGS = 15;
 
-/** The crossings inside the cabinet (add-schematic-card D5): this layout needs 14. */
-const FULL_CROSSINGS: readonly Crossing[] = [
+/** The crossings inside the cabinet (add-schematic-card D5): this layout needs 10. */
+const CROSSINGS: readonly Crossing[] = [
   { over: 'dhw_sup_a', under: 'p2_in', at: [312, 172] },
   { over: 'dhw_sup_c', under: 'ln3', at: [630, 172] },
   { over: 'dhw_sup_c', under: 'ln4_a', at: [690, 172] },
@@ -841,11 +813,7 @@ const FULL_CROSSINGS: readonly Crossing[] = [
   { over: 'trunk', under: 'prod_8_44', at: [312, 348] },
   { over: 'ln3', under: 'br_feed7', at: [630, 348] },
   { over: 'br_10_in', under: 'br_10_28', at: [610, 448] },
-  { over: 'br_10_in', under: 'brine_drain', at: [630, 448] },
   { over: 'prod_10_out', under: 'prod_tap_a', at: [368, 448] },
-  { over: 'prod_10_in', under: 'prod_tap_a', at: [368, 492] },
-  { over: 'prod_10_out', under: 'prod_drain', at: [404, 448] },
-  { over: 'prod_10_in', under: 'prod_drain', at: [404, 492] },
 ];
 
 /** A circuit label under the top edge: the text key, where it sits and what it needs. */
@@ -854,40 +822,35 @@ export interface CircuitLabel extends Pick<Visibility, 'dhw'> {
   x: number;
   y: number;
 }
-const FULL_CIRCUIT_LABELS: readonly CircuitLabel[] = [
+const CIRCUIT_LABELS: readonly CircuitLabel[] = [
   { key: 'dg1', x: 291, y: 112 },
   { key: 'outerLoop', x: 660, y: 112 },
   { key: 'dhw', x: 776, y: 112, dhw: 'external' },
 ];
 
-/** What decides which parts are drawn: the DHW storage, the source, the feature states and the level of detail. */
+/** What decides which parts are drawn: the DHW storage, the source and the feature states. */
 export interface DrawContext {
   /** The model: with `dhw: unused` it decides which tank is drawn (B external, C internal). */
   model: Model;
   dhw: DhwStorage;
   source: Source;
   features: Features;
-  /** `simplified` leaves out the parts and stubs marked `detail: 'full'`. */
-  detail: Detail;
-  /** `false` leaves out the captions inside the drawing (the compact layout, add-compact-layout D2); undefined draws them. */
-  captions?: boolean;
   /**
    * The arrangement drawn (refine-simplified-layout D1): every consumer reads the coordinates from it. The card sets it
-   * from `arrangementFor`; left out, it is the one `arrangementFor(detail, 'full')` gives.
+   * from `arrangementFor`; left out, it is the one `arrangementFor('horizontal')` gives.
    */
   arrangement?: Arrangement;
 }
 
 /** Which arrangement a card shows. */
-type ArrangementId = 'full' | 'simplified';
+type ArrangementId = 'horizontal';
 
-/** The layout the card shows now (card-config `layout`, resolved): compact or full. */
-export type ShownLayout = 'compact' | 'full';
+/** The layout the card shows now (card-config `layout`, resolved): horizontal or vertical. */
+export type ShownLayout = 'horizontal' | 'vertical';
 
 /**
  * One complete arrangement of the drawing (refine-simplified-layout D1): the viewBox, the cabinet and the zone constants
- * (`Zones`), the components, segments, crossings and circuit labels, and the value labels' placements with the
- * compact layout's places. Every consumer reads it from the draw context; none reads a module constant.
+ * (`Zones`), the components, segments, crossings and circuit labels, and the value labels' placements. Every consumer reads it from the draw context; none reads a module constant.
  */
 export interface Arrangement extends Zones {
   readonly id: ArrangementId;
@@ -898,39 +861,10 @@ export interface Arrangement extends Zones {
   readonly labels: LabelPlaces;
 }
 
-/** The source and tank pipes and the labels placed from the zones are generated from `zones`, so they follow its constants. */
-function buildArrangement(id: ArrangementId, zones: Zones): Arrangement {
-  return {
-    ...zones,
-    id,
-    components: componentsFor(zones),
-    segments: segmentsFor(zones),
-    crossings: FULL_CROSSINGS,
-    circuitLabels: FULL_CIRCUIT_LABELS,
-    // the full arrangement is never drawn compact (D7): its labels have no compact places
-    labels: {
-      specs: labelPlacesFor(zones, {}).specs.map((spec) => {
-        const place = FULL_PLACES[spec.id];
-        return place === undefined
-          ? spec
-          : {
-              ...spec,
-              x: place.x,
-              y: place.y,
-              align: place.align,
-              ...(place.caption === undefined ? {} : { caption: place.caption }),
-            };
-      }),
-    },
-  };
-}
-
-const FULL_ARRANGEMENT = buildArrangement('full', FULL_ZONES);
-
-// The simplified arrangement (refine-simplified-layout D2, D3): the cabinet's contents are the full ones under a pair of
+// The arrangement (refine-simplified-layout D2, D3): the cabinet's contents are the frame's under a pair of
 // monotone piecewise-linear maps, the source and the external tank are the same shapes at a uniform scale.
 
-/** A monotone piecewise-linear map of one axis: breakpoints `[from, to]` in the full arrangement's units, ascending. Beyond the first and the last it keeps their offset (slope 1). */
+/** A monotone piecewise-linear map of one axis: breakpoints `[from, to]` in the frame's units, ascending. Beyond the first and the last it keeps their offset (slope 1). */
 type AxisMap = readonly (readonly [from: number, to: number])[];
 
 export function mapAxis(map: AxisMap, value: number): number {
@@ -979,9 +913,9 @@ export const SIMPLIFIED_MAP_X: AxisMap = [
 ];
 
 /**
- * The simplified cabinet's y map: the identity from the top line down to the cut. Every drawn part of the full arrangement
- * lies above y 505 (exchanger 10's body is the lowest, to y 501); the band below it holds only parts the simplified level
- * leaves out (vessels, safety and drain valves), so the cabinet's bottom edge moves from y 605 up to y 530, and the viewBox
+ * The simplified cabinet's y map: the identity from the top line down to the cut. Every drawn part of the frame
+ * lies above y 505 (exchanger 10's body is the lowest, to y 501); the band below it held only parts that are no longer drawn
+ * (vessels, safety and drain valves, no longer drawn), so the cabinet's bottom edge moves from y 605 up to y 530, and the viewBox
  * from 620 to 545. The rows inside need no stretch: the maps' room is in x, where the labels sit beside the pipes.
  */
 export const SIMPLIFIED_MAP_Y: AxisMap = [
@@ -992,7 +926,7 @@ export const SIMPLIFIED_MAP_Y: AxisMap = [
 const simplifiedX = (x: number): number => mapAxis(SIMPLIFIED_MAP_X, x);
 const simplifiedY = (y: number): number => mapAxis(SIMPLIFIED_MAP_Y, y);
 
-/** The scale of the source and the external tank at the simplified level (refine-simplified-layout D3). */
+/** The scale of the source and the external tank (refine-simplified-layout D3). */
 export const SIMPLIFIED_ZONE_SCALE = 0.8;
 const K = SIMPLIFIED_ZONE_SCALE;
 /** A source zone value scaled about the viewBox's left edge (x) and about the cabinet's top line (y). */
@@ -1003,52 +937,53 @@ const scaleX = (x: number): number => round2(x * K);
  */
 const AIR_SHIFT = -12;
 const airX = (x: number): number => round2(scaleX(x) + AIR_SHIFT);
-const scaleY = (y: number): number => round2(FULL_CABINET.y + (y - FULL_CABINET.y) * K);
+const scaleY = (y: number): number => round2(FRAME_CABINET.y + (y - FRAME_CABINET.y) * K);
 
-const SIMPLIFIED_CABINET: Rect = { x: 200, y: FULL_CABINET.y, width: 620, height: 400 };
+const SIMPLIFIED_CABINET: Rect = { x: 200, y: FRAME_CABINET.y, width: 620, height: 400 };
 
 const SIMPLIFIED_ZONES: Zones = deriveZones({
   viewBox: { width: 1000, height: SIMPLIFIED_CABINET.y + SIMPLIFIED_CABINET.height + 15 },
   scale: K,
   cabinet: SIMPLIFIED_CABINET,
   internalTank: {
-    x: simplifiedX(FULL_ZONES.internalTank.x),
-    y: FULL_ZONES.internalTank.y,
+    x: simplifiedX(FRAME_ZONES.internalTank.x),
+    y: FRAME_ZONES.internalTank.y,
     width: round2(
-      simplifiedX(FULL_ZONES.internalTank.x + FULL_ZONES.internalTank.width) - simplifiedX(FULL_ZONES.internalTank.x),
+      simplifiedX(FRAME_ZONES.internalTank.x + FRAME_ZONES.internalTank.width) -
+        simplifiedX(FRAME_ZONES.internalTank.x),
     ),
-    height: FULL_ZONES.internalTank.height,
+    height: FRAME_ZONES.internalTank.height,
   },
-  coil51: { x: simplifiedX(FULL_ZONES.coil51.x), y: FULL_ZONES.coil51.y },
+  coil51: { x: simplifiedX(FRAME_ZONES.coil51.x), y: FRAME_ZONES.coil51.y },
   // the walls and the dome at the scale; the zone starts at x 840 and the tank is centred in it (to x 1000)
   externalTank: {
     x: 853,
-    y: FULL_CABINET.y,
+    y: FRAME_CABINET.y,
     width: Math.round(168 * K),
     height: Math.round(180 * K),
     dome: Math.round(14 * K),
   },
   airUnit: {
     x: airX(26),
-    y: FULL_CABINET.y,
+    y: FRAME_CABINET.y,
     width: scaleX(124),
     height: round2(210 * K),
     fanX: airX(88),
-    fanY: scaleY(FULL_CABINET.y + 162),
+    fanY: scaleY(FRAME_CABINET.y + 162),
     fanRadius: round2(34 * K),
-    coil: { x: airX(36), y: scaleY(FULL_CABINET.y + 16), width: scaleX(104), height: round2(74 * K) },
+    coil: { x: airX(36), y: scaleY(FRAME_CABINET.y + 16), width: scaleX(104), height: round2(74 * K) },
     fins: {
       x: airX(52),
       step: round2(6 * K),
       count: 13,
-      y0: scaleY(FULL_CABINET.y + 20),
-      y1: scaleY(FULL_CABINET.y + 86),
+      y0: scaleY(FRAME_CABINET.y + 20),
+      y1: scaleY(FRAME_CABINET.y + 86),
     },
-    slats: { y0: scaleY(FULL_CABINET.y + 134), step: round2(9 * K), count: 8 },
-    dividerY: scaleY(FULL_CABINET.y + 114),
+    slats: { y0: scaleY(FRAME_CABINET.y + 134), step: round2(9 * K), count: 8 },
+    dividerY: scaleY(FRAME_CABINET.y + 114),
     captionX: airX(88),
-    captionY: FULL_CABINET.y - 8,
-    passes: { y0: scaleY(FULL_CABINET.y + 30), step: round2(15 * K), count: 4, left: airX(44), right: airX(132) },
+    captionY: FRAME_CABINET.y - 8,
+    passes: { y0: scaleY(FRAME_CABINET.y + 30), step: round2(15 * K), count: 4, left: airX(44), right: airX(132) },
   },
   // the legs 2.8 (down) and 0.8 (up) units left of the scale's (so that the Out value, up to 77 units wide, stays inside the drawing): the In label (up to 64 units wide) right of the down leg ends at the cabinet's edge
   groundLoop: { downX: 130, upX: 84, depth: round2(140 * K) },
@@ -1058,63 +993,52 @@ const SIMPLIFIED_ZONES: Zones = deriveZones({
 });
 
 /**
- * The places of the simplified arrangement that are not the full arrangement's under the maps (refine-simplified-layout D2),
- * each with its reason. Pressure transducer 38 and its stub sit in the band the cabinet loses, so they move up, between
- * exchanger 10's two production lines (y 448 and 492) on pump 15's suction side; with them go the stub's crossing with the
- * line at y 492 and the label of the pressure.
+ * The places of the arrangement that are not the frame's under the maps (refine-simplified-layout D2), each with its
+ * reason. Pressure transducer 38 and its stub sit in the band the cabinet loses, so they move up, between exchanger 10's
+ * two production lines (y 448 and 492) on pump 15's suction side; with them go the stub's crossing with the line at y 492
+ * (not in the crossing list) and the label of the pressure. Group 4 of rework-layouts moves the transducers and deletes this.
  */
 export const SIMPLIFIED_EXCEPTIONS: Readonly<Record<string, string>> = {
   'component 38':
     'in the cut band (y 520 of the full cabinet): on the production return side between the two lines of exchanger 10, y 470, stem pointing left',
   'segment prod_tap_a': 'ends at y 470 where transducer 38 now sits, instead of at y 520',
-  'crossing prod_10_in x prod_tap_a': 'the stub no longer reaches the line at y 492',
   'label production_pressure': 'follows transducer 38: right of it',
 };
 
-/** Pressure transducer 38 in the simplified arrangement: on the stub's end (y), its stem pointing left. */
+/** Pressure transducer 38 in the arrangement: on the stub's end (y), its stem pointing left. */
 const TRANSDUCER_38_Y = 470;
 
-function buildSimplifiedArrangement(): Arrangement {
+function buildArrangement(): Arrangement {
   const zones = SIMPLIFIED_ZONES;
-  const inCabinetX = (x: number): boolean => x >= FULL_CABINET.x && x <= FULL_CABINET.x + FULL_CABINET.width;
+  const inCabinetX = (x: number): boolean => x >= FRAME_CABINET.x && x <= FRAME_CABINET.x + FRAME_CABINET.width;
   // a point at the cabinet's columns is a cabinet point (the zones' own points lie left of x 240 and right of x 760)
   const mapPoint = ([x, y]: Point): Point => (inCabinetX(x) ? [simplifiedX(x), simplifiedY(y)] : [x, y]);
   const stubX = simplifiedX(368);
-  const components = componentsFor(zones)
-    .filter((part) => part.detail !== 'full')
-    .map((part): Component => {
-      if (part.item === 50 || part.item === 51) return part;
-      if (part.item === 38) return { ...part, x: stubX + 16, y: TRANSDUCER_38_Y, rotation: 90 };
-      return { ...part, x: simplifiedX(part.x), y: simplifiedY(part.y) };
-    });
-  const segments = segmentsFor(zones)
-    .filter((part) => part.detail !== 'full')
-    .map((part): Segment =>
-      part.id === 'prod_tap_a'
-        ? {
-            ...part,
-            points: [
-              [stubX, simplifiedY(416)],
-              [stubX, TRANSDUCER_38_Y],
-            ],
-          }
-        : { ...part, points: part.points.map(mapPoint) },
-    );
-  const left = new Set(segments.map((part) => part.id));
-  const crossings = FULL_CROSSINGS.filter(
-    (crossing) =>
-      left.has(crossing.over) &&
-      left.has(crossing.under) &&
-      !(crossing.over === 'prod_10_in' && crossing.under === 'prod_tap_a'),
-  ).map((crossing): Crossing => ({ ...crossing, at: mapPoint(crossing.at) }));
-  const labels = labelPlacesFor(zones, COMPACT_PLACES, (x, y) => [simplifiedX(x), simplifiedY(y)]);
+  const components = componentsFor(zones).map((part): Component => {
+    if (part.item === 50 || part.item === 51) return part;
+    if (part.item === 38) return { ...part, x: stubX + 16, y: TRANSDUCER_38_Y, rotation: 90 };
+    return { ...part, x: simplifiedX(part.x), y: simplifiedY(part.y) };
+  });
+  const segments = segmentsFor(zones).map((part): Segment =>
+    part.id === 'prod_tap_a'
+      ? {
+          ...part,
+          points: [
+            [stubX, simplifiedY(416)],
+            [stubX, TRANSDUCER_38_Y],
+          ],
+        }
+      : { ...part, points: part.points.map(mapPoint) },
+  );
+  const crossings = CROSSINGS.map((crossing): Crossing => ({ ...crossing, at: mapPoint(crossing.at) }));
+  const labels = labelPlacesFor(zones, (x, y) => [simplifiedX(x), simplifiedY(y)]);
   return {
     ...zones,
-    id: 'simplified',
+    id: 'horizontal',
     components,
     segments,
     crossings,
-    circuitLabels: FULL_CIRCUIT_LABELS.map((label) => ({ ...label, x: simplifiedX(label.x), y: simplifiedY(label.y) })),
+    circuitLabels: CIRCUIT_LABELS.map((label) => ({ ...label, x: simplifiedX(label.x), y: simplifiedY(label.y) })),
     labels: {
       specs: labels.specs.map((spec) => {
         if (spec.id === 'production_pressure') {
@@ -1127,24 +1051,36 @@ function buildSimplifiedArrangement(): Arrangement {
   };
 }
 
-const SIMPLIFIED_ARRANGEMENT = buildSimplifiedArrangement();
+const ARRANGEMENT = buildArrangement();
 
 /**
- * The arrangement of a detail level in a shown layout: a pure function of the two. `full` draws the full arrangement,
- * `simplified` the simplified one. The compact layout draws the simplified detail level whatever `detail` says (add-compact-layout D3),
- * so it gets the simplified arrangement at either level (refine-simplified-layout D7); its places are COMPACT_PLACES.
+ * The manual-figure frame the arrangement is mapped from (rework-layouts D1): its zones, lists, crossings, circuit labels and
+ * default label places. Its crossing list holds only the crossings the arrangement keeps (not `prod_10_in x prod_tap_a`, whose stub the arrangement shortens; group 4 removes the stub). Not drawn by any layout; the tests of the maps (test/diagram/simplified.test.ts) compare the arrangement with it.
  */
-export function arrangementFor(level: Detail, layout: ShownLayout): Arrangement {
-  if (layout === 'compact') return SIMPLIFIED_ARRANGEMENT;
-  return level === 'full' ? FULL_ARRANGEMENT : SIMPLIFIED_ARRANGEMENT;
+export const FRAME = {
+  zones: FRAME_ZONES,
+  components: componentsFor(FRAME_ZONES),
+  segments: segmentsFor(FRAME_ZONES),
+  crossings: CROSSINGS,
+  circuitLabels: CIRCUIT_LABELS,
+  labels: labelPlacesFor(FRAME_ZONES),
+};
+
+/**
+ * The arrangement of a shown layout: a pure function of it (rework-layouts D2). Until the vertical arrangement is built
+ * (group 7), both layouts draw the same one.
+ */
+export function arrangementFor(layout: ShownLayout): Arrangement {
+  switch (layout) {
+    case 'horizontal':
+    case 'vertical':
+      return ARRANGEMENT;
+  }
 }
 
-/**
- * The arrangement a draw context carries (or, without one, the full layout's arrangement of its detail level). A compact
- * render must pass its arrangement in the context (the card always does), since this fallback is a full layout's.
- */
-export const arrangementOf = (context: Pick<DrawContext, 'arrangement' | 'detail'>): Arrangement =>
-  context.arrangement ?? arrangementFor(context.detail, 'full');
+/** The arrangement a draw context carries, or, without one, the horizontal layout's. */
+export const arrangementOf = (context: Pick<DrawContext, 'arrangement'>): Arrangement =>
+  context.arrangement ?? arrangementFor('horizontal');
 
 export type PartState = 'normal' | 'muted' | 'hidden';
 
@@ -1163,7 +1099,6 @@ const dhwFits = (rule: NonNullable<Visibility['dhw']>, context: Pick<DrawContext
 
 /** Whether a part is drawn normally, drawn muted (feature `unused`) or not drawn (see Visibility). */
 export function partState(part: Visibility, context: DrawContext): PartState {
-  if (part.detail === 'full' && context.detail !== 'full') return 'hidden';
   if (part.source !== undefined && !part.source.includes(context.source)) return 'hidden';
   if (part.dhw !== undefined && !dhwFits(part.dhw, context)) return 'hidden';
   if (part.bypass !== undefined && effectiveFeature(context, part.bypass) !== false) return 'hidden';
@@ -1209,10 +1144,7 @@ export const HOP = 7;
 const STEM = {
   probe_t: 16,
   transducer_p: 16,
-  pressure_switch: 16,
   thermostat: 16,
-  safety_valve: 16,
-  service_outlet: 10,
 };
 
 function localPorts(component: Component): readonly Point[] {
@@ -1240,10 +1172,7 @@ function localPorts(component: Component): readonly Point[] {
       ];
     case 'probe_t':
     case 'transducer_p':
-    case 'pressure_switch':
     case 'thermostat':
-    case 'safety_valve':
-    case 'service_outlet':
       return [[0, STEM[component.kind]]];
     case 'exchanger': {
       const span = component.size ?? 34;
@@ -1260,8 +1189,6 @@ function localPorts(component: Component): readonly Point[] {
         [-14, 0],
         [14, 0],
       ];
-    case 'vessel':
-      return [[0, -12]];
     case 'valve':
       return [
         [0, -9],

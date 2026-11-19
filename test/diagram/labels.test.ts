@@ -23,13 +23,13 @@ import {
 } from '../../src/strings';
 
 // the default config draws the simplified level
-const full = arrangementFor('simplified', 'full');
-const AIR_PORT_Y = full.airPortY;
-const AIR_UNIT = full.airUnit;
-const AIR_UNIT_WALL_X = full.airUnitWallX;
-const GROUND_LINE_Y = full.groundLineY;
-const GROUND_LOOP = full.groundLoop;
-const LABEL_SPECS = full.labels.specs;
+const arrangement = arrangementFor('horizontal');
+const AIR_PORT_Y = arrangement.airPortY;
+const AIR_UNIT = arrangement.airUnit;
+const AIR_UNIT_WALL_X = arrangement.airUnitWallX;
+const GROUND_LINE_Y = arrangement.groundLineY;
+const GROUND_LOOP = arrangement.groundLoop;
+const LABEL_SPECS = arrangement.labels.specs;
 
 const P = 'demo_ecogeo';
 const nb = (text: string): string => text.replaceAll(' ', NBSP);
@@ -102,11 +102,10 @@ describe('refrigerant labels', () => {
     card.remove();
   });
 
-  test('superheat of 6.2 degrees reads 6.2 K near item 12, the valve opening in %', async () => {
-    const card = await mount({ detail: 'full' }, hassOf({ 'refrigerant.superheat': ['6.2', '°C'] }));
-    expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
-    expect(label(card, 'superheat')?.getAttribute('data-label-item')).toBe('12');
-    expect(valueOf(card, 'expansion_valve')).toBe(nb('58 %'));
+  test('the superheat and the valve opening are not on the drawing yet (rework-layouts task 3.1 shows them)', async () => {
+    const card = await mount({}, hassOf({ 'refrigerant.superheat': ['6.2', '°C'] }));
+    expect(label(card, 'superheat')).toBeNull();
+    expect(label(card, 'expansion_valve')).toBeNull();
     card.remove();
   });
 
@@ -144,10 +143,10 @@ describe('hydraulic labels', () => {
     card.remove();
   });
 
-  // live-values "Unused tank labels": the tank is drawn but shows no values, in the full and the compact layout
-  test('unused tank: no tank labels on either model, in the full and the compact layout', async () => {
+  // live-values "Unused tank labels": the tank is drawn but shows no values, in both layouts
+  test('unused tank: no tank labels on either model, in the horizontal and the vertical layout', async () => {
     for (const model of ['B', 'C'] as const) {
-      for (const layout of ['full', 'compact'] as const) {
+      for (const layout of ['horizontal', 'vertical'] as const) {
         const card = await mount({ model, dhw: 'unused', layout }, hassOf());
         expect(
           labelIds(card).filter((id) => id.startsWith('tank_')),
@@ -243,29 +242,30 @@ describe('units, locale and precision', () => {
     card.remove();
   });
 
-  test('a superheat entity in °C with a display precision of 2 shows 6.20 K', async () => {
+  // a temperature difference (K), shown for the tank's start delta-T
+  test('a start delta-T entity in °C with a display precision of 2 shows 6.20 K', async () => {
     const hass = hassOf(
-      { 'refrigerant.superheat': ['6.2', '°C'] },
-      { entities: { [idOf('refrigerant.superheat')]: { display_precision: 2 } } },
+      { 'dhw.start_delta': ['6.2', '°C'] },
+      { entities: { [idOf('dhw.start_delta')]: { display_precision: 2 } } },
     );
-    const card = await mount({ detail: 'full' }, hass);
-    expect(valueOf(card, 'superheat')).toBe(nb('6.20 K'));
+    const card = await mount({}, hass);
+    expect(valueOf(card, 'tank_external_start_delta')).toBe(nb('6.20 K'));
     card.remove();
   });
 
-  test('a Fahrenheit superheat entity with a display precision still uses the role default', async () => {
+  test('a Fahrenheit start delta-T entity with a display precision still uses the role default', async () => {
     const hass = hassOf(
-      { 'refrigerant.superheat': ['43.2', '°F'] },
-      { entities: { [idOf('refrigerant.superheat')]: { display_precision: 2 } } },
+      { 'dhw.start_delta': ['43.2', '°F'] },
+      { entities: { [idOf('dhw.start_delta')]: { display_precision: 2 } } },
     );
-    const card = await mount({ detail: 'full' }, hass);
-    expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
+    const card = await mount({}, hass);
+    expect(valueOf(card, 'tank_external_start_delta')).toBe(nb('6 K'));
     card.remove();
   });
 
-  test('Fahrenheit superheat: 43.2 degrees F reads 6.2 K', async () => {
-    const card = await mount({ detail: 'full' }, hassOf({ 'refrigerant.superheat': ['43.2', '°F'] }));
-    expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
+  test('Fahrenheit start delta-T: 43.2 degrees F reads 6 K (the role has no decimals)', async () => {
+    const card = await mount({}, hassOf({ 'dhw.start_delta': ['43.2', '°F'] }));
+    expect(valueOf(card, 'tank_external_start_delta')).toBe(nb('6 K'));
     card.remove();
   });
 
@@ -311,7 +311,7 @@ describe('roles not present', () => {
   };
 
   test('No pressure sensors: no label at items 37 and 38, the probes stay drawn', async () => {
-    const card = await mount({ ...NO_PRESSURE, detail: 'full', layout: 'full' }, hassOf());
+    const card = await mount({ ...NO_PRESSURE, layout: 'horizontal' }, hassOf());
     expect(label(card, 'production_pressure')).toBeNull();
     expect(label(card, 'brine_pressure')).toBeNull();
     expect(root(card).querySelector('[data-label-item="37"], [data-label-item="38"]')).toBeNull();
@@ -321,15 +321,18 @@ describe('roles not present', () => {
     card.remove();
   });
 
-  test('a hidden label stays hidden in the compact layout', async () => {
-    const card = await mount({ entities: { production: { outlet_temperature: 'none' } }, layout: 'compact' }, hassOf());
+  test('a hidden label stays hidden in the vertical layout', async () => {
+    const card = await mount(
+      { entities: { production: { outlet_temperature: 'none' } }, layout: 'vertical' },
+      hassOf(),
+    );
     expect(label(card, 'production_out')).toBeNull();
     expect(label(card, 'production_in')).not.toBeNull();
     card.remove();
   });
 
   test('No COP: the footer shows no COP item, the others stay', async () => {
-    for (const layout of ['full', 'compact']) {
+    for (const layout of ['horizontal', 'vertical']) {
       const card = await mount({ entities: { unit: { cop: 'none', system_cop: 'none' } }, layout }, hassOf());
       expect(root(card).querySelector('[data-footer="cop"]')).toBeNull();
       expect(root(card).querySelector('[data-footer="outside_temperature"]')).not.toBeNull();
@@ -634,8 +637,8 @@ describe('source labels', () => {
     }
   });
 
-  describe.each(['simplified', 'full'] as const)('port labels touch no pipe or other label (%s)', (detail) => {
-    const arr = arrangementFor(detail, 'full');
+  describe('port labels touch no pipe or other label', () => {
+    const arr = arrangementFor('horizontal');
     interface Box {
       left: number;
       right: number;
@@ -664,7 +667,7 @@ describe('source labels', () => {
     ]);
 
     test.each(['air', 'ground', 'hybrid'] as const)('%s', (source) => {
-      const context = { model: 'B', dhw: 'external', source, features: mergeFeatures(4, {}), detail } as const;
+      const context = { model: 'B', dhw: 'external', source, features: mergeFeatures(4, {}) } as const;
       const shown = arr.labels.specs.filter((spec) => partState(spec, context) !== 'hidden');
       const mine = shown.filter((spec) => SOURCE_IDS.has(spec.id));
       expect(mine.length).toBeGreaterThanOrEqual(source === 'ground' ? 2 : 3);
@@ -813,8 +816,8 @@ describe('DHW tank labels', () => {
     card.remove();
   });
 
-  describe.each(['simplified', 'full'] as const)('model C tank values clear of everything (%s)', (detail) => {
-    const arr = arrangementFor(detail, 'full');
+  describe('model C tank values clear of everything', () => {
+    const arr = arrangementFor('horizontal');
     interface Box {
       left: number;
       right: number;
@@ -865,7 +868,7 @@ describe('DHW tank labels', () => {
       expect(arr.labels.specs.find((item) => item.id === 'tank_internal_demand')?.y).toBeGreaterThan(rowY[0] ?? 0);
     });
 
-    test('no overlap with each other, other labels, item tags, components or pipes', () => {
+    test('no overlap with each other, other labels, components or pipes', () => {
       const boxes = ids.map((id) => [id, boxOf(id)] as const);
       for (const [index, [id, box]] of boxes.entries()) {
         for (const [other, otherBox] of boxes.slice(index + 1))
@@ -874,16 +877,6 @@ describe('DHW tank labels', () => {
         for (const spec of arr.labels.specs.filter((item) => !ids.includes(item.id))) {
           const near = { left: spec.x - 30, right: spec.x + 30, top: spec.y - 6, bottom: spec.y + 6 };
           expect(apart(box, near), id + ' ' + spec.id).toBe(true);
-        }
-        // item tags (full detail): a 14 x 10 box at the tag's anchor
-        if (detail === 'full') {
-          for (const part of arr.components.filter((item) => item.dhw === 'internal' || item.item === 26)) {
-            const [dx, dy, anchor] = part.tag;
-            const x = part.x + dx;
-            const left = anchor === 'start' ? x : anchor === 'end' ? x - 14 : x - 7;
-            const tag = { left, right: left + 14, top: part.y + dy - 9, bottom: part.y + dy + 1 };
-            expect(apart(box, tag), id + ' tag ' + String(part.item)).toBe(true);
-          }
         }
         // components drawn near (probe 54 and the others): their symbol boxes (radius 14, the largest symbols' half size) stay clear, except tank 50
         for (const part of arr.components.filter((item) => item.item !== 50 && item.item !== 51)) {
@@ -915,7 +908,10 @@ describe('DHW tank labels', () => {
 
 describe('label positions', () => {
   test('positions are percentages of the viewBox', () => {
-    expect(cssPosition({ x: 500, y: full.viewBox.height / 2 }, full.viewBox)).toEqual({ left: '50%', top: '50%' });
+    expect(cssPosition({ x: 500, y: arrangement.viewBox.height / 2 }, arrangement.viewBox)).toEqual({
+      left: '50%',
+      top: '50%',
+    });
   });
 
   test('every label has a unique id and lies inside the viewBox', () => {
@@ -933,7 +929,7 @@ describe('label positions', () => {
     const features = mergeFeatures(4, {});
     const entities = Object.fromEntries(ROLE_PATHS.map((role) => [role, undefined])) as Record<RolePath, undefined>;
     const readings = readRoles({}, entities);
-    const context = { model: 'B', dhw: 'external', source: 'air', features, detail: 'simplified' } as const;
+    const context = { model: 'B', dhw: 'external', source: 'air', features } as const;
     expect(labelsFor(context, readings, entities, { locale: {} })).toEqual(
       labelsFor(context, readings, entities, { locale: {} }),
     );
@@ -941,20 +937,20 @@ describe('label positions', () => {
 });
 
 describe('units from another source', () => {
-  test('pressure in kPa reads in bar at item 38 (full layout)', async () => {
-    const card = await mount({ layout: 'full' }, hassOf({ 'production.pressure': ['150', 'kPa'] }));
+  test('pressure in kPa reads in bar at item 38 (horizontal layout)', async () => {
+    const card = await mount({ layout: 'horizontal' }, hassOf({ 'production.pressure': ['150', 'kPa'] }));
     expect(valueOf(card, 'production_pressure')).toBe(`1.5${NBSP}bar`);
     card.remove();
   });
 
   test('compressor speed in Hz keeps its own unit', async () => {
-    const card = await mount({ layout: 'full' }, hassOf({ 'compressor.speed': ['45', 'Hz'] }));
+    const card = await mount({ layout: 'horizontal' }, hassOf({ 'compressor.speed': ['45', 'Hz'] }));
     expect(valueOf(card, 'compressor_speed')).toBe(`45${NBSP}Hz`);
     card.remove();
   });
 
   test('pump speed in rpm keeps its own unit, joined by a no-break space', async () => {
-    const card = await mount({ layout: 'full' }, hassOf({ 'production.pump': ['2400', 'rpm'] }));
+    const card = await mount({ layout: 'horizontal' }, hassOf({ 'production.pump': ['2400', 'rpm'] }));
     const text = valueOf(card, 'production_pump');
     expect(text).toBe(`2400${NBSP}rpm`);
     expect(text).not.toContain(' ');
@@ -964,7 +960,7 @@ describe('units from another source', () => {
   test('pump as on/off reads On', async () => {
     const entityId = 'binary_sensor.pump_state';
     const states = { ...hassOf().states, [entityId]: { entity_id: entityId, state: 'on', attributes: {} } };
-    const card = await mount({ layout: 'full', entities: { production: { pump: entityId } } }, { states });
+    const card = await mount({ layout: 'horizontal', entities: { production: { pump: entityId } } }, { states });
     expect(valueOf(card, 'production_pump')).toBe('On');
     card.remove();
   });
@@ -1024,7 +1020,6 @@ describe('footer power items and efficiency (add-htr-state)', () => {
       dhw?: 'external' | 'internal' | 'unused' | 'none';
       absent?: readonly RolePath[];
       none?: readonly RolePath[];
-      compact?: boolean;
     } = {},
   ) {
     const absent = new Set<RolePath>([...(options.absent ?? []), ...(options.none ?? [])]);
@@ -1032,24 +1027,18 @@ describe('footer power items and efficiency (add-htr-state)', () => {
     const entities = { ...everyEntity };
     for (const role of absent) entities[role] = undefined;
     const states = liveStates(over);
-    return footerItems(
-      readRoles(states, entities),
-      entities,
-      display,
-      {
-        mode,
-        features: mergeFeatures(4, { htr: options.htr ?? true }),
-        dhw: options.dhw ?? 'external',
-        notPresent,
-        absent,
-      },
-      options.compact ?? false,
-    );
+    return footerItems(readRoles(states, entities), entities, display, {
+      mode,
+      features: mergeFeatures(4, { htr: options.htr ?? true }),
+      dhw: options.dhw ?? 'external',
+      notPresent,
+      absent,
+    });
   }
   const shown = (items: ReturnType<typeof footerOf>): string[] =>
     items.map((item) => `${item.caption === undefined ? '' : `${item.caption} `}${item.text}`);
   const power = (items: ReturnType<typeof footerOf>): string[] =>
-    items.filter((item) => item.tier === 'detail' && item.id.endsWith('_power')).map((item) => item.id);
+    items.filter((item) => item.id.endsWith('_power')).map((item) => item.id);
 
   test('Footer while heating: system COP, DG1 and HTR, no condensation or evaporation item', () => {
     const items = footerOf('heating', {
@@ -1143,16 +1132,10 @@ describe('footer power items and efficiency (add-htr-state)', () => {
     expect(power(items)).toEqual(['htr_power']);
   });
 
-  test('power items are detail tier, formatted like capacities; the efficiency is key tier', () => {
+  test('power items are formatted like capacities', () => {
     const items = footerOf('heating');
-    for (const id of ['dg1_power', 'htr_power']) expect(items.find((item) => item.id === id)?.tier).toBe('detail');
-    expect(items.find((item) => item.id === 'cop')?.tier).toBe('key');
+    for (const id of ['dg1_power', 'htr_power']) expect(items.map((item) => item.id)).toContain(id);
     expect(items.find((item) => item.id === 'dg1_power')?.text).toBe(nb('4712 W'));
-  });
-
-  test('Compact footer without power items', () => {
-    const items = footerOf('heating', {}, { compact: true });
-    expect(items.map((item) => item.id).sort()).toEqual(['cop', 'outside_temperature']);
   });
 
   test('System COP first, register COP as fallback', () => {

@@ -76,9 +76,8 @@ const ALL_OPTIONS: CardConfig = {
   dhw: 'internal',
   prefix: 'demo_ecogeo',
   features: { active_cooling: true, passive_cooling: false, htr: false, backup_heater: 'unused' },
-  detail: 'full',
   exchanger_fill: 'none',
-  layout: 'compact',
+  layout: 'vertical',
   colors: [
     { temperature: 0, color: '#1565c0' },
     { temperature: 60, color: '#c62828' },
@@ -110,7 +109,6 @@ describe('ecogeo-card-editor existing config', () => {
       dhw: 'external',
       prefix: 'demo_ecogeo',
       features: { passive_cooling: 'unused', active_cooling: 'default', htr: 'default', backup_heater: 'default' },
-      detail: 'simplified',
       exchanger_fill: 'gradient',
       layout: 'auto',
       states: { off: ['OFF'], defrost: ['Defrost'] },
@@ -128,7 +126,6 @@ describe('ecogeo-card-editor existing config', () => {
       'features.active_cooling',
       'features.htr',
       'features.backup_heater',
-      'detail',
       'exchanger_fill',
       'layout',
       ...rowFields(DEFAULT_STOPS.length + 1),
@@ -285,9 +282,9 @@ describe('ecogeo-card-editor writes', () => {
     editor.setConfig({});
     await editor.updateComplete;
     expect(form.data).not.toHaveProperty('source');
-    editor.setConfig({ layout: 'full' });
+    editor.setConfig({ layout: 'horizontal' });
     await editor.updateComplete;
-    expect(form.data).toMatchObject({ source: 'ground', layout: 'full' });
+    expect(form.data).toMatchObject({ source: 'ground', layout: 'horizontal' });
   });
 
   test('labels come from the section title or the editor strings', async () => {
@@ -374,7 +371,7 @@ describe('ecogeo-card-editor round trip', () => {
       type: 'custom:ecogeo-card',
       source: 'air',
       features: { htr: false, passive_cooling: 'unused', backup_heater: true },
-      layout: 'full',
+      layout: 'horizontal',
       prefix: 'demo_ecogeo',
     };
     const [saved] = await roundTrip(config);

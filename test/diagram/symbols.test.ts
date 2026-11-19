@@ -10,25 +10,21 @@ const KINDS: readonly ComponentKind[] = [
   'inversion_valve',
   'probe_t',
   'transducer_p',
-  'pressure_switch',
   'thermostat',
   'exchanger',
   'compressor',
-  'vessel',
-  'safety_valve',
   'valve',
   'drain_valve',
   'resistor',
   'filter_dryer',
   'expansion_valve',
-  'service_outlet',
   'tank',
   'coil',
 ];
 
 function mount(kind: ComponentKind, rotation: 0 | 90 | 180 | 270 = 0): SVGElement {
   const host = document.createElement('div');
-  render(svg`<svg>${symbol(kind, { rotation, arrangement: arrangementFor('full', 'full') })}</svg>`, host);
+  render(svg`<svg>${symbol(kind, { rotation, arrangement: arrangementFor('horizontal') })}</svg>`, host);
   const group = host.querySelector('svg > g');
   if (group === null) throw new Error('no group');
   return group as unknown as SVGElement;

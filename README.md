@@ -12,9 +12,9 @@ for the explanation of what the card shows and where each part comes from.
 
 ## Features
 
-- The unit's internal schematic drawn as inline SVG after the manual's figures B1 to B4 and C, with the item number of
-  every component shown only with `detail: full` (components show their name on hover), for any model, variant,
-  outer-loop source (air, ground or hybrid) and DHW storage.
+- The unit's internal schematic drawn as inline SVG after the manual's figures B1 to B4 and C, without the service and
+  safety parts that have no live value (components show their name and manual item number on hover), for any model,
+  variant, outer-loop source (air, ground or hybrid) and DHW storage.
 - Pipes coloured by temperature on an absolute scale (blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at
   30 °C, orange at 50 °C, red at 70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe
   with no probe value is muted. The plate exchangers are filled on each side with a gradient from the colour of the pipe
@@ -23,10 +23,10 @@ for the explanation of what the card shows and where each part comes from.
   compressor, the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode
   are muted. `prefers-reduced-motion` stops all animation.
 - Live values beside their components (temperatures, pressures, pump and compressor speeds, power, the tank's values;
-  the superheat and the expansion valve's opening at `detail: full`) and a footer with the mode, season, outside
-  temperature, COP (EER while cooling) and the power items of the mode (DG1 and HTR while heating, DHW while producing
-  DHW, Cooling and HTR in active cooling). The card formats the numbers itself with Home Assistant's locale and keeps
-  every number joined to its unit by a no-break space.
+  the expansion valve's opening and the superheat are not on the drawing yet) and a footer with the mode, season,
+  outside temperature, COP (EER while cooling) and the power items of the mode (DG1 and HTR while heating, DHW while
+  producing DHW, Cooling and HTR in active cooling). The card formats the numbers itself with Home Assistant's locale
+  and keeps every number joined to its unit by a no-break space.
 - A visual editor (add the card from the picker, or edit it) for the unit, the entity prefix, the features and the
   appearance; it writes only what you set and keeps every other key.
 - Read-only: tapping a value, or a component with an entity of its own, opens the entity's more-info dialog; the card
@@ -64,21 +64,16 @@ runs. In the card editor, the help link opens this README. How a release is made
 [docs/ecogeo-card.md](docs/ecogeo-card.md), and what each one changed is in [CHANGELOG.md](CHANGELOG.md).
 
 The card measures its own width and chooses a layout from it (the `layout` option, see Options). With `layout: auto`
-(the default) it shows the full layout from 600 px wide (from 640 px wide with `detail: full`), which is a panel view or
-a wide section, and the compact layout below that, which is what a phone gets. The compact layout shows the schematic at
-the simplified detail level, whatever `detail` says, without the captions inside the drawing and with only the key
-labels (production out and in, brine out and in, compressor speed, the DHW temperature and the source's outlet
-temperature), at least 10 px high and, for production and brine, captioned In and Out and the DHW temperature captioned
-DHW, and a shorter footer (mode, COP or EER, outside temperature and the alarm and offline indications). Pipes and
-outlines never render thinner than 2 px and 1.25 px, and the footer wraps. Once compact, the card returns to full only
-at 624 px, or 664 px with `detail: full` (24 px of hysteresis), so a scrollbar appearing with the layout cannot make it
-flip back and forth. Set `layout: full` or `layout: compact` to force one. In a panel view the card also fits the
-screen: the drawing is kept within the window's height below Home Assistant's header (and above the footer), narrower
-and centred when the card is wider than that, and the layout and line widths follow the drawing's own width. A tall
-window or a sections view is not affected: the drawing fills the card. How the thresholds were measured, and what each
-tier holds, is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
-
-![The card on a 360 px wide phone: the compact layout with its seven key values](docs/images/phone-heating.png)
+(the default) it shows the horizontal layout from 600 px wide, which is a panel view or a wide section, and the vertical
+layout below that, which is what a phone gets. The horizontal layout is the drawing described in this README; the
+vertical layout, a taller arrangement for phones, is still to come, and until then `layout: vertical` (and `auto` below
+600 px) draws the horizontal one. Pipes and outlines never render thinner than 2 px and 1.25 px, and the footer wraps.
+Once vertical, the card returns to horizontal only at 624 px (24 px of hysteresis), so a scrollbar appearing with the
+layout cannot make it flip back and forth. Set `layout: horizontal` or `layout: vertical` to force one. In a panel view
+the card also fits the screen: the drawing is kept within the window's height below Home Assistant's header (and above
+the footer), narrower and centred when the card is wider than that, and the layout and line widths follow the drawing's
+own width. A tall window or a sections view is not affected: the drawing fills the card. How the threshold was
+measured is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
 
 ## Configuration
 
@@ -117,8 +112,7 @@ fault.
 | `states` | group | `off: [OFF]`, `defrost: [Defrost]` | The state texts that mean off (the on/off entity) and defrost (the compressor mode entity); a list replaces its default, case-insensitive. See Using another source in the docs. |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
-| `layout` | `auto`, `full`, `compact` | `auto` | `auto` shows the compact layout while the card is narrower than 600 px (640 px with `detail: full`) and the full layout otherwise (and before the width is known), with 24 px of hysteresis once compact (see Layout in the docs); `full` and `compact` use that layout at any width. |
-| `detail` | `simplified`, `full` | `simplified` | `simplified` leaves out the service and safety parts with no live value, shows no item numbers and draws a wider, shorter cabinet with a smaller outer-loop source and external tank, so the labels get room, and leaves out the superheat and the expansion valve's opening (tap the valve for the opening); `full` draws every part of the manual figure with its item number, in the original, taller cabinet. |
+| `layout` | `auto`, `horizontal`, `vertical` | `auto` | `auto` shows the vertical layout while the card is narrower than 600 px and the horizontal layout otherwise (and before the width is known), with 24 px of hysteresis once vertical (see Layout in the docs); `horizontal` and `vertical` use that layout at any width. Until the vertical arrangement is built, both draw the horizontal one. The former values `full` and `compact` are errors. |
 
 ### Source and DHW
 
@@ -297,7 +291,7 @@ The editor is Home Assistant's own form and has six sections:
   Power DHW") is never taken as heat power.
 - **Features:** passive cooling, active cooling, HTR and backup heater, each On, Off, Unused or, left at the first
   choice, the variant's default (the choice names it, for example "Variant default: on").
-- **Appearance:** detail level, exchanger fill, layout and the colour stops (see below).
+- **Appearance:** exchanger fill, layout and the colour stops (see below).
 - **Advanced entities:** one entity picker per role (the Roles table), in one collapsible group per part of the unit,
   each picker limited to the domains the role accepts. The groups are shown only while the **Advanced settings**
   switch above the form is on. The switch starts on when the config has `entities` or `states`, is never written to
@@ -350,7 +344,7 @@ npm run capture   # one PNG per emulator URL in build/captures/
 npm test          # both test projects: unit (Vitest, happy-dom) and browser (headless Chromium and WebKit)
 npm run test:unit     # unit tests only
 npm run test:browser  # browser tests only (layout at real widths, no label overlaps); stops at a preflight in Chromium on Windows under RDP without font smoothing (docs/ecogeo-card.md)
-npm run measure-layout  # re-measure the compact threshold (see docs/ecogeo-card.md)
+npm run measure-layout  # re-measure the vertical threshold (see docs/ecogeo-card.md)
 npm run check     # typecheck, lint, format check, the Home Assistant quality checks (needs uv) and tests
 npm run lint:ha   # codespell, yamllint, the workflow schema check and the Markdown format check, through uvx
 npm run build     # bundle into build/ecogeo-card.js (git-ignored)
@@ -376,9 +370,9 @@ no installation data. The mock entities use the demo prefix `demo_ecogeo`.
   `hass.entities` and `hass.devices`.
 - **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default; on
   B external, unused or none, on C internal or unused; the other choices are disabled, and a value in the URL that the
-  model rejects falls back to the default), each feature (the variant's preset, `true`, `false` or `unused`), the detail
-  level (simplified or full), the exchanger fill (gradient or none, the card's `exchanger_fill` option) and the light or
-  dark theme.
+  model rejects falls back to the default), each feature (the variant's preset, `true`, `false` or `unused`), the
+  exchanger fill (gradient or none, the card's `exchanger_fill` option), the layout (auto, horizontal or vertical, the
+  card's `layout` option), the card's width and the light or dark theme.
 - **Live values:** sliders for production out and in, brine out and in, DHW temperature, discharge, suction, both
   pumps, the compressor percentage (it moves the speed too), the fan speed and the condensation capacity. Picking a
   scenario resets them. Slider values are not part of the URL state.
@@ -395,7 +389,9 @@ All state is in the URL query string, so every combination is addressable. Param
 | `source`                                                       | `air`, `ground`, `hybrid`                                                    | `ground`   |
 | `dhw`                                                          | `external`, `internal`, `unused`, `none` (`none` on model B only)            | by model   |
 | `active_cooling`, `passive_cooling`, `htr`, `backup_heater`    | `true`, `false`, `unused`                                                    | by variant |
-| `detail`                                                       | `simplified`, `full`                                                         | `simplified` |
+| `layout`                                                       | `auto`, `horizontal`, `vertical`                                             | `auto`     |
+| `width`                                                        | the card's width in px (200 to 2000); the controls offer 320, 360, 412, 600, 800 and 1000 | `1000`     |
+| `panel`                                                        | `1` shows the card as in a panel view                                        | off        |
 | `fill`                                                         | `gradient`, `none`                                                           | `gradient` |
 | `theme`                                                        | `light`, `dark`                                                              | `light`    |
 | `cycle`                                                        | seconds per step; the cycle runs when it is set                              | off        |
@@ -405,8 +401,9 @@ For example `dev/index.html?scenario=passive_cooling&source=ground`.
 `npm run capture` starts its own Vite server, opens every URL of the fixed list in `dev/captures.ts` in headless
 Chromium (Playwright, a dev dependency for this script only) and writes one PNG per URL to `build/captures/`. The list
 covers every scenario, each source, each DHW value, model C, each feature `false` and `unused`, the other variants, the
-dark theme, the foreign naming (heating, heating with HTR recovery, DHW, defrost and off, and heating at 360 px) and
-full-detail captures (heating, heating with HTR recovery, model C, an air and a hybrid source, no DHW and variant 1).
+dark theme, the foreign naming (heating, heating with HTR recovery, DHW, defrost and off), the panel view, and the
+horizontal layout at the vertical threshold (every scenario, light and dark), 800 and 1000 px. An old `detail=` or
+`layout=full`/`layout=compact` in a URL is ignored.
 The first run needs the browser: `npx playwright install chromium`.
 
 `dist/ecogeo-card.js` is the committed, deployable bundle. `npm run format` rewrites files with Prettier.

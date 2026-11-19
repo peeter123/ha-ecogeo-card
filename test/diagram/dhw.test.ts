@@ -17,18 +17,24 @@ import {
 import { DHW_LABELS } from '../../src/strings';
 import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 
-// the literal coordinates below are the full arrangement's (the simplified one has its own, test/diagram/simplified.test.ts)
-const full = arrangementFor('full', 'full');
-const CABINET = full.cabinet;
-const COMPONENTS = full.components;
-const EXTERNAL_TANK = full.externalTank;
-const INTERNAL_TANK = full.internalTank;
-const SEGMENTS = full.segments;
-const LABEL_SPECS = full.labels.specs;
+// the coordinates below come from the arrangement (the manual-figure frame's are in test/diagram/simplified.test.ts)
+const horizontal = arrangementFor('horizontal');
+const CABINET = horizontal.cabinet;
+const COMPONENTS = horizontal.components;
+const EXTERNAL_TANK = horizontal.externalTank;
+const INTERNAL_TANK = horizontal.internalTank;
+const SEGMENTS = horizontal.segments;
+const portX = (item: number): number => COMPONENTS.find((component) => component.item === item)?.x ?? Number.NaN;
+const COIL = SEGMENTS.find((segment) => segment.id === 'dhw_ext_coil')?.shape;
+if (COIL === undefined) throw new Error('no external coil');
+/** The coil's two ends: where it meets the pipes from ports 5 and 6. */
+const COIL_START = `${String(COIL.cx + COIL.rx)} ${String(COIL.top)}`;
+const COIL_END = `${String(COIL.cx - COIL.rx)} ${String(COIL.bottom)}`;
+const LABEL_SPECS = horizontal.labels.specs;
 
 async function mount(config: CardConfig = {}, hass?: HassLike): Promise<EcogeoCard> {
   const card = document.createElement('ecogeo-card') as EcogeoCard;
-  card.setConfig({ type: 'custom:ecogeo-card', detail: 'full', ...config });
+  card.setConfig({ type: 'custom:ecogeo-card', ...config });
   if (hass !== undefined) card.hass = hass;
   document.body.append(card);
   await card.updateComplete;
@@ -60,8 +66,10 @@ describe('DHW storage', () => {
     expect(segments(card)).toEqual(expect.arrayContaining(['dhw_ext_in', 'dhw_ext_coil', 'dhw_ext_out']));
     expect(items(card)).toEqual(expect.arrayContaining([5, 6, 26]));
     const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
-    expect(d('dhw_ext_in').startsWith('M722 130 L722 50')).toBe(true);
-    expect(d('dhw_ext_out').endsWith('L748 130')).toBe(true);
+    expect(
+      d('dhw_ext_in').startsWith(`M${String(portX(5))} 130 L${String(portX(5))} ${String(horizontal.run.inY)}`),
+    ).toBe(true);
+    expect(d('dhw_ext_out').endsWith(`L${String(portX(6))} 130`)).toBe(true);
     expect(items(card).some((item) => item >= 47)).toBe(false);
     card.remove();
   });
@@ -71,7 +79,7 @@ describe('DHW storage', () => {
     const body = root(card).querySelector('path.tank-body[data-dhw-tank="external"]');
     expect(body?.getAttribute('fill')).toContain('--dhw-tank-color');
     const d = body?.getAttribute('d') ?? '';
-    expect(d).toMatch(/^M806 144 A84 14 0 0 1 974 144 V296 A84 14 0 0 1 806 296 Z$/);
+    expect(d).toBe('M853 141 A67 11 0 0 1 987 141 V263 A67 11 0 0 1 853 263 Z');
     expect(root(card).querySelector('.dhw-storage .tank-rim')).not.toBeNull();
     card.remove();
   });
@@ -98,16 +106,16 @@ describe('DHW storage', () => {
     for (const half of back) expect(flow?.getAttribute('d')).not.toContain(half.getAttribute('d'));
     // its ends meet the pipes from ports 5 and 6
     const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
-    expect(d('dhw_ext_in').endsWith('L940 192')).toBe(true);
-    expect(front[0]?.getAttribute('d')?.startsWith('M940 192')).toBe(true);
-    expect(front.at(-1)?.getAttribute('d')?.endsWith('840 276')).toBe(true);
+    expect(d('dhw_ext_in').endsWith(`L${COIL_START}`)).toBe(true);
+    expect(front[0]?.getAttribute('d')?.startsWith(`M${COIL_START}`)).toBe(true);
+    expect(front.at(-1)?.getAttribute('d')?.endsWith(COIL_END)).toBe(true);
     // clean joints (refine-schematic-drawing D8a): every back half is drawn before every front half; backs have butt caps, fronts round
     const lastBack = halves.map((half) => half.getAttribute('data-half')).lastIndexOf('back');
     const firstFront = halves.map((half) => half.getAttribute('data-half')).indexOf('front');
     expect(lastBack).toBeLessThan(firstFront);
     for (const half of back) expect(half.getAttribute('stroke-linecap')).toBe('butt');
     for (const half of front) expect(half.getAttribute('stroke-linecap')).toBe('round');
-    expect(d('dhw_ext_out').startsWith('M840 276')).toBe(true);
+    expect(d('dhw_ext_out').startsWith(`M${COIL_END}`)).toBe(true);
     card.remove();
   });
 
@@ -127,10 +135,10 @@ describe('DHW storage', () => {
     expect(shape.kind).toBe('helix');
     // the tank's centre line is the coil's centre line
     expect(EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2).toBe(shape.cx);
-    expect(EXTERNAL_TANK).toMatchObject({ x: 806, width: 168 });
+    expect(EXTERNAL_TANK).toMatchObject({ x: 853, width: 134 });
     // the dome apex (the path's top: its start y minus the dome rise) is the cabinet's top line
     const d = root(card).querySelector('path.tank-body[data-dhw-tank="external"]')?.getAttribute('d') ?? '';
-    const [, startY] = /^M806 (\d+)/.exec(d) ?? [];
+    const [, startY] = /^M853 (\d+)/.exec(d) ?? [];
     expect(Number(startY) - EXTERNAL_TANK.dome).toBe(CABINET.y);
     expect(EXTERNAL_TANK.y).toBe(CABINET.y);
     // the coil's curve and the pipes at its ends stay inside the tank, in its lower part
@@ -234,8 +242,8 @@ describe('DHW storage', () => {
     internal.remove();
   });
 
-  test('simplified model C: coil 51 is drawn as a helix of the same kind (front solid, back faint)', async () => {
-    const card = await mount({ model: 'C', detail: 'simplified' });
+  test('model C: coil 51 is drawn as a helix of the same kind (front solid, back faint)', async () => {
+    const card = await mount({ model: 'C' });
     const coil = root(card).querySelector('[data-item="51"] .symbol.coil');
     const paths = [...(coil?.querySelectorAll('path[data-half]') ?? [])];
     const faint = paths.filter((path) => path.getAttribute('data-half') === 'back');
@@ -305,22 +313,18 @@ describe('DHW storage', () => {
     card.remove();
   });
 
-  test('internal (model C): tank 50 with coil 51, probe 54, trap 52, drain valve 53 and stubs 47 to 49', async () => {
-    const card = await mount({ model: 'C', detail: 'full' });
-    expect(items(card)).toEqual(expect.arrayContaining([47, 48, 49, 50, 51, 52, 53, 54, 26]));
+  test('internal (model C): tank 50 with coil 51, probe 54 and stubs 47 to 49, no trap 52 and no drain valve 53', async () => {
+    const card = await mount({ model: 'C' });
+    expect(items(card)).toEqual(expect.arrayContaining([47, 48, 49, 50, 51, 54, 26]));
+    expect(items(card)).not.toContain(52);
+    expect(items(card)).not.toContain(53);
     expect(items(card)).not.toContain(5);
     expect(items(card)).not.toContain(6);
     expect(tanks(card)).toEqual(['internal']);
     expect(segments(card)).toEqual(expect.arrayContaining(['tap_47', 'tap_48', 'tap_49']));
     expect(segments(card).some((id) => id.startsWith('dhw_ext_'))).toBe(false);
     expect(root(card).querySelector('.dhw-storage')).toBeNull();
-    for (const item of [47, 48, 49, 50, 51, 52, 53, 54]) {
-      expect(
-        root(card)
-          .querySelector(`[data-item="${String(item)}"] text.item`)
-          ?.textContent.trim(),
-      ).toBe(String(item));
-    }
+    expect(root(card).querySelectorAll('[data-item] text:not(.glyph)')).toHaveLength(0);
     card.remove();
   });
 
@@ -373,10 +377,10 @@ describe('unused DHW storage', () => {
 
   // dhw-storage "Unused internal tank"
   test('model C unused: tank 50, coil 51 and the stubs drawn muted inside the cabinet, no values', async () => {
-    const card = await mount({ prefix: DEMO_PREFIX, model: 'C', dhw: 'unused', detail: 'full' }, hassOfScenario('dhw'));
+    const card = await mount({ prefix: DEMO_PREFIX, model: 'C', dhw: 'unused' }, hassOfScenario('dhw'));
     expect(tanks(card)).toEqual(['internal']);
     expect(tankStyle(card)).toContain(`--dhw-tank-color: ${MUTED_COLOR}`);
-    for (const item of [26, 47, 48, 49, 50, 51, 52, 53, 54]) {
+    for (const item of [26, 47, 48, 49, 50, 51, 54]) {
       expect(symbol(card, item)?.classList.contains('muted'), String(item)).toBe(true);
     }
     for (const id of ['tap_47', 'tap_48', 'tap_49']) expect(pipe(card, id)?.classList.contains('muted'), id).toBe(true);
@@ -392,8 +396,8 @@ describe('unused DHW storage', () => {
       ['B', 'external'],
       ['C', 'internal'],
     ] as const) {
-      const inUse = await mount({ model, dhw, detail: 'full' });
-      const unused = await mount({ model, dhw: 'unused', detail: 'full' });
+      const inUse = await mount({ model, dhw });
+      const unused = await mount({ model, dhw: 'unused' });
       expect(items(unused)).toEqual(items(inUse));
       expect(segments(unused)).toEqual(segments(inUse));
       inUse.remove();

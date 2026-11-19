@@ -1,6 +1,6 @@
 // The cabinet (add-schematic-card D5, D6; schematic-drawing spec): the outline, the connections on the top edge (1-6, and 47-49
-// on model C) with their item numbers and circuit labels, every internal component as a symbol with its item number
-// (model C's tank 50-54 included), and every pipe segment of the drawing, the source's and the external DHW tank's
+// on model C) with their circuit labels, every internal component as a symbol (its item number is its tooltip and
+// `data-item`, never drawn text; model C's tank 50-54 included), and every pipe segment of the drawing, the source's and the external DHW tank's
 // pipes outside the cabinet too, coloured by temperature and animated by flow
 // (pipes.ts). Valve positions come from circuits.ts; a feature that is `false` removes its parts (geometry.ts), `unused` draws them muted.
 import { css, nothing, svg, type SVGTemplateResult } from 'lit';
@@ -35,7 +35,7 @@ import { coilColor, pipeState, shownState, type PipeState, type PipeView } from 
 import { symbol, type ValvePort } from './symbols';
 
 export const cabinetStyles = css`
-  /* The stroke widths follow the card's width (add-compact-layout D4): the card sets --pipe-width and --outline-width on the svg,
+  /* The stroke widths follow the card's width (responsive-layout "Minimum rendered sizes"): the card sets --pipe-width and --outline-width on the svg,
      in drawing units; the fallbacks are the designed widths, used while the width is unknown. */
   .outline {
     fill: none;
@@ -102,10 +102,6 @@ export const cabinetStyles = css`
   .symbol-group[role='button']:focus-visible {
     ${focusRingStyles}
   }
-  .item {
-    fill: var(--secondary-text-color);
-    font-size: 9px;
-  }
   .circuit-label {
     fill: var(--primary-text-color);
     font-size: 10px;
@@ -121,12 +117,11 @@ function openPorts(item: number, circuits: PipeView['circuits']): readonly Valve
 
 /**
  * One component: the symbol, its name as `<title>` and `aria-label` (component-info spec), a tap when its role has an
- * entity, and its item number only at `detail: full`.
+ * entity. The drawing carries no item numbers.
  */
 function component(
   entry: { part: Component; state: 'normal' | 'muted' },
   view: PipeView,
-  detail: DrawContext['detail'],
   taps: Taps | undefined,
   arrangement: Arrangement,
   fills?: { left: string; right: string },
@@ -134,7 +129,6 @@ function component(
   const { part } = entry;
   const { circuits } = view;
   const state = shownState(part, entry.state, view.mode);
-  const [dx, dy, anchor] = part.tag;
   const label = componentLabel(part.item);
   const tap = tapBindings(tapTarget(componentRole(part.item, taps), taps), taps?.onTap);
   return svg`<g class="symbol-group ${state}" data-item=${part.item} data-kind=${part.kind} aria-label=${label} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown} style=${part.kind === 'coil' ? `color: ${coilStyleColor(view)}` : nothing}>
@@ -147,7 +141,6 @@ function component(
       fills,
       arrangement,
     })}</g>
-    ${detail === 'full' ? svg`<text class="item" x=${part.x + dx} y=${part.y + dy} text-anchor=${anchor ?? 'start'}>${part.item}</text>` : nothing}
   </g>`;
 }
 
@@ -267,7 +260,7 @@ export function renderCabinet(
   fill: FillOptions = { mode: 'gradient', idPrefix: 'ecogeo' },
   pipeWidth: number = DEFAULT_STROKES.pipe,
 ): SVGTemplateResult {
-  // The hop gaps scale with the pipe's width (add-compact-layout D4).
+  // The hop gaps scale with the pipe's width (responsive-layout "Minimum rendered sizes").
   const hop = (HOP * pipeWidth) / DEFAULT_STROKES.pipe;
   const arrangement = arrangementOf(context);
   const { cabinet } = arrangement;
@@ -278,7 +271,7 @@ export function renderCabinet(
   const clipId = drawnStorage(context) === 'external' ? `${fill.idPrefix}-tank-clip` : undefined;
   const components = drawnComponents(context).map((entry) => {
     const sides = fill.mode === 'gradient' ? entry.part.sides : undefined;
-    if (sides === undefined) return component(entry, view, context.detail, taps, arrangement);
+    if (sides === undefined) return component(entry, view, taps, arrangement);
     const paints = { left: 'none', right: 'none' };
     for (const side of sides) {
       const gradient = sideGradient(
@@ -290,13 +283,13 @@ export function renderCabinet(
       gradients.push(gradient);
       paints[side.half] = `url(#${gradient.id})`;
     }
-    return component(entry, view, context.detail, taps, arrangement, paints);
+    return component(entry, view, taps, arrangement, paints);
   });
   return svg`<g class="cabinet">
     <defs>${gradients.map(gradientDef)}${clipId === undefined ? nothing : svg`<clipPath id=${clipId} data-tank-clip><path d=${externalTankBody(arrangement)} /></clipPath>`}</defs>
     <rect class="outline" x=${cabinet.x} y=${cabinet.y} width=${cabinet.width} height=${cabinet.height} rx="6" />
     ${arrangement.circuitLabels
-      .filter((label) => context.captions !== false && partState(label, context) !== 'hidden')
+      .filter((label) => partState(label, context) !== 'hidden')
       .map(
         (label) =>
           svg`<text class="circuit-label" x=${label.x} y=${label.y} text-anchor="middle">${CIRCUIT_LABELS[label.key]}</text>`,

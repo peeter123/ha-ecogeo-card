@@ -3,7 +3,7 @@ import { CAPTURES } from '../../dev/captures';
 import { SCENARIO_NAMES } from '../../dev/scenarios';
 import { configOf, defaultState, dhwForModel, parseState, toSearch } from '../../dev/url-state';
 import { configErrors } from '../../src/config/options';
-import { COMPACT_BELOW } from '../../src/lib/layout';
+import { VERTICAL_BELOW } from '../../src/lib/layout';
 
 describe('emulator URL state', () => {
   test('a DHW value the model rejects falls back to default', () => {
@@ -27,9 +27,8 @@ describe('emulator URL state', () => {
       variant: 2 as const,
       source: 'hybrid' as const,
       dhw: 'unused' as const,
-      detail: 'full' as const,
       fill: 'none' as const,
-      layout: 'compact' as const,
+      layout: 'vertical' as const,
       width: 360,
       theme: 'dark' as const,
       cycle: 5,
@@ -41,7 +40,7 @@ describe('emulator URL state', () => {
   test('invalid values keep their defaults', () => {
     expect(
       parseState(
-        '?scenario=x&naming=klingon&model=Z&variant=9&source=sun&theme=blue&htr=maybe&detail=minimal&fill=solid&layout=portrait&width=abc',
+        '?scenario=x&naming=klingon&model=Z&variant=9&source=sun&theme=blue&htr=maybe&fill=solid&layout=portrait&width=abc',
       ),
     ).toEqual(defaultState());
   });
@@ -67,13 +66,19 @@ describe('emulator URL state', () => {
     expect(configOf(defaultState())['prefix']).toBe('demo_ecogeo');
   });
 
-  test('switch detail: the URL carries detail=full and the card config follows', () => {
-    const full = { ...defaultState(), detail: 'full' as const };
-    expect(new URLSearchParams(toSearch(full)).get('detail')).toBe('full');
-    expect(parseState('?detail=full').detail).toBe('full');
-    expect(configOf(full)['detail']).toBe('full');
-    expect(configErrors(configOf(full))).toEqual([]);
-    expect(new URLSearchParams(toSearch(defaultState())).has('detail')).toBe(false);
+  test('an old detail= in a URL is ignored: no state, no URL parameter and no config option', () => {
+    expect(parseState('?detail=full')).toEqual(defaultState());
+    expect(parseState('?scenario=dhw&detail=full&layout=horizontal')).toEqual(
+      parseState('?scenario=dhw&layout=horizontal'),
+    );
+    expect(toSearch(parseState('?detail=full'))).not.toContain('detail');
+    expect(configOf(parseState('?detail=full'))).not.toHaveProperty('detail');
+    expect(configErrors(configOf(parseState('?detail=full')))).toEqual([]);
+  });
+
+  test('the old layout values full and compact in a URL keep the default', () => {
+    expect(parseState('?layout=full').layout).toBe('auto');
+    expect(parseState('?layout=compact').layout).toBe('auto');
   });
 
   test('the exchanger fill travels in the URL as fill= and reaches the card config', () => {
@@ -87,12 +92,12 @@ describe('emulator URL state', () => {
   });
 
   test('the card width and layout travel in the URL as width= and layout= and reach the card config', () => {
-    const phone = { ...defaultState(), width: 360, layout: 'full' as const };
+    const phone = { ...defaultState(), width: 360, layout: 'horizontal' as const };
     const params = new URLSearchParams(toSearch(phone));
     expect(params.get('width')).toBe('360');
-    expect(params.get('layout')).toBe('full');
-    expect(parseState('?width=360&layout=full')).toEqual(phone);
-    expect(configOf(phone)['layout']).toBe('full');
+    expect(params.get('layout')).toBe('horizontal');
+    expect(parseState('?width=360&layout=horizontal')).toEqual(phone);
+    expect(configOf(phone)['layout']).toBe('horizontal');
     expect(configOf(defaultState())['layout']).toBe('auto');
     expect(configErrors(configOf(phone))).toEqual([]);
     const defaults = new URLSearchParams(toSearch(defaultState()));
@@ -102,11 +107,11 @@ describe('emulator URL state', () => {
     expect(parseState('?width=340').width).toBe(340);
   });
 
-  test('Phone width: the captures include every scenario at 360 px in auto and in full at the threshold', () => {
+  test('Threshold width: the captures include every scenario in the horizontal layout at the threshold, light and dark', () => {
     const queries = CAPTURES.map((capture) => capture.query);
     for (const name of SCENARIO_NAMES) {
-      expect(queries).toContain(`scenario=${name}&width=360&theme=light`);
-      expect(queries).toContain(`scenario=${name}&layout=full&width=${String(COMPACT_BELOW)}&theme=light`);
+      for (const theme of ['light', 'dark'])
+        expect(queries).toContain(`scenario=${name}&layout=horizontal&width=${String(VERTICAL_BELOW)}&theme=${theme}`);
     }
     const phone = parseState(`?scenario=heating&width=360`);
     expect(phone.width).toBe(360);
@@ -131,14 +136,13 @@ describe('capture list', () => {
     }
   });
 
-  test('the foreign naming is captured in heating, DHW, defrost and off, and in heating on a phone', () => {
+  test('the foreign naming is captured in heating, DHW, defrost and off', () => {
     const foreign = CAPTURES.map(({ query }) => parseState(`?${query}`)).filter((s) => s.naming === 'foreign');
     for (const scenario of ['heating', 'dhw', 'defrost', 'off'] as const)
       expect(
         foreign.some((s) => s.scenario === scenario),
         scenario,
       ).toBe(true);
-    expect(foreign.some((s) => s.scenario === 'heating' && s.width === 360)).toBe(true);
   });
 
   test('each source is captured in light and dark, in heating and in a cold-source mode (passive cooling or defrost)', () => {
@@ -158,10 +162,15 @@ describe('capture list', () => {
     }
   });
 
-  test('it has full-detail captures of heating and of model C', () => {
-    const full = CAPTURES.map(({ query }) => parseState(`?${query}`)).filter((s) => s.detail === 'full');
-    expect(full.some((s) => s.scenario === 'heating' && s.model === 'B')).toBe(true);
-    expect(full.some((s) => s.model === 'C')).toBe(true);
+  test('it has no full-detail and no compact capture, and captures the horizontal layout at the threshold, 800 and 1000 px', () => {
+    const queries = CAPTURES.map(({ query }) => query);
+    expect(queries.filter((query) => /detail=|layout=(full|compact)/.test(query))).toEqual([]);
+    const horizontal = CAPTURES.map(({ query }) => parseState(`?${query}`)).filter((s) => s.layout === 'horizontal');
+    for (const width of [VERTICAL_BELOW, 800, 1000])
+      expect(
+        horizontal.some((s) => s.width === width),
+        String(width),
+      ).toBe(true);
   });
 
   test('it covers every scenario, each source, each dhw value, model C, each feature false and unused and dark', () => {

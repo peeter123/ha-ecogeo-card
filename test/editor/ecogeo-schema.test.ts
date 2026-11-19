@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
   CHOICE_OPTIONS,
-  DETAIL_OPTION,
   DHW_OPTION,
   EXCHANGER_FILL_OPTION,
   LAYOUT_OPTION,
@@ -58,7 +57,6 @@ describe('editorSchema', () => {
       'features.active_cooling',
       'features.htr',
       'features.backup_heater',
-      'detail',
       'exchanger_fill',
       'layout',
       ...DEFAULT_STOPS.flatMap((_, index) => [`colors_${String(index)}_temperature`, `colors_${String(index)}_color`]),
@@ -82,7 +80,6 @@ describe('editorSchema', () => {
     const options = [
       ['model', MODEL_OPTION],
       ['source', SOURCE_OPTION],
-      ['detail', DETAIL_OPTION],
       ['exchanger_fill', EXCHANGER_FILL_OPTION],
       ['layout', LAYOUT_OPTION],
     ] as const;

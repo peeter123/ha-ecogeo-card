@@ -15,7 +15,7 @@
 // `--dhw-tank-color` (no fill while it is not set). A muted body (DHW temperature unavailable) gets the muted colour
 // through the same property. The values (temperature, setpoint, start delta-T, demand) go under the external tank
 // (centred on it, below its bottom edge: the arrangement's `externalTank`) for the external one, and inside tank 50, one row above coil 51 (refine-schematic-drawing D8b), for the internal one (labels.ts).
-import { css, nothing, svg, type SVGTemplateResult } from 'lit';
+import { css, svg, type SVGTemplateResult } from 'lit';
 import { DHW_LABELS } from '../strings';
 import { EXTERNAL_TANK_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
 import { arrangementOf, drawnStorage, externalTankBody, type DrawContext } from './geometry';
@@ -66,6 +66,6 @@ export function renderDhw(context: DrawContext, taps?: Taps): SVGTemplateResult 
     <title>${DHW_LABELS.externalTank}</title>
     <path class="tank-body" data-dhw-tank="external" d=${body} fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />
     <path class="tank-rim" d=${rim} />
-    ${context.captions === false ? nothing : svg`<text class="tank-caption" x=${x + width / 2} y=${y - 6} text-anchor="middle">${DHW_LABELS.externalTank}</text>`}
+    <text class="tank-caption" x=${x + width / 2} y=${y - 6} text-anchor="middle">${DHW_LABELS.externalTank}</text>
   </g>`;
 }

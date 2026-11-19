@@ -3,7 +3,6 @@
 import { stopsOf, type ColorStop } from '../diagram/colors';
 import { entityAt, type CardConfig } from '../lib/config';
 import {
-  detailOf,
   exchangerFillOf,
   featureOverrides,
   installationOf,
@@ -13,7 +12,6 @@ import {
   setsAnyEntity,
   statesOf,
   variantOf,
-  type Detail,
   type ExchangerFill,
   type Layout,
   type DhwStorage,
@@ -30,11 +28,9 @@ export interface ResolvedConfig {
   variant: Variant;
   source: Source;
   dhw: DhwStorage;
-  /** The level of detail: `simplified` leaves out the service and safety parts and the item numbers. */
-  detail: Detail;
   /** How the plate exchangers are filled: a `gradient` per side from the pipes' colours, or `none`. */
   exchangerFill: ExchangerFill;
-  /** The `layout` option: `auto` follows the card's width, `full` and `compact` force one. */
+  /** The `layout` option: `auto` follows the card's width, `horizontal` and `vertical` force one. */
   layout: Layout;
   prefix: string | undefined;
   features: Features;
@@ -98,7 +94,6 @@ export function resolveConfig(config: CardConfig): ResolvedConfig {
   const notPresent = notPresentRoles(config);
   return {
     ...installationOf(config),
-    detail: detailOf(config),
     exchangerFill: exchangerFillOf(config),
     layout: layoutOf(config),
     variant,

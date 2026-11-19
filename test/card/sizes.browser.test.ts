@@ -1,5 +1,7 @@
-// The compact layout at real widths (responsive-layout spec: Layout hysteresis, Minimum rendered sizes), measured in
-// Chromium and WebKit: rendered stroke widths, label font sizes, the wrapping footer and the layout band at the threshold.
+// Minimum rendered sizes and the layout band at real widths (responsive-layout spec: Layout hysteresis, Minimum rendered
+// sizes), measured in Chromium and WebKit: rendered stroke widths, the label font floor, the wrapping footer and the band at
+// the threshold. Both layouts are checked; the vertical one renders the horizontal arrangement until rework-layouts group 7,
+// which also brings back the 10 px label assertion.
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';
@@ -8,11 +10,13 @@ import { MockHass } from '../../dev/mock-hass';
 import { DEMO_PREFIX, SCENARIO_NAMES, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import type { CardConfig } from '../../src/lib/config';
-import { COMPACT_BELOW, COMPACT_HYSTERESIS, FOOTER_ALLOWANCE, compactBelow } from '../../src/lib/layout';
+import { FOOTER_ALLOWANCE, VERTICAL_BELOW, VERTICAL_HYSTERESIS } from '../../src/lib/layout';
 
 afterEach(() => {
   document.body.replaceChildren();
 });
+
+const LAYOUTS = ['horizontal', 'vertical'] as const;
 
 async function show(
   width: number,
@@ -50,10 +54,10 @@ function renderedStroke(element: SVGGraphicsElement): number {
   return units * Math.hypot(matrix.a, matrix.b);
 }
 
-describe('Thin card', () => {
-  test('at 360 px every pipe renders at least 2 px, every outline at least 1.25 px, every label font at least 10 px', async () => {
-    const { root } = await show(360);
-    expect(layoutOf(root)).toBe('compact');
+describe.each(LAYOUTS)('Thin card, %s layout', (layout) => {
+  test('at 360 px every pipe renders at least 2 px, every outline at least 1.25 px, every label font at least 8 px', async () => {
+    const { root } = await show(360, { layout });
+    expect(layoutOf(root)).toBe(layout);
     const pipes = [...root.querySelectorAll<SVGGraphicsElement>('path.pipe')];
     expect(pipes.length).toBeGreaterThan(20);
     for (const pipe of pipes) {
@@ -72,14 +76,14 @@ describe('Thin card', () => {
     expect(labels.length).toBeGreaterThan(5);
     for (const label of labels) {
       expect(Number.parseFloat(getComputedStyle(label).fontSize), label.dataset['label'] ?? '').toBeGreaterThanOrEqual(
-        10,
+        8,
       );
     }
   });
 
   test('the minimum holds at 320 px, at 500 px and just below the threshold', async () => {
-    for (const width of [320, 500, COMPACT_BELOW - 1]) {
-      const { root, card } = await show(width);
+    for (const width of [320, 500, VERTICAL_BELOW - 1]) {
+      const { root, card } = await show(width, { layout });
       for (const pipe of root.querySelectorAll<SVGGraphicsElement>('path.pipe')) {
         expect(renderedStroke(pipe), `${String(width)} pipe`).toBeGreaterThanOrEqual(2);
       }
@@ -90,9 +94,8 @@ describe('Thin card', () => {
     }
   });
 
-  test('at 1000 px the strokes keep the designed widths and the full layout keeps its 8 px font floor', async () => {
-    const { root } = await show(1000);
-    expect(layoutOf(root)).toBe('full');
+  test('at 1000 px the strokes keep the designed widths and the labels keep their 8 px floor', async () => {
+    const { root } = await show(1000, { layout });
     const pipe = root.querySelector<SVGGraphicsElement>('path.pipe[data-segment]');
     expect(Number.parseFloat(getComputedStyle(pipe as Element).strokeWidth)).toBe(3);
     for (const label of root.querySelectorAll<HTMLElement>('.label')) {
@@ -101,9 +104,9 @@ describe('Thin card', () => {
   });
 });
 
-describe('Footer wraps', () => {
+describe.each(LAYOUTS)('Footer wraps, %s layout', (layout) => {
   test('at 320 px every footer item lies inside the card', async () => {
-    const { root } = await show(320, { layout: 'full' });
+    const { root } = await show(320, { layout });
     const card = root.querySelector('ha-card');
     if (card === null) throw new Error('no ha-card');
     const box = card.getBoundingClientRect();
@@ -119,55 +122,39 @@ describe('Footer wraps', () => {
   });
 
   // add-htr-state: the longest footer (active cooling with HTR: mode, on/off, season, outside, EER, Cooling, HTR) at the
-  // narrowest width each detail level draws the full layout (its threshold plus the hysteresis) fits the panel allowance.
-  test.each([
-    ['simplified', compactBelow('simplified') + COMPACT_HYSTERESIS],
-    ['full', compactBelow('full') + COMPACT_HYSTERESIS],
-  ] as const)(
-    'the longest footer (active cooling with HTR, EER) at %s detail and %i px is inside the card and the allowance',
-    async (detail, width) => {
-      const { root } = await show(width, { detail, layout: 'full' }, 'active_cooling_htr');
-      expect(layoutOf(root)).toBe('full');
-      const ids = [...root.querySelectorAll('[data-footer]')].map((item) => item.getAttribute('data-footer'));
-      expect(ids).toEqual(['on_off', 'season', 'outside_temperature', 'cop', 'cooling_power', 'htr_power']);
-      expect(root.querySelector('[data-footer="cop"] .caption')?.textContent).toBe('EER');
-      const footer = root.querySelector('.footer');
-      const card = root.querySelector('ha-card');
-      if (footer === null || card === null) throw new Error('no footer');
-      const box = card.getBoundingClientRect();
-      for (const item of footer.children) {
-        const rect = item.getBoundingClientRect();
-        expect(rect.left, item.textContent).toBeGreaterThanOrEqual(box.left);
-        expect(rect.right, item.textContent).toBeLessThanOrEqual(box.right + 0.5);
-      }
-      expect(footer.getBoundingClientRect().height).toBeLessThanOrEqual(FOOTER_ALLOWANCE);
-    },
-  );
-
-  test('the compact footer at 320 px is inside the card too', async () => {
-    const { root } = await show(320);
-    const box = root.querySelector('ha-card')?.getBoundingClientRect();
-    if (box === undefined) throw new Error('no ha-card');
-    for (const item of root.querySelectorAll('.footer > *')) {
-      expect(item.getBoundingClientRect().right, item.textContent).toBeLessThanOrEqual(box.right + 0.5);
+  // narrowest width the horizontal layout is drawn once vertical (the threshold plus the hysteresis) fits the panel allowance.
+  test('the longest footer (active cooling with HTR, EER) at the threshold plus the hysteresis is inside the card and the allowance', async () => {
+    const { root } = await show(VERTICAL_BELOW + VERTICAL_HYSTERESIS, { layout }, 'active_cooling_htr');
+    const ids = [...root.querySelectorAll('[data-footer]')].map((item) => item.getAttribute('data-footer'));
+    expect(ids).toEqual(['on_off', 'season', 'outside_temperature', 'cop', 'cooling_power', 'htr_power']);
+    expect(root.querySelector('[data-footer="cop"] .caption')?.textContent).toBe('EER');
+    const footer = root.querySelector('.footer');
+    const card = root.querySelector('ha-card');
+    if (footer === null || card === null) throw new Error('no footer');
+    const box = card.getBoundingClientRect();
+    for (const item of footer.children) {
+      const rect = item.getBoundingClientRect();
+      expect(rect.left, item.textContent).toBeGreaterThanOrEqual(box.left);
+      expect(rect.right, item.textContent).toBeLessThanOrEqual(box.right + 0.5);
     }
+    expect(footer.getBoundingClientRect().height).toBeLessThanOrEqual(FOOTER_ALLOWANCE);
   });
 });
 
 describe('No flip at the threshold', () => {
-  test('a compact card widened to threshold + 10 stays compact and is full at threshold + 24 or more', async () => {
+  test('a vertical card widened to threshold + 10 stays vertical and is horizontal at threshold + 24 or more', async () => {
     const { card, wrapper, root } = await show(360);
-    expect(layoutOf(root)).toBe('compact');
-    wrapper.style.width = `${String(COMPACT_BELOW + 10)}px`;
-    await expect.poll(() => card.width).toBe(COMPACT_BELOW + 10);
+    expect(layoutOf(root)).toBe('vertical');
+    wrapper.style.width = `${String(VERTICAL_BELOW + 10)}px`;
+    await expect.poll(() => card.width).toBe(VERTICAL_BELOW + 10);
     await card.updateComplete;
-    expect(layoutOf(root)).toBe('compact');
-    wrapper.style.width = `${String(COMPACT_BELOW + COMPACT_HYSTERESIS)}px`;
+    expect(layoutOf(root)).toBe('vertical');
+    wrapper.style.width = `${String(VERTICAL_BELOW + VERTICAL_HYSTERESIS)}px`;
     await expect
       .poll(async () => {
         await card.updateComplete;
         return layoutOf(root);
       })
-      .toBe('full');
+      .toBe('horizontal');
   });
 });

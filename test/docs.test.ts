@@ -2,8 +2,7 @@
 import { describe, expect, test } from 'vitest';
 import { configErrors } from '../src/config/options';
 import { resolveConfig } from '../src/config/resolve';
-import { COMPACT_PLACES, FULL_PLACES, ON_PIPE_COMPACT } from '../src/diagram/label-places';
-import { COMPACT_BELOW, COMPACT_BELOW_FULL, COMPACT_HYSTERESIS } from '../src/lib/layout';
+import { VERTICAL_BELOW, VERTICAL_HYSTERESIS } from '../src/lib/layout';
 
 const files = import.meta.glob<string>('../docs/ecogeo-card.md', { query: '?raw', import: 'default', eager: true });
 const DOCS = (Object.values(files)[0] ?? '').replaceAll('\r\n', '\n');
@@ -56,50 +55,21 @@ describe('docs: Using another source', () => {
   });
 });
 
-describe('the compact threshold in the docs', () => {
-  test('the docs state the threshold and the width where an auto card returns to full', () => {
+describe('the vertical threshold in the docs', () => {
+  test('the docs state the threshold and the width where an auto card returns to horizontal', () => {
     const text = DOCS.replace(/\s+/g, ' ');
-    expect(text).toContain(`The threshold is ${String(COMPACT_BELOW)} px`);
-    expect(text).toContain(`the threshold plus 24 px, ${String(COMPACT_BELOW + COMPACT_HYSTERESIS)} px`);
-    expect(COMPACT_HYSTERESIS).toBe(24);
+    expect(text).toContain(`The threshold is ${String(VERTICAL_BELOW)} px`);
+    expect(text).toContain(`the threshold plus 24 px, ${String(VERTICAL_BELOW + VERTICAL_HYSTERESIS)} px`);
+    expect(VERTICAL_HYSTERESIS).toBe(24);
   });
 
-  test('the docs state the threshold of the full detail level and its return width', () => {
+  test('the docs name the layout values and no longer describe the detail levels or the compact layout', () => {
     const text = DOCS.replace(/\s+/g, ' ');
-    expect(text).toContain(`The full detail level's threshold is ${String(COMPACT_BELOW_FULL)} px`);
-    expect(text).toContain(`returns to full at ${String(COMPACT_BELOW_FULL + COMPACT_HYSTERESIS)} px`);
-    expect(text).toContain('`--detail=full`');
-  });
-});
-
-describe('the full places in the docs', () => {
-  test('the table lists the places FULL_PLACES holds', () => {
-    const rows = [...DOCS.matchAll(/^\| `(\w+)` \| (\d+) \| (\d+) \| (start|middle|end) \| .+ \|$/gm)].map((row) => ({
-      id: row[1],
-      x: Number(row[2]),
-      y: Number(row[3]),
-      align: row[4],
-    }));
-    const code = Object.entries(FULL_PLACES).map(([id, { x, y, align }]) => ({ id, x, y, align }));
-    expect(rows).toEqual(code);
-  });
-});
-
-describe('the compact places in the docs', () => {
-  test('the table lists the places COMPACT_PLACES holds, and the on-pipe labels are named', () => {
-    const rows = [...DOCS.matchAll(/^\| `(\w+)` \| (\d+) \| (\d+) \| (start|middle|end) \|$/gm)].map((row) => ({
-      id: row[1],
-      x: Number(row[2]),
-      y: Number(row[3]),
-      align: row[4],
-    }));
-    const code = Object.entries(COMPACT_PLACES).map(([id, place]) => ({ id, ...place }));
-    expect(rows).toEqual(code);
-    const paragraph = /Five labels may lie on a pipe[\s\S]*?\n\n/.exec(DOCS)?.[0] ?? '';
-    const named = [...paragraph.slice(0, paragraph.indexOf('With the pipes')).matchAll(/`([a-z_]+)`/g)].map(
-      (match) => match[1],
-    );
-    expect(named.sort()).toEqual([...ON_PIPE_COMPACT].sort());
+    expect(text).toContain('(`auto`, `horizontal` or `vertical`, default `auto`)');
+    expect(text).not.toContain('What the compact layout shows');
+    expect(text).not.toContain('### Detail levels');
+    expect(text).not.toContain('COMPACT_');
+    expect(text).not.toContain('FULL_PLACES');
   });
 });
 

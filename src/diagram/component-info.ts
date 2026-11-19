@@ -9,7 +9,7 @@ import type { RolePath } from '../config/roles';
  * The role whose entity a component opens: the one its value label shows. Filled from the role table's `item` field
  * where one role belongs to the item, chosen by hand where several do (11, 12, 8, 7). A component that is not in this
  * table has no entity of its own and is neither tappable nor focusable: 1-6 and 47-49 (connections), 9, 10, 13, 14,
- * 17, 22, 25, 27, 28, 44, 45, coil 51 and the service and safety parts that only `detail: full` draws.
+ * 17, 22, 25, 27, 28, 44, 45 and coil 51.
  */
 export const COMPONENT_ROLES: Readonly<Record<number, RolePath>> = {
   7: 'refrigerant.evaporation_temperature',

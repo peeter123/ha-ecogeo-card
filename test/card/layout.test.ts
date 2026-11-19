@@ -4,15 +4,7 @@ import '../../src/index';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import { configErrors } from '../../src/config/options';
 import { resolveConfig } from '../../src/config/resolve';
-import {
-  COMPACT_BELOW,
-  COMPACT_BELOW_FULL,
-  COMPACT_HYSTERESIS,
-  compactBelow,
-  isCompact,
-  nextCompact,
-  strokeWidths,
-} from '../../src/lib/layout';
+import { VERTICAL_BELOW, VERTICAL_HYSTERESIS, isVertical, nextVertical, strokeWidths } from '../../src/lib/layout';
 import type { CardConfig } from '../../src/lib/config';
 
 /** A ResizeObserver whose observations the test triggers. */
@@ -66,87 +58,67 @@ async function resize(card: EcogeoCard, width: number): Promise<void> {
 
 describe('layout option', () => {
   test('Invalid layout: the error names layout and its allowed values', () => {
-    expect(configErrors({ type: 'custom:ecogeo-card', layout: 'portrait' })).toEqual([
-      expect.stringMatching(/layout.*auto, full, compact/),
-    ]);
+    for (const layout of ['portrait', 'full', 'compact']) {
+      expect(configErrors({ type: 'custom:ecogeo-card', layout })).toEqual([
+        expect.stringMatching(/layout.*auto, horizontal, vertical/),
+      ]);
+    }
+  });
+
+  test('Invalid detail: the removed option is an unknown option', () => {
+    expect(configErrors({ type: 'custom:ecogeo-card', detail: 'full' })).toEqual([expect.stringContaining('detail')]);
   });
 
   test('Minimal valid config uses the automatic layout', () => {
     expect(resolveConfig({ type: 'custom:ecogeo-card', prefix: 'ecoforest_ecogeo' }).layout).toBe('auto');
-    for (const layout of ['auto', 'full', 'compact']) {
+    for (const layout of ['auto', 'horizontal', 'vertical']) {
       expect(configErrors({ type: 'custom:ecogeo-card', layout })).toEqual([]);
     }
   });
 });
 
-describe('compactBelow', () => {
-  test('gives each detail level its own threshold, the full level switching earlier', () => {
-    expect(compactBelow('simplified')).toBe(COMPACT_BELOW);
-    expect(compactBelow('full')).toBe(COMPACT_BELOW_FULL);
-    expect(COMPACT_BELOW_FULL).toBeGreaterThan(COMPACT_BELOW);
-    expect(COMPACT_BELOW_FULL).toBeLessThanOrEqual(800);
-  });
-
-  test('keeps the simplified threshold at 640 px or less', () => {
-    expect(COMPACT_BELOW).toBeLessThanOrEqual(640);
+describe('VERTICAL_BELOW', () => {
+  test('stays at 640 px or less', () => {
+    expect(VERTICAL_BELOW).toBeLessThanOrEqual(640);
   });
 });
 
-describe('isCompact', () => {
-  test('forced layouts ignore the width and the detail level', () => {
-    expect(isCompact('compact', 2000, 'simplified')).toBe(true);
-    expect(isCompact('full', 100, 'full')).toBe(false);
+describe('isVertical', () => {
+  test('forced layouts ignore the width', () => {
+    expect(isVertical('vertical', 2000)).toBe(true);
+    expect(isVertical('horizontal', 100)).toBe(false);
   });
 
-  test('auto is compact below the threshold only, and full while the width is unknown', () => {
-    expect(isCompact('auto', COMPACT_BELOW - 1, 'simplified')).toBe(true);
-    expect(isCompact('auto', COMPACT_BELOW, 'simplified')).toBe(false);
-    expect(isCompact('auto', undefined, 'simplified')).toBe(false);
-    expect(isCompact('auto', 0, 'simplified')).toBe(false);
-  });
-
-  test('Full detail switches earlier: between the two thresholds only the full level is compact', () => {
-    for (const width of [COMPACT_BELOW, COMPACT_BELOW_FULL - 1]) {
-      expect(isCompact('auto', width, 'simplified')).toBe(false);
-      expect(isCompact('auto', width, 'full')).toBe(true);
-    }
-    expect(isCompact('auto', COMPACT_BELOW_FULL - 1, 'full')).toBe(true);
-    expect(isCompact('auto', COMPACT_BELOW_FULL, 'full')).toBe(false);
-    expect(isCompact('auto', undefined, 'full')).toBe(false);
-    expect(isCompact('auto', 0, 'full')).toBe(false);
+  test('auto is vertical below the threshold only, and horizontal while the width is unknown', () => {
+    expect(isVertical('auto', VERTICAL_BELOW - 1)).toBe(true);
+    expect(isVertical('auto', VERTICAL_BELOW)).toBe(false);
+    expect(isVertical('auto', undefined)).toBe(false);
+    expect(isVertical('auto', 0)).toBe(false);
   });
 });
 
-describe('nextCompact (layout hysteresis)', () => {
+describe('nextVertical (layout hysteresis)', () => {
   test('forced layouts ignore the width and the current layout', () => {
-    expect(nextCompact('compact', 2000, false, 'simplified')).toBe(true);
-    expect(nextCompact('full', 100, true, 'full')).toBe(false);
+    expect(nextVertical('vertical', 2000, false)).toBe(true);
+    expect(nextVertical('horizontal', 100, true)).toBe(false);
   });
 
-  test('a full card goes compact below the threshold, as isCompact does', () => {
-    expect(nextCompact('auto', COMPACT_BELOW - 1, false, 'simplified')).toBe(true);
-    expect(nextCompact('auto', COMPACT_BELOW, false, 'simplified')).toBe(false);
-    expect(nextCompact('auto', COMPACT_BELOW_FULL - 1, false, 'full')).toBe(true);
-    expect(nextCompact('auto', COMPACT_BELOW_FULL, false, 'full')).toBe(false);
+  test('a horizontal card goes vertical below the threshold, as isVertical does', () => {
+    expect(nextVertical('auto', VERTICAL_BELOW - 1, false)).toBe(true);
+    expect(nextVertical('auto', VERTICAL_BELOW, false)).toBe(false);
   });
 
-  test.each([
-    ['simplified', COMPACT_BELOW],
-    ['full', COMPACT_BELOW_FULL],
-  ] as const)(
-    'No flip at the threshold: a compact card at the %s level stays compact until its threshold plus the hysteresis',
-    (detail, threshold) => {
-      expect(COMPACT_HYSTERESIS).toBe(24);
-      expect(nextCompact('auto', threshold + 10, true, detail)).toBe(true);
-      expect(nextCompact('auto', threshold + COMPACT_HYSTERESIS - 1, true, detail)).toBe(true);
-      expect(nextCompact('auto', threshold + COMPACT_HYSTERESIS, true, detail)).toBe(false);
-      expect(nextCompact('auto', threshold + 100, true, detail)).toBe(false);
-    },
-  );
+  test('No flip at the threshold: a vertical card stays vertical until the threshold plus the hysteresis', () => {
+    expect(VERTICAL_HYSTERESIS).toBe(24);
+    expect(nextVertical('auto', VERTICAL_BELOW + 10, true)).toBe(true);
+    expect(nextVertical('auto', VERTICAL_BELOW + VERTICAL_HYSTERESIS - 1, true)).toBe(true);
+    expect(nextVertical('auto', VERTICAL_BELOW + VERTICAL_HYSTERESIS, true)).toBe(false);
+    expect(nextVertical('auto', VERTICAL_BELOW + 100, true)).toBe(false);
+  });
 
-  test('an unknown width gives full, also for a compact card', () => {
-    expect(nextCompact('auto', undefined, true, 'full')).toBe(false);
-    expect(nextCompact('auto', 0, true, 'simplified')).toBe(false);
+  test('an unknown width gives horizontal, also for a vertical card', () => {
+    expect(nextVertical('auto', undefined, true)).toBe(false);
+    expect(nextVertical('auto', 0, true)).toBe(false);
   });
 });
 
@@ -173,33 +145,33 @@ describe('strokeWidths', () => {
 });
 
 describe('card layout from its width', () => {
-  test('unknown width (before the first observation) is full', async () => {
+  test('unknown width (before the first observation) is horizontal', async () => {
     const card = await mount();
-    expect(layoutOf(card)).toBe('full');
+    expect(layoutOf(card)).toBe('horizontal');
   });
 
-  test('Auto on a phone: 360 px is compact', async () => {
+  test('Auto on a phone: 360 px is vertical', async () => {
     const card = await mount();
     await resize(card, 360);
-    expect(layoutOf(card)).toBe('compact');
+    expect(layoutOf(card)).toBe('vertical');
   });
 
-  test('Auto on a wide card: 1000 px is full', async () => {
+  test('Auto on a wide card: 1000 px is horizontal', async () => {
     const card = await mount();
     await resize(card, 1000);
-    expect(layoutOf(card)).toBe('full');
+    expect(layoutOf(card)).toBe('horizontal');
   });
 
-  test('Forced full: layout full at 360 px is full', async () => {
-    const card = await mount({ layout: 'full' });
+  test('Forced horizontal: layout horizontal at 360 px is horizontal', async () => {
+    const card = await mount({ layout: 'horizontal' });
     await resize(card, 360);
-    expect(layoutOf(card)).toBe('full');
+    expect(layoutOf(card)).toBe('horizontal');
   });
 
-  test('Forced compact at 1000 px is compact', async () => {
-    const card = await mount({ layout: 'compact' });
+  test('Forced vertical at 1000 px is vertical', async () => {
+    const card = await mount({ layout: 'vertical' });
     await resize(card, 1000);
-    expect(layoutOf(card)).toBe('compact');
+    expect(layoutOf(card)).toBe('vertical');
   });
 
   test('a width change that keeps the layout does not render again; one that flips it does', async () => {
@@ -210,7 +182,7 @@ describe('card layout from its width', () => {
     expect(rendered).not.toHaveBeenCalled();
     await resize(card, 360);
     expect(rendered).toHaveBeenCalledTimes(1);
-    expect(layoutOf(card)).toBe('compact');
+    expect(layoutOf(card)).toBe('vertical');
   });
 
   test('a width change that keeps the layout but changes the stroke widths renders again', async () => {
@@ -262,16 +234,16 @@ describe('the layout property Home Assistant assigns', () => {
     document.body.append(card);
     await card.updateComplete;
     await resize(card, 360);
-    expect(layoutOf(card)).toBe('compact');
-    expect(card.shownLayout).toBe('compact');
+    expect(layoutOf(card)).toBe('vertical');
+    expect(card.shownLayout).toBe('vertical');
   });
 
   test('assigning layout after setConfig neither throws nor changes the layout shown', async () => {
     for (const [config, width, shown] of [
-      [{}, 360, 'compact'],
-      [{}, 1000, 'full'],
-      [{ layout: 'full' }, 360, 'full'],
-      [{ layout: 'compact' }, 1000, 'compact'],
+      [{}, 360, 'vertical'],
+      [{}, 1000, 'horizontal'],
+      [{ layout: 'horizontal' }, 360, 'horizontal'],
+      [{ layout: 'vertical' }, 1000, 'vertical'],
     ] as const) {
       const card = await mount(config);
       await resize(card, width);

@@ -29,31 +29,44 @@ group 1) and returns a text verdict.
 
 ## 2. One drawing level and the new layout names
 
-- [ ] 2.1 Remove the full detail level (design D1, schematic-drawing "Detail level" removed): delete the full-only
+- [x] 2.1 Remove the full detail level (design D1, schematic-drawing "Detail level" removed): delete the full-only
   parts and their stub segments and crossings from `componentsFor`/`segmentsFor`, the `detail` field of components and
   segments, the full arrangement, `FULL_PLACES`, `FULL_ZONES`-only code paths, item-number rendering and
   `COMPACT_BELOW_FULL`. Verify: unit tests for schematic-drawing "Refrigerant components" and "Hydraulic components"
   (items drawn, no item numbers, 18-21, 23, 24, 39-41, 52, 53 absent) pass; the `detail-full-*`, `labels-full-*` and
   `threshold-full-*` snapshots are deleted.
-- [ ] 2.2 Replace the options (card-config "Card type and options"): remove `detail` and `DETAIL_LEVELS`; `LAYOUTS`
+  Note (2026-11-19): the frame's zones and lists stay exported as `FRAME` (geometry.ts) only so that the map tests in
+  simplified.test.ts can compare the arrangement with it; no layout draws it. The unused symbol kinds (vessel, safety
+  valve, pressure switch, service outlet), the `tag` field of components and the `captions` draw option went with the
+  item numbers and the compact layout.
+- [x] 2.2 Replace the options (card-config "Card type and options"): remove `detail` and `DETAIL_LEVELS`; `LAYOUTS`
   becomes `auto | horizontal | vertical`; `layout.ts` gets `VERTICAL_BELOW` (start at today's 600) and
   `nextVertical` with the 24 px hysteresis (responsive-layout "Layout choice", "Layout hysteresis"); the copied
   helper's header records the deviation. Until group 7, both layouts render the horizontal (today's simplified)
   arrangement with today's simplified-level labels. Verify: unit tests for `layout: full`, `compact`, `portrait` and
   `detail: full` as configuration errors, and for the hysteresis, pass.
-- [ ] 2.3 Remove the compact layout's own content: `COMPACT_PLACES`, `COMPACT_CAPTIONS`, `STACKED_CAPTIONS`,
+- [x] 2.3 Remove the compact layout's own content: `COMPACT_PLACES`, `COMPACT_CAPTIONS`, `STACKED_CAPTIONS`,
   `ON_PIPE_COMPACT`, `Tier` and `KEY_LABELS`, the compact branches in labels.ts and the card, and the compact and
   phone-width browser tests (compact.browser, the phone cases of overlaps and overlaps-pipes); keep the stroke-width and
   footer-wrap checks for both layouts. Verify: `npm run check` passes with no reference to `compact` left in `src/`
-  (grep).
-- [ ] 2.4 Update the editor (card-editor "Editor sections": no detail field, layout offers auto, horizontal,
+  (grep). Note (2026-11-19): `grep -ri compact src/` finds nothing. Removing `Tier` and `KEY_LABELS` left the horizontal
+  label set as it was, except that the two labels the simplified level hid (superheat, expansion valve opening) are not
+  in the table until task 3.1 re-adds them. `sidePairs` and `pairOrderPairs` of dev/overlaps.ts went with the compact
+  browser test; `LABEL_SIDES`, `OUT_IN_PAIRS` and `inOrder` stay for scripts/search-places.mjs until group 3 reworks it.
+  The stroke, font-floor, footer-wrap and no-flip checks live on in `test/card/sizes.browser.test.ts` for both layouts
+  (labels at the 8 px floor; the 10 px assertion returns in group 7).
+- [x] 2.4 Update the editor (card-editor "Editor sections": no detail field, layout offers auto, horizontal,
   vertical) and the emulator (no detail control, `layout` values in the controls and URL, an old `detail=` ignored;
   dev-emulator "Card width and layout controls"), and the capture list (no full-level and compact captures yet; the
   horizontal layout at the threshold, 800 and 1000 px). Verify: editor and emulator URL-state tests pass.
-- [ ] 2.5 Update README.md and docs/ecogeo-card.md: options table (`layout` values, no `detail`), the layouts section
+- [x] 2.5 Update README.md and docs/ecogeo-card.md: options table (`layout` values, no `detail`), the layouts section
   (horizontal now, vertical following), threshold notes. Verify: `npm run check` passes (docs and README tests
   included); a capture subagent confirms the heating and DHW captures at 1000 px look as before minus item numbers
   and safety parts.
+  Note (2026-11-19, implementer): the browser run on this RDP host stops at the preflight in Chromium by design, so the
+  browser project was verified in WebKit only (542 tests pass); `npm run capture` writes 111 PNGs and the heating and
+  DHW captures at 1000 px look as before minus the removed parts; the capture review by a separate subagent is the
+  orchestrator's step.
 
 ## 3. One value set, one footer, no captions
 
