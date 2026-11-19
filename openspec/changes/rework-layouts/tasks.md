@@ -14,12 +14,17 @@ group 1) and returns a text verdict.
   fail, fractional pass). Verify: `npm test` passes on a host with font smoothing on; the user switches font
   smoothing off in an RDP session and confirms the browser run stops at the preflight with that message (record the
   result in this task's note).
-- [ ] 1.2 Add the review section to docs/ecogeo-card.md (dev-emulator "Screenshot review loop"): how to run
+  Note (2026-11-19, smoothing off, verified by the implementer on this RDP host, SPI_GETFONTSMOOTHING = 0): the
+  Chromium run stops at the preflight, every browser test file fails in setup with "Browser preflight failed: Chromium
+  measures text with whole-pixel widths ... (measured 55 and 98 px)" and no test runs; WebKit passes (1211 tests).
+  The check is Windows-only (Chromium on Windows). Still open: the user's smoothing-on confirmation and a CI Linux
+  run showing the preflight passes.
+- [x] 1.2 Add the review section to docs/ecogeo-card.md (dev-emulator "Screenshot review loop"): how to run
   `npm run capture`, where the PNGs land, and the criteria (no label on a pipe, part or outline; values inside their
   bodies; no crossing outside the cabinet; band order emitter, source, tank; text legible at the capture's width), and
   a paragraph on the RDP font-smoothing cause and its fix. Verify: `npm run lint:ha` passes and the section names
   every criterion.
-- [ ] 1.3 Make `npm run capture` print the list of PNGs it wrote with their capture names, so a reviewing subagent can
+- [x] 1.3 Make `npm run capture` print the list of PNGs it wrote with their capture names, so a reviewing subagent can
   pick the ones a group names. Verify: `npm run capture` lists one PNG per capture-list entry under `build/captures/`.
 
 ## 2. One drawing level and the new layout names

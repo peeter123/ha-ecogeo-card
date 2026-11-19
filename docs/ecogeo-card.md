@@ -1123,3 +1123,36 @@ together.
 
 The browser tests measure label and footer boxes in Roboto (`EMULATOR_FONT` in `dev/overlaps.ts`), so Roboto must be
 installed for them to pass. CI installs it (`fonts-roboto`, a step of `check.yml`); install it locally too.
+
+### Screenshot review
+
+`npm run capture` opens every emulator URL of the capture list (`dev/captures.ts`) in headless Chromium and writes
+one PNG of the card per entry to `build/captures/` (git-ignored; the panel view captures the whole window). It
+prints one line per capture, `capture <name>: build/captures/<name>.png`, and a final count, so a reviewer can pick
+the captures a task names. Every capture is checked against these criteria:
+
+- No label sits on a pipe, a part or an outline.
+- Every value is inside its body (the tank, exchanger or part it belongs to).
+- Nothing crosses outside the cabinet.
+- The band order is emitter, source, tank.
+- Text is legible at the capture's width.
+
+These are the criteria the drawing is being built to meet (the band order and the values inside bodies apply to the
+reworked drawing as it lands); a capture that fails one is a finding, not a pass.
+
+The capture is headless Chromium too, so take captures for review with font smoothing on as well: under RDP without
+font smoothing the text is aliased and has whole-pixel widths.
+
+#### Text widths and font smoothing
+
+On Windows, Chromium lays text out with whole-pixel advances when font smoothing is off, as it is in a remote
+desktop (RDP) session without font smoothing. Label boxes then grow by about 2 px (the preflight's two 10.3 px
+reference strings measure 55 and 98 px with smoothing off), which eats the 2 px label margin rule and makes the overlap
+tests fail for the wrong reason. The fix is to enable font smoothing in the RDP client (`allow font smoothing:i:1` in
+the .rdp file, or the "Font smoothing" experience option) or to run the tests from the console or in CI.
+
+Chromium on Linux at scale factor 1, CI's reference environment, also uses whole-pixel advances by design, so its
+widths are whole too and nothing is wrong there. The guard therefore applies on Windows only: the browser test
+project's setup file (`test/browser-preflight.setup.ts`) measures two reference strings at 10.3 px and stops the
+Chromium run with a message naming font smoothing and RDP when both widths are whole numbers. WebKit and other
+platforms are not affected.

@@ -73,8 +73,10 @@ unbound, so the card shows their fallbacks, and SHALL bind `unit.cop`, so the re
 
 ### Requirement: Browser text preflight
 Before its tests, the browser test project SHALL measure a reference label text in each browser and SHALL fail at once,
-with a message that names font smoothing and remote desktop sessions, when the browser measures text with whole-pixel
-advances where the reference needs fractional ones, instead of running the overlap tests on wrong text widths.
+with a message that names font smoothing and remote desktop sessions, when Chromium on Windows measures text with
+whole-pixel advances where the reference needs fractional ones, instead of running the overlap tests on wrong text
+widths. Chromium on Linux, which uses whole-pixel advances at scale factor 1 by design, and WebKit SHALL pass the
+preflight.
 
 #### Scenario: Font smoothing off
 - **WHEN** the browser tests run in Chromium on Windows with system font smoothing off

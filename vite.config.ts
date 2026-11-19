@@ -36,6 +36,8 @@ export default defineConfig({
         test: {
           name: 'browser',
           include: ['test/**/*.browser.test.ts'],
+          // Stops the run with one message when the browser lays text out with whole-pixel advances (rework-layouts D11).
+          setupFiles: ['test/browser-preflight.setup.ts'],
           // WebKit's first ResizeObserver delivery can take longer than the 1 s default on a loaded runner.
           expect: { poll: { timeout: 5000 } },
           browser: {

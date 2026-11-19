@@ -156,10 +156,14 @@ unit section and as an emulator control mirrored in the URL. The live installati
 ### D11 Browser preflight
 
 A setup file of the browser test project renders two reference strings (10.3 px Roboto, different lengths) and
-fails the run with a message about font smoothing and remote desktop sessions when, in Chromium, both widths are
-whole numbers. With font smoothing on, layout uses fractional advances, so at a fractional font size at least one
-width is fractional; with smoothing off every advance is whole. The check is verified on this machine both ways in
-group 1 (the user switches font smoothing; the orchestrator does not change system settings).
+fails the run with a message about font smoothing and remote desktop sessions when, in Chromium on Windows, both
+widths are whole numbers. On Windows, Chromium uses subpixel positioning only while system font smoothing is on
+(`font_render_params_win.cc`, SPI_GETFONTSMOOTHING), so at a fractional font size at least one width is fractional;
+with smoothing off every advance is whole. On Linux at device scale factor 1, Chromium never uses subpixel
+positioning (`font_render_params_linux.cc`), so whole widths are its normal state there, CI's references and overlap
+runs included; the check therefore applies to Chromium on Windows only (decided 2026-11-19 in the group 1 review).
+The check is verified on this machine both ways in group 1 (the user switches font smoothing; the orchestrator does
+not change system settings), and on CI Linux by the next workflow run.
 
 ### D12 Screenshot loop and visual references
 

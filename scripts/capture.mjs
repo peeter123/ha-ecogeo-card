@@ -3,7 +3,7 @@
 // can be in view. Starts and stops its own Vite server, after hrv-ventilation scripts/capture.mjs; Playwright is also
 // used by the browser test project.
 import { mkdirSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
@@ -48,7 +48,7 @@ try {
     if (viewport) await page.screenshot({ path: join(OUT, `${name}.png`), animations: 'disabled' });
     else await page.locator('.slot').screenshot({ path: join(OUT, `${name}.png`), animations: 'disabled' });
     count += 1;
-    console.log(`capture: ${name}.png`);
+    console.log(`capture ${name}: ${relative(process.cwd(), join(OUT, `${name}.png`)).replaceAll(sep, '/')}`);
   }
   if (problems.length > 0) throw new Error(`page errors: ${problems.join('; ')}`);
 } finally {

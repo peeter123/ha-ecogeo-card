@@ -349,7 +349,7 @@ npm run dev       # the emulator: the card with a mock hass, served by Vite
 npm run capture   # one PNG per emulator URL in build/captures/
 npm test          # both test projects: unit (Vitest, happy-dom) and browser (headless Chromium and WebKit)
 npm run test:unit     # unit tests only
-npm run test:browser  # browser tests only (layout at real widths, no label overlaps at the threshold)
+npm run test:browser  # browser tests only (layout at real widths, no label overlaps); stops at a preflight in Chromium on Windows under RDP without font smoothing (docs/ecogeo-card.md)
 npm run measure-layout  # re-measure the compact threshold (see docs/ecogeo-card.md)
 npm run check     # typecheck, lint, format check, the Home Assistant quality checks (needs uv) and tests
 npm run lint:ha   # codespell, yamllint, the workflow schema check and the Markdown format check, through uvx
