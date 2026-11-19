@@ -189,8 +189,8 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
   further away until the x stretch of design D2 widens the span between the riser and valve 22). Verify: horizontal
   overlap browser tests pass in Chromium and WebKit; a unit test bounds the distance of production In, Out and
   pressure from probes 34, 33 and transducer 38, and of brine Out from probe 31, so the search cannot drift a label
-  across another part; a capture subagent checks air, ground and hybrid with external, internal, unused and no tank, light and
-  dark, at the threshold and 1000 px, plus the panel view at 1280 x 800.
+  across another part; a capture subagent checks air, ground and hybrid with external, internal, unused and no tank,
+  light and dark, at the threshold and 1000 px, plus the panel view at 1280 x 800.
 - [ ] 5.6 Update README.md (drawing description, screenshot if it shows the old layout) and docs/ecogeo-card.md (band
   model, bodies, threshold). Verify: `npm run check` passes.
 
