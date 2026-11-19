@@ -75,7 +75,9 @@ group 1) and returns a text verdict.
   In, ground In, hybrid air unit In, DG1 setpoint and tank setpoint and start delta-T labels; show the superheat and
   expansion valve opening in the horizontal arrangement; give the production and brine values their Out and In
   captions and the tank its DHW caption. Verify: unit tests list exactly the 19 labels for the heating capture of model
-  B, air, external tank, variant 4, both demands on.
+  B, air, external tank, variant 4, both demands on. Note (group 2 review): the display-precision and °F tests in
+  `test/diagram/labels.test.ts` were moved to `tank_external_start_delta` when the superheat label went; move them
+  back to the superheat label when this task deletes the start delta-T label.
 - [ ] 3.2 Footer (live-values "Footer", "Power items in the footer"): one item list, no on/off or season; power items
   shown in both layouts. Verify: footer unit tests for heating, DHW, active cooling with HTR and passive cooling pass.
 - [ ] 3.3 Remove the in-drawing captions (responsive-layout "No in-drawing captions"): the circuit labels DG1, Outer
@@ -98,11 +100,16 @@ group 1) and returns a text verdict.
 - [ ] 4.2 Draw the discharge pair (30 with 36 at x 452) and keep the suction pair (29 with 35), each pair's values as
   one two-row block (schematic-drawing "Refrigerant probe pairs", live-values "Probe pair values"). Verify: unit tests
   for adjacency and the value blocks pass.
-- [ ] 4.3 Re-place the affected labels with the search, record the snapshots again. Verify: horizontal overlap browser
-  tests pass; a capture subagent checks the heating, active cooling and defrost captures for the new transducer places
-  and the pairs.
-- [ ] 4.4 Update docs/ecogeo-card.md (the drawing section: transducers and pairs, the simplification of the vessel
-  tees). Verify: `npm run check` passes.
+- [ ] 4.3 Fill the compressor's two triangles (the parts of circle 11 outside its converging lines) solid in the
+  outline colour, the part between the lines unfilled (schematic-drawing "Refrigerant components after the manual
+  figure", scenarios "Compressor symbol" and "Compressor fill in the dark theme"; asked by the user 2026-11-19).
+  Verify: a unit test finds two filled shapes in the outline colour inside the compressor symbol and the lines
+  unchanged; light and dark captures show them.
+- [ ] 4.4 Re-place the affected labels with the search, record the snapshots again. Verify: horizontal overlap browser
+  tests pass; a capture subagent checks the heating, active cooling and defrost captures, light and dark, for the new
+  transducer places, the pairs and the filled compressor.
+- [ ] 4.5 Update docs/ecogeo-card.md (the drawing section: transducers and pairs, the simplification of the vessel
+  tees, the compressor symbol's fill). Verify: `npm run check` passes.
 
 ## 5. Band arrangement: source and tank above the cabinet
 

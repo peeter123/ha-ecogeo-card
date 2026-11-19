@@ -39,12 +39,19 @@ The cabinet SHALL contain the refrigerant circuit in the topology of the manual'
 
 Mini-pressure switches 39/40 and service outlets 41 SHALL NOT be drawn: they have no live value. No component SHALL
 show its item number. Compressor 11 SHALL use the standard compressor symbol: a circle with two straight lines
-converging from its suction side towards its discharge side.
+converging from its suction side towards its discharge side. The two parts of the circle outside the lines (the
+triangles between each line and the circle) SHALL be filled solid in the outline colour, so they read black on a
+light theme and stay visible on a dark one; the part between the lines stays unfilled.
 
 #### Scenario: Compressor symbol
 - **WHEN** the card renders any configuration
 - **THEN** compressor 11 is a circle with two straight converging lines, wide at the suction pipe and narrow at the
-  discharge pipe
+  discharge pipe, and the two parts of the circle outside the lines are filled solid in the outline colour
+
+#### Scenario: Compressor fill in the dark theme
+- **WHEN** Home Assistant uses a dark theme
+- **THEN** the compressor's two filled parts take the dark theme's outline colour and contrast with the card
+  background
 
 #### Scenario: Refrigerant items
 - **WHEN** the card renders variant 4 with every feature `true`
