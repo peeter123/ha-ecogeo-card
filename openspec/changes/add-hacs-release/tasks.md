@@ -161,5 +161,10 @@ this change's artifacts: values from `private/installation.md` are used only in 
   releases setting, and whether tag pushes should also run the workflows. Decided 2026-11-19: tag pushes run both
   workflows, which the bare `push:` trigger already does (the `v1.0.0` push ran Check and Validate), so the
   triggers stay; releases stay mutable, so a release asset can still be replaced.
+- Whole-change review (2026-11-19): no blocking finding. Fixed before archiving: the lockfile's stale version and a
+  release procedure that bumps both files, the edit hook skipping git-ignored Markdown and YAML, AGENTS.md's hook
+  description, a test that the repository's codespell config still catches an unquoted misspelling; the spec's
+  Purpose and the Misspelling scenario reworded. Accepted: the installation-value scenarios are checked with the
+  private scan list and script only.
 - Investigate why 13 Chromium overlap browser tests fail locally on Windows since the evening of 2026-11-18 while
   WebKit and CI pass on the same code (the user chose to release on CI's result).

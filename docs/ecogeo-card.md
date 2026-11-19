@@ -1061,7 +1061,9 @@ README. HACS offers an update when a new release is published.
 ## Releases
 
 The version is the `version` in `package.json`: semantic versioning, a minor version for new behaviour and a patch
-version for fixes. The card logs it once to the browser console when it loads, as `ecogeo-card <version>`.
+version for fixes. It is bumped with `npm version <major|minor|patch> --no-git-tag-version`, which updates
+`package.json` and `package-lock.json` together. The card logs it once to the browser console when it loads, as
+`ecogeo-card <version>`.
 
 - `CHANGELOG.md` has one section per version, newest first; its top section is the `package.json` version.
 - `npm run release` runs `npm run check` and builds, then checks that the build is the single, current

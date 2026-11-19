@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
@@ -26,6 +26,21 @@ describe('lint-ha', () => {
       expect(bad.code).not.toBe(0);
       expect(bad.output).toContain('bad.md');
       expect(codespell(dir, ['good.md']).code).toBe(0);
+    },
+    SLOW,
+  );
+
+  test(
+    'codespell with the repository config ignores a backticked misspelling only',
+    () => {
+      copyFileSync(join(process.cwd(), '.codespellrc'), join(dir, '.codespellrc'));
+      const word = 'rec' + 'ieve';
+      writeFileSync(join(dir, 'prose.md'), `We ${word} the signal.\n`);
+      writeFileSync(join(dir, 'quoted.md'), `The \`${word}\` identifier was renamed.\n`);
+      const prose = codespell(dir, ['prose.md']);
+      expect(prose.code).not.toBe(0);
+      expect(prose.output).toContain('prose.md');
+      expect(codespell(dir, ['quoted.md']).code).toBe(0);
     },
     SLOW,
   );

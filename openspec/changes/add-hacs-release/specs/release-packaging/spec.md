@@ -3,8 +3,9 @@
 ## Purpose
 
 What a released ecoGEO card consists of and how a release is checked: the single bundle and its HACS manifest, the one
-version that the package, the bundle and its load message share, and the checks that keep a stale or mismatched
-bundle from being released.
+version that the package, the bundle and its load message share, the card picker's documentation link, the release
+check that refuses a stale or mismatched bundle, the check that the committed bundle is the build of the committed
+sources, the Home Assistant quality checks, and that nothing installation-specific is published.
 
 ## ADDED Requirements
 
@@ -93,7 +94,7 @@ Markdown format check (LF line endings, one final newline, at most 120 character
 blocks and unbreakable lines) and a schema check of the GitHub workflow files. Any finding SHALL fail the check.
 
 #### Scenario: Misspelling
-- **WHEN** a tracked Markdown file contains the word `recieve`
+- **WHEN** a tracked Markdown file contains the word `recieve` in prose (not quoted in backticks)
 - **THEN** the project check fails and names that file
 
 #### Scenario: Long Markdown line

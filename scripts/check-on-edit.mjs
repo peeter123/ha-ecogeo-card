@@ -75,6 +75,8 @@ async function main() {
   const isYaml = /\.ya?ml$/i.test(rel);
   if ((isMarkdown || isYaml) && !rel.startsWith('..') && !isAbsolute(rel) && existsSync(absolute)) {
     if (isMarkdown && !inScope(rel)) return 0;
+    // Git-ignored files (private/) are not part of the checks; exit 0 of `git check-ignore -q` means ignored.
+    if (!(await runCommand('git check-ignore', 'git', ['check-ignore', '-q', '--', rel]))) return 0;
     const failure = isMarkdown
       ? await runCommand('Markdown format', process.execPath, [join(root, 'scripts', 'md-format.mjs'), rel])
       : await runCommand('yamllint', 'uvx', [`yamllint@${YAMLLINT_VERSION}`, '--strict', rel], UV_HINT);

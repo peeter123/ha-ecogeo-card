@@ -19,7 +19,7 @@ its rules are binding. Read it, and the active change in `openspec/changes/`, be
   quality checks), `scripts/lint-ha.mjs` (`npm run lint:ha`: codespell, yamllint, the workflow schema and the
   Markdown format check, part of `npm run check`; needs uv on the PATH).
 - `scripts/check-on-edit.mjs`: the quality hook (`.claude/settings.json`), run after every edit of a TypeScript file
-  under `src/`, `test/` or `dev/`. Keep it green.
+  under `src/`, `test/` or `dev/`, and of a Markdown or YAML file that git does not ignore. Keep it green.
 - `docs/ecogeo-card.md`: the public explanation. `README.md`: features, install and configuration.
 - `private/` (git-ignored): `installation.md` with everything specific to the live installation.
 
@@ -55,8 +55,9 @@ archived in `openspec/changes/archive/2026-11-18-add-htr-state/`.
 
 ## Releases
 
-- A change's release group bumps `version` in `package.json` (minor for new behaviour, patch for fixes), adds the
-  version's section to `CHANGELOG.md` and runs `npm run release`.
+- A change's release group bumps `version` in `package.json` (minor for new behaviour, patch for fixes) with
+  `npm version <major|minor|patch> --no-git-tag-version`, which updates `package.json` and `package-lock.json`
+  together, adds the version's section to `CHANGELOG.md` and runs `npm run release`.
 - Pushing, tagging (`v<version>`) and creating the GitHub release with `dist/ecogeo-card.js` attached happen only on
   the user's explicit request for that release. "Never push" stays the default for task groups.
 - The steps are in the Releases section of `docs/ecogeo-card.md`.
