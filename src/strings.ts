@@ -175,6 +175,10 @@ export const componentLabel = (item: number): string => {
 /** The tooltip and accessible name of the air unit's fan (not a manual item); the external tank's is `DHW_LABELS.externalTank`. */
 export const AIR_UNIT_FAN_NAME = 'Air unit fan';
 
+/** The tooltip and accessible name of the air unit's housing and of the ground collector (not manual items: the manual stops at connections 3 and 4). */
+export const AIR_UNIT_NAME = 'Air unit';
+export const GROUND_COLLECTOR_NAME = 'Ground collector';
+
 /** The visual editor's texts (add-card-editor): section and field labels, choice labels and the notes. */
 export const EDITOR = {
   noForm: "The editor needs Home Assistant's form element, which is not available yet. Use the code editor instead.",

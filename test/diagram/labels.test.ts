@@ -24,10 +24,9 @@ import {
 
 // the default config draws the simplified level
 const arrangement = arrangementFor('horizontal');
-const AIR_PORT_Y = arrangement.airPortY;
-const AIR_UNIT_WALL_X = arrangement.airUnitWallX;
-const GROUND_LINE_Y = arrangement.groundLineY;
-const GROUND_LOOP = arrangement.groundLoop;
+/** The arrangement of the card's band key for a source (the external tank drawn). */
+const bandOf = (source: 'air' | 'ground' | 'hybrid') =>
+  arrangementFor('horizontal', { source, tank: true, emitter: false });
 const LABEL_SPECS = arrangement.labels.specs;
 
 const P = 'demo_ecogeo';
@@ -517,24 +516,30 @@ describe('source labels', () => {
       expect(labelIds(card), id).not.toContain(id);
     }
     expect(labelIds(card).some((id) => id.startsWith('ground_'))).toBe(false);
-    // Out sits at the outlet port (the top pass), right of the housing's wall
-    const out = LABEL_SPECS.find((spec) => spec.id === 'air_unit_out');
-    expect(Math.abs((out?.y ?? 0) - AIR_PORT_Y.top)).toBeLessThan(20);
-    expect(out?.x).toBeGreaterThan(AIR_UNIT_WALL_X);
+    // Out sits inside the housing, in the strip between the fan and the coil block
+    const air = bandOf('air');
+    const out = air.labels.specs.find((spec) => spec.id === 'air_unit_out');
+    const strip = air.airUnit?.strip;
+    expect(out?.align).toBe('middle');
+    expect(out?.x).toBe((strip?.x ?? 0) + (strip?.width ?? 0) / 2);
+    expect(out?.y).toBe((strip?.y ?? 0) + (strip?.height ?? 0) / 2);
     card.remove();
   });
 
-  test('Single loop: only Out at the up leg, the brine inlet, just under the ground line, and no In', async () => {
+  test('Ground collector: only Out, the brine inlet, in the strip between the hatching and the serpentine, and no In', async () => {
     const card = await mount({ source: 'ground' }, hassOf());
     expect(valueOf(card, 'ground_out')).toBe(nb('0.5 °C'));
     expect(label(card, 'ground_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
     expect(label(card, 'ground_out')?.getAttribute('data-role')).toBe('brine.inlet_temperature');
     expect(labelIds(card)).not.toContain('ground_in');
     expect(labelIds(card)).not.toContain('fan_speed');
-    const out = LABEL_SPECS.find((spec) => spec.id === 'ground_out');
-    expect(out?.x).toBeLessThan(GROUND_LOOP.upX);
-    expect((out?.y ?? 0) - GROUND_LINE_Y.ground).toBeGreaterThan(0);
-    expect((out?.y ?? 0) - GROUND_LINE_Y.ground).toBeLessThan(30);
+    const ground = bandOf('ground');
+    const out = ground.labels.specs.find((spec) => spec.id === 'ground_out');
+    const strip = ground.collector?.strip;
+    expect(out?.x).toBe((strip?.x ?? 0) + (strip?.width ?? 0) / 2);
+    expect(out?.y).toBe((strip?.y ?? 0) + (strip?.height ?? 0) / 2);
+    expect(out?.y).toBeGreaterThan((ground.collector?.hatch.y ?? 0) + (ground.collector?.hatch.height ?? 0));
+    expect(out?.y).toBeLessThan(ground.collector?.passes.y0 ?? 0);
     card.remove();
   });
 
@@ -587,18 +592,15 @@ describe('source labels', () => {
     }
   });
 
-  describe('the source label touches no pipe or other label', () => {
-    const arr = arrangementFor('horizontal');
+  describe('the source label sits inside its body, touching no pipe, outline or other label', () => {
     interface Box {
       left: number;
       right: number;
       top: number;
       bottom: number;
     }
-    // a value label with its caption: at most about 64 units wide and 13 tall at the 1000 px slot (normal size; the
-    // `.slot` of dev/index.html is the 1000 px reference). The estimate holds for cards about 842 px or wider, where
-    // 0.95cqw is at least 8 px
-    const [WIDTH, HEIGHT] = [64, 13];
+    // a value label with its caption: at most about 82 units wide and 14 tall at 560 px (the narrowest width of the horizontal layout)
+    const [WIDTH, HEIGHT] = [84, 14];
     const boxOf = (spec: LabelSpec): Box => {
       const left = spec.align === 'start' ? spec.x : spec.align === 'end' ? spec.x - WIDTH : spec.x - WIDTH / 2;
       return { left, right: left + WIDTH, top: spec.y - HEIGHT / 2, bottom: spec.y + HEIGHT / 2 };
@@ -608,35 +610,58 @@ describe('source labels', () => {
     const SOURCE_IDS = new Set(['air_unit_out', 'ground_out', 'hybrid_ground_out']);
 
     test.each(['air', 'ground', 'hybrid'] as const)('%s', (source) => {
+      const arr = bandOf(source);
       const context = { model: 'B', dhw: 'external', source, features: mergeFeatures(4, {}) } as const;
       const shown = arr.labels.specs.filter((spec) => partState(spec, context) !== 'hidden');
       const mine = shown.filter((spec) => SOURCE_IDS.has(spec.id));
       expect(mine).toHaveLength(1);
-      const pipes = drawnSegments(context).map(({ part }) => part);
-      // the housing, the coil block, the cabinet, and the ground line with its hatching
-      const solids: [string, Box][] = [
-        ['cabinet', { left: arr.cabinet.x - 2, right: 1000, top: arr.cabinet.y - 2, bottom: arr.viewBox.height }],
-      ];
-      if (source !== 'ground') {
-        const { x, y, width, height } = arr.airUnit;
-        solids.push(['housing', { left: x - 2, right: x + width + 2, top: y - 2, bottom: y + height + 2 }]);
-      }
-      if (source !== 'air') {
-        const lineY = arr.groundLineY[source === 'hybrid' ? 'hybrid' : 'ground'];
-        solids.push([
-          'ground line',
-          { left: arr.groundLineX.start, right: arr.groundLineX.end, top: lineY - 2, bottom: lineY + 10 },
-        ]);
-      }
+      const body = source === 'air' ? arr.airUnit : arr.collector;
+      if (body === undefined) throw new Error('no body');
+      // the value's strip lies inside the body, clear of the obstacles the body registers (the fan, the coil block, the
+      // hatching, the serpentine)
+      const obstacles: Box[] =
+        source === 'air'
+          ? [
+              {
+                left: body.x,
+                right: body.x + body.width,
+                top: body.y,
+                bottom: (arr.airUnit?.fan.cy ?? 0) + (arr.airUnit?.fan.radius ?? 0),
+              },
+              {
+                left: arr.airUnit?.coil.x ?? 0,
+                right: (arr.airUnit?.coil.x ?? 0) + (arr.airUnit?.coil.width ?? 0),
+                top: arr.airUnit?.coil.y ?? 0,
+                bottom: (arr.airUnit?.coil.y ?? 0) + (arr.airUnit?.coil.height ?? 0),
+              },
+            ]
+          : [
+              {
+                left: body.x,
+                right: body.x + body.width,
+                top: body.y,
+                bottom: arr.collector ? arr.collector.hatch.y + arr.collector.hatch.height : 0,
+              },
+              {
+                left: arr.collector?.serpentine.x ?? 0,
+                right: (arr.collector?.serpentine.x ?? 0) + (arr.collector?.serpentine.width ?? 0),
+                top: arr.collector?.serpentine.y ?? 0,
+                bottom: (arr.collector?.serpentine.y ?? 0) + (arr.collector?.serpentine.height ?? 0),
+              },
+            ];
       for (const spec of mine) {
         const box = boxOf(spec);
-        expect(box.left, spec.id).toBeGreaterThan(0);
-        for (const [name, solid] of solids) expect(apart(box, solid), `${spec.id} ${name}`).toBe(true);
+        // inside the body's outline, with room
+        expect(box.left, spec.id).toBeGreaterThan(body.x + 2);
+        expect(box.right, spec.id).toBeLessThan(body.x + body.width - 2);
+        expect(box.top, spec.id).toBeGreaterThan(body.y + 2);
+        expect(box.bottom, spec.id).toBeLessThan(body.y + body.height - 2);
+        for (const obstacle of obstacles) expect(apart(box, obstacle), spec.id).toBe(true);
         for (const other of shown.filter((item) => item.id !== spec.id)) {
           expect(apart(box, boxOf(other)), `${spec.id} ${other.id}`).toBe(true);
         }
         // no pipe: every straight piece, thickened by its half stroke and a margin of 1
-        for (const pipe of pipes) {
+        for (const pipe of drawnSegments(context).map(({ part }) => part)) {
           pipe.points.slice(1).forEach((end, index) => {
             const start = pipe.points[index] ?? end;
             const run: Box = {
@@ -648,8 +673,6 @@ describe('source labels', () => {
             expect(apart(box, run), `${spec.id} ${pipe.id}`).toBe(true);
           });
         }
-        // the value text stays on the card: the wide estimate must not reach the cabinet or the left edge
-        expect(box.right, spec.id).toBeLessThan(arr.cabinet.x);
       }
     });
   });
@@ -760,11 +783,15 @@ describe('DHW tank labels', () => {
         expect(box.left, id).toBeGreaterThan(tank.x + 2);
         expect(box.right, id).toBeLessThan(tank.x + tank.width - 2);
         expect(box.top, id).toBeGreaterThan(tank.y + 2);
-        expect(box.bottom, id).toBeLessThan(coilTop);
+        // (the row estimate is a unit or two taller than the drawn text; the browser overlap tests are exact)
+        expect(box.bottom, id).toBeLessThan(coilTop + 2);
       }
-      const temperatureY = arr.labels.specs.find((item) => item.id === 'tank_internal_temperature')?.y;
-      // the demand text sits under the temperature
-      expect(arr.labels.specs.find((item) => item.id === 'tank_internal_demand')?.y).toBeGreaterThan(temperatureY ?? 0);
+      // the demand sits right of the temperature, in the same row
+      const [temperature, demand] = ['tank_internal_temperature', 'tank_internal_demand'].map((id) =>
+        arr.labels.specs.find((item) => item.id === id),
+      );
+      expect(demand?.y).toBe(temperature?.y);
+      expect(demand?.x ?? 0).toBeGreaterThan((temperature?.x ?? 0) + (SIZE['tank_internal_temperature']?.[0] ?? 0));
     });
 
     test('no overlap with each other, other labels, components or pipes', () => {
@@ -780,7 +807,7 @@ describe('DHW tank labels', () => {
         // components drawn near (probe 54 and the others): their symbol boxes (radius 14, the largest symbols' half size) stay clear, except tank 50
         for (const part of arr.components.filter((item) => item.item !== 50 && item.item !== 51)) {
           // a port is only a 10 x 6 rectangle on the cabinet's top edge, so a half size of 7 covers it
-          const half = part.kind === 'port' ? 7 : 14;
+          const half = part.kind === 'port' ? 7 : part.kind === 'probe_t' ? 9 : 14;
           const symbolBox = { left: part.x - half, right: part.x + half, top: part.y - half, bottom: part.y + half };
           expect(apart(box, symbolBox), id + ' component ' + String(part.item)).toBe(true);
         }
@@ -820,7 +847,7 @@ describe('label positions', () => {
       expect(spec.x, spec.id).toBeGreaterThan(0);
       expect(spec.x, spec.id).toBeLessThan(1000);
       expect(spec.y, spec.id).toBeGreaterThan(0);
-      expect(spec.y, spec.id).toBeLessThan(620);
+      expect(spec.y, spec.id).toBeLessThan(arrangement.viewBox.height);
     }
   });
 

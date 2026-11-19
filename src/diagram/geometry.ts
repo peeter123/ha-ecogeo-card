@@ -1,18 +1,23 @@
-// The drawing's geometry as data (add-schematic-card D5): the viewBox, the ports on the top edge, every component and every pipe
-// segment, laid out after the manual's B4 figure (manual-figure, section 3.1, page 34) and, for model C, figure C
-// (items 47-54, the integrated tank). The topology and the item numbers are the figures'; the coordinates are re-laid
-// out for legibility. Besides the cabinet's own pipes the segments include the pipes of the outer-loop source (left
-// zone) and of the external DHW tank (right zone), and the stubs of connections 47-49. No Lit here: this file is
+// The drawing's geometry as data (add-schematic-card D5, rework-layouts D1-D3): the viewBox, the ports on the top edge, every
+// component and every pipe segment, laid out after the manual's B4 figure (manual-figure, section 3.1, page 34) and, for
+// model C, figure C (items 47-54, the integrated tank). The topology and the item numbers are the figures'; the coordinates
+// are re-laid out for legibility. Besides the cabinet's own pipes the segments include the pipes of the outer-loop source and of
+// the external DHW tank, which lie in the band above the cabinet, and the stubs of connections 47-49. No Lit here: this file is
 // data plus small pure helpers that the renderer and the integrity tests share.
 //
-// The component and segment lists are authored in the manual-figure frame (cabinet x 240-760, y 130-605); the one drawn arrangement
-// (`arrangementFor`, the horizontal layout's; the vertical layout shares it until its own is built) maps them to its own units
-// (rework-layouts D1, D2). Only the parts the drawing shows are in the lists: the service and safety parts of the figure (items
-// 18-21, 23, 24, 39-41, 52, 53) are not drawn. In the frame, in viewBox units: source zone x 0-240, cabinet x 240-760, DHW zone x 790-1000, the pipe run
-// above the cabinet y 0-110, the cabinet's top edge at y 130. Ports 1-6 sit on the top edge in the manual's order.
-// Inside, from the top: the DHW supply (y 172) and return (y 198) lines of valve 26, the probe row, the discharge
-// line of compressor 11 (y 250) through HTR exchanger 9 to inversion valve 14, condenser 8 and evaporator 7, the
+// The cabinet's component and segment lists are authored in the manual-figure frame (cabinet x 240-760, y 130-605); the one
+// drawn arrangement (`arrangementFor`, the horizontal layout's; the vertical layout shares it until its own is built) maps
+// them to its own units (rework-layouts D1, D2). Only the parts the drawing shows are in the lists: the service and safety
+// parts of the figure (items 18-21, 23, 24, 39-41, 52, 53) are not drawn. Ports 1-6 sit on the cabinet's top edge in the
+// manual's order. Inside, from the top: the DHW supply (y 172) and return (y 198) lines of valve 26, the probe row, the
+// discharge line of compressor 11 (y 250) through HTR exchanger 9 to inversion valve 14, condenser 8 and evaporator 7, the
 // valve 27 / pump 15 / valve 28 row (y 416) and exchanger 10.
+//
+// Above the cabinet lies the band (rework-layouts D3): a strip with three slots, left to right the emitter (over ports 1/2),
+// the outer-loop source (over 3/4) and the external DHW tank (over 5/6), and, between the band and the cabinet's top edge,
+// the join lane that holds the short pipes from the ports into the parts. None of the band's parts is a manual item: the
+// manual's figures stop at the connections; the air unit, the ground collector and the external tank are the card's own
+// drawings of what the connections lead to (the tank is the "DHW inter-accumulator" of ports 5/6).
 //
 // Pipe points run in the direction of the flow in heating (`direction` 1) so that the renderer can animate them.
 import type { CircuitId, Circuits } from '../calc/circuits';
@@ -22,32 +27,56 @@ import type { FeatureKey, Features } from '../config/variants';
 import { HORIZONTAL_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
 
 /** A rectangle in viewBox units. */
-interface Rect {
+export interface Rect {
   readonly x: number;
   readonly y: number;
   readonly width: number;
   readonly height: number;
 }
 
-/** The air unit's housing, fan, coil block, fins, slats and serpentine (see `SIMPLIFIED_ZONES`). */
-export interface AirUnitShape {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-  readonly fanX: number;
-  readonly fanY: number;
-  readonly fanRadius: number;
+/**
+ * The air unit (not a manual item): a housing with the fan in its upper part, a strip for the Out value under the fan and the
+ * coil block at the bottom, facing the cabinet. The brine serpentine runs in vertical passes across the coil's horizontal
+ * fins and enters and leaves on the coil block's bottom face (`passes.x0` and the last pass), so that both pipes arrive from
+ * the join lane below.
+ */
+export interface AirUnitShape extends Rect {
+  readonly fan: { readonly cx: number; readonly cy: number; readonly radius: number };
+  /** The divider between the fan section and the value strip. */
+  readonly dividerY: number;
+  /** The free strip between the fan and the coil block, where the Out value sits. */
+  readonly strip: Rect;
+  /** The coil block's frame; its bottom edge is the face the brine pipes use. */
   readonly coil: Rect;
   readonly fins: {
-    readonly x: number;
+    readonly x0: number;
+    readonly x1: number;
+    readonly y0: number;
     readonly step: number;
     readonly count: number;
-    readonly y0: number;
-    readonly y1: number;
   };
-  readonly slats: { readonly y0: number; readonly step: number; readonly count: number };
-  readonly dividerY: number;
+  /** The serpentine: the x of the first pass, the pass spacing, the (even) number of passes, and the y of its top and bottom bends. */
+  readonly passes: {
+    readonly x0: number;
+    readonly step: number;
+    readonly count: number;
+    readonly top: number;
+    readonly bottom: number;
+  };
+}
+
+/**
+ * The ground collector (not a manual item): a strip of ground, hatched along its top edge (the surface), with a flat
+ * serpentine of horizontal passes in its lower part and the Out value in the strip between the hatching and the serpentine.
+ * The brine enters on the left at `feedX`, runs through the passes and leaves at `passes.left`; both ends are on the bottom face.
+ */
+export interface CollectorShape extends Rect {
+  readonly hatch: Rect;
+  /** The free strip between the hatching and the serpentine, where the Out value sits. */
+  readonly strip: Rect;
+  /** The box around the serpentine and its feed riser. */
+  readonly serpentine: Rect;
+  /** The passes: the y of the first, the spacing, the (even) number, and the x of the left and right bends. */
   readonly passes: {
     readonly y0: number;
     readonly step: number;
@@ -55,21 +84,45 @@ export interface AirUnitShape {
     readonly left: number;
     readonly right: number;
   };
+  /** The x of the feed riser, left of the serpentine. */
+  readonly feedX: number;
 }
 
+/** The external tank's cylinder with its elliptical domed caps. */
+export type TankShape = Rect & { readonly dome: number };
+
 /**
- * The primary values of an arrangement's zones: the viewBox, the cabinet's outline, the integrated tank and its coil
- * (inside the cabinet), the external tank, the air unit, the ground loop and the pipe run above the cabinet.
- * `deriveZones` computes everything else that depends on them.
+ * The external coil: its centre line is the tank's, and it sits in the tank's lower part (the upper part holds the values).
+ * `inX` and `outX` are the columns of the pipes that enter the tank, left and right of the coil, so that they run beside it.
  */
-interface ZoneBase {
+export interface ExternalCoil {
+  readonly cx: number;
+  readonly top: number;
+  readonly bottom: number;
+  readonly rx: number;
+  readonly inX: number;
+  readonly outX: number;
+}
+
+/** What decides the band's slots: the source, and whether the external tank and the emitter are drawn (an empty slot gives its space away). */
+export interface BandKey {
+  readonly source: Source;
+  readonly tank: boolean;
+  readonly emitter: boolean;
+}
+
+export type BandSlotName = 'emitter' | 'source' | 'tank';
+
+/** A slot's horizontal extent in the band. */
+export interface Slot {
+  readonly x0: number;
+  readonly x1: number;
+}
+
+/** The cabinet-side zones: the viewBox, the outline and the integrated tank of model C with its coil, all in the arrangement's units. */
+export interface CabinetZones {
   readonly viewBox: { readonly width: number; readonly height: number };
-  /**
-   * The uniform scale of the source and the external tank relative to the manual-figure frame (1 when left out): it sizes
-   * the offsets `deriveZones` adds to them (the external coil, the hybrid's ground line) and the air unit's fan blades.
-   */
-  readonly scale?: number;
-  /** The cabinet's outline and the zones around it. */
+  /** The cabinet's outline. */
   readonly cabinet: Rect;
   /**
    * The integrated tank of model C (item 50), inside the cabinet under the top edge: coil 51 (its ports are where the DHW
@@ -79,92 +132,176 @@ interface ZoneBase {
   readonly internalTank: Rect;
   /** Coil 51's centre (model C), inside tank 50; its port stubs reach back to the tank wall (symbols.ts). */
   readonly coil51: { readonly x: number; readonly y: number };
-  /** The external tank right of the cabinet (not a manual item: the "DHW inter-accumulator" of ports 5/6). */
-  readonly externalTank: Rect & { readonly dome: number };
-  /**
-   * The air unit's housing and the fan in it, left of the cabinet (not manual items). The housing's top is the
-   * cabinet's top line (refine-schematic-drawing D11); everything else is placed from it. Both brine pipes leave through the housing's
-   * right wall, the side facing the cabinet (refine-schematic-drawing D13).
-   */
-  readonly airUnit: AirUnitShape;
-  /**
-   * The ground loop (refine-schematic-drawing D12): a single vertical U. One leg goes down from the ground line (at `downX`), a half circle
-   * forms the bottom and one leg comes back up (at `upX`), `depth` below the line at its lowest. The legs' spacing is the
-   * bottom's diameter.
-   */
-  readonly groundLoop: { readonly downX: number; readonly upX: number; readonly depth: number };
-  /** The ground line's horizontal extent in the source zone (the hatching ticks sit 6 units inside each end). */
-  readonly groundLineX: { readonly start: number; readonly end: number };
-  /** The pipe run above the cabinet: the y of port 3's and port 4's pipes, the x where they turn down or up to the source, and the column of the hybrid's return pipe. */
-  readonly run: {
-    readonly outY: number;
-    readonly inY: number;
-    readonly feedX: number;
-    readonly returnX: number;
-    readonly hybridReturnX: number;
-  };
 }
 
-/** What `deriveZones` computes from a `ZoneBase`. */
-export interface Zones extends ZoneBase {
-  /** The housing's right wall, where both brine pipes leave the air unit. */
-  readonly airUnitWallX: number;
-  /** The y of the air unit's top and bottom brine ports (the first and last pass), on the coil block's right side. */
-  readonly airPortY: { readonly top: number; readonly bottom: number };
-  /** The x where the brine pipes meet the coil block's right edge (the ports of the first and last pass). */
-  readonly coilPortX: number;
-  /** The serpentine's U-bends: half the distance between two passes, so each bend is a half circle. */
-  readonly airCoilBend: number;
-  /** The ground loop's bottom: half the legs' spacing, so the bottom is a half circle. */
-  readonly loopBend: number;
-  /** The ground line (the surface) of the ground loop: on the cabinet's top line, or in the hybrid under the air unit. */
-  readonly groundLineY: { readonly ground: number; readonly hybrid: number };
-  /**
-   * The external coil: its centre line is the tank's, and it sits in the lower part of the tank (the tank's top plus 62
-   * and 146). `rx` is its half width, `port6X` the x of port 6's vertical inside the tank (14 units inside the left wall).
-   */
-  readonly externalCoil: {
-    readonly cx: number;
-    readonly top: number;
-    readonly bottom: number;
-    readonly rx: number;
-    readonly port6X: number;
-  };
-  /**
-   * Where port 3's line (`src_out`) hands over to the source, and where the exits hand over to port 4's line (`src_in`):
-   * a few units along the straight run past the turn, so that no corner is a boundary between two segments (a butt-capped
-   * boundary would show a square notch where the pipe turns).
-   */
-  readonly joinX: { readonly out: number; readonly in: number };
+/** The band's parts, placed for one `BandKey`. */
+export interface BandZones {
+  readonly key: BandKey;
+  /** The band: its top and its bottom, where every body's bottom edge lies. The join lane runs from the bottom to the cabinet's top edge. */
+  readonly band: { readonly top: number; readonly bottom: number };
+  /** The x of connections 3-6 on the cabinet's top edge. */
+  readonly ports: Readonly<Record<3 | 4 | 5 | 6, number>>;
+  /** The slots that are filled (a slot of an absent part is not there). */
+  readonly slots: Readonly<Partial<Record<BandSlotName, Slot>>>;
+  readonly airUnit?: AirUnitShape;
+  readonly collector?: CollectorShape;
+  readonly externalTank?: TankShape;
+  readonly externalCoil?: ExternalCoil;
+}
+
+/** What `arrangementFor` gives: the cabinet's zones and the band's. */
+export type Zones = CabinetZones & BandZones;
+
+/** The band's sizes in viewBox units (rework-layouts D3, D4). */
+export const BAND = {
+  /** The bodies' height: the tallest (the tank's); every body's bottom edge is the band's bottom. */
+  height: 170,
+  /** The top of the band, below the viewBox's top margin. */
+  top: 6,
+  /** The join lane between the band's bottom and the cabinet's top edge. */
+  joinLane: 56,
+  /** The smallest gap between two slots. */
+  gap: 24,
+  air: { width: 130, height: 168 },
+  collector: { width: 170, height: 112 },
+  /** The gap between the air unit and the collector of the hybrid. */
+  hybridGap: 12,
+  tank: { width: 160, height: 170, dome: 14 },
+  /** The emitter's width; 0 while the emitter is not drawn (its slot is empty and gives its space away). */
+  emitterWidth: 0 as number,
+  /** The jogs' distances above the cabinet's top edge. */
+  jog: { out: 22, in: 34, link: 46, tank: 28 },
+} as const;
+
+/** The width of the source's body (the air unit, the collector, or both side by side). */
+export const sourceWidth = (source: Source): number =>
+  source === 'air'
+    ? BAND.air.width
+    : source === 'ground'
+      ? BAND.collector.width
+      : BAND.air.width + BAND.hybridGap + BAND.collector.width;
+
+/** One part to place in the band: its slot, the x it would centre on (over its ports) and its width (0: not drawn). */
+export interface BandItem {
+  readonly name: BandSlotName;
+  readonly centre: number;
+  readonly width: number;
+}
+
+/**
+ * The slots of the band (rework-layouts D3): each part is centred over its port pair where its width allows; where two parts
+ * would come closer than `gap`, or leave the bounds, the parts move the least that restores the order, the gaps and the
+ * bounds (neighbours that meet share the move: the cluster centres on the mean of its parts' ideal places). A part of
+ * width 0 is empty: it has no slot and gives its space to the others. Pure.
+ */
+export function planBand(
+  items: readonly BandItem[],
+  bounds: { readonly min: number; readonly max: number },
+  gap: number,
+): Partial<Record<BandSlotName, Slot>> {
+  interface Cluster {
+    members: { item: BandItem; offset: number }[];
+    width: number;
+    /** The sum over the members of (ideal left edge - offset): its mean is the cluster's ideal left edge. */
+    total: number;
+    x0: number;
+  }
+  const place = (cluster: Cluster): number =>
+    Math.min(Math.max(cluster.total / cluster.members.length, bounds.min), bounds.max - cluster.width);
+  const clusters: Cluster[] = [];
+  for (const item of items.filter((entry) => entry.width > 0)) {
+    let current: Cluster = {
+      members: [{ item, offset: 0 }],
+      width: item.width,
+      total: item.centre - item.width / 2,
+      x0: 0,
+    };
+    current.x0 = place(current);
+    for (;;) {
+      const previous = clusters[clusters.length - 1];
+      if (previous === undefined || previous.x0 + previous.width + gap <= current.x0) break;
+      clusters.pop();
+      const shift = previous.width + gap;
+      current = {
+        members: [
+          ...previous.members,
+          ...current.members.map((member) => ({ ...member, offset: member.offset + shift })),
+        ],
+        width: previous.width + gap + current.width,
+        total: previous.total + current.total - current.members.length * shift,
+        x0: 0,
+      };
+      current.x0 = place(current);
+    }
+    clusters.push(current);
+  }
+  return Object.fromEntries(
+    clusters.flatMap((cluster) =>
+      cluster.members.map(({ item, offset }) => [
+        item.name,
+        { x0: round2(cluster.x0 + offset), x1: round2(cluster.x0 + offset + item.width) },
+      ]),
+    ),
+  );
 }
 
 const round2 = (value: number): number => Math.round(value * 100) / 100;
 
-/** The values that depend on the primary ones: ports, line heights, the external coil, the joins of the pipe run. */
-function deriveZones(base: ZoneBase): Zones {
-  const { airUnit, groundLoop, externalTank, run, cabinet } = base;
-  const k = base.scale ?? 1;
-  const groundLineY = { ground: cabinet.y, hybrid: airUnit.y + airUnit.height + Math.round(70 * k) };
+/** The air unit placed with its left edge at `x0` and its bottom edge at `bottom`. */
+export function airUnitShape(x0: number, bottom: number): AirUnitShape {
+  const { width, height } = BAND.air;
+  const y = bottom - height;
+  const coil: Rect = { x: x0 + 10, y: y + 102, width: 110, height: 58 };
   return {
-    ...base,
-    airUnitWallX: airUnit.x + airUnit.width,
-    airPortY: {
-      top: airUnit.passes.y0,
-      bottom: airUnit.passes.y0 + (airUnit.passes.count - 1) * airUnit.passes.step,
-    },
-    coilPortX: airUnit.coil.x + airUnit.coil.width,
-    airCoilBend: airUnit.passes.step / 2,
-    loopBend: (groundLoop.downX - groundLoop.upX) / 2,
-    groundLineY,
-    externalCoil: {
-      cx: externalTank.x + externalTank.width / 2,
-      top: externalTank.y + Math.round(62 * k),
-      bottom: externalTank.y + Math.round(146 * k),
-      rx: Math.round(50 * k),
-      port6X: externalTank.x + Math.round(14 * k),
-    },
-    joinX: { out: run.feedX + 8, in: run.returnX + 8 },
+    x: x0,
+    y,
+    width,
+    height,
+    fan: { cx: x0 + width / 2, cy: y + 36, radius: 28 },
+    dividerY: y + 70,
+    strip: { x: x0 + 8, y: y + 74, width: width - 16, height: 24 },
+    coil,
+    fins: { x0: coil.x + 4, x1: coil.x + coil.width - 4, y0: coil.y + 8, step: 8, count: 6 },
+    passes: { x0: x0 + 32, step: 22, count: 4, top: coil.y + 12, bottom: coil.y + 46 },
   };
+}
+
+/** The collector placed with its left edge at `x0` and its bottom edge at `bottom`. */
+export function collectorShape(x0: number, bottom: number): CollectorShape {
+  const { width, height } = BAND.collector;
+  const y = bottom - height;
+  return {
+    x: x0,
+    y,
+    width,
+    height,
+    hatch: { x: x0, y, width, height: 14 },
+    strip: { x: x0 + 8, y: y + 18, width: width - 16, height: 24 },
+    serpentine: { x: x0 + 8, y: y + 48, width: width - 16, height: height - 48 },
+    passes: { y0: y + 54, step: 14, count: 4, left: x0 + 34, right: x0 + width - 14 },
+    feedX: x0 + 14,
+  };
+}
+
+/** The x of the air unit's brine pipes on its coil block's bottom face: the feed (first pass) and the exit (last pass). */
+export const airPortX = (unit: AirUnitShape): { feed: number; exit: number } => ({
+  feed: unit.passes.x0,
+  exit: unit.passes.x0 + (unit.passes.count - 1) * unit.passes.step,
+});
+
+/** The y of the air unit's brine face, the coil block's bottom edge. */
+export const airFaceY = (unit: AirUnitShape): number => unit.coil.y + unit.coil.height;
+
+/** The y of the collector's passes, in order. */
+export const collectorPassYs = (collector: CollectorShape): number[] =>
+  Array.from({ length: collector.passes.count }, (_, index) => collector.passes.y0 + index * collector.passes.step);
+
+/** The outline of the external tank's body (straight walls, elliptical domed caps), as path data. */
+export function externalTankBody({ externalTank }: Pick<BandZones, 'externalTank'>): string {
+  if (externalTank === undefined) return '';
+  const { x, y, width, height, dome } = externalTank;
+  const rx = width / 2;
+  return `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x + width)} ${String(y + dome)} V${String(y + height - dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x)} ${String(y + height - dome)} Z`;
 }
 
 /** Coil 51's ports in its local frame: supply first, return second. The symbol's port stubs end on their y values; the symbol keeps this size in every arrangement. */
@@ -173,49 +310,19 @@ export const COIL_LOCAL_PORTS: readonly [readonly [number, number], readonly [nu
   [-75, 13],
 ];
 
-/** The outline of the external tank's body (straight walls, elliptical domed caps), as path data. */
-export function externalTankBody({ externalTank }: Pick<ZoneBase, 'externalTank'>): string {
-  const { x, y, width, height, dome } = externalTank;
-  const rx = width / 2;
-  return `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x + width)} ${String(y + dome)} V${String(y + height - dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x)} ${String(y + height - dome)} Z`;
-}
-
 /** The manual-figure frame's cabinet; the maps of the arrangement start from it. */
 const FRAME_CABINET = { x: 240, y: 130, width: 520, height: 475 } as const;
 
 /**
- * The manual-figure frame's zones: the coordinates the component and segment lists are authored in (add-schematic-card D5). Not drawn
- * (rework-layouts D1): the arrangement's own zones derive from them, and `FRAME` lets the tests compare the two.
+ * The manual-figure frame's zones: the coordinates the cabinet's component and segment lists are authored in (add-schematic-card D5).
+ * Not drawn (rework-layouts D1): the arrangement's own zones derive from them, and `FRAME` lets the tests compare the two.
  */
-const FRAME_ZONES: Zones = deriveZones({
+const FRAME_ZONES: CabinetZones = {
   viewBox: { width: 1000, height: 620 },
   cabinet: FRAME_CABINET,
   internalTank: { x: 408, y: 138, width: 182, height: 66 },
   coil51: { x: 495, y: 185 },
-  externalTank: { x: 806, y: FRAME_CABINET.y, width: 168, height: 180, dome: 14 },
-  airUnit: {
-    x: 26,
-    y: FRAME_CABINET.y,
-    width: 124,
-    height: 210,
-    fanX: 88,
-    fanY: FRAME_CABINET.y + 162,
-    fanRadius: 34,
-    // the coil block's frame (the brine serpentine runs inside it, over the fins)
-    coil: { x: 36, y: FRAME_CABINET.y + 16, width: 104, height: 74 },
-    // the coil's fins: the first x, the step, how many, and where they start and end
-    fins: { x: 52, step: 6, count: 13, y0: FRAME_CABINET.y + 20, y1: FRAME_CABINET.y + 86 },
-    // the slats of the housing's front, in the gutters left and right of the fan: the first y, the step and how many
-    slats: { y0: FRAME_CABINET.y + 134, step: 9, count: 8 },
-    // where the fan section starts (a divider under the coil block)
-    dividerY: FRAME_CABINET.y + 114,
-    // the serpentine: four passes (an even number, so that it enters and leaves on the right), 15 apart, bending at x `left` and `right`
-    passes: { y0: FRAME_CABINET.y + 30, step: 15, count: 4, left: 44, right: 132 },
-  },
-  groundLoop: { downX: 166, upX: 106, depth: 140 },
-  groundLineX: { start: 8, end: 220 },
-  run: { outY: 85, inY: 50, feedX: 226, returnX: 206, hybridReturnX: 12 },
-});
+};
 
 export type Point = readonly [x: number, y: number];
 export type Rotation = 0 | 90 | 180 | 270;
@@ -296,6 +403,8 @@ export interface HelixShape {
   bottom: number;
   rx: number;
   turns: number;
+  /** Starts at the left end (cx - rx) and ends at the right one, instead of the other way round. */
+  mirror?: true;
 }
 
 export interface Segment extends Visibility {
@@ -340,7 +449,7 @@ const c = (
 ): Component => ({ item, kind, x, y, rotation, ...extra });
 
 /** Components. Items 1-6 are the ports on the top edge. */
-const componentsFor = (z: Zones): readonly Component[] => [
+const componentsFor = (z: CabinetZones): readonly Component[] => [
   // ports, left to right in the manual's order
   c(1, 'port', 270, 130, 0),
   c(2, 'port', 312, 130, 0),
@@ -444,38 +553,6 @@ const parsePoints = (path: string): Point[] =>
     return [x ?? 0, y ?? 0];
   });
 
-/**
- * The air coil's points (refine-schematic-drawing D13): a serpentine of the passes of the arrangement's `airUnit.passes`. It starts at the right of the
- * top pass and, the number of passes being even, ends at the right of the bottom pass. `reverse` gives the other
- * direction: the air source is entered at the bottom, so that its exit on the top pass rises left of the feed.
- */
-function coilPath(z: Zones, reverse: boolean): string {
-  const { y0, step, count, left, right } = z.airUnit.passes;
-  const points: Point[] = [[z.coilPortX, y0]];
-  for (let index = 0; index < count; index += 1) {
-    const y = y0 + index * step;
-    if (index % 2 === 0) {
-      if (index > 0) points.push([right, y]);
-      points.push([left, y]);
-    } else {
-      points.push([left, y], index === count - 1 ? [z.coilPortX, y] : [right, y]);
-    }
-  }
-  return (reverse ? points.reverse() : points).map(([x, y]) => `${String(x)},${String(y)}`).join(' ');
-}
-
-/**
- * One half of the ground loop's U from the ground line at `lineY` (refine-schematic-drawing D12): `down` is the leg down and the bottom's
- * first quarter circle, `up` the second quarter circle and the leg up. They meet in the middle of the bottom.
- */
-function loopHalf(z: Zones, lineY: number, half: 'down' | 'up'): string {
-  const { downX, upX, depth } = z.groundLoop;
-  const [middleX, bottom] = [(downX + upX) / 2, lineY + depth];
-  return half === 'down'
-    ? `${String(downX)},${String(lineY)} ${String(downX)},${String(bottom)} ${String(middleX)},${String(bottom)}`
-    : `${String(middleX)},${String(bottom)} ${String(upX)},${String(bottom)} ${String(upX)},${String(lineY)}`;
-}
-
 /** Points as text: "x,y x,y ...". */
 const line = (...points: Point[]): string => points.map(([x, y]) => `${String(x)},${String(y)}`).join(' ');
 
@@ -518,9 +595,9 @@ export const HTR_WATER_SEGMENT_IDS: readonly string[] = [
   'dhw_ext_out',
 ];
 
-/** Pipe segments. The production trunk (return from ports 2/6 through 27, 15, 8, 44, 33 and 26) serves DG1 and DHW. */
-const segmentsFor = (z: Zones): readonly Segment[] => [
-  // production: ports 1 and 2 (the DG1 stubs end below the pipe run, y > 110)
+/** The cabinet's pipe segments (the band's are `bandSegments`). The production trunk (return from ports 2/6 through 27, 15, 8, 44, 33 and 26) serves DG1 and DHW. */
+const cabinetSegments = (): readonly Segment[] => [
+  // production: ports 1 and 2 (the DG1 stubs are 12 units long)
   seg('p1_stub', DG1, '270,130 270,118', OUT, { stub: true }),
   seg('p2_stub', DG1, '312,118 312,130', RET, { stub: true }),
   seg('p1_up', DG1, '270,160 270,130', OUT, { dhw: 'any', speedRole: PP }),
@@ -560,176 +637,10 @@ const segmentsFor = (z: Zones): readonly Segment[] => [
   seg('htr_to_9', ['htr'], '340,265 340,296 361,296', DHWT, { feature: 'htr', dhw: 'any' }),
   seg('htr_drain', ['htr'], '340,296 340,309', DHWT, { feature: 'htr', dhw: 'any', stub: true }),
   seg('htr_riser', ['htr'], '361,250 361,172', DHWT, { feature: 'htr', dhw: 'any' }),
-  // DHW storage. External (ports 5/6, a tank with a coil right of the cabinet, the pipes rise into the run and go
-  // right: 5 higher than 6, so that they do not cross).
-  seg(
-    'dhw_ext_in',
-    ['dhw_coil'],
-    `722,130 722,${String(z.run.inY)} ${String(z.externalCoil.cx + z.externalCoil.rx)},${String(z.run.inY)} ${String(z.externalCoil.cx + z.externalCoil.rx)},${String(z.externalCoil.top)}`,
-    OUT,
-    { dhw: 'external', speedRole: PP },
-  ),
-  seg(
-    'dhw_ext_coil',
-    ['dhw_coil'],
-    `${String(z.externalCoil.cx + z.externalCoil.rx)},${String(z.externalCoil.top)} ${String(z.externalCoil.cx - z.externalCoil.rx)},${String(z.externalCoil.bottom)}`,
-    OUT,
-    {
-      dhw: 'external',
-      speedRole: PP,
-      shape: {
-        kind: 'helix',
-        cx: z.externalCoil.cx,
-        top: z.externalCoil.top,
-        bottom: z.externalCoil.bottom,
-        rx: z.externalCoil.rx,
-        turns: 4.5,
-      },
-    },
-  ),
-  seg(
-    'dhw_ext_out',
-    ['dhw_coil'],
-    `${String(z.externalCoil.cx - z.externalCoil.rx)},${String(z.externalCoil.bottom)} ${String(z.externalCoil.port6X)},${String(z.externalCoil.bottom)} ${String(z.externalCoil.port6X)},${String(z.run.outY)} 748,${String(z.run.outY)} 748,130`,
-    RET,
-    {
-      dhw: 'external',
-      speedRole: PP,
-    },
-  ),
   // Internal (model C, items 47-49 on the top edge): short stubs into the tank
   seg('tap_47', ['dhw_coil'], '440,118 440,138', DHWT, { dhw: 'internal', stub: true }),
   seg('tap_48', ['dhw_coil'], '490,138 490,118', DHWT, { dhw: 'internal', stub: true }),
   seg('tap_49', ['dhw_coil'], '540,118 540,138', DHWT, { dhw: 'internal', stub: true }),
-  // Outer-loop source (left zone). Port 3 (brine out) rises to y 85 and runs left to x 226, port 4 (brine in) comes back
-  // at y 50 from x 206: both stay above the DG1 stubs (y > 110), and port 4's pipe is the higher
-  // one so that the two do not cross. Air unit (refine-schematic-drawing D13): the feed comes down the column x 226 to the bottom pass,
-  // the exit leaves the top pass and rises at x 206 (left of the feed's column, so no pipe crosses another); both
-  // leave the housing's right wall. Ground loop (refine-schematic-drawing D12): feed, one leg down with the bottom's first quarter
-  // circle, the other quarter circle and the leg up, exit. Hybrid: the air unit is entered at its top pass, so that
-  // the link to the ground loop can leave from the bottom pass without crossing the feed; the ground loop's exit
-  // returns up along the housing's left side.
-  seg('src_out', ['brine'], line([630, 130], [630, z.run.outY], [z.joinX.out, z.run.outY]), BOUT, { speedRole: BP }),
-  seg('src_in', ['brine'], line([z.joinX.in, z.run.inY], [690, z.run.inY], [690, 130]), BIN, { speedRole: BP }),
-  seg(
-    'src_air_feed',
-    ['brine'],
-    line(
-      [z.joinX.out, z.run.outY],
-      [z.run.feedX, z.run.outY],
-      [z.run.feedX, z.airPortY.bottom],
-      [z.coilPortX, z.airPortY.bottom],
-    ),
-    BOUT,
-    {
-      source: ['air'],
-      speedRole: BP,
-    },
-  ),
-  seg('src_air_coil', ['brine'], coilPath(z, true), BOUT, { source: ['air'], speedRole: BP, bend: z.airCoilBend }),
-  seg(
-    'src_air_exit',
-    ['brine'],
-    line(
-      [z.coilPortX, z.airPortY.top],
-      [z.run.returnX, z.airPortY.top],
-      [z.run.returnX, z.run.inY],
-      [z.joinX.in, z.run.inY],
-    ),
-    AIRO,
-    {
-      source: ['air'],
-      speedRole: BP,
-    },
-  ),
-  seg(
-    'src_gnd_feed',
-    ['brine'],
-    line([z.joinX.out, z.run.outY], [z.groundLoop.downX, z.run.outY], [z.groundLoop.downX, z.groundLineY.ground]),
-    BOUT,
-    {
-      source: ['ground'],
-      speedRole: BP,
-    },
-  ),
-  seg('src_gnd_down', ['brine'], loopHalf(z, z.groundLineY.ground, 'down'), BOUT, {
-    source: ['ground'],
-    speedRole: BP,
-    roundEnd: true,
-    bend: z.loopBend,
-  }),
-  seg('src_gnd_up', ['brine'], loopHalf(z, z.groundLineY.ground, 'up'), BIN, {
-    source: ['ground'],
-    speedRole: BP,
-    bend: z.loopBend,
-  }),
-  seg(
-    'src_gnd_exit',
-    ['brine'],
-    line([z.groundLoop.upX, z.groundLineY.ground], [z.groundLoop.upX, z.run.inY], [z.joinX.in, z.run.inY]),
-    BIN,
-    {
-      source: ['ground'],
-      speedRole: BP,
-    },
-  ),
-  seg(
-    'src_hyb_feed',
-    ['brine'],
-    line(
-      [z.joinX.out, z.run.outY],
-      [z.run.feedX, z.run.outY],
-      [z.run.feedX, z.airPortY.top],
-      [z.coilPortX, z.airPortY.top],
-    ),
-    BOUT,
-    {
-      source: ['hybrid'],
-      speedRole: BP,
-    },
-  ),
-  seg('src_hyb_coil', ['brine'], coilPath(z, false), BOUT, { source: ['hybrid'], speedRole: BP, bend: z.airCoilBend }),
-  seg(
-    'src_hyb_link',
-    ['brine'],
-    line(
-      [z.coilPortX, z.airPortY.bottom],
-      [z.groundLoop.downX, z.airPortY.bottom],
-      [z.groundLoop.downX, z.groundLineY.hybrid],
-    ),
-    AIRO,
-    {
-      source: ['hybrid'],
-      speedRole: BP,
-    },
-  ),
-  seg('src_hyb_down', ['brine'], loopHalf(z, z.groundLineY.hybrid, 'down'), AIRO, {
-    source: ['hybrid'],
-    speedRole: BP,
-    roundEnd: true,
-    bend: z.loopBend,
-  }),
-  seg('src_hyb_up', ['brine'], loopHalf(z, z.groundLineY.hybrid, 'up'), BIN, {
-    source: ['hybrid'],
-    speedRole: BP,
-    bend: z.loopBend,
-  }),
-  seg(
-    'src_hyb_exit',
-    ['brine'],
-    line(
-      [z.groundLoop.upX, z.groundLineY.hybrid],
-      [z.groundLoop.upX, z.groundLineY.hybrid - 15],
-      [z.run.hybridReturnX, z.groundLineY.hybrid - 15],
-      [z.run.hybridReturnX, z.run.inY],
-      [z.joinX.in, z.run.inY],
-    ),
-    BIN,
-    {
-      source: ['hybrid'],
-      speedRole: BP,
-    },
-  ),
   // refrigerant: discharge 11 -> 9 -> 14 -> 8 (heating), expansion 8 -> 13 -> 12 -> 7, suction 7 -> 14 -> 11
   seg('ref_discharge', ['refrigerant'], '496,250 385,250', DISCH, { through: 'htr', speedRole: CP }),
   seg('ref_9_14', ['refrigerant'], '385,296 416,296', DISCH, { through: 'htr', speedRole: CP }),
@@ -801,6 +712,183 @@ const CROSSINGS: readonly Crossing[] = [
   { over: 'br_10_in', under: 'br_10_28', at: [610, 448] },
 ];
 
+/**
+ * The air coil's points: a serpentine of the vertical passes of the unit's `passes`. It starts on the coil block's bottom face
+ * at the first pass, rises, bends over at the top into the next pass, comes down and so on; the number of passes being even,
+ * it ends on the bottom face at the last pass.
+ */
+function airCoilPoints(unit: AirUnitShape): Point[] {
+  const { x0, step, count, top, bottom } = unit.passes;
+  const face = airFaceY(unit);
+  const points: Point[] = [[x0, face]];
+  for (let index = 0; index < count; index += 1) {
+    const x = x0 + index * step;
+    const last = index === count - 1;
+    if (index % 2 === 0) {
+      points.push([x, top]);
+      if (!last) points.push([x + step, top]);
+    } else {
+      points.push(last ? [x, face] : [x, bottom]);
+      if (!last) points.push([x + step, bottom]);
+    }
+  }
+  return points;
+}
+
+/** The pieces of the collector's serpentine as point lists: the first half, the second half, the exit's start. */
+function collectorPoints(collector: CollectorShape): { down: Point[]; up: Point[] } {
+  const { left, right } = collector.passes;
+  const [y1, y2, y3, y4] = collectorPassYs(collector);
+  if (y1 === undefined || y2 === undefined || y3 === undefined || y4 === undefined) throw new Error('four passes');
+  const face = collector.y + collector.height;
+  const middle = (y2 + y3) / 2;
+  return {
+    down: [
+      [collector.feedX, face],
+      [collector.feedX, y1],
+      [right, y1],
+      [right, y2],
+      [left, y2],
+      [left, middle],
+    ],
+    up: [
+      [left, middle],
+      [left, y3],
+      [right, y3],
+      [right, y4],
+      [left, y4],
+    ],
+  };
+}
+
+/** A polyline without repeated points (a jog of length 0 leaves none). */
+const route = (...points: Point[]): Point[] =>
+  points.filter((point, index) => index === 0 || !same(point, points[index - 1] ?? point));
+
+/**
+ * The pipes of the band (rework-layouts D3): the external tank's and the source's, each rising from its port in the join lane,
+ * with at most one horizontal jog, into its part. Authored in the arrangement's own units from the zones.
+ *
+ * The jogs' heights keep the pipes apart: port 3's pipe jogs lowest (`jog.out`), port 4's above it (`jog.in`), the hybrid's link
+ * highest (`jog.link`), so a vertical never meets a horizontal. The external tank is joined with a mirrored helix: port 5 (the
+ * left one) reaches the coil's upper left end through the column left of the coil, port 6 the coil's lower right end through
+ * the column right of it, so the two do not cross. The air unit and the collector are entered and left on their bottom faces.
+ */
+function bandSegments(z: Zones): readonly Segment[] {
+  const { ports, cabinet, key } = z;
+  const top = cabinet.y;
+  const tank = z.externalCoil;
+  const level = bandJogs(top);
+  const segments: Segment[] = [];
+  if (key.tank && tank !== undefined) {
+    const start: Point = [tank.cx - tank.rx, tank.top];
+    const end: Point = [tank.cx + tank.rx, tank.bottom];
+    segments.push(
+      seg(
+        'dhw_ext_in',
+        ['dhw_coil'],
+        line(...route([ports[5], top], [ports[5], level.tank], [tank.inX, level.tank], [tank.inX, tank.top], start)),
+        OUT,
+        {
+          dhw: 'external',
+          speedRole: PP,
+        },
+      ),
+      seg('dhw_ext_coil', ['dhw_coil'], line(start, end), OUT, {
+        dhw: 'external',
+        speedRole: PP,
+        shape: {
+          kind: 'helix',
+          cx: tank.cx,
+          top: tank.top,
+          bottom: tank.bottom,
+          rx: tank.rx,
+          turns: 4.5,
+          mirror: true,
+        },
+      }),
+      seg(
+        'dhw_ext_out',
+        ['dhw_coil'],
+        line(...route(end, [tank.outX, tank.bottom], [tank.outX, level.tank], [ports[6], level.tank], [ports[6], top])),
+        RET,
+        {
+          dhw: 'external',
+          speedRole: PP,
+        },
+      ),
+    );
+  }
+  // the source: port 3 (brine out) rises to its jog and on into the part, the part's exit comes down to port 4's jog (brine in)
+  segments.push(
+    seg('src_out', ['brine'], line([ports[3], top], [ports[3], level.out]), BOUT, { speedRole: BP }),
+    seg('src_in', ['brine'], line([ports[4], level.in], [ports[4], top]), BIN, { speedRole: BP }),
+  );
+  const { airUnit: air, collector } = z;
+  const from3 = (x: number, faceY: number): string => line(...route([ports[3], level.out], [x, level.out], [x, faceY]));
+  const to4 = (x: number, fromY: number): string => line(...route([x, fromY], [x, level.in], [ports[4], level.in]));
+  if (key.source === 'air' && air !== undefined) {
+    const { feed, exit } = airPortX(air);
+    segments.push(
+      seg('src_air_feed', ['brine'], from3(feed, airFaceY(air)), BOUT, { source: ['air'], speedRole: BP }),
+      seg('src_air_coil', ['brine'], line(...airCoilPoints(air)), BOUT, {
+        source: ['air'],
+        speedRole: BP,
+        bend: air.passes.step / 2,
+      }),
+      seg('src_air_exit', ['brine'], to4(exit, airFaceY(air)), AIRO, { source: ['air'], speedRole: BP }),
+    );
+  }
+  if (key.source === 'ground' && collector !== undefined) {
+    const { down, up } = collectorPoints(collector);
+    const bend = collector.passes.step / 2;
+    segments.push(
+      seg('src_gnd_feed', ['brine'], from3(collector.feedX, collector.y + collector.height), BOUT, {
+        source: ['ground'],
+        speedRole: BP,
+      }),
+      seg('src_gnd_down', ['brine'], line(...down), BOUT, { source: ['ground'], speedRole: BP, roundEnd: true, bend }),
+      seg('src_gnd_up', ['brine'], line(...up), BIN, { source: ['ground'], speedRole: BP, bend }),
+      seg('src_gnd_exit', ['brine'], to4(collector.passes.left, collectorPassYs(collector)[3] ?? 0), BIN, {
+        source: ['ground'],
+        speedRole: BP,
+      }),
+    );
+  }
+  if (key.source === 'hybrid' && air !== undefined && collector !== undefined) {
+    const { feed, exit } = airPortX(air);
+    const { down, up } = collectorPoints(collector);
+    const bend = collector.passes.step / 2;
+    segments.push(
+      seg('src_hyb_feed', ['brine'], from3(feed, airFaceY(air)), BOUT, { source: ['hybrid'], speedRole: BP }),
+      seg('src_hyb_coil', ['brine'], line(...airCoilPoints(air)), BOUT, {
+        source: ['hybrid'],
+        speedRole: BP,
+        bend: air.passes.step / 2,
+      }),
+      seg(
+        'src_hyb_link',
+        ['brine'],
+        line(
+          [exit, airFaceY(air)],
+          [exit, level.link],
+          [collector.feedX, level.link],
+          [collector.feedX, collector.y + collector.height],
+        ),
+        AIRO,
+        { source: ['hybrid'], speedRole: BP },
+      ),
+      seg('src_hyb_down', ['brine'], line(...down), AIRO, { source: ['hybrid'], speedRole: BP, roundEnd: true, bend }),
+      seg('src_hyb_up', ['brine'], line(...up), BIN, { source: ['hybrid'], speedRole: BP, bend }),
+      seg('src_hyb_exit', ['brine'], to4(collector.passes.left, collectorPassYs(collector)[3] ?? 0), BIN, {
+        source: ['hybrid'],
+        speedRole: BP,
+      }),
+    );
+  }
+  return segments;
+}
+
 /** What decides which parts are drawn: the DHW storage, the source and the feature states. */
 export interface DrawContext {
   /** The model: with `dhw: unused` it decides which tank is drawn (B external, C internal). */
@@ -810,7 +898,7 @@ export interface DrawContext {
   features: Features;
   /**
    * The arrangement drawn (refine-simplified-layout D1): every consumer reads the coordinates from it. The card sets it
-   * from `arrangementFor`; left out, it is the one `arrangementFor('horizontal')` gives.
+   * from `arrangementFor`; left out, it is the one `arrangementFor('horizontal', bandKeyOf(context))` gives.
    */
   arrangement?: Arrangement;
 }
@@ -825,16 +913,16 @@ export type ShownLayout = 'horizontal' | 'vertical';
  * One complete arrangement of the drawing (refine-simplified-layout D1): the viewBox, the cabinet and the zone constants
  * (`Zones`), the components, segments, crossings and the value labels' placements. Every consumer reads it from the draw context; none reads a module constant.
  */
-export interface Arrangement extends Zones {
+export type Arrangement = Zones & {
   readonly id: ArrangementId;
   readonly components: readonly Component[];
   readonly segments: readonly Segment[];
   readonly crossings: readonly Crossing[];
   readonly labels: LabelPlaces;
-}
+};
 
-// The arrangement (refine-simplified-layout D2, D3): the cabinet's contents are the frame's under a pair of
-// monotone piecewise-linear maps, the source and the external tank are the same shapes at a uniform scale.
+// The arrangement (rework-layouts D2, D3): the cabinet's contents are the frame's under a pair of monotone piecewise-linear
+// maps, the band above it is placed from the maps' ports.
 
 /** A monotone piecewise-linear map of one axis: breakpoints `[from, to]` in the frame's units, ascending. Beyond the first and the last it keeps their offset (slope 1). */
 type AxisMap = readonly (readonly [from: number, to: number])[];
@@ -852,128 +940,180 @@ export function mapAxis(map: AxisMap, value: number): number {
 }
 
 /**
- * The simplified cabinet's x map: the cabinet grows from 520 to 620 units (x 240-760 becomes 200-820). Slope 1 over every
- * span a component's ports cover (a symbol keeps its size, so the pipes that end on its ports must keep their distance):
- * the probe stems 254-270 and 296-312, valves 27/17/22/25/38/15 (338-397), the refrigerant row and tank 50's coil
- * (416-539), exchanger 7 with probes 35 and 54 (560-590), valve 28 and probe 31 (598-630), pump 16 and probe 32
- * (674-690), port 5 (the column 709-725, where transducer 37 used to sit; free of transducers now, and the horizontal x stretch redoes this map) and port 6 (748). The 100 extra units go to the gaps between those spans:
- * the probe lane at the left (240-254 +4, 286-296 +12, 312-338 +10, 397-416 +8), the core (539-560 +10), and the brine
- * lane at the right (590-598 +4, 630-674 +30, 690-709 +8, 725-748 +6, 748-760 +8). Left of 240 and right of 760 the map
- * keeps its offset, so the labels outside the outline stay outside, and the source and tank zones are placed from their
- * own constants.
+ * The horizontal layout's x map (rework-layouts D2): the cabinet grows from 520 to 980 units (x 240-760 becomes 10-990), so it
+ * fills the drawing's width, and the room goes to the lanes between the slope-1 spans, where the values sit beside their probes
+ * and pipes. Slope 1 over every span a symbol's ports cover (a symbol keeps its size, so the pipes that end on its ports keep
+ * their distance): the probe 33 body and stem (245-270), thermostat 45 (270-286), probes 34/38 and their stems (287-312), the
+ * valves, pumps and exchangers of the HTR column (312-397), the refrigerant row (416-452 and 473-539, around the stretch
+ * below), exchanger 7 with probes 35 and 54 (560-590), valve 28 and probe 31 (598-630), probe 32 and pump 16 with their stems
+ * (665-690). The 460 extra units go to:
+ * - 240-245, +95: production Out beside probe 33, left of its body (probe 33 is left of riser 270).
+ * - 286-287, +90: production In and the production pressure left of probes 34 and 38, between riser 270 and their bodies; the
+ *   thermostat at 286 keeps its stem on the riser, so the lane starts right of it.
+ * - 312-338, +10: the lane before the HTR column.
+ * - 397-416, +8: the lane before exchanger 8, as before.
+ * - 452-473, +24: the lane between transducer 36 and filter dryer 13 / compressor 11 (only pipes cross it), so that the
+ *   discharge value block (temperature over pressure, up to 50 units wide at the threshold) clears the compressor.
+ * - 539-560, +10: the core of the refrigerant circuit, as before.
+ * - 590-598, +4: as before.
+ * - 630-665, +70: brine Out and the brine pressure and pump values, right of riser 630, left of probes 32 and 37.
+ * - 690-722, +77 and 722-748, +14 and 748-760, +58: ports 5 and 6 and the right edge: they take the external tank's slot
+ *   (width 160) to the right of the source's, so that the hybrid source and the tank fit side by side in the band, and the
+ *   lane right of the brine inlet riser holds the brine In value.
+ * Left of 240 and right of 760 the map keeps its offset.
  */
-export const SIMPLIFIED_MAP_X: AxisMap = [
-  [240, 200],
-  [254, 218],
-  [286, 250],
-  [296, 272],
-  [312, 288],
-  [338, 324],
-  [397, 383],
-  [416, 410],
-  [539, 533],
-  [560, 564],
-  [590, 594],
-  [598, 606],
-  [630, 638],
-  [674, 712],
-  [690, 728],
-  [709, 755],
-  [725, 771],
-  [748, 800],
-  [760, 820],
+export const HORIZONTAL_MAP_X: AxisMap = [
+  [240, 10],
+  [245, 110],
+  [286, 151],
+  [287, 242],
+  [312, 267],
+  [338, 303],
+  [397, 362],
+  [416, 389],
+  [452, 425],
+  [473, 470],
+  [496, 493],
+  [539, 536],
+  [560, 567],
+  [590, 597],
+  [598, 609],
+  [630, 641],
+  [665, 746],
+  [690, 771],
+  [722, 880],
+  [748, 920],
+  [760, 990],
 ];
 
 /**
- * The simplified cabinet's y map: the identity from the top line down to the cut. Every drawn part of the frame
- * lies above y 505 (exchanger 10's body is the lowest, to y 501); the band below it held only parts that are no longer drawn
- * (vessels, safety and drain valves, no longer drawn), so the cabinet's bottom edge moves from y 605 up to y 530, and the viewBox
- * from 620 to 545. The rows inside need no stretch: the maps' room is in x, where the labels sit beside the pipes.
+ * The horizontal layout's y map: a shift that puts the cabinet's top edge under the band (the band's height plus the join lane),
+ * with no stretch. Every drawn part of the frame lies above y 505 (exchanger 10's body is the lowest, to y 501); the part of the
+ * frame below it held only parts that are no longer drawn (vessels, safety and drain valves), so the cabinet's bottom edge moves
+ * from y 605 up to y 530, and the viewBox's height follows. The rows inside need no stretch: the maps' room is in x, where the
+ * labels sit beside the pipes.
  */
-export const SIMPLIFIED_MAP_Y: AxisMap = [
-  [130, 130],
-  [505, 505],
+export const HORIZONTAL_MAP_Y: AxisMap = [
+  [130, BAND.top + BAND.height + BAND.joinLane],
+  [505, BAND.top + BAND.height + BAND.joinLane + 375],
 ];
 
-const simplifiedX = (x: number): number => mapAxis(SIMPLIFIED_MAP_X, x);
-const simplifiedY = (y: number): number => mapAxis(SIMPLIFIED_MAP_Y, y);
+const mapX = (x: number): number => mapAxis(HORIZONTAL_MAP_X, x);
+const mapY = (y: number): number => mapAxis(HORIZONTAL_MAP_Y, y);
 
-/** The scale of the source and the external tank (refine-simplified-layout D3). */
-export const SIMPLIFIED_ZONE_SCALE = 0.8;
-const K = SIMPLIFIED_ZONE_SCALE;
-/** A source zone value scaled about the viewBox's left edge (x) and about the cabinet's top line (y). */
-const scaleX = (x: number): number => round2(x * K);
-/**
- * The air unit sits 12 units left of where the scale puts it, so that the brine In and Out labels beside its ports (up to
- * 64 units wide) fit between its wall and the feed's column (x 190).
- */
-const AIR_SHIFT = -12;
-const airX = (x: number): number => round2(scaleX(x) + AIR_SHIFT);
-const scaleY = (y: number): number => round2(FRAME_CABINET.y + (y - FRAME_CABINET.y) * K);
-
-const SIMPLIFIED_CABINET: Rect = { x: 200, y: FRAME_CABINET.y, width: 620, height: 400 };
-
-const SIMPLIFIED_ZONES: Zones = deriveZones({
-  viewBox: { width: 1000, height: SIMPLIFIED_CABINET.y + SIMPLIFIED_CABINET.height + 15 },
-  scale: K,
-  cabinet: SIMPLIFIED_CABINET,
-  internalTank: {
-    x: simplifiedX(FRAME_ZONES.internalTank.x),
-    y: FRAME_ZONES.internalTank.y,
-    width: round2(
-      simplifiedX(FRAME_ZONES.internalTank.x + FRAME_ZONES.internalTank.width) -
-        simplifiedX(FRAME_ZONES.internalTank.x),
-    ),
-    height: FRAME_ZONES.internalTank.height,
-  },
-  coil51: { x: simplifiedX(FRAME_ZONES.coil51.x), y: FRAME_ZONES.coil51.y },
-  // the walls and the dome at the scale; the zone starts at x 840 and the tank is centred in it (to x 1000)
-  externalTank: {
-    x: 853,
-    y: FRAME_CABINET.y,
-    width: Math.round(168 * K),
-    height: Math.round(180 * K),
-    dome: Math.round(14 * K),
-  },
-  airUnit: {
-    x: airX(26),
-    y: FRAME_CABINET.y,
-    width: scaleX(124),
-    height: round2(210 * K),
-    fanX: airX(88),
-    fanY: scaleY(FRAME_CABINET.y + 162),
-    fanRadius: round2(34 * K),
-    coil: { x: airX(36), y: scaleY(FRAME_CABINET.y + 16), width: scaleX(104), height: round2(74 * K) },
-    fins: {
-      x: airX(52),
-      step: round2(6 * K),
-      count: 13,
-      y0: scaleY(FRAME_CABINET.y + 20),
-      y1: scaleY(FRAME_CABINET.y + 86),
-    },
-    slats: { y0: scaleY(FRAME_CABINET.y + 134), step: round2(9 * K), count: 8 },
-    dividerY: scaleY(FRAME_CABINET.y + 114),
-    passes: { y0: scaleY(FRAME_CABINET.y + 30), step: round2(15 * K), count: 4, left: airX(44), right: airX(132) },
-  },
-  // the legs 2.8 (down) and 0.8 (up) units left of the scale's (so that the Out value, up to 77 units wide, stays inside the drawing): the In label (up to 64 units wide) right of the down leg ends at the cabinet's edge
-  groundLoop: { downX: 130, upX: 84, depth: round2(140 * K) },
-  groundLineX: { start: scaleX(8), end: scaleX(220) },
-  // the run above the cabinet keeps its heights; its columns sit right of the air unit's wall (x 108) with room for its port labels
-  run: { outY: 85, inY: 50, feedX: 190, returnX: 172, hybridReturnX: 6 },
+/** The heights of the horizontal jogs in the join lane, from the cabinet's top edge. */
+export const bandJogs = (top: number): { out: number; in: number; link: number; tank: number } => ({
+  out: top - BAND.jog.out,
+  in: top - BAND.jog.in,
+  link: top - BAND.jog.link,
+  tank: top - BAND.jog.tank,
 });
 
-function buildArrangement(): Arrangement {
-  const zones = SIMPLIFIED_ZONES;
-  const inCabinetX = (x: number): boolean => x >= FRAME_CABINET.x && x <= FRAME_CABINET.x + FRAME_CABINET.width;
-  // a point at the cabinet's columns is a cabinet point (the zones' own points lie left of x 240 and right of x 760)
-  const mapPoint = ([x, y]: Point): Point => (inCabinetX(x) ? [simplifiedX(x), simplifiedY(y)] : [x, y]);
+/** The band's key for a draw context: the source, whether the external tank is drawn, and whether the emitter is. */
+export const bandKeyOf = (context: Pick<DrawContext, 'model' | 'dhw' | 'source'>): BandKey => ({
+  source: context.source,
+  tank: drawnStorage(context) === 'external',
+  emitter: BAND.emitterWidth > 0,
+});
+
+/** The widest band: the hybrid source with the tank and the emitter; `arrangementFor` without a key. */
+const WIDEST_KEY: BandKey = { source: 'hybrid', tank: true, emitter: BAND.emitterWidth > 0 };
+
+const CABINET_ZONES: CabinetZones = (() => {
+  const cabinet: Rect = {
+    x: mapX(FRAME_CABINET.x),
+    y: mapY(FRAME_CABINET.y),
+    width: mapX(FRAME_CABINET.x + FRAME_CABINET.width) - mapX(FRAME_CABINET.x),
+    // the cabinet's bottom edge: the frame's 605 moves up to 530 (see HORIZONTAL_MAP_Y)
+    height: 400,
+  };
+  const tank = FRAME_ZONES.internalTank;
+  return {
+    viewBox: { width: 1000, height: cabinet.y + cabinet.height + 15 },
+    cabinet,
+    internalTank: {
+      x: mapX(tank.x),
+      y: mapY(tank.y),
+      width: round2(mapX(tank.x + tank.width) - mapX(tank.x)),
+      height: tank.height,
+    },
+    // coil 51's supply port is where the mapped DHW line of valve 26 ends (frame x 420), whatever the maps stretch in between
+    coil51: { x: mapX(FRAME_ZONES.coil51.x - 75) + 75, y: mapY(FRAME_ZONES.coil51.y) },
+  };
+})();
+
+/** The band's parts placed for a key: the slots from the ports (rework-layouts D3), the bodies in them. */
+function bandZonesFor(key: BandKey, cabinet: CabinetZones): BandZones {
+  const top = cabinet.cabinet.y;
+  const bottom = top - BAND.joinLane;
+  const ports = { 3: mapX(630), 4: mapX(690), 5: mapX(722), 6: mapX(748) } as const;
+  const slots = planBand(
+    [
+      { name: 'emitter', centre: (mapX(270) + mapX(312)) / 2, width: key.emitter ? BAND.emitterWidth : 0 },
+      { name: 'source', centre: (ports[3] + ports[4]) / 2, width: sourceWidth(key.source) },
+      { name: 'tank', centre: (ports[5] + ports[6]) / 2, width: key.tank ? BAND.tank.width : 0 },
+    ],
+    { min: cabinet.cabinet.x, max: cabinet.cabinet.x + cabinet.cabinet.width },
+    BAND.gap,
+  );
+  const source = slots.source;
+  const air = key.source === 'ground' || source === undefined ? undefined : airUnitShape(source.x0, bottom);
+  const collectorX =
+    source === undefined ? 0 : key.source === 'hybrid' ? source.x0 + BAND.air.width + BAND.hybridGap : source.x0;
+  const collector = key.source === 'air' || source === undefined ? undefined : collectorShape(collectorX, bottom);
+  const tankSlot = slots.tank;
+  const tankShape: TankShape | undefined =
+    tankSlot === undefined
+      ? undefined
+      : {
+          x: tankSlot.x0,
+          y: bottom - BAND.tank.height,
+          width: BAND.tank.width,
+          height: BAND.tank.height,
+          dome: BAND.tank.dome,
+        };
+  const coil: ExternalCoil | undefined =
+    tankShape === undefined
+      ? undefined
+      : {
+          cx: tankShape.x + tankShape.width / 2,
+          top: tankShape.y + 78,
+          bottom: tankShape.y + 140,
+          rx: 38,
+          inX: tankShape.x + tankShape.width / 2 - 38 - 12,
+          outX: tankShape.x + tankShape.width / 2 + 38 + 12,
+        };
+  return {
+    key,
+    band: { top: bottom - BAND.height, bottom },
+    ports,
+    slots,
+    ...(air === undefined ? {} : { airUnit: air }),
+    ...(collector === undefined ? {} : { collector }),
+    ...(tankShape === undefined ? {} : { externalTank: tankShape }),
+    ...(coil === undefined ? {} : { externalCoil: coil }),
+  };
+}
+
+const ARRANGEMENTS = new Map<string, Arrangement>();
+
+function buildArrangement(key: BandKey): Arrangement {
+  const zones: Zones = { ...CABINET_ZONES, ...bandZonesFor(key, CABINET_ZONES) };
+  const place = (x: number, y: number): readonly [number, number] => [mapX(x), mapY(y)];
   const components = componentsFor(zones).map((part): Component => {
     if (part.item === 50 || part.item === 51) return part;
-    return { ...part, x: simplifiedX(part.x), y: simplifiedY(part.y) };
+    return { ...part, x: mapX(part.x), y: mapY(part.y) };
   });
-  const segments = segmentsFor(zones).map((part): Segment => ({ ...part, points: part.points.map(mapPoint) }));
-  const crossings = CROSSINGS.map((crossing): Crossing => ({ ...crossing, at: mapPoint(crossing.at) }));
-  const labels = labelPlacesFor(zones, (x, y) => [simplifiedX(x), simplifiedY(y)]);
+  const cabinet = cabinetSegments().map((part): Segment => ({
+    ...part,
+    points: part.points.map(([x, y]): Point => [mapX(x), mapY(y)]),
+  }));
+  const segments = [...cabinet, ...bandSegments(zones)];
+  const crossings = CROSSINGS.map((crossing): Crossing => ({
+    ...crossing,
+    at: place(crossing.at[0], crossing.at[1]),
+  }));
+  const labels = labelPlacesFor(zones, place);
   return {
     ...zones,
     id: 'horizontal',
@@ -982,37 +1122,37 @@ function buildArrangement(): Arrangement {
     crossings,
     labels: {
       specs: labels.specs.map((spec) => {
-        const place = HORIZONTAL_PLACES[spec.id]?.at(zones, (x, y) => [simplifiedX(x), simplifiedY(y)]);
-        return place === undefined ? spec : { ...spec, ...place };
+        const own = HORIZONTAL_PLACES[spec.id]?.at(zones, place);
+        return own === undefined ? spec : { ...spec, ...own };
       }),
     },
   };
 }
 
-const ARRANGEMENT = buildArrangement();
-
 /**
- * The manual-figure frame the arrangement is mapped from (rework-layouts D1): its zones, lists, crossings and
+ * The manual-figure frame the arrangement is mapped from (rework-layouts D1): its zones, the cabinet's lists, crossings and
  * default label places. Not drawn by any layout; the tests of the maps (test/diagram/simplified.test.ts) compare the arrangement with it.
  */
 export const FRAME = {
   zones: FRAME_ZONES,
   components: componentsFor(FRAME_ZONES),
-  segments: segmentsFor(FRAME_ZONES),
+  segments: cabinetSegments(),
   crossings: CROSSINGS,
   labels: labelPlacesFor(FRAME_ZONES),
 };
 
 /**
- * The arrangement of a shown layout: a pure function of it (rework-layouts D2). Until the vertical arrangement is built
- * (the vertical arrangement), both layouts draw the same one.
+ * The arrangement of a shown layout and band key: a pure function of them (rework-layouts D2, D3), built once per key. Until the
+ * vertical arrangement is built (the vertical arrangement), both layouts draw the same one. Without a key, the widest band's.
  */
-export function arrangementFor(layout: ShownLayout): Arrangement {
-  switch (layout) {
-    case 'horizontal':
-    case 'vertical':
-      return ARRANGEMENT;
-  }
+export function arrangementFor(layout: ShownLayout, key: BandKey = WIDEST_KEY): Arrangement {
+  // until the vertical arrangement is built both layouts share it
+  const id = `${layout === 'vertical' ? 'horizontal' : layout}|${key.source}|${String(key.tank)}|${String(key.emitter)}`;
+  const known = ARRANGEMENTS.get(id);
+  if (known !== undefined) return known;
+  const built = buildArrangement(key);
+  ARRANGEMENTS.set(id, built);
+  return built;
 }
 
 /**
@@ -1024,13 +1164,21 @@ export function defaultLabelPlaces(layout: ShownLayout): LabelPlaces {
   switch (layout) {
     case 'horizontal':
     case 'vertical':
-      return labelPlacesFor(SIMPLIFIED_ZONES, (x, y) => [simplifiedX(x), simplifiedY(y)]);
+      return labelPlacesFor({ ...CABINET_ZONES, ...bandZonesFor(WIDEST_KEY, CABINET_ZONES) }, (x, y) => [
+        mapX(x),
+        mapY(y),
+      ]);
   }
 }
 
-/** The arrangement a draw context carries, or, without one, the horizontal layout's. */
-export const arrangementOf = (context: Pick<DrawContext, 'arrangement'>): Arrangement =>
-  context.arrangement ?? arrangementFor('horizontal');
+/** The arrangement a draw context carries, or, without one, the horizontal layout's for its band key. */
+export const arrangementOf = (
+  context: Partial<Pick<DrawContext, 'arrangement' | 'model' | 'dhw' | 'source'>>,
+): Arrangement =>
+  context.arrangement ??
+  (context.model === undefined || context.dhw === undefined || context.source === undefined
+    ? arrangementFor('horizontal')
+    : arrangementFor('horizontal', bandKeyOf({ model: context.model, dhw: context.dhw, source: context.source })));
 
 export type PartState = 'normal' | 'muted' | 'hidden';
 
@@ -1202,7 +1350,9 @@ function helixCubics(shape: HelixShape): { front: boolean; curve: Cubic }[] {
   const bulge = (4 / 3) * Math.max(3, pitch);
   return Array.from({ length: count }, (_, index) => {
     const front = index % 2 === 0;
-    const [from, to] = front ? [shape.cx + shape.rx, shape.cx - shape.rx] : [shape.cx - shape.rx, shape.cx + shape.rx];
+    const [rightEnd, leftEnd] =
+      shape.mirror === true ? [shape.cx - shape.rx, shape.cx + shape.rx] : [shape.cx + shape.rx, shape.cx - shape.rx];
+    const [from, to] = front ? [rightEnd, leftEnd] : [leftEnd, rightEnd];
     const y0 = shape.top + index * pitch;
     const y1 = y0 + pitch;
     const lift = front ? bulge : -bulge;

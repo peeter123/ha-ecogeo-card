@@ -116,10 +116,12 @@ describe('cabinet wiring', () => {
 });
 
 describe('source wiring', () => {
-  test('standby mutes the air unit and the ground loop symbols, heating does not; the fan follows its own speed', async () => {
+  test('standby mutes the air unit and the ground collector, heating does not; the fan follows its own speed', async () => {
     for (const source of ['air', 'ground', 'hybrid'] as const) {
       const standby = await mount({ source }, hassOf(STANDBY));
-      for (const element of root(standby).querySelectorAll('.air-unit, .ground-loop')) {
+      const mutedBodies = root(standby).querySelectorAll('.air-unit, .ground-collector');
+      expect(mutedBodies.length, `standby ${source}`).toBeGreaterThan(0);
+      for (const element of mutedBodies) {
         expect(element.classList.contains('muted'), `standby ${source}`).toBe(true);
       }
       if (source !== 'ground') {
@@ -128,7 +130,9 @@ describe('source wiring', () => {
       }
       standby.remove();
       const heating = await mount({ source }, hassOf());
-      for (const element of root(heating).querySelectorAll('.air-unit, .ground-loop')) {
+      const bodies = root(heating).querySelectorAll('.air-unit, .ground-collector');
+      expect(bodies.length, `heating ${source}`).toBeGreaterThan(0);
+      for (const element of bodies) {
         expect(element.classList.contains('muted'), `heating ${source}`).toBe(false);
       }
       heating.remove();

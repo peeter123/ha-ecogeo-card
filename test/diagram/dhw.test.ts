@@ -5,7 +5,7 @@ import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
 import { COIL_51_SHAPE } from '../../src/diagram/symbols';
 import { helixHalves } from '../../src/diagram/geometry';
-import { helixExtent, arrangementFor } from '../../src/diagram/geometry';
+import { bandJogs, externalTankBody, helixExtent, arrangementFor } from '../../src/diagram/geometry';
 import { cabinetStyles } from '../../src/diagram/cabinet';
 import {
   COIL_MUTED_LIGHT,
@@ -17,18 +17,24 @@ import {
 import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 
 // the coordinates below come from the arrangement (the manual-figure frame's are in test/diagram/simplified.test.ts)
-const horizontal = arrangementFor('horizontal');
+const horizontal = arrangementFor('horizontal', { source: 'ground', tank: true, emitter: false });
 const CABINET = horizontal.cabinet;
 const COMPONENTS = horizontal.components;
-const EXTERNAL_TANK = horizontal.externalTank;
+const EXTERNAL_TANK = horizontal.externalTank ?? {
+  x: Number.NaN,
+  y: Number.NaN,
+  width: Number.NaN,
+  height: Number.NaN,
+  dome: Number.NaN,
+};
 const INTERNAL_TANK = horizontal.internalTank;
 const SEGMENTS = horizontal.segments;
 const portX = (item: number): number => COMPONENTS.find((component) => component.item === item)?.x ?? Number.NaN;
 const COIL = SEGMENTS.find((segment) => segment.id === 'dhw_ext_coil')?.shape;
 if (COIL === undefined) throw new Error('no external coil');
 /** The coil's two ends: where it meets the pipes from ports 5 and 6. */
-const COIL_START = `${String(COIL.cx + COIL.rx)} ${String(COIL.top)}`;
-const COIL_END = `${String(COIL.cx - COIL.rx)} ${String(COIL.bottom)}`;
+const COIL_START = `${String(COIL.cx - COIL.rx)} ${String(COIL.top)}`;
+const COIL_END = `${String(COIL.cx + COIL.rx)} ${String(COIL.bottom)}`;
 const LABEL_SPECS = horizontal.labels.specs;
 
 async function mount(config: CardConfig = {}, hass?: HassLike): Promise<EcogeoCard> {
@@ -58,16 +64,18 @@ const tanks = (card: EcogeoCard): string[] =>
   [...root(card).querySelectorAll('[data-dhw-tank]')].map((element) => element.getAttribute('data-dhw-tank') ?? '');
 
 describe('DHW storage', () => {
-  test('external: a tank with a coil right of the cabinet, joined to ports 5 and 6', async () => {
+  test('external: a tank with a coil above ports 5 and 6, joined to them', async () => {
     const card = await mount({ model: 'B', dhw: 'external' });
     expect(tanks(card)).toEqual(['external']);
     expect(segments(card)).toEqual(expect.arrayContaining(['dhw_ext_in', 'dhw_ext_coil', 'dhw_ext_out']));
     expect(items(card)).toEqual(expect.arrayContaining([5, 6, 26]));
     const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
     expect(
-      d('dhw_ext_in').startsWith(`M${String(portX(5))} 130 L${String(portX(5))} ${String(horizontal.run.inY)}`),
+      d('dhw_ext_in').startsWith(
+        `M${String(portX(5))} ${String(CABINET.y)} L${String(portX(5))} ${String(bandJogs(CABINET.y).tank)}`,
+      ),
     ).toBe(true);
-    expect(d('dhw_ext_out').endsWith(`L${String(portX(6))} 130`)).toBe(true);
+    expect(d('dhw_ext_out').endsWith(`L${String(portX(6))} ${String(CABINET.y)}`)).toBe(true);
     expect(items(card).some((item) => item >= 47)).toBe(false);
     card.remove();
   });
@@ -77,7 +85,8 @@ describe('DHW storage', () => {
     const body = root(card).querySelector('path.tank-body[data-dhw-tank="external"]');
     expect(body?.getAttribute('fill')).toContain('--dhw-tank-color');
     const d = body?.getAttribute('d') ?? '';
-    expect(d).toBe('M853 141 A67 11 0 0 1 987 141 V263 A67 11 0 0 1 853 263 Z');
+    expect(d).toBe(externalTankBody(horizontal));
+    expect(d).toMatch(/^M\d+ \d+ A80 14 0 0 1 /);
     expect(root(card).querySelector('.dhw-storage .tank-rim')).not.toBeNull();
     card.remove();
   });
@@ -126,32 +135,39 @@ describe('DHW storage', () => {
     card.remove();
   });
 
-  test('tank geometry: centred on the coil, dome apex on the cabinet top, coil and pipes inside', async () => {
+  test('tank geometry: centred on the coil, the whole tank above the cabinet on the band, coil and pipes inside', async () => {
     const card = await mount({ model: 'B', dhw: 'external' });
     const shape = SEGMENTS.find((segment) => segment.id === 'dhw_ext_coil')?.shape;
     if (shape === undefined) throw new Error('no helix');
     expect(shape.kind).toBe('helix');
     // the tank's centre line is the coil's centre line
     expect(EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2).toBe(shape.cx);
-    expect(EXTERNAL_TANK).toMatchObject({ x: 853, width: 134 });
-    // the dome apex (the path's top: its start y minus the dome rise) is the cabinet's top line
+    expect(EXTERNAL_TANK).toMatchObject({ width: 160, height: 170 });
+    // the whole tank lies above the cabinet's top edge, its bottom on the band's bottom edge
+    expect(EXTERNAL_TANK.y + EXTERNAL_TANK.height).toBe(horizontal.band.bottom);
+    expect(horizontal.band.bottom).toBeLessThan(CABINET.y);
+    // the dome apex (the path's top: its start y minus the dome rise) is the tank's top
     const d = root(card).querySelector('path.tank-body[data-dhw-tank="external"]')?.getAttribute('d') ?? '';
-    const [, startY] = /^M853 (\d+)/.exec(d) ?? [];
-    expect(Number(startY) - EXTERNAL_TANK.dome).toBe(CABINET.y);
-    expect(EXTERNAL_TANK.y).toBe(CABINET.y);
-    // the coil's curve and the pipes at its ends stay inside the tank, in its lower part
+    const [, startY] = /^M\d+ (\d+)/.exec(d) ?? [];
+    expect(Number(startY) - EXTERNAL_TANK.dome).toBe(EXTERNAL_TANK.y);
+    // the coil's curve stays inside the tank, in its lower part, and the pipes beside it run in columns left and right of it
     const extent = helixExtent(shape);
     expect(extent.left).toBeGreaterThan(EXTERNAL_TANK.x);
     expect(extent.right).toBeLessThan(EXTERNAL_TANK.x + EXTERNAL_TANK.width);
     expect(extent.top).toBeGreaterThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height / 3);
-    expect(extent.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height);
-    // the value labels sit under the tank, centred on it
+    expect(extent.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height - EXTERNAL_TANK.dome);
+    const coil = horizontal.externalCoil;
+    expect(coil?.inX).toBeLessThan(extent.left);
+    expect(coil?.outX).toBeGreaterThan(extent.right);
+    // the value labels sit inside the tank's upper part (above the coil), centred on it, bare on the tinted body
     const specs = LABEL_SPECS.filter((spec) => spec.id.startsWith('tank_external'));
-    expect(specs.length).toBeGreaterThan(0);
+    expect(specs.map((spec) => spec.id).sort()).toEqual(['tank_external_demand', 'tank_external_temperature']);
     for (const spec of specs) {
       expect(spec.x).toBe(EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2);
-      expect(spec.y).toBeGreaterThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height);
+      expect(spec.y).toBeGreaterThan(EXTERNAL_TANK.y + EXTERNAL_TANK.dome);
+      expect(spec.y).toBeLessThan(extent.top - 6);
       expect(spec.align).toBe('middle');
+      expect(spec.bare).toBe(true);
     }
     card.remove();
   });

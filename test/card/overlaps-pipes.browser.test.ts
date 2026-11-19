@@ -82,11 +82,11 @@ describe('Pipe overlaps', () => {
     if (!label || !svg) throw new Error('no label or drawing');
     const before = pairs(root);
     const rect = svg.getBoundingClientRect();
-    moveOnto(label, rect.left, rect.top + rect.height * 0.8);
+    moveOnto(label, rect.left + rect.width * 0.5, rect.bottom);
     expect(added(root, before)).toEqual(['label compressor_speed x edge']);
   });
 
-  test("the ground loop's Out value stays at least 2 px inside the drawing at the vertical threshold", async () => {
+  test("the ground collector's Out value stays at least 2 px inside the drawing at the vertical threshold", async () => {
     for (const source of ['ground', 'hybrid']) {
       const root = await render(`source=${source}`, VERTICAL_BELOW, 'defrost');
       const label = root.querySelector(

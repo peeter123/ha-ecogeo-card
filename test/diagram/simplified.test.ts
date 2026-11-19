@@ -1,20 +1,23 @@
-// The arrangement (refine-simplified-layout D2, D3, rework-layouts D1, D2): its own zone constants for the source and the
-// external tank, the cabinet's contents under the monotone maps (compared with the manual-figure frame, `FRAME`), and every
-// topology rule checked on it for every source, DHW storage and model.
+// The arrangement (refine-simplified-layout D2, D3, rework-layouts D1-D3): the cabinet's contents under the monotone maps
+// (compared with the manual-figure frame, `FRAME`), and every topology rule checked on it for every source, DHW storage and
+// model. The band above the cabinet (slots, bodies, join lane) is checked in band.test.ts.
 import { describe, expect, test } from 'vitest';
 import { DHW_STORAGES, SOURCES } from '../../src/config/options';
 import { HORIZONTAL_PLACES } from '../../src/diagram/label-places';
+import { VERTICAL_BELOW } from '../../src/lib/layout';
 import type { FeatureState, Features } from '../../src/config/variants';
 import {
   MAX_CROSSINGS,
-  SIMPLIFIED_MAP_X,
-  SIMPLIFIED_MAP_Y,
-  SIMPLIFIED_ZONE_SCALE,
+  BAND,
+  HORIZONTAL_MAP_X,
+  HORIZONTAL_MAP_Y,
   FRAME,
   arrangementFor,
+  arrangementOf,
   crossingPoints,
   drawnComponents,
   drawnSegments,
+  drawnStorage,
   mapAxis,
   onPolyline,
   overlap,
@@ -143,16 +146,19 @@ const first = (context: DrawContext, id: string): Point => pointsOf(context, id)
 const last = (context: DrawContext, id: string): Point => pointsOf(context, id).at(-1) ?? [NaN, NaN];
 
 describe('arrangementFor: the simplified arrangement', () => {
-  test('Wider, shorter cabinet: a wider and less tall cabinet and a wider drawing', () => {
+  test('Cabinet fills the drawing: the cabinet spans the viewBox plus a small margin, under the band', () => {
     expect(simplified.id).toBe('horizontal');
     expect(simplified.viewBox.width).toBe(1000);
     expect(simplified.cabinet.width).toBeGreaterThan(frame.zones.cabinet.width);
-    expect(simplified.cabinet.width).toBe(620);
-    expect(simplified.cabinet.height).toBeLessThan(frame.zones.cabinet.height);
-    expect(simplified.viewBox.height / simplified.viewBox.width).toBeLessThan(
-      frame.zones.viewBox.height / frame.zones.viewBox.width,
-    );
-    expect(simplified.cabinet.y).toBe(frame.zones.cabinet.y);
+    expect(simplified.cabinet.width).toBe(980);
+    expect(simplified.cabinet.x).toBeLessThanOrEqual(12);
+    expect(simplified.viewBox.width - (simplified.cabinet.x + simplified.cabinet.width)).toBeLessThanOrEqual(12);
+    // the cabinet's top edge is the band's height and the join lane under the top margin
+    expect(simplified.cabinet.y).toBe(BAND.top + BAND.height + BAND.joinLane);
+    expect(simplified.cabinet.height).toBe(400);
+    expect(simplified.viewBox.height).toBe(simplified.cabinet.y + simplified.cabinet.height + 15);
+    // the band's height is added, the cabinet is cut: the drawing is still much wider than tall
+    expect(simplified.viewBox.height / simplified.viewBox.width).toBeLessThan(0.7);
   });
 
   test("the frame is the manual figure's: the coordinates of add-schematic-card", () => {
@@ -161,7 +167,7 @@ describe('arrangementFor: the simplified arrangement', () => {
   });
 
   test("the maps are monotone, ascending and start the cabinet where the frame's does", () => {
-    for (const map of [SIMPLIFIED_MAP_X, SIMPLIFIED_MAP_Y]) {
+    for (const map of [HORIZONTAL_MAP_X, HORIZONTAL_MAP_Y]) {
       map.slice(1).forEach(([from, to], index) => {
         const [from0, to0] = map[index] ?? [0, 0];
         expect(from).toBeGreaterThan(from0);
@@ -169,12 +175,12 @@ describe('arrangementFor: the simplified arrangement', () => {
         expect(to - to0).toBeGreaterThanOrEqual(from - from0);
       });
     }
-    expect(mapAxis(SIMPLIFIED_MAP_X, frame.zones.cabinet.x)).toBe(simplified.cabinet.x);
-    expect(mapAxis(SIMPLIFIED_MAP_X, frame.zones.cabinet.x + frame.zones.cabinet.width)).toBe(
+    expect(mapAxis(HORIZONTAL_MAP_X, frame.zones.cabinet.x)).toBe(simplified.cabinet.x);
+    expect(mapAxis(HORIZONTAL_MAP_X, frame.zones.cabinet.x + frame.zones.cabinet.width)).toBe(
       simplified.cabinet.x + simplified.cabinet.width,
     );
     for (let x = 200; x < 800; x += 7)
-      expect(mapAxis(SIMPLIFIED_MAP_X, x + 1)).toBeGreaterThan(mapAxis(SIMPLIFIED_MAP_X, x));
+      expect(mapAxis(HORIZONTAL_MAP_X, x + 1)).toBeGreaterThan(mapAxis(HORIZONTAL_MAP_X, x));
   });
 
   test('every symbol keeps its size: each pair of ports of a component is as far apart as in the frame', () => {
@@ -197,16 +203,14 @@ describe('arrangementFor: the simplified arrangement', () => {
       const spec = simplified.labels.specs.find((label) => label.id === id);
       expect(spec, id).toBeDefined();
       expect({ x: spec?.x, y: spec?.y, align: spec?.align }, id).toEqual(
-        place.at(simplified, (x, y) => [mapAxis(SIMPLIFIED_MAP_X, x), mapAxis(SIMPLIFIED_MAP_Y, y)]),
+        place.at(simplified, (x, y) => [mapAxis(HORIZONTAL_MAP_X, x), mapAxis(HORIZONTAL_MAP_Y, y)]),
       );
     }
   });
 
   test("every cabinet point is the frame's point under the maps", () => {
-    const fx = (x: number): number => mapAxis(SIMPLIFIED_MAP_X, x);
-    const fy = (y: number): number => mapAxis(SIMPLIFIED_MAP_Y, y);
-    const inCabinet = (x: number): boolean =>
-      x >= frame.zones.cabinet.x && x <= frame.zones.cabinet.x + frame.zones.cabinet.width;
+    const fx = (x: number): number => mapAxis(HORIZONTAL_MAP_X, x);
+    const fy = (y: number): number => mapAxis(HORIZONTAL_MAP_Y, y);
     for (const part of simplified.components) {
       if (part.item === 50 || part.item === 51) continue;
       const twin = frame.components.find((candidate) => candidate.item === part.item && candidate.kind === part.kind);
@@ -214,18 +218,10 @@ describe('arrangementFor: the simplified arrangement', () => {
       expect([part.x, part.y], `item ${String(part.item)}`).toEqual([fx(twin?.x ?? NaN), fy(twin?.y ?? NaN)]);
     }
     for (const segment of simplified.segments) {
+      // the band's pipes are authored in the arrangement's units (band.test.ts), not mapped from the frame
+      if (segment.id.startsWith('src_') || segment.id.startsWith('dhw_ext_')) continue;
       const twin = frame.segments.find((candidate) => candidate.id === segment.id);
       expect(twin, segment.id).toBeDefined();
-      if (segment.id.startsWith('src_') || segment.id.startsWith('dhw_ext_')) {
-        // zone pipes: only their points at the cabinet's columns are mapped
-        segment.points.forEach((point, index) => {
-          const original = twin?.points[index];
-          if (original !== undefined && inCabinet(original[0])) {
-            expect(point, `${segment.id}[${String(index)}]`).toEqual([fx(original[0]), fy(original[1])]);
-          }
-        });
-        continue;
-      }
       expect(segment.points, segment.id).toEqual((twin?.points ?? []).map(([x, y]) => [fx(x), fy(y)]));
     }
     const kept = simplified.crossings;
@@ -263,21 +259,6 @@ describe('arrangementFor: the simplified arrangement', () => {
     }
   });
 
-  test('no point of the source and tank pipes lies in the cabinet columns, except the pipes of ports 3 to 6', () => {
-    const columns = simplified.components
-      .filter((part) => part.kind === 'port' && part.item >= 3 && part.item <= 6)
-      .map((part) => part.x);
-    for (const segment of simplified.segments) {
-      if (!segment.id.startsWith('src_') && !segment.id.startsWith('dhw_ext_')) continue;
-      for (const [x] of segment.points) {
-        if (x >= simplified.cabinet.x && x <= simplified.cabinet.x + simplified.cabinet.width)
-          expect(columns, `${segment.id} at x ${String(x)}`).toContain(x);
-      }
-    }
-    expect(simplified.externalTank.x).toBeGreaterThan(760);
-    expect(simplified.airUnit.x + simplified.airUnit.width).toBeLessThan(240);
-  });
-
   test('every crossing is between two segments of the arrangement', () => {
     const ids = new Set(simplified.segments.map((segment) => segment.id));
     for (const crossing of simplified.crossings) {
@@ -286,83 +267,9 @@ describe('arrangementFor: the simplified arrangement', () => {
   });
 });
 
-describe('the source and the external tank (outer-loop-source, dhw-storage on the simplified arrangement)', () => {
-  test('Source aligned to the cabinet: the housing top and the ground line are on the cabinet top line', () => {
-    expect(simplified.airUnit.y).toBe(simplified.cabinet.y);
-    expect(simplified.groundLineY.ground).toBe(simplified.cabinet.y);
-    expect(simplified.groundLineY.hybrid).toBeGreaterThan(simplified.airUnit.y + simplified.airUnit.height);
-    for (const source of SOURCES) {
-      const context = { ...VARIANT_4, source };
-      if (source === 'ground') {
-        expect(first(context, 'src_gnd_down')[1]).toBe(simplified.cabinet.y);
-        expect(last(context, 'src_gnd_up')[1]).toBe(simplified.cabinet.y);
-      }
-    }
-  });
-
-  test('the tank: its dome apex is on the cabinet top line and its centre line is the coil', () => {
-    const { externalTank, cabinet, externalCoil } = simplified;
-    expect(externalTank.y).toBe(cabinet.y);
-    expect(externalTank.x + externalTank.width / 2).toBe(externalCoil.cx);
-    expect(externalCoil.top).toBeGreaterThan(externalTank.y + externalTank.height / 3);
-    expect(externalCoil.bottom).toBeLessThan(externalTank.y + externalTank.height - externalTank.dome);
-  });
-
-  test('the source zone ends at about x 190, the tank zone starts at about x 840, with the cabinet between', () => {
-    const { airUnit, airUnitWallX, groundLineX, run, cabinet, externalTank } = simplified;
-    expect(airUnit.x).toBeGreaterThan(0);
-    expect(Math.max(airUnitWallX, groundLineX.end, run.feedX)).toBeLessThanOrEqual(190);
-    expect(cabinet.x).toBeGreaterThan(190);
-    expect(cabinet.x + cabinet.width).toBeLessThan(840);
-    expect(externalTank.x).toBeGreaterThanOrEqual(840);
-    expect(externalTank.x + externalTank.width).toBeLessThanOrEqual(1000);
-    for (const source of SOURCES) {
-      const context = { ...VARIANT_4, source };
-      for (const { part } of drawnSegments(context).filter((entry) => entry.part.id.startsWith('src_'))) {
-        // the run's two long pipes start at ports 3 and 4 in the cabinet; the rest of the source stays left of it
-        if (part.id === 'src_out' || part.id === 'src_in') continue;
-        for (const point of part.points) expect(point[0], part.id).toBeLessThan(simplified.cabinet.x);
-      }
-    }
-  });
-
-  test("the source and the tank are the frame's at a uniform scale of about 0.8", () => {
-    expect(SIMPLIFIED_ZONE_SCALE).toBe(0.8);
-    const ratio = (a: number, b: number): number => a / b;
-    const full = frame.zones;
-    expect(ratio(simplified.airUnit.width, full.airUnit.width)).toBeCloseTo(0.8, 1);
-    expect(ratio(simplified.airUnit.height, full.airUnit.height)).toBeCloseTo(0.8, 1);
-    expect(ratio(simplified.airUnit.fanRadius, full.airUnit.fanRadius)).toBeCloseTo(0.8, 1);
-    expect(ratio(simplified.groundLoop.depth, full.groundLoop.depth)).toBeCloseTo(0.8, 1);
-    expect(
-      ratio(simplified.groundLoop.downX - simplified.groundLoop.upX, full.groundLoop.downX - full.groundLoop.upX),
-    ).toBeCloseTo(0.8, 1);
-    expect(ratio(simplified.externalTank.width, full.externalTank.width)).toBeCloseTo(0.8, 1);
-    expect(ratio(simplified.externalTank.height, full.externalTank.height)).toBeCloseTo(0.8, 1);
-    expect(ratio(simplified.externalCoil.rx, full.externalCoil.rx)).toBeCloseTo(0.8, 1);
-  });
-
-  test.each(
-    CONTEXTS.filter((context) => context.features.htr === true).map((context) => [name(context), context] as const),
-  )('the source and tank pipes meet their ports: %s', (_name, context) => {
-    expect(first(context, 'src_out')).toEqual(portOf(context, 3));
-    expect(last(context, 'src_in')).toEqual(portOf(context, 4));
-    const feed = { air: 'src_air_feed', ground: 'src_gnd_feed', hybrid: 'src_hyb_feed' }[context.source];
-    const exit = { air: 'src_air_exit', ground: 'src_gnd_exit', hybrid: 'src_hyb_exit' }[context.source];
-    expect(first(context, feed)).toEqual(last(context, 'src_out'));
-    expect(last(context, exit)).toEqual(first(context, 'src_in'));
-    if (context.dhw === 'external' || (context.dhw === 'unused' && context.model === 'B')) {
-      expect(first(context, 'dhw_ext_in')).toEqual(portOf(context, 5));
-      expect(last(context, 'dhw_ext_out')).toEqual(portOf(context, 6));
-      expect(last(context, 'dhw_ext_in')).toEqual(first(context, 'dhw_ext_coil'));
-      expect(last(context, 'dhw_ext_coil')).toEqual(first(context, 'dhw_ext_out'));
-    }
-  });
-});
-
 describe('the invariants of the full level on the simplified arrangement', () => {
   test.each(CONTEXTS.map((context) => [name(context), context] as const))('%s', (_name, context) => {
-    const arrangement = simplified;
+    const arrangement = arrangementOf(context);
     const { cabinet } = arrangement;
     const components = drawnComponents(context).map((entry) => entry.part);
     const segments = drawnSegments(context).map((entry) => entry.part);
@@ -378,19 +285,28 @@ describe('the invariants of the full level on the simplified arrangement', () =>
         part.kind === 'port' ? cabinet.y - 6 : cabinet.y,
       );
     }
-    if (context.source !== 'ground') {
-      const { x, y, width, height } = arrangement.airUnit;
-      expect(x).toBeGreaterThan(0);
-      expect(x + width).toBeLessThan(cabinet.x);
-      expect(y + height).toBeLessThan(arrangement.viewBox.height);
+    // the band's bodies lie inside the band (above the cabinet's top edge) and above the cabinet's columns: nothing is drawn beside the cabinet
+    const bodies = [
+      ...(context.source === 'ground' ? [] : [['air unit', arrangement.airUnit] as const]),
+      ...(context.source === 'air' ? [] : [['collector', arrangement.collector] as const]),
+      ...(drawnStorage(context) === 'external' ? [['tank', arrangement.externalTank] as const] : []),
+    ].map(([what, shape]) => {
+      if (shape === undefined) throw new Error(`no ${what}`);
+      return { what, x0: shape.x, y0: shape.y, x1: shape.x + shape.width, y1: shape.y + shape.height };
+    });
+    for (const body of bodies) {
+      expect(body.y0, body.what).toBeGreaterThanOrEqual(arrangement.band.top);
+      expect(body.y1, body.what).toBeLessThanOrEqual(arrangement.band.bottom);
+      expect(body.x0, body.what).toBeGreaterThanOrEqual(cabinet.x);
+      expect(body.x1, body.what).toBeLessThanOrEqual(cabinet.x + cabinet.width);
     }
-    if (context.source !== 'air') {
-      const { downX, upX, depth } = arrangement.groundLoop;
-      const lineY = arrangement.groundLineY[context.source === 'hybrid' ? 'hybrid' : 'ground'];
-      expect(Math.min(upX - arrangement.loopBend, arrangement.groundLineX.start)).toBeGreaterThanOrEqual(0);
-      expect(Math.max(downX, arrangement.groundLineX.end)).toBeLessThan(cabinet.x);
-      expect(lineY + depth).toBeLessThan(arrangement.viewBox.height);
-    }
+    bodies.forEach((body, index) => {
+      for (const other of bodies.slice(index + 1))
+        expect(
+          apart({ x0: body.x0, y0: body.y0, x1: body.x1, y1: body.y1 }, other),
+          `${body.what} and ${other.what} overlap`,
+        ).toBe(true);
+    });
     for (const segment of segments) {
       for (const point of segment.points) {
         expect(point[0], segment.id).toBeGreaterThanOrEqual(0);
@@ -605,6 +521,90 @@ describe('the invariants of the full level on the simplified arrangement', () =>
       const xs = pairItems.map((item) => partOf(VARIANT_4, item).x);
       expect(top.x, String(pair)).toBeGreaterThanOrEqual(Math.min(...xs) - 30);
       expect(top.x, String(pair)).toBeLessThanOrEqual(Math.max(...xs) + 30);
+    }
+  });
+});
+
+// live-values "Hydraulic values", rework-layouts: the production Out, In and pressure sit beside probes 33, 34 and transducer 38, the brine
+// Out beside probe 31, with no other part between them. The place search moves a label to the nearest free place, so
+// without this bound it could drift across another part.
+describe('values beside their probes', () => {
+  /** The widest label box of each value at the vertical threshold, 560 px (the place search's "widest box", rounded up), in units. */
+  const SIZES: Record<string, [number, number]> = {
+    production_out: [74, 14],
+    production_in: [65, 14],
+    production_pressure: [48, 14],
+    brine_out: [74, 14],
+  };
+  const BESIDE: readonly (readonly [string, number])[] = [
+    ['production_out', 33],
+    ['production_in', 34],
+    ['production_pressure', 38],
+    ['brine_out', 31],
+  ];
+  /** The largest gap between a label's box and its part's box, in units (the search's places lie 6 to 13 units away). */
+  const MAX_GAP = 24;
+  const partOf = (context: DrawContext, item: number): Component => {
+    const found = drawnComponents(context).find((entry) => entry.part.item === item)?.part;
+    if (found === undefined) throw new Error(`no part ${String(item)}`);
+    return found;
+  };
+
+  test.each(BESIDE)('%s is beside item %i, close, with no other part between', (id, item) => {
+    const spec = simplified.labels.specs.find((entry) => entry.id === id);
+    const size = SIZES[id];
+    if (spec === undefined || size === undefined) throw new Error(id);
+    const [width, height] = size;
+    const left = spec.align === 'start' ? spec.x : spec.align === 'end' ? spec.x - width : spec.x - width / 2;
+    const label: Box = { x0: left, y0: spec.y - height / 2, x1: left + width, y1: spec.y + height / 2 };
+    for (const context of CONTEXTS) {
+      const part = partOf(context, item);
+      const target = boxOf(part);
+      // beside: the boxes' vertical ranges overlap and the horizontal gap is small
+      const gap = Math.max(target.x0 - label.x1, label.x0 - target.x1, 0);
+      expect(gap, `${name(context)} ${id}`).toBeLessThanOrEqual(MAX_GAP);
+      expect(Math.min(label.y1, target.y1) - Math.max(label.y0, target.y0), `${name(context)} ${id}`).toBeGreaterThan(
+        0,
+      );
+      // no other drawn component's box meets the rectangle that spans both
+      const hull: Box = {
+        x0: Math.min(label.x0, target.x0),
+        y0: Math.min(label.y0, target.y0),
+        x1: Math.max(label.x1, target.x1),
+        y1: Math.max(label.y1, target.y1),
+      };
+      for (const { part: other } of drawnComponents(context)) {
+        if (other.item === item || other.kind === 'port') continue;
+        expect(apart(boxOf(other), hull), `${name(context)} ${id}: item ${String(other.item)} between`).toBe(true);
+      }
+    }
+  });
+});
+
+describe('pressure values beside their transducers on wider cards', () => {
+  // The label boxes are fixed in px while the drawing scales, so at 1000 px a label is VERTICAL_BELOW/1000 of its width at the
+  // threshold in units. A start-aligned place that is 6 units from its transducer at the threshold drifts away from it as the card widens.
+  const WIDTHS = [VERTICAL_BELOW, 1000] as const;
+  const WIDEST_AT_THRESHOLD: Record<string, number> = { production_pressure: 48, brine_pressure: 48 };
+  test.each([
+    ['production_pressure', 38],
+    ['brine_pressure', 37],
+  ] as const)('%s stays within 8 units of transducer %i at the threshold and at 1000 px', (id, item) => {
+    const spec = simplified.labels.specs.find((entry) => entry.id === id);
+    const target = boxOf(
+      (() => {
+        const found = drawnComponents(VARIANT_4).find((entry) => entry.part.item === item)?.part;
+        if (found === undefined) throw new Error('no part');
+        return found;
+      })(),
+    );
+    if (spec === undefined) throw new Error(id);
+    for (const width of WIDTHS) {
+      const labelWidth = ((WIDEST_AT_THRESHOLD[id] ?? 0) * VERTICAL_BELOW) / width;
+      const left =
+        spec.align === 'start' ? spec.x : spec.align === 'end' ? spec.x - labelWidth : spec.x - labelWidth / 2;
+      const gap = Math.max(target.x0 - (left + labelWidth), left - target.x1, 0);
+      expect(gap, `${id} at ${String(width)} px`).toBeLessThanOrEqual(8);
     }
   });
 });

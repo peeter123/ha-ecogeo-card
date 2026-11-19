@@ -2,7 +2,7 @@
 // the forced horizontal layout, sets the card's width from 320 to 800 px in 20 px steps and,
 // per width, checks overlaps in the DOM: the bounding boxes of the value labels (the card's `.label` elements)
 // against each other and against the component groups of the drawing (`g.symbol-group`, `g.dhw-storage`,
-// `g.air-unit`, and the marks of `g.ground-loop`). The threshold is the narrowest width at which every case has zero overlaps and
+// `g.air-unit`, `g.ground-collector` and the obstacles the bodies register). The threshold is the narrowest width at which every case has zero overlaps and
 // every wider measured width does too (a width of the 20 px grid). Paste it into VERTICAL_BELOW in src/lib/layout.ts.
 //
 // The check counts pipes too (dev/overlaps.ts) and prints the most frequent pairs. `--browser=chromium|webkit` (default

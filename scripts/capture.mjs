@@ -1,7 +1,7 @@
 // `npm run capture`: opens every emulator URL of the fixed list (dev/captures.ts) in headless Chromium and writes one
 // PNG of the card per URL to build/captures/ (git-ignored); a capture with a viewport (the panel view) shows the whole window. The pages use mock states only, so no installation data
 // can be in view. Starts and stops its own Vite server, after hrv-ventilation scripts/capture.mjs; Playwright is also
-// used by the browser test project.
+// used by the browser test project. `--only=<regex>` writes only the captures whose name matches (to iterate on a drawing).
 import { mkdirSync, rmSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,7 +12,9 @@ const OUT = fileURLToPath(new URL('../build/captures/', import.meta.url));
 /** Pixel ratio of the captures, so text stays sharp. */
 const SCALE = 2;
 
-rmSync(OUT, { recursive: true, force: true });
+const onlyArg = process.argv.find((arg) => arg.startsWith('--only='));
+const only = onlyArg === undefined ? undefined : new RegExp(onlyArg.slice('--only='.length));
+if (only === undefined) rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 
 const server = await createServer({ logLevel: 'warn', server: { port: 5310, strictPort: false } });
@@ -37,6 +39,7 @@ try {
   const problems = [];
   page.on('pageerror', (error) => problems.push(error.message));
   for (const { name, query, viewport } of CAPTURES) {
+    if (only !== undefined && !only.test(name)) continue;
     await page.setViewportSize(viewport ?? DEFAULT_VIEWPORT);
     await page.goto(new URL(`dev/index.html?${query}`, base).href);
     await page.locator('#cards[data-ready]').waitFor();

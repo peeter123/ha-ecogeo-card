@@ -166,23 +166,42 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
   Chromium and WebKit).
 ## 5. Band arrangement: source and tank above the cabinet
 
-- [ ] 5.1 Implement the band model (design D3): remove the pipe run above the cabinet and the side zones; add the band,
+- [x] 5.1 Implement the band model (design D3): remove the pipe run above the cabinet and the side zones; add the band,
   its slots and the join lane; give the horizontal arrangement its x stretch (design D2), with the map breakpoints
   recorded and reasoned. Verify: unit tests for schematic-drawing "Band arrangement" and "Arrangement keeps the
   topology" (band order, short joins, no outside crossings, every part in its zone) pass for every source and DHW
   storage.
-- [ ] 5.2 Redraw the external tank above ports 5/6 with the DHW value and Demand inside its upper part (dhw-storage
+  Note (2026-11-19, implementer): the band is 170 units high (top 6) over a join lane of 56; `planBand` places the three
+  slots (centred over their ports, 24 units apart, least movement, an empty slot gives its space away; the emitter's
+  width is 0 until it is drawn) and the arrangement is built per band key (source, tank drawn, emitter drawn), so
+  `arrangementFor(layout, key)` and `arrangementOf(context)` replace the single arrangement. The x map stretches the
+  cabinet to 980 units (viewBox 1000 x 647), breakpoints and reasons in `HORIZONTAL_MAP_X` (geometry.ts); the y map is a
+  shift of 102. Jogs at 22, 28, 34 and 46 units over the top edge. Tests: `test/diagram/band.test.ts` and the updated
+  simplified and geometry tests, for every source and DHW storage.
+- [x] 5.2 Redraw the external tank above ports 5/6 with the DHW value and Demand inside its upper part (dhw-storage
   "External tank above connections 5/6", "DHW values inside the tank", "Muted coil visible on the tank"); model C's
   tank 50 shows temperature and Demand. Verify: dhw-storage unit tests pass.
-- [ ] 5.3 Redraw the air unit with its coil block towards the cabinet, the fan above, and its Out value inside the
-  housing (outer-loop-source "Air unit with its value inside", "Fan follows its speed"); decide the value's strip with
-  the screenshot loop (design Open Questions) and record it. The housing gets a tooltip (component-info "Component
-  name on hover"; the "Air unit" caption is gone since group 3). Verify: outer-loop-source unit tests pass.
-- [ ] 5.4 Draw the ground collector (hatched strip, flat serpentine, Out inside) and the hybrid side by side
+  Note (2026-11-19, implementer): tank 160 x 170 on the band's bottom edge, mirrored helix (port 5 to the upper left
+  end, port 6 to the lower right, no crossing), DHW temperature and Demand as bare labels at 38 and 56 units under its
+  top, clear of the rim (registered as an obstacle) and the coil. Model C's tank 50 shows its two values in one row
+  above coil 51.
+- [x] 5.3 Redraw the air unit with its coil block towards the cabinet, the fan above, and its Out value
+  inside the housing (outer-loop-source "Air unit with its value inside", "Fan follows its speed"); decide the value's
+  strip with the screenshot loop (design Open Questions) and record it. The housing gets a tooltip (component-info
+  "Component name on hover"; the "Air unit" caption is gone since group 3). Verify: outer-loop-source unit tests pass.
+  Note (2026-11-19, implementer): decision: the Out value sits in a strip between the coil block and the fan, not above
+  the fan (it is next to the coil's outlet and keeps the housing's top outline clear); recorded in docs/ecogeo-card.md
+  (The band). Housing 130 x 168, coil block at the bottom with four vertical passes entering and leaving on its bottom
+  face, six fins; tooltips "Air unit" and "Air unit fan".
+- [x] 5.4 Draw the ground collector (hatched strip, flat serpentine, Out inside) and the hybrid side by side
   (outer-loop-source "Ground collector", "Hybrid side by side"); colour the collector's halves (temperature-coloring
   "Water segment temperatures"). The collector gets a tooltip (component-info "Component name on hover"). Verify: unit
   tests for the collector's passes, ends and halves' colours pass.
-- [ ] 5.5 Re-place the labels, re-measure the threshold, record the snapshots again. Production In sits beside probe
+  Note (2026-11-19, implementer): collector 170 x 112: hatching 14 units, Out strip 24, four horizontal passes 14 apart,
+  feed riser at the left and exit at the left end of the bottom pass; halves coloured as before (down: brine outlet, up:
+  brine inlet; hybrid: air unit outlet then brine inlet); tooltip "Ground collector". Hybrid: air unit left, collector
+  right, link in the lane.
+- [x] 5.5 Re-place the labels, re-measure the threshold, record the snapshots again. Production In sits beside probe
   34 and production Out beside probe 33, not next to the source (live-values "Hydraulic values"; group 3 accepted
   both further away until the band frees the space); the production pressure sits beside transducer 38, with no other
   part (thermostat 45, the HTR column, exchanger 9) between them, and brine Out beside probe 31 (group 4 accepted both
@@ -191,8 +210,22 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
   pressure from probes 34, 33 and transducer 38, and of brine Out from probe 31, so the search cannot drift a label
   across another part; a capture subagent checks air, ground and hybrid with external, internal, unused and no tank,
   light and dark, at the threshold and 1000 px, plus the panel view at 1280 x 800.
-- [ ] 5.6 Update README.md (drawing description, screenshot if it shows the old layout) and docs/ecogeo-card.md (band
-  model, bodies, threshold). Verify: `npm run check` passes.
+  Note (2026-11-19, implementer, Chromium with font smoothing on): an extra x stretch of 24 units between transducer 36
+  and filter dryer 13 gives the discharge block room; `search-places` now also tries a free default place as a
+  candidate, exempts a block's two rows from the margin between them and treats the superheat over the valve opening as
+  a block. `VERTICAL_BELOW` is 560: the narrowest grid width where the search keeps the blocks at their pairs (it finds
+  places down to 500 px, but from 540 the blocks move about 50 units off their pairs; at 480 the bodies' values find no
+  place); `measure-layout` with the recorded places is clean from 520 px. Six places recorded (production Out, In,
+  pressure 38, brine In, pressure 37, DG1 demand). Production In, Out, the pressure and brine Out are 6 to 13 units from
+  their parts, bounded by a unit test. Browser project: 1514 tests pass in Chromium and WebKit. The capture check is in
+  the group's report.
+  Note (2026-11-19, group 5 review): the 560 px threshold is accepted and design D7 amended (a place must also be one
+  its own spec allows); the review opened all 49 band and panel captures and found them clean.
+- [x] 5.6 Update README.md (drawing description, screenshot if it shows the old layout) and
+  docs/ecogeo-card.md (band model, bodies, threshold). Verify: `npm run check` passes.
+  Note (2026-11-19, implementer): README.md, docs/ecogeo-card.md (arrangement, band, bodies, x map, threshold, places)
+  and docs/images/heating.png regenerated; `docs/images/phone-heating.png` still shows the old compact layout (not
+  referenced; the vertical layout is not built yet). `npm run check` passes.
 
 ## 6. The DG1 emitter
 

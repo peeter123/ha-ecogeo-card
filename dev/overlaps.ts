@@ -2,16 +2,18 @@
 // sets the threshold) and test/card/overlaps.browser.test.ts (which guards it), so that the two cannot drift. It
 // reads real layout, so it runs in a browser. Boxes: a label's box is its element's box without the half-leading above
 // and below its text (line-height minus font-size, halved), because rows that stack at a fixed pitch share that
-// leading without their text touching. Components are the symbol groups, the DHW storage and the air unit; the ground
-// loop's group box spans the empty ground below its line, where the label of its up leg sits on purpose, so its own
-// marks (the line with its hatching) are checked one by one. The values inside tank 50 on model C
-// (`bare` labels) sit on its body by design and are not compared with tank 50. Two boxes overlap when they share more
+// leading without their text touching. Components are the symbol groups, the DHW storage, the air unit and the ground
+// collector. A label that sits inside a body (BODY_LABELS: tank 50 on model C, the external tank, the air unit, the
+// ground collector) is not compared with that body's box but must lie inside it (`label <id> x outline:<body>` otherwise),
+// and the obstacles a body registers (`data-obstacle`: the air unit's coil block and fan, the collector's hatching and
+// serpentine) count as parts of their own; the pipes of a body (the coil, the serpentine) are sampled like every pipe.
+// Two boxes overlap when they share more
 // than TOLERANCE px in both directions. Pipes are opt-in (refine-simplified-layout D4): measureCard with
 // `{ pipes: true }` also samples every `path.pipe` along its rendered length at 1 px steps, each sample a square of the
 // rendered stroke width, and takes the svg's box as the drawing's edge; overlapPairs then reports `label <id> x edge` for a
 // label box that leaves it by more than TOLERANCE and `label <id> x pipe:<segment>` (the drawing has no in-drawing captions
 // any more, rework-layouts "No in-drawing captions"). A hop is a gap in the path data (a moveto), so each subpath is sampled on its own
-// and the gap yields no samples. The `bare` labels inside tank 50 ignore pipe samples that lie within tank 50's box.
+// and the gap yields no samples. The labels inside tank 50 ignore pipe samples that lie within tank 50's box.
 
 /** Boxes that overlap by less than this many px in either direction only touch. */
 export const TOLERANCE = 0.5;
@@ -28,6 +30,9 @@ export const INSTALLATIONS = [
   { name: 'air-C-internal', query: 'source=air&model=C&dhw=internal' },
   { name: 'ground-B-unused', query: 'source=ground&dhw=unused' },
   { name: 'air-C-unused', query: 'source=air&model=C&dhw=unused' },
+  { name: 'air-B-none', query: 'source=air&dhw=none' },
+  { name: 'hybrid-B-none', query: 'source=hybrid&dhw=none' },
+  { name: 'hybrid-C-internal', query: 'source=hybrid&model=C&dhw=internal' },
 ] as const;
 
 export interface Box {
@@ -111,13 +116,15 @@ export function measureCard(root: ParentNode, options: { pipes?: boolean } = {})
       bottom: bottom - leading,
     };
   });
-  const groups = [...root.querySelectorAll('g.symbol-group, g.dhw-storage, g.air-unit')];
-  const groundMarks = [...root.querySelectorAll('g.ground-loop > path, g.ground-loop > text')];
-  const parts = [...groups, ...groundMarks].map((element) => ({
+  const groups = [...root.querySelectorAll('g.symbol-group, g.dhw-storage, g.air-unit, g.ground-collector')];
+  const parts: PartBox[] = groups.map((element) => ({
     id: `${element.getAttribute('class')?.split(' ')[0] ?? 'g'}:${element.getAttribute('data-item') ?? element.getAttribute('data-dhw') ?? element.getAttribute('data-source') ?? ''}`,
     item: element.getAttribute('data-item'),
     ...box(element),
   }));
+  for (const element of root.querySelectorAll('[data-obstacle]')) {
+    parts.push({ id: `obstacle:${element.getAttribute('data-obstacle') ?? ''}`, item: null, ...box(element) });
+  }
   const outline = root.querySelector('.cabinet > .outline');
   const cabinet = outline === null ? undefined : box(outline);
   if (options.pipes !== true) return { labels, parts, cabinet };
@@ -138,7 +145,11 @@ const overlaps = (a: Box, b: Box): boolean =>
 /** The overlapping pairs of a measurement, as texts. */
 export function overlapPairs({ labels, parts, pipes = [], drawing, cabinet }: Measurement): string[] {
   const pairs: string[] = [];
-  const tank50 = parts.find((part) => part.item === '50');
+  const tank50 = parts.find((part) => part.id === 'symbol-group:50');
+  const bodyOf = (label: LabelBox): PartBox | undefined => {
+    const id = BODY_LABELS[label.id];
+    return id === undefined ? undefined : parts.find((part) => part.id === id);
+  };
   const inside = (square: Box, outer: Box): boolean =>
     square.left >= outer.left &&
     square.right <= outer.right &&
@@ -149,7 +160,7 @@ export function overlapPairs({ labels, parts, pipes = [], drawing, cabinet }: Me
   };
   for (const label of labels) {
     for (const pipe of pipes) {
-      const ignored = label.bare && tank50 !== undefined ? tank50 : undefined;
+      const ignored = BODY_LABELS[label.id] === 'symbol-group:50' && tank50 !== undefined ? tank50 : undefined;
       if (pipe.squares.some((s) => overlaps(s, label) && !(ignored !== undefined && inside(s, ignored)))) {
         add(`label ${label.id} x ${pipe.id}`);
       }
@@ -182,22 +193,36 @@ export function overlapPairs({ labels, parts, pipes = [], drawing, cabinet }: Me
     for (const other of labels.slice(index + 1)) {
       if (overlaps(label, other)) pairs.push(`label ${label.id} x label ${other.id}`);
     }
+    const body = bodyOf(label);
     for (const part of parts) {
-      if (label.bare && part.item === '50') continue;
+      if (part === body) continue;
       if (overlaps(label, part)) pairs.push(`label ${label.id} x ${part.id}`);
     }
+    if (
+      body !== undefined &&
+      (label.left < body.left - TOLERANCE ||
+        label.right > body.right + TOLERANCE ||
+        label.top < body.top - TOLERANCE ||
+        label.bottom > body.bottom + TOLERANCE)
+    )
+      pairs.push(`label ${label.id} x outline:${body.id}`);
   });
   return pairs;
 }
 
 /**
- * The labels that sit inside a body and must stay inside it (rework-layouts D7): id to the item of the body (tank 50 of
- * model C). The bodies of the band (external tank, air unit, ground collector, emitter) join them with the band. Read by
- * scripts/search-places.mjs only.
+ * The labels that sit inside a body and must stay inside it (rework-layouts D7): label id to the body's part id (as
+ * `measureCard` names it): tank 50 of model C, and the bodies of the band (the external tank, the air unit, the ground
+ * collector). Read by the overlap check and scripts/search-places.mjs.
  */
 export const BODY_LABELS: Readonly<Record<string, string>> = {
-  tank_internal_temperature: '50',
-  tank_internal_demand: '50',
+  tank_internal_temperature: 'symbol-group:50',
+  tank_internal_demand: 'symbol-group:50',
+  tank_external_temperature: 'dhw-storage:external',
+  tank_external_demand: 'dhw-storage:external',
+  air_unit_out: 'air-unit:air',
+  ground_out: 'ground-collector:ground',
+  hybrid_ground_out: 'ground-collector:ground',
 };
 
 /** The Out and In values that read as a pair (refine-simplified-layout D7), production and brine; read by scripts/search-places.mjs only. */
@@ -213,6 +238,8 @@ export const OUT_IN_PAIRS: readonly (readonly [string, string])[] = [
 export const BLOCK_PAIRS: readonly (readonly [string, string])[] = [
   ['discharge_temperature', 'discharge_pressure'],
   ['suction_temperature', 'suction_pressure'],
+  // the expansion valve's pair (superheat over opening) beside valve 12 keeps the same pitch
+  ['superheat', 'expansion_valve'],
 ];
 export const PAIR_ROW_GAP = 16;
 

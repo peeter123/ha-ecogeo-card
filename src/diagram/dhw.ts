@@ -52,6 +52,7 @@ export const dhwStyles = css`
 export function renderDhw(context: DrawContext, taps?: Taps): SVGTemplateResult {
   if (drawnStorage(context) !== 'external') return svg``;
   const arrangement = arrangementOf(context);
+  if (arrangement.externalTank === undefined) return svg``;
   const { x, y, width, dome } = arrangement.externalTank;
   const rx = width / 2;
   // straight walls with elliptical domed caps: the top cap's lower arc is drawn as a rim
@@ -62,5 +63,6 @@ export function renderDhw(context: DrawContext, taps?: Taps): SVGTemplateResult 
     <title>${DHW_LABELS.externalTank}</title>
     <path class="tank-body" data-dhw-tank="external" d=${body} fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />
     <path class="tank-rim" d=${rim} />
+    <rect class="obstacle" data-obstacle="tank-rim" x=${x} y=${y + dome} width=${width} height=${dome} fill="none" stroke="none" />
   </g>`;
 }

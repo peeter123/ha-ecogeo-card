@@ -66,11 +66,11 @@ runs. In the card editor, the help link opens this README. How a release is made
 [docs/ecogeo-card.md](docs/ecogeo-card.md), and what each one changed is in [CHANGELOG.md](CHANGELOG.md).
 
 The card measures its own width and chooses a layout from it (the `layout` option, see Options). With `layout: auto`
-(the default) it shows the horizontal layout from 680 px wide, which is a panel view or a wide section, and the vertical
+(the default) it shows the horizontal layout from 560 px wide, which is a panel view or a wide section, and the vertical
 layout below that, which is what a phone gets. The horizontal layout is the drawing described in this README; the
 vertical layout, a taller arrangement for phones, is still to come, and until then `layout: vertical` (and `auto` below
-680 px) draws the horizontal one. Pipes and outlines never render thinner than 2 px and 1.25 px, and the footer wraps.
-Once vertical, the card returns to horizontal only at 704 px (24 px of hysteresis), so a scrollbar appearing with the
+560 px) draws the horizontal one. Pipes and outlines never render thinner than 2 px and 1.25 px, and the footer wraps.
+Once vertical, the card returns to horizontal only at 584 px (24 px of hysteresis), so a scrollbar appearing with the
 layout cannot make it flip back and forth. Set `layout: horizontal` or `layout: vertical` to force one. In a panel view
 the card also fits the screen: the drawing is kept within the window's height below Home Assistant's header (and above
 the footer), narrower and centred when the card is wider than that, and the layout and line widths follow the drawing's
@@ -114,11 +114,11 @@ fault.
 | `states` | group | `off: [OFF]`, `defrost: [Defrost]` | The state texts that mean off (the on/off entity) and defrost (the compressor mode entity); a list replaces its default, case-insensitive. See Using another source in the docs. |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
-| `layout` | `auto`, `horizontal`, `vertical` | `auto` | `auto` shows the vertical layout while the card is narrower than 680 px and the horizontal layout otherwise (and before the width is known), with 24 px of hysteresis once vertical (see Layout in the docs); `horizontal` and `vertical` use that layout at any width. Until the vertical arrangement is built, both draw the horizontal one. The former values `full` and `compact` are errors. |
+| `layout` | `auto`, `horizontal`, `vertical` | `auto` | `auto` shows the vertical layout while the card is narrower than 560 px and the horizontal layout otherwise (and before the width is known), with 24 px of hysteresis once vertical (see Layout in the docs); `horizontal` and `vertical` use that layout at any width. Until the vertical arrangement is built, both draw the horizontal one. The former values `full` and `compact` are errors. |
 
 ### Source and DHW
 
-`source` chooses what is drawn left of the cabinet on ports 3/4, and `dhw` the storage joined to ports 5/6 (or the
+`source` chooses what is drawn above the cabinet over ports 3/4, and `dhw` the storage above ports 5/6 (or the
 tank inside the cabinet on model C):
 
 ```yaml
@@ -130,7 +130,7 @@ dhw: external
 ```
 
 ```yaml
-# a ground loop, and no DHW storage (model B only): no tank, no ports 5/6, no valve 26, no HTR
+# a ground collector, and no DHW storage (model B only): no tank, no ports 5/6, no valve 26, no HTR
 type: custom:ecogeo-card
 prefix: demo_ecogeo
 source: ground
@@ -146,7 +146,7 @@ dhw: unused
 ```
 
 ```yaml
-# air unit and ground loop on one brine loop, with the integrated tank of model C
+# air unit and ground collector on one brine loop, with the integrated tank of model C
 type: custom:ecogeo-card
 prefix: demo_ecogeo
 model: C
@@ -156,15 +156,16 @@ dhw: internal
 
 | `source` | Drawn |
 |---|---|
-| `air` | An air unit with a four-pass coil and a fan, its Out value beside its top port. |
-| `ground` | A ground loop: a single U-shaped loop below a ground line, with its Out value at the line. |
-| `hybrid` | Both, in series on one brine loop (only the ground loop shows its Out; the air unit shows no value). |
+| `air` | An air unit: a fan above a finned coil block with a four-pass coil, its Out value inside the housing between them. |
+| `ground` | A ground collector: a ground strip hatched along its top with a flat serpentine, its Out value inside, under the hatching. |
+| `hybrid` | Both, side by side in series on one brine loop, air unit first (only the collector shows its Out; the air unit shows no value). |
 
-The top of the air unit or of the ground line is level with the top of the heat pump.
+The source and the tank stand in a band above the heat pump, each over its own
+connections, joined to them by short pipes; nothing is drawn beside the heat pump.
 
 | `dhw` | Drawn |
 |---|---|
-| `external` | A tank with a coil right of the cabinet, joined to ports 5/6 (model B), with the DHW temperature and the DHW demand under it. |
+| `external` | A tank with a coil above ports 5/6 (model B), with the DHW temperature and the DHW demand inside its upper part. |
 | `internal` | The integrated tank 50 with coil 51 inside the cabinet (model C). |
 | `unused` | The model's tank (external on B, integrated on C) drawn muted, with no tank value and no DHW circuit active; HTR is drawn if its feature says so. |
 | `none` | Nothing DHW related (model B only). |

@@ -2,7 +2,7 @@
 // D7, add-compact-layout D8, rework-layouts D7). For every one of the 19 values it finds, over every emulator scenario,
 // installation and naming at the layout's narrowest verified width, the places where the label overlaps no component, no
 // pipe at its rendered width, no other label and no outline (the cabinet's, a body's), stays inside the drawing, and, for a
-// label inside a body (BODY_LABELS of dev/overlaps.ts: the values of tank 50), inside that body, with about 2 px of margin
+// label inside a body (BODY_LABELS of dev/overlaps.ts: tank 50, the external tank, the air unit, the collector), inside that body, with about 2 px of margin
 // (Chromium and WebKit differ by 1-2 px in text width). There is no on-pipe set and no pipe-free option: a label without a
 // place is reported and is a decision point (design Risks), not an exception. Of the feasible places it takes the one
 // nearest the label's default place (its probe or component, before the recorded places), most constrained label first.
@@ -68,9 +68,9 @@ const ALIGNS = /** @type {const} */ (['start', 'middle', 'end']);
 
 /**
  * Runs in the page: for each label of the card, which candidate places are free of obstacles, as packed bits.
- * @param {{ step: number; cell: number; marginX: number; marginY: number; bodies: Readonly<Record<string, string>>; homes: Readonly<Record<string, { x: number; y: number; align: string }>> }} options
+ * @param {{ step: number; cell: number; marginX: number; marginY: number; bodies: Readonly<Record<string, string>>; homes: Readonly<Record<string, { x: number; y: number; align: string }>>; partners: Readonly<Record<string, string>> }} options
  */
-async function searchInPage({ step, cell, marginX, marginY, bodies, homes }) {
+async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partners }) {
   const path = '/dev/overlaps.ts';
   const shared = await import(path);
   const root = document.querySelector('ecogeo-card')?.shadowRoot;
@@ -145,6 +145,18 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes }) {
       const home = homes[label.id];
       const w = label.right - label.left;
       const h = label.bottom - label.top;
+      // a body's label is placed from its zones (it follows its body): its home is where it renders
+      if (bodies[label.id] !== undefined) {
+        return {
+          id: label.id,
+          box: {
+            left: label.left - drawing.left - marginX,
+            right: label.right - drawing.left + marginX,
+            top: label.top - drawing.top - marginY,
+            bottom: label.bottom - drawing.top + marginY,
+          },
+        };
+      }
       if (home === undefined) return { id: label.id, box: undefined };
       const x = home.x * scale + 0;
       const left = home.align === 'start' ? x : home.align === 'end' ? x - w : x - w / 2;
@@ -168,7 +180,7 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes }) {
         top: part.top - drawing.top,
         bottom: part.bottom - drawing.top,
       };
-      if (meets(mine, rel) && bodies[id] !== part.item) hit.push(part.id);
+      if (meets(mine, rel) && bodies[id] !== part.id) hit.push(part.id);
     }
     for (const pipe of m.pipes ?? []) {
       if (
@@ -184,7 +196,9 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes }) {
         hit.push(pipe.id);
     }
     for (const other of homeBoxes)
-      if (other.id !== id && other.box !== undefined && meets(mine, other.box)) hit.push(`label:${other.id}`);
+      // the two rows of a block keep their fixed pitch: a row's margin does not count against its partner
+      if (other.id !== id && partners[id] !== other.id && other.box !== undefined && meets(mine, other.box))
+        hit.push(`label:${other.id}`);
     if (mine.left < 0 || mine.top < 0 || mine.right > dw || mine.bottom > dh) hit.push('edge');
     const overlapsCabinet = meets(mine, cab);
     const withinCabinet =
@@ -196,12 +210,11 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes }) {
     return hit;
   };
   for (const label of m.labels) {
-    // a label inside a body (the values of tank 50) stays inside that body's box and ignores the body as an obstacle
-    const bodyItem = bodies[label.id];
+    // a label inside a body (tank 50, the external tank, the air unit, the ground collector) stays inside that body's box and
+    // ignores the body as an obstacle; the obstacles the body registers (coil block, fan, hatching, serpentine) still count
+    const bodyId = bodies[label.id];
     const body =
-      bodyItem === undefined
-        ? undefined
-        : m.parts.find((/** @type {{ item: string | null }} */ part) => part.item === bodyItem);
+      bodyId === undefined ? undefined : m.parts.find((/** @type {{ id: string }} */ part) => part.id === bodyId);
     const hitsOwn =
       body === undefined
         ? hits
@@ -247,7 +260,18 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes }) {
     }
     let text = '';
     for (const byte of bits) text += String.fromCharCode(byte);
-    results.push({ id: label.id, w: w / scale, h: h / scale, bits: btoa(text), homeHits: homeHits(label.id) });
+    // the default place itself is a candidate too, when it is free: the 4-unit grid cannot hit a place that is only a few
+    // units wide (a two-row block between two lines), and a free default place needs no entry (tested exactly, not on the
+    // raster: such a block is free by a fraction of a pixel)
+    const homeFree = homes[label.id] !== undefined && bodyId === undefined && homeHits(label.id).length === 0;
+    results.push({
+      id: label.id,
+      w: w / scale,
+      h: h / scale,
+      bits: btoa(text),
+      homeHits: homeHits(label.id),
+      homeFree,
+    });
   }
   return { vb: { width: vb.width, height: vb.height }, labels: results };
 }
@@ -263,7 +287,7 @@ const { VERTICAL_BELOW } = /** @type {{ VERTICAL_BELOW: number }} */ (await serv
 const WIDTH = WIDTH_OPTION > 0 ? WIDTH_OPTION : LAYOUT === 'vertical' ? 320 : VERTICAL_BELOW;
 /** @type {import('playwright').Browser | undefined} */
 let browser;
-/** @type {Map<string, { feasible: Uint8Array; w: number; h: number; sizes: Map<number, { w: number; h: number }>; homeHits: Map<string, number> }>} */
+/** @type {Map<string, { feasible: Uint8Array; w: number; h: number; sizes: Map<number, { w: number; h: number }>; homeHits: Map<string, number>; homeFree: boolean }>} */
 const found = new Map();
 /** @type {{ width: number; height: number } | undefined} */
 let viewBox;
@@ -327,6 +351,12 @@ try {
           marginY: MARGIN_Y,
           bodies: loadedBodies ?? {},
           homes,
+          partners: Object.fromEntries(
+            (blockPairs ?? []).flatMap(([top, bottom]) => [
+              [top, bottom],
+              [bottom, top],
+            ]),
+          ),
         });
         viewBox = result.vb;
         for (const label of result.labels) {
@@ -339,12 +369,14 @@ try {
               h: label.h,
               sizes: new Map([[cases, { w: label.w, h: label.h }]]),
               homeHits: new Map(label.homeHits.map((/** @type {string} */ hit) => [hit, 1])),
+              homeFree: label.homeFree,
             });
           } else {
             for (let i = 0; i < bits.length; i += 1) entry.feasible[i] = (entry.feasible[i] ?? 0) & (bits[i] ?? 0);
             entry.w = Math.max(entry.w, label.w);
             entry.h = Math.max(entry.h, label.h);
             entry.sizes.set(cases, { w: label.w, h: label.h });
+            entry.homeFree = entry.homeFree && label.homeFree;
             for (const hit of label.homeHits) entry.homeHits.set(hit, (entry.homeHits.get(hit) ?? 0) + 1);
           }
         }
@@ -466,7 +498,16 @@ const inOrderEverywhere = (
   }
   return true;
 };
-const candidates = new Map([...found].map(([id, entry]) => [id, placesOf(entry.feasible)]));
+const candidates = new Map(
+  [...found].map(([id, entry]) => {
+    const places = placesOf(entry.feasible);
+    const home = homes[id];
+    // a default place that is free in every case is a candidate, off the grid or not
+    if (entry.homeFree && home !== undefined)
+      places.push({ x: home.x, y: home.y, align: /** @type {'start' | 'middle' | 'end'} */ (home.align) });
+    return [id, places];
+  }),
+);
 // The pairs first, together (the pair with the least distance in all wins), then the other labels, most constrained first.
 // For every label the nearest place to its own wins.
 /** @type {Map<string, { x: number; y: number; align: string; distance: number }>} */
@@ -501,7 +542,8 @@ for (const [outId, inId] of [...PAIRS, ...BLOCKS]) {
     for (const out of outs) {
       const inn = below.get(`${String(out.x)},${String(out.y + (rowGap ?? 16))},${out.align}`);
       if (inn === undefined || out.distance + inn.distance >= bestSum) continue;
-      if (inBlock(out, inn) && apartEverywhere(outId, out, inId, inn)) {
+      if (inBlock(out, inn)) {
+        // the two rows of a block keep their fixed pitch: they need no margin between them, only 16 units apart
         best = [out, inn];
         bestSum = out.distance + inn.distance;
       }
@@ -525,12 +567,15 @@ for (const [outId, inId] of [...PAIRS, ...BLOCKS]) {
     chosen.set(inId, best[1]);
   }
 }
+const BESIDE_PART = new Set(['production_pressure', 'brine_pressure']);
 const rest = [...found.keys()]
   .filter((id) => !chosen.has(id) && !missing.includes(id))
   .sort((x, y) => (candidates.get(x)?.length ?? 0) - (candidates.get(y)?.length ?? 0));
 const bodies = loadedBodies ?? {};
 for (const id of rest) {
-  const free = freeFor(id, false);
+  // the pressure labels sit beside their transducers and keep the alignment of their default place (an end-aligned label
+  // stays beside its part when the card is wider; a start-aligned one drifts away from it)
+  const free = freeFor(id, BESIDE_PART.has(id));
   // the labels inside one body share its room: a place counts only if every label of that body still waiting has a place
   // apart from it (a greedy pick of one label could otherwise take the whole strip)
   const waiting =
@@ -591,8 +636,15 @@ if (process.argv.includes('--map')) {
     for (const row of cells) console.log(row.join(''));
   }
 }
-console.log(`\nPaste into ${LAYOUT.toUpperCase()}_PLACES (src/diagram/label-places.ts):`);
+// The labels of the bodies are placed from the zones and never get an entry; a label whose default place is free in every
+// case needs none either.
+const zoned = [...chosen.keys()].filter((id) => (loadedBodies ?? {})[id] !== undefined);
+console.log(`\nPlaced from the zones (no entry): ${zoned.join(', ')}`);
+console.log(
+  `\nPaste into ${LAYOUT.toUpperCase()}_PLACES (src/diagram/label-places.ts), labels whose default place fails:`,
+);
 for (const [id, place] of chosen) {
+  if (zoned.includes(id) || (found.get(id)?.homeHits.size ?? 0) === 0) continue;
   console.log(`  ${id}: { x: ${String(place.x)}, y: ${String(place.y)}, align: '${place.align}' },`);
 }
 if (missing.length > 0) {

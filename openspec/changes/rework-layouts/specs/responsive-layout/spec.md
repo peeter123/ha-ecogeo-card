@@ -71,8 +71,9 @@ than the vertical threshold and horizontal otherwise; before the card's width is
 The vertical threshold SHALL be the narrowest card width, on a grid of 20 px steps from 320 to 800 px, at which the
 horizontal layout shows no overlap (see "Labels clear of everything") in any emulator scenario with every label
 keeping the place search's margin of 2 px, which covers the text width difference between the browser engines, and
-no wider width on that grid falls short of it. It SHALL be recorded in the docs with how it was measured, including
-the label box, the margin and the tolerance the result depends on.
+at a place its own requirement allows (a probe pair's values at their pair, a hydraulic value beside its part, a
+body's value inside its body), and no wider width on that grid falls short of it. It SHALL be recorded in the docs
+with how it was measured, including the label box, the margin and the tolerance the result depends on.
 
 #### Scenario: No overlaps above the threshold
 - **WHEN** the emulator captures every scenario in the horizontal layout at the threshold width, at 800 px and at

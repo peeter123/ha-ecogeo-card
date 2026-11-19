@@ -1,16 +1,19 @@
-// The outer-loop source (add-schematic-card D5, D6; refine-schematic-drawing D11-D14; outer-loop-source spec): the air unit, the ground loop or both on
-// one brine loop, drawn in the zone left of the cabinet (viewBox x 0-240), its top on the cabinet's top line. This
-// file draws what is not a pipe: the air unit's housing (slatted front), finned coil block and fan, and the ground line
-// (no captions: the tooltips name the parts, rework-layouts "No in-drawing captions"). The pipes (ports 3/4 up into the run, left to the zone, the serpentine and the ground loop's U)
-// are segments in geometry.ts, so pipes.ts colours and animates them like every other pipe. None of these parts is
-// a manual item: the manual's figures stop at connections 3 (brine outlet) and 4 (brine inlet).
+// The outer-loop source (add-schematic-card D5, D6; refine-schematic-drawing D11-D14; rework-layouts D3, D4; outer-loop-source spec): the
+// air unit, the ground collector or both side by side on one brine loop, drawn in the band above the cabinet, over connections
+// 3/4. This file draws what is not a pipe: the air unit's housing, finned coil block and fan, and the collector's ground strip
+// with its hatching (no captions: the tooltips name the parts, rework-layouts "No in-drawing captions"). The pipes (ports 3/4
+// up through the join lane into the bottom faces, the serpentines and the link) are segments in geometry.ts, so pipes.ts
+// colours and animates them like every other pipe. None of these parts is a manual item: the manual's figures stop at
+// connections 3 (brine outlet) and 4 (brine inlet).
 //
-// The live value (labels.ts): the source's Out only, beside the air unit's top port or at the ground loop's up leg.
+// The live value (labels.ts): the source's Out only, inside the air unit's housing (the strip between the fan and the coil
+// block) or the collector's strip (between the hatching and the serpentine); the bodies register their obstacles with
+// `data-obstacle` so that the overlap check sees the coil, the fan, the hatching and the serpentine inside them.
 import { css, svg, type SVGTemplateResult } from 'lit';
 import type { AnimationReadings } from '../calc/readings';
-import { AIR_UNIT_FAN_NAME } from '../strings';
+import { AIR_UNIT_FAN_NAME, AIR_UNIT_NAME, GROUND_COLLECTOR_NAME } from '../strings';
 import { FAN_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
-import { arrangementOf, drawnSegments, type AirUnitShape, type DrawContext } from './geometry';
+import { arrangementOf, type AirUnitShape, type CollectorShape, type DrawContext } from './geometry';
 
 export const sourceStyles = css`
   .source-outline {
@@ -28,11 +31,6 @@ export const sourceStyles = css`
     stroke-opacity: 0.55;
     stroke-width: calc(var(--outline-width, 2) * 0.5);
   }
-  .source-slat {
-    stroke: var(--secondary-text-color);
-    stroke-width: var(--outline-width, 2);
-    stroke-linecap: round;
-  }
   .source-divider {
     stroke: var(--primary-text-color);
     stroke-width: calc(var(--outline-width, 2) * 0.75);
@@ -45,7 +43,6 @@ export const sourceStyles = css`
   .muted .source-outline,
   .muted .source-frame,
   .muted .source-fin,
-  .muted .source-slat,
   .muted .source-divider,
   .muted .source-ground {
     stroke: var(--disabled-text-color);
@@ -82,7 +79,7 @@ export const sourceStyles = css`
   }
 `;
 
-/** Rounds to 2 decimals, so the scaled zones of the simplified arrangement leave no float noise in the markup. */
+/** Rounds to 2 decimals, so the shapes' derived values leave no float noise in the markup. */
 const round2 = (value: number): number => Math.round(value * 100) / 100;
 
 /** The fan's turn in seconds at the fixed medium speed, for a speed in another unit than % (add-entity-discovery D6). */
@@ -105,69 +102,59 @@ const BLADES = [0, 72, 144, 216, 288].map(
     svg`<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(${angle})" />`,
 );
 
+/** The blades are drawn for a ring of this radius; a smaller ring scales them. */
+const BLADE_RING = 34;
+
+/** An invisible box that registers an obstacle inside a body for the overlap check (dev/overlaps.ts). */
+const obstacle = (name: string, rect: { x: number; y: number; width: number; height: number }): SVGTemplateResult =>
+  svg`<rect class="obstacle" data-obstacle=${name} x=${rect.x} y=${rect.y} width=${rect.width} height=${rect.height} fill="none" stroke="none" />`;
+
 function airUnit(
   unit: AirUnitShape,
   speed: number | boolean | undefined,
   muted: boolean,
   taps: Taps | undefined,
-  scale: number | undefined,
 ): SVGTemplateResult {
-  const { x, y, width, height, fanX, fanY, fanRadius, coil, fins: fin, slats: slat, dividerY } = unit;
+  const { x, y, width, height, fan, coil, fins: fin, dividerY } = unit;
   const duration = fanDuration(speed);
-  const fins = Array.from({ length: fin.count }, (_, index) => round2(fin.x + index * fin.step));
-  const slatYs = Array.from({ length: slat.count }, (_, index) => round2(slat.y0 + index * slat.step));
-  const [gutterLeft, gutterRight] = [round2(x + 6), round2(fanX + fanRadius + 6)];
-  const gutter = round2(fanX - fanRadius - 6 - gutterLeft);
-  // the blades keep the frame's proportions to the ring: a smaller air unit scales them with it
-  const fanScale = round2(scale ?? 1);
+  const finYs = Array.from({ length: fin.count }, (_, index) => round2(fin.y0 + index * fin.step));
+  const fanScale = round2(fan.radius / BLADE_RING);
   const tap = tapBindings(tapTarget(FAN_ROLE, taps), taps?.onTap);
-  return svg`<g class="air-unit${muted ? ' muted' : ''}" data-source="air">
+  return svg`<g class="air-unit${muted ? ' muted' : ''}" data-source="air" aria-label=${AIR_UNIT_NAME}>
+    <title>${AIR_UNIT_NAME}</title>
     <rect class="source-outline" x=${x} y=${y} width=${width} height=${height} rx="6" />
     <path class="source-divider" d="M${x} ${dividerY} H${round2(x + width)}" />
-    ${slatYs.map((slatY) => svg`<path class="source-slat" data-slat d="M${gutterLeft} ${slatY} h${gutter} M${gutterRight} ${slatY} h${gutter}" />`)}
-    <rect class="source-frame" data-coil-block x=${coil.x} y=${coil.y} width=${coil.width} height=${coil.height} rx="3" />
-    ${fins.map((finX) => svg`<path class="source-fin" d="M${finX} ${fin.y0} V${fin.y1}" />`)}
+    ${obstacle('air-divider', { x, y: dividerY - 1.5, width, height: 3 })}
+    <rect class="source-frame" data-coil-block data-obstacle="air-coil" x=${coil.x} y=${coil.y} width=${coil.width} height=${coil.height} rx="3" />
+    ${finYs.map((finY) => svg`<path class="source-fin" d="M${fin.x0} ${finY} H${fin.x1}" />`)}
     <g class="fan-part" aria-label=${AIR_UNIT_FAN_NAME} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>
       <title>${AIR_UNIT_FAN_NAME}</title>
-      <circle class="fan-ring" cx=${fanX} cy=${fanY} r=${fanRadius} />
-      <circle class="fan-hit" cx=${fanX} cy=${fanY} r=${fanRadius} fill="transparent" stroke="none" />
-      <g class="fan" data-fan transform="translate(${fanX} ${fanY})${fanScale === 1 ? '' : ` scale(${String(fanScale)})`}">
+      <circle class="fan-ring" data-obstacle="air-fan" cx=${fan.cx} cy=${fan.cy} r=${fan.radius} />
+      <circle class="fan-hit" cx=${fan.cx} cy=${fan.cy} r=${fan.radius} fill="transparent" stroke="none" />
+      <g class="fan" data-fan transform="translate(${fan.cx} ${fan.cy})${fanScale === 1 ? '' : ` scale(${String(fanScale)})`}">
         <g class=${duration === undefined ? 'fan-rotor still' : 'fan-rotor'} style=${duration === undefined ? '' : `--fan-duration: ${String(duration)}s`}>${BLADES}<circle class="fan-hub" r="5" fill="var(--primary-text-color)" /></g>
       </g>
     </g>
   </g>`;
 }
 
-/** The x of the drawn source pipes that run across or end on the height `lineY`. */
-function pipesAcross(context: DrawContext, lineY: number): number[] {
-  return drawnSegments(context).flatMap(({ part }) =>
-    part.id.startsWith('src_')
-      ? part.points.slice(1).flatMap((end, index) => {
-          const start = part.points[index];
-          if (start?.[0] !== end[0]) return [];
-          return lineY >= Math.min(start[1], end[1]) && lineY <= Math.max(start[1], end[1]) ? [end[0]] : [];
-        })
-      : [],
-  );
-}
-
-/** The ground line with its hatching, at `lineY`, leaving out the places where the source pipes pass. */
-function groundLine(context: DrawContext, lineY: number, muted: boolean): SVGTemplateResult {
-  const { groundLineX } = arrangementOf(context);
-  const skip = pipesAcross(context, lineY);
-  const ticks = Array.from(
-    { length: Math.floor((groundLineX.end - groundLineX.start - 12) / 10) + 1 },
-    (_, index) => groundLineX.start + 6 + index * 10,
-  ).filter((tick) => !skip.some((pipe) => Math.abs(pipe - tick) < 10));
-  return svg`<g class="ground-loop${muted ? ' muted' : ''}" data-source="ground">
-    <path class="source-ground" d="M${groundLineX.start} ${lineY} H${groundLineX.end}" />
-    ${ticks.map((tick) => svg`<path class="source-ground" d="M${tick} ${lineY} l-6 8" />`)}
+/** The ground collector: the strip, hatched along its top (the surface); its serpentine is a segment of the brine circuit. */
+function collectorBody(collector: CollectorShape, muted: boolean): SVGTemplateResult {
+  const { x, y, width, height, hatch, serpentine } = collector;
+  const ticks = Array.from({ length: Math.floor((width - 20) / 10) + 1 }, (_, index) => round2(x + 14 + index * 10));
+  return svg`<g class="ground-collector${muted ? ' muted' : ''}" data-source="ground" aria-label=${GROUND_COLLECTOR_NAME}>
+    <title>${GROUND_COLLECTOR_NAME}</title>
+    <rect class="source-outline" x=${x} y=${y} width=${width} height=${height} rx="4" />
+    <path class="source-ground" d="M${x} ${hatch.y + hatch.height} H${round2(x + width)}" />
+    ${ticks.map((tick) => svg`<path class="source-ground" d="M${tick} ${y} l-8 ${hatch.height}" />`)}
+    ${obstacle('ground-hatch', hatch)}
+    ${obstacle('ground-serpentine', serpentine)}
   </g>`;
 }
 
 /**
- * The source for the config: air unit, ground loop or both (hybrid), with the fan turning at `source.fan_speed`. The
- * housing, coil and ground line are muted while the brine circuit is inactive (`brineActive` false), like the pipes.
+ * The source for the config: air unit, ground collector or both (hybrid), with the fan turning at `source.fan_speed`. The
+ * housing, coil and collector are muted while the brine circuit is inactive (`brineActive` false), like the pipes.
  */
 export function renderSource(
   context: DrawContext,
@@ -175,12 +162,11 @@ export function renderSource(
   brineActive: boolean,
   taps?: Taps,
 ): SVGTemplateResult {
-  const { airUnit: unit, groundLineY, scale } = arrangementOf(context);
+  const { airUnit: unit, collector } = arrangementOf(context);
   const air = context.source === 'air' || context.source === 'hybrid';
   const ground = context.source === 'ground' || context.source === 'hybrid';
-  const kind = context.source === 'hybrid' ? 'hybrid' : 'ground';
   return svg`<g class="source" data-source-kind=${context.source}>
-    ${air ? airUnit(unit, readings['source.fan_speed'], !brineActive, taps, scale) : svg``}
-    ${ground ? groundLine(context, groundLineY[kind], !brineActive) : svg``}
+    ${air && unit !== undefined ? airUnit(unit, readings['source.fan_speed'], !brineActive, taps) : svg``}
+    ${ground && collector !== undefined ? collectorBody(collector, !brineActive) : svg``}
   </g>`;
 }

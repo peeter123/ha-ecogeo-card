@@ -7,7 +7,7 @@
 // Positions are viewBox points with an alignment: `start` puts the label's left edge at x, `end` its right edge,
 // `middle` centres it; y is the vertical centre. They sit where the drawing leaves room (checked on the emulator
 // captures): the probe row's values below the discharge line, the compressor's stack inside the refrigerant loop,
-// the source's values under the air unit and beside its ports and the ground loop's legs, the tank's values under the external tank or,
+// the source's Out inside the air unit or the ground collector, the tank's values inside the external tank or,
 // for model C, inside tank 50 above its coil (refine-schematic-drawing D8b). A label of a part that is not drawn is not shown (same rules as
 // geometry.ts `partState`); a drawn label with no value shows a muted dash and keeps its place.
 import { css, html, nothing, type TemplateResult } from 'lit';

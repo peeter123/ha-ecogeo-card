@@ -22,6 +22,14 @@ const LABEL_VARIANTS = [
 const LABEL_WIDTHS = [VERTICAL_BELOW, 800, 1000] as const;
 const LABEL_SCENARIOS = ['heating', 'dhw', 'defrost', 'passive_cooling'] as const;
 
+/** The DHW storages of the band captures (rework-layouts 5.5): the external tank, model C's tank, the unused tank of model B, none. */
+const BAND_STORAGES = [
+  { name: 'external', query: 'dhw=external' },
+  { name: 'internal', query: 'model=C&dhw=internal' },
+  { name: 'unused', query: 'dhw=unused' },
+  { name: 'none', query: 'dhw=none' },
+] as const;
+
 const step = (name: string, query: string, viewport?: CaptureStep['viewport']): CaptureStep =>
   viewport === undefined ? { name, query } : { name, query, viewport };
 
@@ -91,9 +99,22 @@ export const CAPTURES: readonly CaptureStep[] = [
       ),
     ),
   ),
+  // rework-layouts 5.5: the band with every source above every DHW storage, light and dark, at the vertical threshold and 1000 px
+  ...(['air', 'ground', 'hybrid'] as const).flatMap((source) =>
+    BAND_STORAGES.flatMap(({ name, query }) =>
+      (['light', 'dark'] as const).flatMap((theme) =>
+        [VERTICAL_BELOW, 1000].map((width) =>
+          step(
+            `band-${source}-${name}-${theme}-${String(width)}`,
+            `scenario=dhw&source=${source}&${query}&layout=horizontal&width=${String(width)}&theme=${theme}`,
+          ),
+        ),
+      ),
+    ),
+  ),
   // refine-simplified-layout 4.4: the values of the horizontal layout at the vertical threshold, 800 and 1000 px, in the
   // scenarios with the most values (heating, DHW, defrost, passive cooling), for an air unit, model C and, where the
-  // `threshold-*` and `scenario-*` captures do not already show it, a ground loop
+  // `threshold-*` and `scenario-*` captures do not already show it, a ground collector
   ...LABEL_VARIANTS.flatMap(({ name, query }) =>
     LABEL_WIDTHS.flatMap((width) =>
       LABEL_SCENARIOS.filter(() => name !== 'ground' || width === 800).map((scenario) =>

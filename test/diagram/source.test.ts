@@ -7,16 +7,16 @@ import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
 import { states } from '../helpers';
 
-// the coordinates below come from the arrangement (the manual-figure frame's are in test/diagram/simplified.test.ts)
-const horizontal = arrangementFor('horizontal');
-const AIR_PORT_Y = horizontal.airPortY;
-const AIR_UNIT = horizontal.airUnit;
-const CABINET = horizontal.cabinet;
-const GROUND_LINE_Y = horizontal.groundLineY;
-const GROUND_LOOP = horizontal.groundLoop;
-const GROUND_LINE_X = horizontal.groundLineX;
-const portX = (item: number): number =>
-  horizontal.components.find((component) => component.item === item)?.x ?? Number.NaN;
+import { airFaceY, airPortX, collectorPassYs } from '../../src/diagram/geometry';
+import { AIR_UNIT_NAME, GROUND_COLLECTOR_NAME } from '../../src/strings';
+
+// the coordinates below come from the arrangement of the card's band key (the manual-figure frame's are in test/diagram/simplified.test.ts)
+const arrangementOfSource = (source: 'air' | 'ground' | 'hybrid') =>
+  arrangementFor('horizontal', { source, tank: true, emitter: false });
+const need = <T>(value: T | undefined): T => {
+  if (value === undefined) throw new Error('not drawn');
+  return value;
+};
 
 const P = 'demo_ecogeo';
 
@@ -45,76 +45,77 @@ const withFan = (speed: string, extra: readonly (readonly [string, string])[] = 
 });
 
 describe('outer-loop source', () => {
-  test('every source has the pipes from ports 3 and 4 above the DG1 stubs', async () => {
+  test('every source has the pipes from ports 3 and 4 into the join lane', async () => {
     for (const source of ['air', 'ground', 'hybrid'] as const) {
       const card = await mount({ source });
+      const arrangement = arrangementOfSource(source);
+      const { ports, cabinet } = arrangement;
       expect(segments(card), source).toEqual(expect.arrayContaining(['src_out', 'src_in']));
       const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
-      expect(
-        d('src_out').startsWith(`M${String(portX(3))} 130 L${String(portX(3))} ${String(horizontal.run.outY)}`),
-        source,
-      ).toBe(true);
-      expect(d('src_in').endsWith(`L${String(portX(4))} 130`), source).toBe(true);
+      expect(d('src_out').startsWith(`M${String(ports[3])} ${String(cabinet.y)} L${String(ports[3])} `), source).toBe(
+        true,
+      );
+      expect(d('src_in').endsWith(`L${String(ports[4])} ${String(cabinet.y)}`), source).toBe(true);
       card.remove();
     }
   });
 
-  test('air: a housing with a coil and a fan, and no ground loop', async () => {
+  test('air: a housing with a coil and a fan, and no ground collector', async () => {
     const card = await mount({ source: 'air' });
     expect(root(card).querySelector('.air-unit')).not.toBeNull();
-    expect(root(card).querySelector('.ground-loop')).toBeNull();
+    expect(root(card).querySelector('.ground-collector')).toBeNull();
     expect(segments(card)).toEqual(expect.arrayContaining(['src_air_feed', 'src_air_coil', 'src_air_exit']));
     expect(svgTexts(card)).toEqual([]);
     card.remove();
   });
 
-  test('air unit drawing: a slatted housing, a finned coil block crossed by the serpentine, a fan of blades in a ring', async () => {
+  test('Air unit with its value inside: a finned coil block crossed by the serpentine, a fan of blades in a ring, a free strip between them', async () => {
     for (const source of ['air', 'hybrid'] as const) {
       const card = await mount({ source });
-      const unit = root(card).querySelector('.air-unit');
-      // slatted front, and a coil block with at least twelve fins
-      expect(unit?.querySelectorAll('[data-slat]').length, source).toBe(AIR_UNIT.slats.count);
-      const block = unit?.querySelector('[data-coil-block]');
+      const unit = need(arrangementOfSource(source).airUnit);
+      const rendered = root(card).querySelector('.air-unit');
+      // the coil block with at least six horizontal fins, all inside it
+      const block = rendered?.querySelector('[data-coil-block]');
       expect(block, source).not.toBeNull();
-      const fins = [...(unit?.querySelectorAll('.source-fin') ?? [])];
-      expect(fins.length, source).toBe(AIR_UNIT.fins.count);
-      expect(fins.length, source).toBeGreaterThanOrEqual(12);
-      const blockX = Number(block?.getAttribute('x'));
-      const blockRight = blockX + Number(block?.getAttribute('width'));
+      const fins = [...(rendered?.querySelectorAll('.source-fin') ?? [])];
+      expect(fins.length, source).toBe(unit.fins.count);
+      expect(fins.length, source).toBeGreaterThanOrEqual(6);
       for (const fin of fins) {
-        const x = Number(/^M([\d.]+) /.exec(fin.getAttribute('d') ?? '')?.[1]);
-        expect(x).toBeGreaterThan(blockX);
-        expect(x).toBeLessThan(blockRight);
+        const y = Number(/^M[\d.]+ ([\d.]+) /.exec(fin.getAttribute('d') ?? '')?.[1]);
+        expect(y).toBeGreaterThan(unit.coil.y);
+        expect(y).toBeLessThan(unit.coil.y + unit.coil.height);
       }
-      // the serpentine: an even number of passes (at least four) joined by rounded U-bends, drawn after (over) the fins,
-      // entering and leaving on the coil block's right side
+      // the serpentine: an even number of vertical passes (at least four) joined by rounded U-bends, drawn over the fins, entering
+      // and leaving on the coil block's bottom face
       const coilId = source === 'air' ? 'src_air_coil' : 'src_hyb_coil';
       const coil = root(card).querySelector(`path[data-segment="${coilId}"]`);
       const d = coil?.getAttribute('d') ?? '';
       const bends = d.match(/A/g)?.length ?? 0;
-      expect(bends, source).toBe(AIR_UNIT.passes.count * 2 - 2);
-      const passes = bends / 2 + 1;
-      expect(passes % 2, source).toBe(0);
-      expect(passes, source).toBeGreaterThanOrEqual(4);
-      const portX = AIR_UNIT.coil.x + AIR_UNIT.coil.width;
-      const [top, bottom] = [AIR_PORT_Y.top, AIR_PORT_Y.bottom];
-      const [from, to] = source === 'air' ? [bottom, top] : [top, bottom];
-      expect(d.startsWith(`M${String(portX)} ${String(from)}`), source).toBe(true);
-      expect(d.endsWith(`L${String(portX)} ${String(to)}`), source).toBe(true);
+      expect(bends, source).toBe(unit.passes.count * 2 - 2);
+      expect(unit.passes.count % 2, source).toBe(0);
+      expect(unit.passes.count, source).toBeGreaterThanOrEqual(4);
+      const { feed, exit } = airPortX(unit);
+      expect(d.startsWith(`M${String(feed)} ${String(airFaceY(unit))}`), source).toBe(true);
+      expect(d.endsWith(`L${String(exit)} ${String(airFaceY(unit))}`), source).toBe(true);
       expect(
         coil !== null && (fins[0]?.compareDocumentPosition(coil) ?? 0) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
-      // the fan: a ring, a hub and five blades
-      expect(unit?.querySelectorAll('.fan-ring')).toHaveLength(1);
-      expect(unit?.querySelectorAll('.fan-hub')).toHaveLength(1);
-      expect(unit?.querySelectorAll('.fan-rotor .fan-blade')).toHaveLength(5);
+      // the fan: a ring, a hub and five blades, above the free strip, which lies above the coil block
+      expect(rendered?.querySelectorAll('.fan-ring')).toHaveLength(1);
+      expect(rendered?.querySelectorAll('.fan-hub')).toHaveLength(1);
+      expect(rendered?.querySelectorAll('.fan-rotor .fan-blade')).toHaveLength(5);
+      expect(unit.fan.cy + unit.fan.radius).toBeLessThan(unit.strip.y);
+      expect(unit.strip.y + unit.strip.height).toBeLessThan(unit.coil.y);
+      // the tooltips name the housing and the fan
+      expect(rendered?.querySelector(':scope > title')?.textContent, source).toBe(AIR_UNIT_NAME);
       card.remove();
     }
   });
 
-  test('ground: a ground loop, and no air unit or fan', async () => {
+  test('ground: a ground collector, and no air unit or fan', async () => {
     const card = await mount({ source: 'ground' });
-    expect(root(card).querySelector('.ground-loop')).not.toBeNull();
+    expect(root(card).querySelector('.ground-collector')).not.toBeNull();
+    expect(root(card).querySelector('.ground-collector > title')?.textContent).toBe(GROUND_COLLECTOR_NAME);
     expect(root(card).querySelector('.air-unit')).toBeNull();
     expect(fan(card)).toBeNull();
     expect(segments(card)).toEqual(
@@ -125,10 +126,10 @@ describe('outer-loop source', () => {
     card.remove();
   });
 
-  test('hybrid: the air unit and the ground loop on one brine loop', async () => {
+  test('hybrid: the air unit and the ground collector side by side on one brine loop', async () => {
     const card = await mount({ source: 'hybrid' });
     expect(root(card).querySelector('.air-unit')).not.toBeNull();
-    expect(root(card).querySelector('.ground-loop')).not.toBeNull();
+    expect(root(card).querySelector('.ground-collector')).not.toBeNull();
     expect(svgTexts(card)).toEqual([]);
     expect(segments(card)).toEqual(
       expect.arrayContaining([
@@ -145,44 +146,28 @@ describe('outer-loop source', () => {
     card.remove();
   });
 
-  test('Source aligned to the cabinet: the housing top (air, hybrid) and the ground line (ground) sit on the cabinet top line', async () => {
-    for (const source of ['air', 'ground', 'hybrid'] as const) {
-      const card = await mount({ source });
-      const housing = root(card).querySelector('.air-unit .source-outline');
-      const line = root(card).querySelector('.ground-loop path.source-ground');
-      if (source === 'ground') {
-        expect(housing).toBeNull();
-        expect(line?.getAttribute('d')).toBe(
-          `M${String(GROUND_LINE_X.start)} ${String(CABINET.y)} H${String(GROUND_LINE_X.end)}`,
-        );
-      } else {
-        expect(Number(housing?.getAttribute('y')), source).toBe(CABINET.y);
-        if (source === 'hybrid') {
-          // the ground loop moves down with the air unit: its line is under the housing
-          expect(line?.getAttribute('d')).toBe(
-            `M${String(GROUND_LINE_X.start)} ${String(GROUND_LINE_Y.hybrid)} H${String(GROUND_LINE_X.end)}`,
-          );
-          expect(GROUND_LINE_Y.hybrid).toBeGreaterThan(CABINET.y + AIR_UNIT.height);
-        }
-      }
-      card.remove();
-    }
-  });
-
-  test('Single loop: the ground loop is one U with a half-circle bottom, its two legs on the ground line', async () => {
+  test('Ground collector: the strip is hatched along its top, the serpentine has four horizontal passes, both ends on the bottom face', async () => {
     for (const source of ['ground', 'hybrid'] as const) {
       const card = await mount({ source });
+      const arrangement = arrangementOfSource(source);
+      const collector = need(arrangement.collector);
       const kind = source === 'ground' ? 'gnd' : 'hyb';
-      const lineY = GROUND_LINE_Y[source];
-      const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
-      const r = (GROUND_LOOP.downX - GROUND_LOOP.upX) / 2;
-      // one arc per half: together the half circle, whose radius is half the legs' spacing
-      expect(d(`src_${kind}_down`).match(/A/g), source).toHaveLength(1);
-      expect(d(`src_${kind}_up`).match(/A/g), source).toHaveLength(1);
-      expect(d(`src_${kind}_down`), source).toContain(`A${String(r)} ${String(r)} `);
-      expect(d(`src_${kind}_down`).startsWith(`M${String(GROUND_LOOP.downX)} ${String(lineY)}`), source).toBe(true);
-      expect(d(`src_${kind}_up`).endsWith(`L${String(GROUND_LOOP.upX)} ${String(lineY)}`), source).toBe(true);
-      // the down half ends in a round cap, which closes the seam between the two halves
+      const body = root(card).querySelector('.ground-collector');
+      // hatching: diagonal ticks along the top
+      expect(body?.querySelectorAll('path.source-ground').length, source).toBeGreaterThan(8);
+      expect(body?.querySelector('[data-obstacle="ground-hatch"]'), source).not.toBeNull();
+      expect(body?.querySelector('[data-obstacle="ground-serpentine"]'), source).not.toBeNull();
+      // the passes: the horizontal pieces of the two halves, at the passes' ys
+      const horizontal = ['down', 'up'].flatMap((half) => {
+        const points = need(arrangement.segments.find((entry) => entry.id === `src_${kind}_${half}`)).points;
+        return points.slice(1).flatMap((end, index) => (points[index]?.[1] === end[1] ? [end[1]] : []));
+      });
+      expect(horizontal.length, source).toBeGreaterThanOrEqual(4);
+      expect(
+        [...new Set(horizontal)].sort((x, y) => x - y),
+        source,
+      ).toEqual(collectorPassYs(collector));
+      // the down half's end is rounded, which closes the seam between the two halves
       expect(
         root(card).querySelector(`[data-segment="src_${kind}_down"]`)?.getAttribute('stroke-linecap'),
         source,
@@ -191,12 +176,6 @@ describe('outer-loop source', () => {
         root(card).querySelector(`[data-segment="src_${kind}_up"]`)?.getAttribute('stroke-linecap'),
         source,
       ).toBeNull();
-      // no collector rows any more: only the two halves are drawn for the loop
-      expect(
-        [...root(card).querySelectorAll('[data-segment]')].filter((e) =>
-          (e.getAttribute('data-segment') ?? '').includes('loop'),
-        ),
-      ).toHaveLength(0);
       card.remove();
     }
   });

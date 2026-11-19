@@ -14,7 +14,7 @@ import { SAMPLE_STATES } from '../config/sample';
 import { cabinetStyles, renderCabinet } from '../diagram/cabinet';
 import type { Taps } from '../diagram/component-info';
 import { dhwStyles, renderDhw } from '../diagram/dhw';
-import { arrangementFor, type DrawContext, type ShownLayout } from '../diagram/geometry';
+import { arrangementFor, bandKeyOf, type DrawContext, type ShownLayout } from '../diagram/geometry';
 import { footerItems, labelsFor, labelStyles, renderFooterItems, renderLabels } from '../diagram/labels';
 import { coilMutedColor, MUTED_COLOR } from '../diagram/colors';
 import { EDITOR_TAG } from '../editor/ecogeo-card-editor';
@@ -276,7 +276,7 @@ export class EcogeoCard extends LitElement {
     this.renderedDrawing = fitted;
     const config = this.resolved;
     if (config === undefined) return html`<ha-card data-layout=${layout}><div class="diagram"></div></ha-card>`;
-    const arrangement = arrangementFor(layout);
+    const arrangement = arrangementFor(layout, bandKeyOf(config));
     const { viewBox } = arrangement;
     const resolved: ResolvedConfig & Pick<DrawContext, 'arrangement'> = { ...config, arrangement };
     const { readings, absent, offline } = this.readings(resolved);

@@ -14,7 +14,9 @@ import {
   gapsIn,
   helixExtent,
   helixHalves,
+  HORIZONTAL_MAP_Y,
   isSegmentActive,
+  mapAxis,
   onInternalTank,
   onPolyline,
   overlap,
@@ -30,15 +32,15 @@ import {
 } from '../../src/diagram/geometry';
 
 const arrangement = arrangementFor('horizontal');
-const AIR_PORT_Y = arrangement.airPortY;
-const AIR_UNIT_WALL_X = arrangement.airUnitWallX;
 const CABINET = arrangement.cabinet;
-const GROUND_LINE_Y = arrangement.groundLineY;
-const GROUND_LOOP = arrangement.groundLoop;
 const COMPONENTS = arrangement.components;
-const AIR_UNIT = arrangement.airUnit;
 const CROSSINGS = arrangement.crossings;
-const EXTERNAL_TANK = arrangement.externalTank;
+const defined = <T>(value: T | undefined): T => {
+  if (value === undefined) throw new Error('not in this arrangement');
+  return value;
+};
+/** The widest band's external tank (the default arrangement draws every part of the band). */
+const EXTERNAL_TANK = defined(arrangement.externalTank);
 const INTERNAL_TANK = arrangement.internalTank;
 const SEGMENTS = arrangement.segments;
 const viewBox = arrangement.viewBox;
@@ -102,10 +104,10 @@ const enters = (points: readonly Point[], rect: { x: number; y: number; width: n
 
 describe('geometry data', () => {
   test('the viewBox and the cabinet fit the zones of the arrangement (refine-simplified-layout D2)', () => {
-    expect(viewBox).toEqual({ width: 1000, height: 545 });
-    expect(CABINET.x).toBe(200);
-    expect(CABINET.x + CABINET.width).toBe(820);
-    expect(CABINET.y).toBe(130);
+    expect(viewBox).toEqual({ width: 1000, height: 647 });
+    expect(CABINET.x).toBe(10);
+    expect(CABINET.x + CABINET.width).toBe(990);
+    expect(CABINET.y).toBe(232);
   });
 
   test('ports 1 to 6 sit on the top edge in the manual order', () => {
@@ -203,7 +205,7 @@ describe('geometry data', () => {
   test('gapsIn: no gap when the pipe on top is not drawn', () => {
     const idsOf = (context: DrawContext): Set<string> => new Set(ids(context));
     const [x, y0, y1] = [portX(2), CABINET.y, segmentPoints('p2_in').at(-1)?.[1] ?? 0];
-    expect(gapsIn(arrangement, 'p2_in', idsOf(full('external')))).toContainEqual([x, 172]);
+    expect(gapsIn(arrangement, 'p2_in', idsOf(full('external')))).toContainEqual([x, mapAxis(HORIZONTAL_MAP_Y, 172)]);
     expect(gapsIn(arrangement, 'p2_in', idsOf(full('none')))).toEqual([]);
     expect(pathData(segmentPoints('p2_in'), gapsIn(arrangement, 'p2_in', idsOf(full('none'))))).toBe(
       `M${String(x)} ${String(y0)} L${String(x)} ${String(y1)}`,
@@ -293,11 +295,11 @@ describe('integrity in every configuration', () => {
     }
     for (const item of [52, 53]) expect(drawnItems.includes(item), `item ${String(item)}`).toBe(false);
 
-    // the source and external DHW pipes stay above y 100 outside the cabinet (the circuit labels' glyphs reach about
-    // y 104)
+    // the band's pipes lie between the band's top and the cabinet's top edge (the join lane and the bodies)
     for (const segment of segments.filter((s) => s.id.startsWith('src_') || s.id.startsWith('dhw_ext_'))) {
       for (const point of segment.points) {
-        if (point[1] < arrangementOf(context).cabinet.y) expect(point[1], segment.id).toBeLessThanOrEqual(100);
+        expect(point[1], segment.id).toBeLessThanOrEqual(arrangementOf(context).cabinet.y);
+        expect(point[1], segment.id).toBeGreaterThanOrEqual(arrangementOf(context).band.top);
       }
     }
 
@@ -309,14 +311,14 @@ describe('integrity in every configuration', () => {
     if (drawnStorage(context) === 'internal')
       expect(entering(arrangementOf(context).internalTank).sort()).toEqual(['dhw_ret_b', 'dhw_sup_b']);
     if (drawnStorage(context) === 'external') {
-      expect(entering(arrangementOf(context).externalTank).sort()).toEqual([
+      expect(entering(defined(arrangementOf(context).externalTank)).sort()).toEqual([
         'dhw_ext_coil',
         'dhw_ext_in',
         'dhw_ext_out',
       ]);
     }
     if (context.source !== 'ground') {
-      expect(entering(arrangementOf(context).airUnit).sort()).toEqual(
+      expect(entering(defined(arrangementOf(context).airUnit)).sort()).toEqual(
         context.source === 'air'
           ? ['src_air_coil', 'src_air_exit', 'src_air_feed']
           : ['src_hyb_coil', 'src_hyb_feed', 'src_hyb_link'],
@@ -465,10 +467,10 @@ describe('feature states', () => {
   test('the source pipes leave from ports 3 and 4 and the DHW pipes from ports 5 and 6', () => {
     const start = (id: string): Point | undefined => segmentPoints(id)[0];
     const end = (id: string): Point | undefined => segmentPoints(id).at(-1);
-    expect(start('src_out')).toEqual([portX(3), 130]);
-    expect(end('src_in')).toEqual([portX(4), 130]);
-    expect(start('dhw_ext_in')).toEqual([portX(5), 130]);
-    expect(end('dhw_ext_out')).toEqual([portX(6), 130]);
+    expect(start('src_out')).toEqual([portX(3), CABINET.y]);
+    expect(end('src_in')).toEqual([portX(4), CABINET.y]);
+    expect(start('dhw_ext_in')).toEqual([portX(5), CABINET.y]);
+    expect(end('dhw_ext_out')).toEqual([portX(6), CABINET.y]);
   });
 
   test('the source parts follow the source option', () => {
@@ -540,8 +542,9 @@ describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
     if (coil === undefined || shape === undefined) throw new Error('no helix');
     expect(shape.turns).toBeGreaterThanOrEqual(4);
     expect(coil.points).toHaveLength(2);
-    expect(coil.points[0]).toEqual([shape.cx + shape.rx, shape.top]);
-    expect(coil.points[1]).toEqual([shape.cx - shape.rx, shape.bottom]);
+    expect(shape.mirror).toBe(true);
+    expect(coil.points[0]).toEqual([shape.cx - shape.rx, shape.top]);
+    expect(coil.points[1]).toEqual([shape.cx + shape.rx, shape.bottom]);
     expect(segmentPoints('dhw_ext_in').at(-1)).toEqual(coil.points[0]);
     expect(segmentPoints('dhw_ext_out')[0]).toEqual(coil.points[1]);
     // the coil sits in the lower part of the tank, inside its walls
@@ -554,8 +557,8 @@ describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
     const halves = helixHalves(shape);
     expect(halves).toHaveLength(Math.round(shape.turns * 2));
     expect(halves.map((half) => half.front)).toEqual(halves.map((_, index) => index % 2 === 0));
-    expect(halves[0]?.d.startsWith(`M${String(shape.cx + shape.rx)} ${String(shape.top)} `)).toBe(true);
-    expect(halves.at(-1)?.d.endsWith(`${String(shape.cx - shape.rx)} ${String(shape.bottom)}`)).toBe(true);
+    expect(halves[0]?.d.startsWith(`M${String(shape.cx - shape.rx)} ${String(shape.top)} `)).toBe(true);
+    expect(halves.at(-1)?.d.endsWith(`${String(shape.cx + shape.rx)} ${String(shape.bottom)}`)).toBe(true);
   });
 
   test('a helix is checked as the rectangle of its extent, other segments as their points', () => {
@@ -567,8 +570,8 @@ describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
     // a pipe that cuts through the coil would be found
     expect(
       crossingPoints(ring, [
-        [890, 150],
-        [890, 250],
+        [shape.cx, shape.top - 20],
+        [shape.cx, shape.bottom + 20],
       ]).length,
     ).toBeGreaterThan(0);
   });
@@ -644,173 +647,6 @@ describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
       ),
     ).toBe('M0 0 L15 0 A5 5 0 0 1 20 5 L20 5 A5 5 0 0 1 15 10 L0 10');
   });
-
-  test('src_air_coil and src_hyb_coil have four passes, rounded bends and their fins lie inside the coil block', () => {
-    const { coil: block, fins, passes } = AIR_UNIT;
-    for (const id of ['src_air_coil', 'src_hyb_coil']) {
-      const coil = SEGMENTS.find((segment) => segment.id === id);
-      expect(coil?.bend, id).toBe(passes.step / 2);
-      // the horizontal pieces are the passes: an even number, at least four, on the lines of AIR_UNIT.passes
-      const points = coil?.points ?? [];
-      const horizontal = points.slice(1).flatMap((end, index) => {
-        const start = points[index];
-        return start?.[1] === end[1] ? [end[1]] : [];
-      });
-      expect(horizontal.length % 2, id).toBe(0);
-      expect(horizontal.length, id).toBeGreaterThanOrEqual(4);
-      expect(horizontal.length, id).toBe(passes.count);
-      expect(
-        [...horizontal].sort((a, b) => a - b),
-        id,
-      ).toEqual(Array.from({ length: passes.count }, (_, index) => passes.y0 + index * passes.step));
-      // the first and the last point are the ports, on the coil block's right side; the bends stay inside the block
-      for (const end of [points[0], points.at(-1)]) expect(end?.[0], id).toBe(block.x + block.width);
-      for (const point of points.slice(1, -1)) {
-        expect(point[0], id).toBeGreaterThan(block.x);
-        expect(point[0], id).toBeLessThan(block.x + block.width);
-      }
-      for (const point of points) {
-        expect(point[1], id).toBeGreaterThan(block.y);
-        expect(point[1], id).toBeLessThan(block.y + block.height);
-      }
-    }
-    expect(fins.count).toBeGreaterThanOrEqual(12);
-    const lastFin = fins.x + (fins.count - 1) * fins.step;
-    expect(fins.x).toBeGreaterThan(block.x);
-    expect(lastFin).toBeLessThan(block.x + block.width);
-    expect(fins.y0).toBeGreaterThan(block.y);
-    expect(fins.y1).toBeLessThan(block.y + block.height);
-  });
-});
-
-describe('outer-loop source geometry (refine-schematic-drawing D11-D13)', () => {
-  const first = (id: string): Point => {
-    const point = segmentPoints(id)[0];
-    if (point === undefined) throw new Error(id);
-    return point;
-  };
-  const last = (id: string): Point => {
-    const point = segmentPoints(id).at(-1);
-    if (point === undefined) throw new Error(id);
-    return point;
-  };
-  const role = (id: string): RolePath | undefined => SEGMENTS.find((segment) => segment.id === id)?.temperatureRole;
-
-  test('Source aligned to the cabinet: the housing top and the ground line are on the cabinet top, the hybrid loop is below the unit', () => {
-    expect(AIR_UNIT.y).toBe(CABINET.y);
-    expect(GROUND_LINE_Y.ground).toBe(CABINET.y);
-    // the ground loop's pipes start on the line; in the hybrid it is under the air unit's housing
-    expect(first('src_gnd_down')[1]).toBe(GROUND_LINE_Y.ground);
-    expect(last('src_gnd_up')[1]).toBe(GROUND_LINE_Y.ground);
-    expect(GROUND_LINE_Y.hybrid).toBeGreaterThan(AIR_UNIT.y + AIR_UNIT.height);
-    expect(first('src_hyb_down')[1]).toBe(GROUND_LINE_Y.hybrid);
-    expect(last('src_hyb_up')[1]).toBe(GROUND_LINE_Y.hybrid);
-    // everything stays inside the drawing
-    expect(GROUND_LINE_Y.hybrid + GROUND_LOOP.depth).toBeLessThan(viewBox.height);
-  });
-
-  test('Single loop: one leg down, a half circle, one leg up, both at the ground line, with the roles of the legs', () => {
-    const { downX, upX, depth } = GROUND_LOOP;
-    const spacing = downX - upX;
-    expect(spacing).toBeGreaterThan(0);
-    const arc = (id: string): string => {
-      const segment = SEGMENTS.find((candidate) => candidate.id === id);
-      return roundedPathData(segment?.points ?? [], segment?.bend ?? 0);
-    };
-    const [r, middle] = [spacing / 2, (downX + upX) / 2];
-    for (const [kind, lineY, down, up, downRole] of [
-      ['ground', GROUND_LINE_Y.ground, 'src_gnd_down', 'src_gnd_up', 'brine.outlet_temperature'],
-      ['hybrid', GROUND_LINE_Y.hybrid, 'src_hyb_down', 'src_hyb_up', 'source.air_unit_outlet_temperature'],
-    ] as const) {
-      const bottom = lineY + depth;
-      // the down leg and the first quarter circle, then the second quarter circle and the up leg, meeting in the
-      // middle of the bottom
-      expect(segmentPoints(down), kind).toEqual([
-        [downX, lineY],
-        [downX, bottom],
-        [middle, bottom],
-      ]);
-      expect(segmentPoints(up), kind).toEqual([
-        [middle, bottom],
-        [upX, bottom],
-        [upX, lineY],
-      ]);
-      // the bend is half the legs' spacing: a half circle in all
-      for (const id of [down, up]) expect(SEGMENTS.find((segment) => segment.id === id)?.bend, id).toBe(r);
-      expect(arc(down), kind).toBe(
-        `M${String(downX)} ${String(lineY)} L${String(downX)} ${String(bottom - r)} A${String(r)} ${String(r)} 0 0 1 ${String(middle)} ${String(bottom)} L${String(middle)} ${String(bottom)}`,
-      );
-      expect(arc(up), kind).toContain(`A${String(r)} ${String(r)} 0 0 1 ${String(upX)} ${String(bottom - r)}`);
-      // the down leg carries the heat pump's brine outlet (the air unit's outlet in the hybrid), the up leg its brine inlet
-      expect(role(down), kind).toBe(downRole);
-      expect(role(up), kind).toBe('brine.inlet_temperature');
-    }
-    // the loop is one U: the feed ends on the down leg, the exit starts on the up leg
-    expect(last('src_gnd_feed')).toEqual(first('src_gnd_down'));
-    expect(last('src_gnd_up')).toEqual(first('src_gnd_exit'));
-    expect(last('src_hyb_link')).toEqual(first('src_hyb_down'));
-    expect(last('src_hyb_up')).toEqual(first('src_hyb_exit'));
-  });
-
-  test('no corner of the source pipes is a boundary between two segments (it would show a square notch)', () => {
-    const source = SEGMENTS.filter((segment) => segment.id.startsWith('src_'));
-    const direction = (from: Point, to: Point): string =>
-      `${String(Math.sign(to[0] - from[0]))},${String(Math.sign(to[1] - from[1]))}`;
-    let joints = 0;
-    for (const first of source) {
-      for (const second of source) {
-        const [end, before] = [first.points.at(-1), first.points.at(-2)];
-        const [start, after] = [second.points[0], second.points[1]];
-        if (first === second || end === undefined || before === undefined || start === undefined || after === undefined)
-          continue;
-        if (end[0] !== start[0] || end[1] !== start[1]) continue;
-        // segments of different sources are never drawn together
-        if (
-          first.source !== undefined &&
-          second.source !== undefined &&
-          !first.source.some((kind) => second.source?.includes(kind))
-        )
-          continue;
-        joints += 1;
-        expect(direction(before, end), `${first.id} to ${second.id}`).toBe(direction(start, after));
-      }
-    }
-    expect(joints).toBeGreaterThan(10);
-  });
-
-  test('Air unit ports: both pipes meet the coil block and leave the housing on its right wall, without a hop', () => {
-    const wall = AIR_UNIT_WALL_X;
-    const portX = AIR_UNIT.coil.x + AIR_UNIT.coil.width;
-    expect(portX).toBeLessThan(wall);
-    // air: the feed enters the bottom pass and the exit leaves the top pass
-    expect(last('src_air_feed')).toEqual([portX, AIR_PORT_Y.bottom]);
-    expect(first('src_air_coil')).toEqual([portX, AIR_PORT_Y.bottom]);
-    expect(last('src_air_coil')).toEqual([portX, AIR_PORT_Y.top]);
-    expect(first('src_air_exit')).toEqual([portX, AIR_PORT_Y.top]);
-    // hybrid: entered at the top pass, the link to the ground loop leaves from the outlet port, at the bottom
-    expect(last('src_hyb_feed')).toEqual([portX, AIR_PORT_Y.top]);
-    expect(first('src_hyb_coil')).toEqual([portX, AIR_PORT_Y.top]);
-    expect(last('src_hyb_coil')).toEqual([portX, AIR_PORT_Y.bottom]);
-    expect(first('src_hyb_link')).toEqual([portX, AIR_PORT_Y.bottom]);
-    // every pipe at the housing crosses its right wall and stays right of the coil block
-    for (const id of ['src_air_feed', 'src_air_exit', 'src_hyb_feed', 'src_hyb_link']) {
-      const points = segmentPoints(id);
-      const crossesWall = points.slice(1).some((end, index) => {
-        const start = points[index];
-        return start?.[1] === end[1] && Math.min(start[0], end[0]) < wall && Math.max(start[0], end[0]) > wall;
-      });
-      expect(crossesWall, id).toBe(true);
-      expect(Math.min(...points.map((point) => point[0])), id).toBeGreaterThanOrEqual(portX);
-    }
-    // no pipe of the source needs a hop
-    expect(
-      CROSSINGS.filter((crossing) => crossing.over.startsWith('src_') || crossing.under.startsWith('src_')),
-    ).toEqual([]);
-    // air: the exit rises left of the feed's column (that is why it leaves the top pass)
-    expect(last('src_air_exit')[0]).toBeLessThan(first('src_air_feed')[0]);
-    expect(role('src_air_exit')).toBe('source.air_unit_outlet_temperature');
-    expect(role('src_air_feed')).toBe('brine.outlet_temperature');
-  });
 });
 
 describe('exchanger sides (refine-schematic-drawing D4)', () => {
@@ -873,14 +709,25 @@ describe('arrangementFor (rework-layouts D2)', () => {
     expect(arrangementFor('vertical')).toBe(horizontal);
   });
 
+  test('a band key builds its own arrangement, once', () => {
+    const key = { source: 'air', tank: false, emitter: false } as const;
+    expect(arrangementFor('horizontal', key)).toBe(arrangementFor('horizontal', { ...key }));
+    expect(arrangementFor('horizontal', key)).not.toBe(arrangementFor('horizontal'));
+    expect(arrangementFor('horizontal', key).cabinet).toEqual(arrangementFor('horizontal').cabinet);
+  });
+
   test('it is a pure function: the same input gives the same value', () => {
     for (const layout of ['horizontal', 'vertical'] as const) {
       expect(arrangementFor(layout)).toBe(arrangementFor(layout));
     }
   });
 
-  test('a draw context without an arrangement gets the horizontal one', () => {
+  test('a draw context without an arrangement gets the horizontal one for its band key', () => {
     expect(arrangementOf({})).toBe(arrangementFor('horizontal'));
+    const context = { model: 'B', dhw: 'none', source: 'ground' } as const;
+    expect(arrangementOf(context)).toBe(
+      arrangementFor('horizontal', { source: 'ground', tank: false, emitter: false }),
+    );
   });
 
   test('a draw context with an arrangement keeps it', () => {
