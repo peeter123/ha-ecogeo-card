@@ -36,17 +36,10 @@ export const HTR_FLOW_SECONDS = 3;
 export const TAP_WATER_SEGMENT_IDS: readonly string[] = ['tap_47', 'tap_48', 'tap_49'];
 
 /**
- * The production legs from valve 27 to condenser 8: the pipe from valve 27 through pump 15 to the condenser, with the
- * taps on pump 15's suction and the drain after it (the same water). In passive cooling and defrost the compressor is
+ * The production legs from valve 27 to condenser 8: the pipe from valve 27 through pump 15 to the condenser. In passive cooling and defrost the compressor is
  * stopped, so the condenser does not change the water temperature and the legs take the outlet temperature (add-schematic-card D7).
  */
-export const PRODUCTION_LEGS_27_TO_8: readonly string[] = [
-  'prod_27_15',
-  'prod_15_8',
-  'prod_tap_a',
-  'prod_tap_b',
-  'prod_drain',
-];
+export const PRODUCTION_LEGS_27_TO_8: readonly string[] = ['prod_27_15', 'prod_15_8'];
 
 /** The dash period for a speed in %; undefined (still) at 0 % or without a value. */
 export function flowDuration(speed: number | undefined): number | undefined {

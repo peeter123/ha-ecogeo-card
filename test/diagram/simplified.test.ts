@@ -7,7 +7,6 @@ import { HORIZONTAL_PLACES } from '../../src/diagram/label-places';
 import type { FeatureState, Features } from '../../src/config/variants';
 import {
   MAX_CROSSINGS,
-  SIMPLIFIED_EXCEPTIONS,
   SIMPLIFIED_MAP_X,
   SIMPLIFIED_MAP_Y,
   SIMPLIFIED_ZONE_SCALE,
@@ -186,8 +185,7 @@ describe('arrangementFor: the simplified arrangement', () => {
       expect(a.length).toBe(b.length);
       const relative = (ports: Point[]): Point[] =>
         ports.map(([x, y]) => [x - (ports[0]?.[0] ?? 0), y - (ports[0]?.[1] ?? 0)]);
-      // item 38 is the named exception: it is turned
-      if (part.item !== 38) expect(relative(a), `item ${String(part.item)}`).toEqual(relative(b));
+      expect(relative(a), `item ${String(part.item)}`).toEqual(relative(b));
     }
   });
 
@@ -204,28 +202,18 @@ describe('arrangementFor: the simplified arrangement', () => {
     }
   });
 
-  test('the exceptions to the maps are named with a reason', () => {
-    expect(Object.keys(SIMPLIFIED_EXCEPTIONS).sort()).toEqual([
-      'component 38',
-      'label production_pressure',
-      'segment prod_tap_a',
-    ]);
-    for (const reason of Object.values(SIMPLIFIED_EXCEPTIONS)) expect(reason.length).toBeGreaterThan(10);
-  });
-
-  test("every cabinet point is the frame's point under the maps, except the named exceptions", () => {
+  test("every cabinet point is the frame's point under the maps", () => {
     const fx = (x: number): number => mapAxis(SIMPLIFIED_MAP_X, x);
     const fy = (y: number): number => mapAxis(SIMPLIFIED_MAP_Y, y);
     const inCabinet = (x: number): boolean =>
       x >= frame.zones.cabinet.x && x <= frame.zones.cabinet.x + frame.zones.cabinet.width;
     for (const part of simplified.components) {
-      if (part.item === 50 || part.item === 51 || part.item === 38) continue;
+      if (part.item === 50 || part.item === 51) continue;
       const twin = frame.components.find((candidate) => candidate.item === part.item && candidate.kind === part.kind);
       expect(twin, `item ${String(part.item)}`).toBeDefined();
       expect([part.x, part.y], `item ${String(part.item)}`).toEqual([fx(twin?.x ?? NaN), fy(twin?.y ?? NaN)]);
     }
     for (const segment of simplified.segments) {
-      if (segment.id === 'prod_tap_a') continue;
       const twin = frame.segments.find((candidate) => candidate.id === segment.id);
       expect(twin, segment.id).toBeDefined();
       if (segment.id.startsWith('src_') || segment.id.startsWith('dhw_ext_')) {
@@ -530,22 +518,93 @@ describe('the invariants of the full level on the simplified arrangement', () =>
     expect(bottom - lowest).toBeLessThanOrEqual(40);
   });
 
-  test('Pressure 38 inside the cabinet: the transducer and its stub, on the production return side', () => {
-    const { cabinet } = simplified;
-    const context = { ...VARIANT_4 };
-    const part = drawnComponents(context).find((entry) => entry.part.item === 38)?.part;
-    if (part === undefined) throw new Error('no transducer 38');
-    const box = boxOf(part);
-    expect(box.x0).toBeGreaterThan(cabinet.x);
-    expect(box.x1).toBeLessThan(cabinet.x + cabinet.width);
-    expect(box.y1).toBeLessThan(cabinet.y + cabinet.height);
-    // the production return side: the left half, with the trunk (pump 15's suction)
-    expect(part.x).toBeLessThan(cabinet.x + cabinet.width / 2);
-    for (const point of pointsOf(context, 'prod_tap_a')) {
-      expect(point[1]).toBeLessThan(cabinet.y + cabinet.height);
-      expect(point[0]).toBeLessThan(cabinet.x + cabinet.width / 2);
+  // rework-layouts D6: the transducers on their lines and the probe pairs
+  const PAIRS: readonly { name: string; items: readonly [number, number]; gap: number }[] = [
+    { name: 'production return', items: [34, 38], gap: 28 },
+    { name: 'brine inlet', items: [32, 37], gap: 28 },
+    { name: 'discharge', items: [30, 36], gap: 22 },
+    { name: 'suction', items: [29, 35], gap: 22 },
+  ];
+  const partOf = (context: DrawContext, item: number): Component => {
+    const part = drawnComponents(context).find((entry) => entry.part.item === item)?.part;
+    if (part === undefined) throw new Error(`no part ${String(item)}`);
+    return part;
+  };
+
+  test.each(PAIRS)('Transducers and pairs: $name items share one pipe with no part between them', ({ items, gap }) => {
+    for (const context of CONTEXTS) {
+      const [one, two] = items.map((item) => partOf(context, item));
+      if (one === undefined || two === undefined) throw new Error('no pair');
+      const [portOne, portTwo] = [portsOf(one)[0], portsOf(two)[0]];
+      if (portOne === undefined || portTwo === undefined) throw new Error('no ports');
+      // both stems end on the same drawn pipe: no stub leads to either of them
+      const shared = drawnSegments(context).filter(
+        (entry) => onPolyline(portOne, entry.part.points) && onPolyline(portTwo, entry.part.points),
+      );
+      expect(shared.length, `${name(context)} ${String(items)}`).toBeGreaterThan(0);
+      expect(shared.every((entry) => entry.part.stub !== true)).toBe(true);
+      // the two bodies are the frame's distance apart, along the line, and nothing else is drawn between them
+      const apartBy = Math.hypot(one.x - two.x, one.y - two.y);
+      expect(apartBy).toBeGreaterThanOrEqual(gap);
+      expect(apartBy).toBeLessThanOrEqual(gap + 10);
+      const between: Box = {
+        x0: Math.min(one.x, two.x),
+        y0: Math.min(one.y, two.y),
+        x1: Math.max(one.x, two.x),
+        y1: Math.max(one.y, two.y),
+      };
+      for (const { part } of drawnComponents(context)) {
+        if (part.item === one.item || part.item === two.item) continue;
+        const box = boxOf(part);
+        const meets = !(box.x1 <= between.x0 || between.x1 <= box.x0 || box.y1 < between.y0 || between.y1 < box.y0);
+        expect(meets, `item ${String(part.item)} between ${String(items)}`).toBe(false);
+      }
     }
-    // its stem is on the stub's end
-    expect(portsOf(part)[0]).toEqual(last(context, 'prod_tap_a'));
+  });
+
+  test('Transducers 38 and 37 sit directly under probes 34 and 32, on their risers', () => {
+    for (const [under, over] of [
+      [38, 34],
+      [37, 32],
+    ] as const) {
+      const [lower, upper] = [partOf(VARIANT_4, under), partOf(VARIANT_4, over)];
+      expect(lower.x, String(under)).toBe(upper.x);
+      expect(lower.rotation).toBe(upper.rotation);
+      expect(lower.y).toBeGreaterThan(upper.y);
+      expect(lower.y - upper.y).toBeLessThan(40);
+    }
+    expect(drawnSegments(VARIANT_4).map((entry) => entry.part.id)).not.toContain('prod_tap_a');
+    expect(drawnSegments(VARIANT_4).map((entry) => entry.part.id)).not.toContain('brine_tap_a');
+  });
+
+  test('Discharge pair: transducer 36 is 22 units from probe 30, like the suction pair, and the frame has it at x 452', () => {
+    const [probe, transducer] = [30, 36].map((item) => frame.components.find((part) => part.item === item));
+    expect(transducer?.x).toBe(452);
+    expect((transducer?.x ?? 0) - (probe?.x ?? 0)).toBe(22);
+    const [suctionProbe, suctionTransducer] = [29, 35].map((item) =>
+      frame.components.find((part) => part.item === item),
+    );
+    expect((suctionTransducer?.x ?? 0) - (suctionProbe?.x ?? 0)).toBe(22);
+  });
+
+  test('Probe pair values: each pair is one two-row block, the temperature over the pressure, under the pair', () => {
+    for (const [pair, temperature, pressure] of [
+      [30, 'discharge_temperature', 'discharge_pressure'],
+      [29, 'suction_temperature', 'suction_pressure'],
+    ] as const) {
+      const top = simplified.labels.specs.find((spec) => spec.id === temperature);
+      const bottom = simplified.labels.specs.find((spec) => spec.id === pressure);
+      if (top === undefined || bottom === undefined) throw new Error('no labels');
+      expect(bottom.align, String(pair)).toBe(top.align);
+      expect(bottom.x, String(pair)).toBe(top.x);
+      expect(bottom.y - top.y, String(pair)).toBeGreaterThanOrEqual(12);
+      expect(bottom.y - top.y, String(pair)).toBeLessThanOrEqual(18);
+      expect(top.y, String(pair)).toBeGreaterThan(partOf(VARIANT_4, pair).y);
+      // the block is under or next to its pair: its anchor lies within the pair's span, padded by 30 units
+      const pairItems = pair === 30 ? [30, 36] : [29, 35];
+      const xs = pairItems.map((item) => partOf(VARIANT_4, item).x);
+      expect(top.x, String(pair)).toBeGreaterThanOrEqual(Math.min(...xs) - 30);
+      expect(top.x, String(pair)).toBeLessThanOrEqual(Math.max(...xs) + 30);
+    }
   });
 });

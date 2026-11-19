@@ -273,6 +273,10 @@ const homes = {};
 let loadedBodies;
 /** @type {readonly (readonly [string, string])[] | undefined} */
 let outInPairs;
+/** @type {readonly (readonly [string, string])[] | undefined} */
+let blockPairs;
+/** @type {number | undefined} */
+let rowGap;
 /** @type {((out: object, inn: object) => boolean) | undefined} */
 let loadedInOrder;
 let cases = 0;
@@ -288,6 +292,8 @@ try {
   const namings = /** @type {readonly string[]} */ (foreign['NAMINGS']);
   loadedBodies = overlaps['BODY_LABELS'];
   outInPairs = overlaps['OUT_IN_PAIRS'];
+  blockPairs = overlaps['BLOCK_PAIRS'];
+  rowGap = overlaps['PAIR_ROW_GAP'];
   loadedInOrder = overlaps['inOrder'];
   // each label's own place: its default place under the maps, before HORIZONTAL_PLACES (a rerun never measures from a
   // recorded place)
@@ -406,6 +412,13 @@ const apartEverywhere = (
  * width, at about the middle and at the far end of the layout's range (1000 px horizontal, 1 px under the threshold vertical).
  */
 const PAIRS = outInPairs ?? [];
+/** The refrigerant pairs' two-row blocks: same alignment and x, the pressure `rowGap` units under the temperature. */
+const BLOCKS = blockPairs ?? [];
+const isBlock = (/** @type {string} */ id) => BLOCKS.some((pair) => pair[0] === id);
+const inBlock = (
+  /** @type {{ x: number; y: number; align: string }} */ top,
+  /** @type {{ x: number; y: number; align: string }} */ bottom,
+) => top.align === bottom.align && top.x === bottom.x && bottom.y - top.y === (rowGap ?? 16);
 const inOrder = loadedInOrder ?? (() => false);
 const WIDE = LAYOUT === 'vertical' ? VERTICAL_BELOW - 1 : 1000;
 /** A label's box at a place, in px at a card width (the text's size is the same in px at every width). */
@@ -460,13 +473,13 @@ const candidates = new Map([...found].map(([id, entry]) => [id, placesOf(entry.f
 const chosen = new Map();
 /** @type {string[]} */
 const missing = [];
-/** The distance of a place from the label's own: its box centre from the anchor of its place in the arrangement. */
+/** The distance of a place from the label's own: the centre of its box from the centre of the box at the default place (alignment included). */
 const distanceOf = (/** @type {string} */ id, /** @type {{ x: number; y: number; align: string }} */ place) => {
   const entry = found.get(id);
   const home = homes[id];
   if (entry === undefined || home === undefined) return Infinity;
-  const box = boxOf(place, entry);
-  return Math.hypot((box.left + box.right) / 2 - home.x, place.y - home.y);
+  const [box, homeBox] = [boxOf(place, entry), boxOf(home, entry)];
+  return Math.hypot((box.left + box.right) / 2 - (homeBox.left + homeBox.right) / 2, place.y - home.y);
 };
 /** The candidates of a label that keep its home alignment (pairs) and stay apart from the labels already chosen, nearest first. */
 const freeFor = (/** @type {string} */ id, /** @type {boolean} */ keepAlign) =>
@@ -475,20 +488,34 @@ const freeFor = (/** @type {string} */ id, /** @type {boolean} */ keepAlign) =>
     .filter((place) => [...chosen].every(([otherId, other]) => apartEverywhere(id, place, otherId, other)))
     .map((place) => ({ ...place, distance: distanceOf(id, place) }))
     .sort((x, y) => x.distance - y.distance);
-for (const [outId, inId] of PAIRS) {
-  const outs = freeFor(outId, true).slice(0, 600);
-  const ins = freeFor(inId, true).slice(0, 600);
+for (const [outId, inId] of [...PAIRS, ...BLOCKS]) {
+  const block = isBlock(outId);
+  // a block's rows must line up exactly, so its candidates are matched through a lookup, not a nearest-first prefix
+  const outs = block ? freeFor(outId, true) : freeFor(outId, true).slice(0, 600);
+  const ins = block ? freeFor(inId, true) : freeFor(inId, true).slice(0, 600);
+  const below = new Map(ins.map((place) => [`${String(place.x)},${String(place.y)},${place.align}`, place]));
   /** @type {[(typeof outs)[number], (typeof ins)[number]] | undefined} */
   let best;
   let bestSum = Infinity;
-  for (const out of outs) {
-    for (const inn of ins) {
-      const sum = out.distance + inn.distance;
-      if (sum >= bestSum) break;
-      if (inOrderEverywhere(outId, out, inId, inn) && apartEverywhere(outId, out, inId, inn)) {
+  if (block) {
+    for (const out of outs) {
+      const inn = below.get(`${String(out.x)},${String(out.y + (rowGap ?? 16))},${out.align}`);
+      if (inn === undefined || out.distance + inn.distance >= bestSum) continue;
+      if (inBlock(out, inn) && apartEverywhere(outId, out, inId, inn)) {
         best = [out, inn];
-        bestSum = sum;
-        break;
+        bestSum = out.distance + inn.distance;
+      }
+    }
+  } else {
+    for (const out of outs) {
+      for (const inn of ins) {
+        const sum = out.distance + inn.distance;
+        if (sum >= bestSum) break;
+        if (inOrderEverywhere(outId, out, inId, inn) && apartEverywhere(outId, out, inId, inn)) {
+          best = [out, inn];
+          bestSum = sum;
+          break;
+        }
       }
     }
   }

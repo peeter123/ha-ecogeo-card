@@ -2,16 +2,16 @@ layout: horizontal
 labels:
 production_out | label end | left: 19.7%; top: 41.8348623853211%
 production_in | label middle | left: 32%; top: 29.357798165137616%
-production_pressure | label start | left: 38.6%; top: 86.23853211009175%
+production_pressure | label start | left: 35.199999999999996%; top: 42.56880733944954%
 production_pump | label end | left: 38.2%; top: 69.72477064220183%
-brine_out | label start | left: 64.30499999999999%; top: 45.321100917431195%
+brine_out | label start | left: 64.4%; top: 49.908256880733944%
 brine_in | label start | left: 73.795%; top: 45.321100917431195%
-brine_pressure | label start | left: 72.7%; top: 84.22018348623853%
-brine_pump | label end | left: 72.39999999999999%; top: 51.37614678899083%
-discharge_temperature | label start | left: 40.8%; top: 47.706422018348626%
-discharge_pressure | label start | left: 45.2%; top: 50.64220183486239%
-suction_temperature | label end | left: 54%; top: 49.908256880733944%
-suction_pressure | label start | left: 55.60000000000001%; top: 50.64220183486239%
+brine_pressure | label start | left: 65.60000000000001%; top: 46.972477064220186%
+brine_pump | label start | left: 66.8%; top: 55.04587155963303%
+discharge_temperature | label start | left: 44.4%; top: 47.706422018348626%
+discharge_pressure | label start | left: 44.4%; top: 50.64220183486239%
+suction_temperature | label end | left: 57.599999999999994%; top: 47.706422018348626%
+suction_pressure | label end | left: 57.599999999999994%; top: 50.64220183486239%
 compressor_speed | label middle | left: 49.7%; top: 56.330275229357795%
 superheat | label end | left: 53.6%; top: 68.9908256880734%
 expansion_valve | label end | left: 53.6%; top: 71.92660550458716%
@@ -141,8 +141,6 @@ svg:
 </path>
 <path class="pipe muted" data-segment="prod_10_out" d="M502 448 L336 448 L336 428">
 </path>
-<path class="pipe " data-segment="prod_tap_a" style="stroke: color-mix(in srgb, #f2711c 95%, #e8a317)" d="M354 416 L354 441 M354 455 L354 470">
-</path>
 <path class="pipe " data-segment="dhw_sup_a" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" d="M246 172 L347 172">
 </path>
 <path class="flow " data-flow="dhw_sup_a" style="--flow-duration: 1.2012012012012012s" d="M246 172 L347 172">
@@ -258,8 +256,6 @@ svg:
 <path class="pipe muted" data-segment="br_10_in" d="M728 348 L728 448 L526 448">
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M526 492 L618 492 L618 455 M618 441 L618 428">
-</path>
-<path class="pipe " data-segment="brine_tap_a" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M728 270 L771 270 L771 440">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>
@@ -399,6 +395,10 @@ svg:
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol compressor" transform="rotate(0)">
 <circle r="14">
 </circle>
+<path class="compressor-fill" fill="currentColor" d="M9 -10.7 L-13.73 -2.75 A14 14 0 0 1 9 -10.7 Z">
+</path>
+<path class="compressor-fill" fill="currentColor" d="M9 10.7 L-13.73 2.75 A14 14 0 0 0 9 10.7 Z">
+</path>
 <path class="compressor-lines" d="M9 -10.7 L-13 -3 M9 10.7 L-13 3">
 </path>
 </g>
@@ -473,7 +473,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="36" data-kind="transducer_p" aria-label="Discharge pressure transducer (36)" role="button" tabindex="0">
     <title>Discharge pressure transducer (36)</title>
-    <g transform="translate(468 234)">
+    <g transform="translate(446 234)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(0)">
 <circle r="9">
 </circle>
@@ -658,7 +658,7 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="37" data-kind="transducer_p" aria-label="Brine pressure transducer (37)" role="button" tabindex="0">
     <title>Brine pressure transducer (37)</title>
-    <g transform="translate(755 440)">
+    <g transform="translate(712 256)">
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(270)">
 <circle r="9">
 </circle>
@@ -670,13 +670,13 @@ svg:
   </g>
 <g class="symbol-group normal" data-item="38" data-kind="transducer_p" aria-label="Production pressure transducer (38)" role="button" tabindex="0">
     <title>Production pressure transducer (38)</title>
-    <g transform="translate(370 470)">
-<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(90)">
+    <g transform="translate(272 256)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(270)">
 <circle r="9">
 </circle>
 <path d="M0 9 V16">
 </path>
-<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-90)">P</text>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">P</text>
 </g>
 </g>
   </g>

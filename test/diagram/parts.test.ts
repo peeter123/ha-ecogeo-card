@@ -63,10 +63,12 @@ describe('the drawn parts', () => {
     card.remove();
   });
 
-  test('the transducers, valves 22/25 and thermostat 45 stay, with the pipes they sit on', async () => {
+  test('the transducers, valves 22/25 and thermostat 45 stay; the transducers have no stub pipe', async () => {
     const card = await mount({ features: ALL_TRUE });
     for (const item of [35, 36, 37, 38, 22, 25, 45]) expect(items(card).has(item), String(item)).toBe(true);
-    for (const id of ['prod_tap_a', 'brine_tap_a', 'htr_drain']) expect(segments(card).has(id), id).toBe(true);
+    expect(segments(card).has('htr_drain')).toBe(true);
+    // the transducers sit on their lines: no stub pipe leads to them (schematic-drawing "Transducers on their lines")
+    for (const id of ['prod_tap_a', 'brine_tap_a']) expect(segments(card).has(id), id).toBe(false);
     card.remove();
   });
 

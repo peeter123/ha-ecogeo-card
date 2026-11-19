@@ -192,7 +192,7 @@ export function overlapPairs({ labels, parts, pipes = [], drawing, cabinet }: Me
 
 /**
  * The labels that sit inside a body and must stay inside it (rework-layouts D7): id to the item of the body (tank 50 of
- * model C). The bodies of the band (external tank, air unit, ground collector, emitter) join them in groups 5 and 6. Read by
+ * model C). The bodies of the band (external tank, air unit, ground collector, emitter) join them with the band. Read by
  * scripts/search-places.mjs only.
  */
 export const BODY_LABELS: Readonly<Record<string, string>> = {
@@ -200,11 +200,21 @@ export const BODY_LABELS: Readonly<Record<string, string>> = {
   tank_internal_demand: '50',
 };
 
-/** The Out and In values that read as a pair (refine-simplified-layout D7, group 5), production and brine; read by scripts/search-places.mjs only. */
+/** The Out and In values that read as a pair (refine-simplified-layout D7), production and brine; read by scripts/search-places.mjs only. */
 export const OUT_IN_PAIRS: readonly (readonly [string, string])[] = [
   ['production_out', 'production_in'],
   ['brine_out', 'brine_in'],
 ];
+
+/**
+ * The refrigerant probe pairs' values (rework-layouts D6, D7): temperature over pressure, one two-row block under the pair
+ * (same alignment and x, `PAIR_ROW_GAP` units between the rows); read by scripts/search-places.mjs only.
+ */
+export const BLOCK_PAIRS: readonly (readonly [string, string])[] = [
+  ['discharge_temperature', 'discharge_pressure'],
+  ['suction_temperature', 'suction_pressure'],
+];
+export const PAIR_ROW_GAP = 16;
 
 /**
  * Whether an Out value and its In value read in order: the Out box lies left of the In box or, where the two overlap

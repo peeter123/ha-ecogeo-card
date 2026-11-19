@@ -1,5 +1,5 @@
 // The switch between the layouts with a mocked width (responsive-layout spec: Layout choice, Layout hysteresis). Both layouts
-// draw the same arrangement until rework-layouts group 7 builds the vertical one.
+// draw the same arrangement until the vertical arrangement of rework-layouts is built.
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { arrangementFor } from '../../src/diagram/geometry';
 import '../../src/index';

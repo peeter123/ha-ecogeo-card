@@ -7,7 +7,7 @@ import type { Layout } from '../config/options';
 
 /**
  * With `layout: auto`, cards narrower than this (px) get the vertical layout. Until the vertical arrangement is built
- * (rework-layouts group 7) both layouts draw the same arrangement. Decided on 2026-11-19 (rework-layouts D7, D8): the
+ * (the vertical arrangement of rework-layouts) both layouts draw the same arrangement. Decided on 2026-11-19 (rework-layouts D7, D8): the
  * narrowest width on the 20 px grid from 320 to 800 px at which `npm run search-places -- --layout=horizontal` places every
  * label with its 2 px margin, measured in WebKit. `npm run measure-layout` finds no overlap from 640 px, which is the
  * tolerance's view of the same drawing; the margin is what makes 680 px the threshold (docs/ecogeo-card.md). The Chromium

@@ -317,7 +317,7 @@ export interface Segment extends Visibility {
   bend?: number;
   /** The base stroke ends in a round cap: it closes the seam where the ground loop's half circle is split in two segments. */
   roundEnd?: true;
-  /** A dead-end tap (a transducer's stub, the HTR drain): coloured, never animated. */
+  /** A dead end (the DG1 and HTR stubs, the model C tap-water stubs): coloured, never animated. */
   stub?: boolean;
   /** The pipe carries water only in this position of valves 27/28 (the legs behind a closed arm). */
   onlyWhen?: { valves2728: Circuits['valves2728'] };
@@ -400,7 +400,7 @@ const componentsFor = (z: Zones): readonly Component[] => [
   c(29, 'probe_t', 542, 234, 0),
   c(30, 'probe_t', 430, 234, 0),
   c(35, 'transducer_p', 564, 234, 0),
-  c(36, 'transducer_p', 474, 234, 0),
+  c(36, 'transducer_p', 452, 234, 0),
   // hydraulic circuits
   c(10, 'exchanger', 520, 470, 0, {
     size: 22,
@@ -424,8 +424,8 @@ const componentsFor = (z: Zones): readonly Component[] => [
   c(32, 'probe_t', 674, 228, 270),
   c(33, 'probe_t', 254, 228, 270),
   c(34, 'probe_t', 296, 228, 270),
-  c(37, 'transducer_p', 709, 440, 270),
-  c(38, 'transducer_p', 352, 520, 270),
+  c(37, 'transducer_p', 674, 256, 270),
+  c(38, 'transducer_p', 296, 256, 270),
   c(44, 'resistor', 270, 320, 90, { feature: 'backup_heater' }),
   c(45, 'thermostat', 286, 282, 90, { feature: 'backup_heater' }),
   // model C's integrated tank (50) with its coil (51, ports where the DHW lines of valve 26 end) and DHW probe (54) on
@@ -547,8 +547,6 @@ const segmentsFor = (z: Zones): readonly Segment[] => [
     feature: 'passive_cooling',
     speedRole: PP,
   }),
-  // production tap as in the figure: transducer 38 on pump 15's suction (the figure's vessel, safety valve and drain are not drawn)
-  seg('prod_tap_a', TRUNK, '368,416 368,520', RET, { stub: true }),
   // DHW lines of valve 26: supply to port 5, return from port 6 (or to and from the integrated tank of model C)
   seg('dhw_sup_a', ['production_dhw'], '282,172 361,172', OUT, { dhw: 'any', speedRole: PP }),
   seg('dhw_sup_b', ['dhw_coil'], '361,172 420,172', OUT, { dhw: 'any', speedRole: PP }),
@@ -785,14 +783,12 @@ const segmentsFor = (z: Zones): readonly Segment[] => [
     feature: 'passive_cooling',
     speedRole: BP,
   }),
-  // brine tap as in the figure: transducer 37 on port 4's line before pump 16 (the figure's vessel, safety valve and drain are not drawn)
-  seg('brine_tap_a', ['brine'], '690,270 725,270 725,440', BIN, { stub: true }),
 ];
 
 /** The most crossings inside the cabinet (add-schematic-card D5): the manual's figure has 15 (14 hops and the return line behind resistor 44). */
 export const MAX_CROSSINGS = 15;
 
-/** The crossings inside the cabinet (add-schematic-card D5): this layout needs 10. */
+/** The crossings inside the cabinet (add-schematic-card D5): this layout needs 9. */
 const CROSSINGS: readonly Crossing[] = [
   { over: 'dhw_sup_a', under: 'p2_in', at: [312, 172] },
   { over: 'dhw_sup_c', under: 'ln3', at: [630, 172] },
@@ -803,7 +799,6 @@ const CROSSINGS: readonly Crossing[] = [
   { over: 'trunk', under: 'prod_8_44', at: [312, 348] },
   { over: 'ln3', under: 'br_feed7', at: [630, 348] },
   { over: 'br_10_in', under: 'br_10_28', at: [610, 448] },
-  { over: 'prod_10_out', under: 'prod_tap_a', at: [368, 448] },
 ];
 
 /** What decides which parts are drawn: the DHW storage, the source and the feature states. */
@@ -861,7 +856,7 @@ export function mapAxis(map: AxisMap, value: number): number {
  * span a component's ports cover (a symbol keeps its size, so the pipes that end on its ports must keep their distance):
  * the probe stems 254-270 and 296-312, valves 27/17/22/25/38/15 (338-397), the refrigerant row and tank 50's coil
  * (416-539), exchanger 7 with probes 35 and 54 (560-590), valve 28 and probe 31 (598-630), pump 16 and probe 32
- * (674-690), transducer 37 and port 5 (709-725) and port 6 (748). The 100 extra units go to the gaps between those spans:
+ * (674-690), port 5 (the column 709-725, where transducer 37 used to sit; free of transducers now, and the horizontal x stretch redoes this map) and port 6 (748). The 100 extra units go to the gaps between those spans:
  * the probe lane at the left (240-254 +4, 286-296 +12, 312-338 +10, 397-416 +8), the core (539-560 +10), and the brine
  * lane at the right (590-598 +4, 630-674 +30, 690-709 +8, 725-748 +6, 748-760 +8). Left of 240 and right of 760 the map
  * keeps its offset, so the labels outside the outline stay outside, and the source and tank zones are placed from their
@@ -967,44 +962,16 @@ const SIMPLIFIED_ZONES: Zones = deriveZones({
   run: { outY: 85, inY: 50, feedX: 190, returnX: 172, hybridReturnX: 6 },
 });
 
-/**
- * The places of the arrangement that are not the frame's under the maps (refine-simplified-layout D2), each with its
- * reason. Pressure transducer 38 and its stub sit in the band the cabinet loses, so they move up, between exchanger 10's
- * two production lines (y 448 and 492) on pump 15's suction side; with them go the stub's crossing with the line at y 492
- * (not in the crossing list) and the label of the pressure. Group 4 of rework-layouts moves the transducers and deletes this.
- */
-export const SIMPLIFIED_EXCEPTIONS: Readonly<Record<string, string>> = {
-  'component 38':
-    'in the cut band (y 520 of the full cabinet): on the production return side between the two lines of exchanger 10, y 470, stem pointing left',
-  'segment prod_tap_a': 'ends at y 470 where transducer 38 now sits, instead of at y 520',
-  'label production_pressure': 'follows transducer 38: right of it',
-};
-
-/** Pressure transducer 38 in the arrangement: on the stub's end (y), its stem pointing left. */
-const TRANSDUCER_38_Y = 470;
-
 function buildArrangement(): Arrangement {
   const zones = SIMPLIFIED_ZONES;
   const inCabinetX = (x: number): boolean => x >= FRAME_CABINET.x && x <= FRAME_CABINET.x + FRAME_CABINET.width;
   // a point at the cabinet's columns is a cabinet point (the zones' own points lie left of x 240 and right of x 760)
   const mapPoint = ([x, y]: Point): Point => (inCabinetX(x) ? [simplifiedX(x), simplifiedY(y)] : [x, y]);
-  const stubX = simplifiedX(368);
   const components = componentsFor(zones).map((part): Component => {
     if (part.item === 50 || part.item === 51) return part;
-    if (part.item === 38) return { ...part, x: stubX + 16, y: TRANSDUCER_38_Y, rotation: 90 };
     return { ...part, x: simplifiedX(part.x), y: simplifiedY(part.y) };
   });
-  const segments = segmentsFor(zones).map((part): Segment =>
-    part.id === 'prod_tap_a'
-      ? {
-          ...part,
-          points: [
-            [stubX, simplifiedY(416)],
-            [stubX, TRANSDUCER_38_Y],
-          ],
-        }
-      : { ...part, points: part.points.map(mapPoint) },
-  );
+  const segments = segmentsFor(zones).map((part): Segment => ({ ...part, points: part.points.map(mapPoint) }));
   const crossings = CROSSINGS.map((crossing): Crossing => ({ ...crossing, at: mapPoint(crossing.at) }));
   const labels = labelPlacesFor(zones, (x, y) => [simplifiedX(x), simplifiedY(y)]);
   return {
@@ -1015,9 +982,6 @@ function buildArrangement(): Arrangement {
     crossings,
     labels: {
       specs: labels.specs.map((spec) => {
-        if (spec.id === 'production_pressure') {
-          return { ...spec, x: stubX + 32, y: TRANSDUCER_38_Y, align: 'start' as const };
-        }
         const place = HORIZONTAL_PLACES[spec.id]?.at(zones, (x, y) => [simplifiedX(x), simplifiedY(y)]);
         return place === undefined ? spec : { ...spec, ...place };
       }),
@@ -1029,7 +993,7 @@ const ARRANGEMENT = buildArrangement();
 
 /**
  * The manual-figure frame the arrangement is mapped from (rework-layouts D1): its zones, lists, crossings and
- * default label places. Its crossing list holds only the crossings the arrangement keeps (not `prod_10_in x prod_tap_a`, whose stub the arrangement shortens; group 4 removes the stub). Not drawn by any layout; the tests of the maps (test/diagram/simplified.test.ts) compare the arrangement with it.
+ * default label places. Not drawn by any layout; the tests of the maps (test/diagram/simplified.test.ts) compare the arrangement with it.
  */
 export const FRAME = {
   zones: FRAME_ZONES,
@@ -1041,7 +1005,7 @@ export const FRAME = {
 
 /**
  * The arrangement of a shown layout: a pure function of it (rework-layouts D2). Until the vertical arrangement is built
- * (group 7), both layouts draw the same one.
+ * (the vertical arrangement), both layouts draw the same one.
  */
 export function arrangementFor(layout: ShownLayout): Arrangement {
   switch (layout) {

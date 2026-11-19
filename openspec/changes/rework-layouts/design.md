@@ -134,6 +134,9 @@ The search measures distance from each label's default place (its probe or compo
 place. The horizontal threshold is the narrowest width on the 20 px grid at which the search finds a place for every
 label with its 2 px margin, not only the narrowest width without overlap (decided 2026-11-19 in the group 3 review:
 at 640 and 660 px production Out cleared its neighbours by less than the margin, so the threshold became 680).
+The search treats each refrigerant probe pair's two values as one two-row block (temperature over pressure), as it
+treats the Out/In pairs, so a pasted result keeps the blocks of live-values "Probe pair values" (decided 2026-11-19
+in the group 4 review).
 
 ### D8 Fonts and threshold
 

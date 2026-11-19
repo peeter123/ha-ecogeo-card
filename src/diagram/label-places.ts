@@ -50,41 +50,36 @@ interface PlaceOverride {
 /**
  * The labels of the horizontal arrangement whose default place (the frame's place under the maps, or the zone's) fails
  * and that `npm run search-places -- --layout=horizontal` moved, each with its reason: what the default place's box, with
- * the 2 px margin, meets (the search prints it under "Default place meets"). Every entry is a constant place; group 5
- * places the labels of the new bodies from the zones. No label sits on a pipe. The other labels keep their default place,
- * which the search finds free at 680 px, the vertical threshold: at 660 px the external tank's temperature and demand
+ * the 2 px margin, meets (the search prints it under "Default place meets"). Every entry is a constant place; the labels
+ * of the band's bodies are placed from the zones. No label sits on a pipe. The other labels keep their default place,
+ * which the search finds free at 680 px (the refrigerant pairs' two-row blocks, which it places together, are default places), the vertical threshold: at 660 px the external tank's temperature and demand
  * meet in 6 cases and the search moves production Out to x 124 to keep it left of In, so the threshold is 680 px.
  */
 export const HORIZONTAL_PLACES: Readonly<Record<string, PlaceOverride>> = {
   production_in: {
     at: () => ({ x: 320, y: 160, align: 'middle' }),
     reason:
-      'at its default place beside probe 34 the box, with its 2 px margin, meets pipes prod_44_26 and trunk in all 140 cases that show it (search at 680 px); the nearest free place is inside the cabinet under the DG1 stubs, to the right of the production outlet value so the pair reads in order',
+      'at its default place beside probe 34 the box, with its 2 px margin, meets transducer 38 (168 cases) and pipes prod_44_26 and trunk (140 cases each) (search at 680 px, WebKit); the nearest free place is inside the cabinet under the DG1 stubs, to the right of the production outlet value so the pair reads in order',
+  },
+  production_pressure: {
+    at: () => ({ x: 352, y: 232, align: 'start' }),
+    reason:
+      "right of the riser, beside transducer 38, the box meets valve 22's symbol in 140 cases (search at 680 px, WebKit and Chromium; the gap between the riser and valve 22 is narrower than the 40-unit value); the nearest free place is right of the riser at the height of probe 34, 61 units from the default place",
+  },
+  brine_pressure: {
+    at: () => ({ x: 656, y: 256, align: 'start' }),
+    reason:
+      'its default place left of transducer 37 meets the brine outlet label in 140 cases (search at 680 px, WebKit and Chromium); it stays beside the transducer, in the same place shifted 4 units left and left-aligned, and the outlet label moves',
+  },
+  brine_out: {
+    at: () => ({ x: 644, y: 272, align: 'start' }),
+    reason:
+      "its default place meets the brine pressure label (140 cases) and transducer 37's symbol (98 cases) (search at 680 px, WebKit); starts at x 644 right of line ln3, under the pressure value, the nearest free place",
   },
   brine_pump: {
-    at: () => ({ x: 724, y: 280, align: 'end' }),
+    at: () => ({ x: 668, y: 300, align: 'start' }),
     reason:
-      "its default place meets pump 16's symbol in all 168 cases (search at 680 px); this is the nearest place clear of the pump and the brine pipes",
-  },
-  discharge_temperature: {
-    at: () => ({ x: 408, y: 260, align: 'start' }),
-    reason:
-      'its default place meets the discharge pressure label in 140 cases (search at 680 px); starts at x 408, the nearest free place',
-  },
-  discharge_pressure: {
-    at: () => ({ x: 452, y: 276, align: 'start' }),
-    reason:
-      'its default place meets the discharge temperature label in 140 cases (search at 680 px); starts at x 452 under it, the nearest free place',
-  },
-  suction_temperature: {
-    at: () => ({ x: 540, y: 272, align: 'end' }),
-    reason:
-      'its default place meets the suction pressure label in 140 cases (search at 680 px); ends at x 540, the nearest free place',
-  },
-  suction_pressure: {
-    at: () => ({ x: 556, y: 276, align: 'start' }),
-    reason:
-      'its default place meets the suction temperature label in 140 cases (search at 680 px); starts at x 556 under it, the nearest free place',
+      "its default place meets pump 16's symbol in all 168 cases (search at 680 px, WebKit and Chromium); the nearest free place is at the same height left of the pump, starting at x 668",
   },
   superheat: {
     at: () => ({ x: 536, y: 376, align: 'end' }),
@@ -153,7 +148,7 @@ export function labelPlacesFor(
     return spec(id, role, px, py, align, extra);
   };
   const specs: readonly LabelSpec[] = [
-    // production: probes 33 and 34 (Out, In), pressure 38, pump 15, and the DG1 demand above connections 1/2
+    // production: probes 33 and 34 (Out, In), pressure 38 (right of the riser under probe 34), pump 15, and the DG1 demand above connections 1/2
     cab('production_out', 'production.outlet_temperature', 237, 228, 'end', {
       item: 33,
       caption: VALUE_CAPTIONS.portOut,
@@ -162,20 +157,20 @@ export function labelPlacesFor(
       item: 34,
       caption: VALUE_CAPTIONS.portIn,
     }),
-    cab('production_pressure', 'production.pressure', 360, 537, 'end', { item: 38 }),
+    cab('production_pressure', 'production.pressure', 318, 256, 'start', { item: 38 }),
     cab('production_pump', 'production.pump', 396, 380, 'end', { item: 15 }),
     cab('dg1_demand', 'heating.demand', 320, 123, 'start', { item: 1, demand: true }),
-    // brine: probes 31 and 32 (Out, In), pressure 37, pump 16
+    // brine: probes 31 and 32 (Out, In), pressure 37 (left of the riser under probe 32), pump 16
     cab('brine_out', 'brine.outlet_temperature', 633, 247, 'start', { item: 31, caption: VALUE_CAPTIONS.portOut }),
     cab('brine_in', 'brine.inlet_temperature', 697, 247, 'start', { item: 32, caption: VALUE_CAPTIONS.portIn }),
-    cab('brine_pressure', 'brine.pressure', 689, 459, 'start', { item: 37 }),
+    cab('brine_pressure', 'brine.pressure', 664, 256, 'end', { item: 37 }),
     cab('brine_pump', 'brine.pump', 676, 300, 'end', { item: 16 }),
-    // refrigerant: temperatures 30 and 29 and pressures 36 and 35 below the discharge and suction lines, the compressor's
+    // refrigerant: each pair's temperature (30, 29) over its pressure (36, 35) as one two-row block under the pair (16 units between the rows), the compressor's
     // speed inside the loop, and the expansion valve's opening and superheat beside valve 12
-    cab('discharge_temperature', 'compressor.discharge_temperature', 436, 262, 'start', { item: 30 }),
-    cab('discharge_pressure', 'compressor.discharge_pressure', 480, 275, 'middle', { item: 36 }),
-    cab('suction_temperature', 'compressor.suction_temperature', 528, 262, 'start', { item: 29 }),
-    cab('suction_pressure', 'compressor.suction_pressure', 570, 275, 'middle', { item: 35 }),
+    cab('discharge_temperature', 'compressor.discharge_temperature', 450, 260, 'start', { item: 30 }),
+    cab('discharge_pressure', 'compressor.discharge_pressure', 450, 276, 'start', { item: 36 }),
+    cab('suction_temperature', 'compressor.suction_temperature', 572, 260, 'end', { item: 29 }),
+    cab('suction_pressure', 'compressor.suction_pressure', 572, 276, 'end', { item: 35 }),
     cab('compressor_speed', 'compressor.speed', 503, 307, 'middle', { item: 11 }),
     cab('superheat', 'refrigerant.superheat', 527, 376, 'middle', { item: 12 }),
     cab('expansion_valve', 'refrigerant.expansion_valve', 527, 388, 'middle', { item: 12 }),

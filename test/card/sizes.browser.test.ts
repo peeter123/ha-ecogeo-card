@@ -1,6 +1,6 @@
 // Minimum rendered sizes and the layout band at real widths (responsive-layout spec: Layout hysteresis, Minimum rendered
 // sizes), measured in Chromium and WebKit: rendered stroke widths, the label font floor, the wrapping footer and the band at
-// the threshold. Both layouts are checked; the vertical one renders the horizontal arrangement until rework-layouts group 7,
+// the threshold. Both layouts are checked; the vertical one renders the horizontal arrangement until the vertical arrangement of rework-layouts is built,
 // which also brings back the 10 px label assertion.
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';

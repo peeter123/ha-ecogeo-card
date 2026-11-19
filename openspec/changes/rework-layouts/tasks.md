@@ -14,7 +14,7 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 
 ## 1. Browser preflight and screenshot review loop
 
-- [ ] 1.1 Add the browser preflight (design D11): a setup file of the `browser` Vitest project that measures two
+- [x] 1.1 Add the browser preflight (design D11): a setup file of the `browser` Vitest project that measures two
   reference strings at 10.3 px Roboto and fails with a message naming font smoothing and remote desktop sessions when
   Chromium reports whole-number widths for both. Keep the detection a pure function with a unit test (whole widths
   fail, fractional pass). Verify: `npm test` passes on a host with font smoothing on; the user switches font
@@ -23,8 +23,9 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
   Note (2026-11-19, smoothing off, verified by the implementer on this RDP host, SPI_GETFONTSMOOTHING = 0): the
   Chromium run stops at the preflight, every browser test file fails in setup with "Browser preflight failed: Chromium
   measures text with whole-pixel widths ... (measured 55 and 98 px)" and no test runs; WebKit passes (1211 tests).
-  The check is Windows-only (Chromium on Windows). Still open: the user's smoothing-on confirmation and a CI Linux
-  run showing the preflight passes.
+  The check is Windows-only (Chromium on Windows). Note (2026-11-19, smoothing on, SPI_GETFONTSMOOTHING = 1 after the
+  user changed the session, observed during group 4): the preflight passes and the Chromium browser run passes its
+  539 tests. The CI Linux confirmation moves to the Workflow follow-up (it needs a push).
 - [x] 1.2 Add the review section to docs/ecogeo-card.md (dev-emulator "Screenshot review loop"): how to run
   `npm run capture`, where the PNGs land, and the criteria (no label on a pipe, part or outline; values inside their
   bodies; no crossing outside the cabinet; band order emitter, source, tank; text legible at the capture's width), and
@@ -111,24 +112,58 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 
 ## 4. Cabinet parts: transducers on their lines, probe pairs
 
-- [ ] 4.1 Move transducer 38 onto the production return riser under probe 34 and transducer 37 onto the brine inlet
+- [x] 4.1 Move transducer 38 onto the production return riser under probe 34 and transducer 37 onto the brine inlet
   riser under probe 32 (design D6, schematic-drawing "Transducers on their lines"); delete `prod_tap_a`,
   `brine_tap_a`, their crossings and `SIMPLIFIED_EXCEPTIONS`. Verify: unit tests that 38 shares its pipe with 34 and 37
   with 32, with no stub segment, and the topology tests (no outside crossing, hops inside) pass.
-- [ ] 4.2 Draw the discharge pair (30 with 36 at x 452) and keep the suction pair (29 with 35), each pair's values as
+  Note (2026-11-19, implementer): transducer 38 is at frame (296, 256) rotation 270 on `trunk` (riser x 312, under
+  probe 34 at y 228) and 37 at (674, 256) rotation 270 on `ln4_a` (riser x 690, under probe 32); both stems end on the
+  pipe, no stub. `prod_tap_a`, `brine_tap_a`, the crossing `prod_10_out x prod_tap_a`, `SIMPLIFIED_EXCEPTIONS`,
+  `TRANSDUCER_38_Y` and the production-pressure special case are deleted; the arrangement is the frame under the maps
+  with no exception (9 crossings). Unit tests: shared pipe with no part between, no stub segment, the map tests
+  without exceptions.
+- [x] 4.2 Draw the discharge pair (30 with 36 at x 452) and keep the suction pair (29 with 35), each pair's values as
   one two-row block (schematic-drawing "Refrigerant probe pairs", live-values "Probe pair values"). Verify: unit tests
   for adjacency and the value blocks pass.
-- [ ] 4.3 Fill the compressor's two triangles (the parts of circle 11 outside its converging lines) solid in the
+  Note (2026-11-19, implementer): transducer 36 is at frame x 452 (arrangement x 446), 22 units from probe 30, like 35
+  from 29. Each pair's values are a two-row block (temperature over pressure, 16 units apart, same x and alignment):
+  discharge starts at frame x 450 (arrangement 444) under the line, suction ends at frame x 572 (arrangement 576),
+  rows at y 260 and 276. They are the labels' default places (no `HORIZONTAL_PLACES` entry): the search, which places
+  each label alone, finds all four free ("Default place meets: nothing"). Unit tests: adjacency, no part between,
+  value blocks.
+- [x] 4.3 Fill the compressor's two triangles (the parts of circle 11 outside its converging lines) solid in the
   outline colour, the part between the lines unfilled (schematic-drawing "Refrigerant components after the manual
   figure", scenarios "Compressor symbol" and "Compressor fill in the dark theme"; asked by the user 2026-11-19).
   Verify: a unit test finds two filled shapes in the outline colour inside the compressor symbol and the lines
   unchanged; light and dark captures show them.
-- [ ] 4.4 Re-place the affected labels with the search, record the snapshots again. Verify: horizontal overlap browser
+  Note (2026-11-19, implementer): `symbols.ts` draws two closed paths `.compressor-fill` with `fill="currentColor"`
+  (the outline colour: the symbol group's `color` is the primary text colour, the disabled colour while muted, so the
+  fill follows the outline in light and dark and when muted): each runs along its line, on to the circle on the same
+  slope at (-13.73, -/+2.75) and back along the arc to the line's start; the lines are unchanged. Unit test in
+  cabinet.test.ts. The light and dark captures show the two parts solid and the wedge between the lines empty.
+- [x] 4.4 Re-place the affected labels with the search, record the snapshots again. Verify: horizontal overlap browser
   tests pass; a capture subagent checks the heating, active cooling and defrost captures, light and dark, for the new
   transducer places, the pairs and the filled compressor.
-- [ ] 4.5 Update docs/ecogeo-card.md (the drawing section: transducers and pairs, the simplification of the vessel
+  Note (2026-11-19, implementer): places from `npm run search-places -- --layout=horizontal --browser=webkit` at 680
+  px: pressure 38 (284, 296, end; the default right of the riser meets valve 22 in 140 cases), pressure 37 (700, 256,
+  end; the default meets the brine outlet label in 140), brine Out (644, 272, start; meets the pressure label in 140
+  and transducer 37 in 98), brine pump (724, 320, end; meets pump 16 in 168), production In re-recorded (meets
+  transducer 38 in 168 cases too); the four pair labels keep their default blocks. `measure-layout` (WebKit) is clean
+  from 640 px as before; the search at 660 px still moves production Out to x 124 (and pressure 38 to x 240, y 212),
+  so `VERTICAL_BELOW` stays 680. Snapshots re-recorded (111, diff checked on scenario-heating). The overlap browser
+  tests pass in WebKit (539 tests) and, as the preflight passes on this host now, in Chromium (539); the Chromium
+  search was not run. Open point for the user: label 38 ("1.2 bar") sits left of the riser under the transducer, next
+  to thermostat 45, and can read as the thermostat's value.
+  Round 2 (2026-11-19): the search's distance now counts from the centre of the default box, so it agrees with the
+  recorded pair blocks; the places moved to pressure 38 (352, 232, start), pressure 37 (656, 256, start) and brine pump
+  (668, 300, start); the production pressure is now right of the riser at the height of probe 34
+  (the open point above is superseded; the place beside 38 is deferred),
+  and the 660 px search still moves production Out only.
+- [x] 4.5 Update docs/ecogeo-card.md (the drawing section: transducers and pairs, the simplification of the vessel
   tees, the compressor symbol's fill). Verify: `npm run check` passes.
-
+  Note (2026-11-19, implementer): docs/ecogeo-card.md updated (transducers on their risers, the pairs, the compressor
+  fill, no exceptions to the maps, 9 crossings, the places and values tables); `npm run check` passes (6311 tests,
+  Chromium and WebKit).
 ## 5. Band arrangement: source and tank above the cabinet
 
 - [ ] 5.1 Implement the band model (design D3): remove the pipe run above the cabinet and the side zones; add the band,
@@ -149,8 +184,12 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
   tests for the collector's passes, ends and halves' colours pass.
 - [ ] 5.5 Re-place the labels, re-measure the threshold, record the snapshots again. Production In sits beside probe
   34 and production Out beside probe 33, not next to the source (live-values "Hydraulic values"; group 3 accepted
-  both further away until the band frees the space). Verify: horizontal overlap browser tests pass in Chromium and
-  WebKit; a capture subagent checks air, ground and hybrid with external, internal, unused and no tank, light and
+  both further away until the band frees the space); the production pressure sits beside transducer 38, with no other
+  part (thermostat 45, the HTR column, exchanger 9) between them, and brine Out beside probe 31 (group 4 accepted both
+  further away until the x stretch of design D2 widens the span between the riser and valve 22). Verify: horizontal
+  overlap browser tests pass in Chromium and WebKit; a unit test bounds the distance of production In, Out and
+  pressure from probes 34, 33 and transducer 38, and of brine Out from probe 31, so the search cannot drift a label
+  across another part; a capture subagent checks air, ground and hybrid with external, internal, unused and no tank, light and
   dark, at the threshold and 1000 px, plus the panel view at 1280 x 800.
 - [ ] 5.6 Update README.md (drawing description, screenshot if it shows the old layout) and docs/ecogeo-card.md (band
   model, bodies, threshold). Verify: `npm run check` passes.
@@ -220,8 +259,11 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 ## Workflow follow-up
 
 - Before group 9: with font smoothing on (the user switches it), run the browser project in Chromium, the place
-  search for both layouts and `scripts/measure-layout.mjs` in Chromium; fix any difference from the WebKit results,
-  and check off task 1.1.
+  search for both layouts and `scripts/measure-layout.mjs` in Chromium; fix any difference from the WebKit results.
+  Done for the horizontal layout on 2026-11-19 (group 4 review, smoothing on): the browser project passes in both
+  engines, and the Chromium search at 680 and 660 px and `measure-layout` agree with WebKit (places and threshold
+  680). Repeat after groups 5-7 change the drawing, and for the vertical search.
+- The first CI run on Linux after a push confirms the browser preflight passes there (design D11).
 - One fresh Opus review of the whole change before archiving.
 - At archive, edit the Purpose sections of the main specs that still describe the old layouts and side zones
   (responsive-layout, schematic-drawing, outer-loop-source, dhw-storage), and name the change in AGENTS.md.

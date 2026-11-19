@@ -273,7 +273,7 @@ describe('flow animation', () => {
 
   test('stubs are coloured but never animated', () => {
     const { get } = scenario({ mode: 'heating' }, HEATING);
-    for (const id of ['p1_stub', 'p2_stub', 'prod_tap_a', 'brine_tap_a', 'htr_drain']) {
+    for (const id of ['p1_stub', 'p2_stub', 'htr_drain']) {
       const state = SEGMENTS.find((segment) => segment.id === id);
       expect(state?.stub, id).toBe(true);
       expect(get(id).animated, id).toBe(false);

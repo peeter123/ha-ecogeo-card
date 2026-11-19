@@ -340,7 +340,7 @@ y 130 to 605), so every component keeps citing its item and its place in the B4 
 derived from them by the maps below. The card picks the arrangement with `arrangementFor(layout)`, a pure function of
 the layout the card shows now (`horizontal` or `vertical`). Every consumer (the cabinet, the source, the DHW tank, the
 pipes, the labels and the card's viewBox) reads the arrangement from the draw context the card builds, never from a
-module constant, so one drawing cannot mix two arrangements. Until the vertical arrangement is built (a later group of
+module constant, so one drawing cannot mix two arrangements. Until the vertical arrangement is built (a later step of
 `rework-layouts`), `arrangementFor('vertical')` returns the horizontal one. A draw context without an arrangement gets
 the horizontal one. The frame itself is not drawn by any layout; `FRAME` in `src/diagram/geometry.ts` exports it so
 that the tests can compare the arrangement with it. The label text size relies on the viewBox being 1000 units wide (one
@@ -382,12 +382,10 @@ units wide at the nominal label size, about 67 at 680 px, measured with the plac
 the feed's column and between the loop and the cabinet. The pipes of the source and of ports 5 and 6 are generated from
 these constants, so they stay connected to the ports, which follow `fx`.
 
-**Exceptions to the maps** (`SIMPLIFIED_EXCEPTIONS`, each with its reason in code): pressure transducer 38 and its
-stub sat in the cut band (y 520), so they move up, between the two production lines of exchanger 10 (y 448 and 492) on
-the production return side: the stub ends at y 470, the transducer sits right of it with its stem pointing left, and
-the stub no longer crosses the line at y 492 (10 crossings remain, at most 15 as in the manual's figure); the
-pressure label follows it, right of the transducer. A later group of `rework-layouts` moves both transducers onto the
-lines they measure and deletes these exceptions.
+**No exceptions to the maps.** Every part of the cabinet, pipes and crossings included, is the frame's under the maps
+(`test/diagram/simplified.test.ts` compares them). Pressure transducers 37 and 38 used to be exceptions (38 sat on a
+stub in the cut band); they now sit on their lines in the frame itself (see How the B4 figure is laid out), so the
+stubs, the crossing and the exception list are gone (9 crossings remain, at most 15 as in the manual's figure).
 
 The invariants are tested on it for every source, DHW storage and model (`test/diagram/simplified.test.ts`): every part
 inside its zone, no two parts overlap, ports 1-6 in order, every crossing a hop inside the cabinet, and the source and
@@ -400,29 +398,40 @@ tank pipes meeting their ports.
   (see the Source and DHW sections), so no pipe outside the cabinet crosses another.
 - **DHW lines:** valve 26 sits on port 1's line. Its DHW output is the supply line across the cabinet to port 5, and
   the return line from port 6 runs back across to join port 2's line. Exchanger 9 taps the supply, pump 17 the return.
-- **Refrigerant:** compressor 11 is in the middle, drawn as the standard compressor symbol: a circle with two straight
-  lines that start on it at the suction side and converge towards the discharge side, so the wide side faces the suction
-  pipe (right) and the narrow side the discharge pipe (left). The discharge runs left through 36 and 30 into HTR
-  exchanger 9 and on to inversion valve 14, which feeds condenser 8 (heating) or evaporator 7 (active cooling). The
-  expansion leg 8, 13, 12, 7 runs along the lower row; the suction returns through 29 and 35. (The figure's
-  mini-pressure switches 39 and 40 and service outlets 41 are not drawn.)
+-  **Refrigerant:** compressor 11 is in the middle, drawn as the standard compressor symbol: a circle with two
+  straight lines that start on it at the suction side and converge towards the discharge side, so the wide side faces
+  the suction pipe (right) and the narrow side the discharge pipe (left). The two parts of the circle outside the
+  lines (between each line and the circle) are filled solid in the outline colour, `currentColor`, which the card sets
+  to the theme's primary text colour (the compressor has no feature, so it is never muted): black on a light
+  theme, the light outline colour on a dark one. Each filled part is one closed path: along its line, on to the circle
+  on the same slope (the lines end 1 unit inside it) and back along the arc, so no sliver stays unfilled; the part
+  between the lines stays empty. The discharge runs left through 36 and 30 into HTR exchanger 9 and on to inversion
+  valve 14, which feeds condenser 8 (heating) or evaporator 7 (active cooling). The expansion leg 8, 13, 12, 7 runs
+  along the lower row; the suction returns through 29 and 35. Each temperature probe sits next to its pressure
+  transducer as a pair on the same line, 22 units apart (30 at frame x 430 and 36 at 452 on the discharge line; 29 at
+  542 and 35 at 564 on the suction line), with no part between them. (The figure's mini-pressure switches 39 and 40
+  and service outlets 41 are not drawn.)
 - **Valve 14's ports:** the three ports on its right are ordered suction (top), evaporator 7 (middle), condenser 8
   (bottom). The figure orders them evaporator, suction, condenser, which makes two refrigerant pipes cross; this
   order does not. It is a layout choice, the connections are the same.
 - **Production:** the return trunk runs from the junction of ports 2 and 6 down to valve 27, pump 15 and condenser 8.
   From there the outlet runs left to resistor 44 and up past probe 33 to valve 26 and port 1. The resistor is drawn
-  vertical on port 1's lane (the figure draws it horizontal with the return line passing behind it). Transducer 38 sits
-  on the pump's suction side, as in the figure (vessel 19, safety valve 21 and drain 24 are not drawn).
+  vertical on port 1's lane (the figure draws it horizontal with the return line passing behind it). Transducer 38
+  sits on the production return riser of port 2 (frame x 312), under probe 34 and above thermostat 45, drawn like
+  probe 34 (body left of the riser, stem to it). The figure puts it on a tee towards vessel 19, safety valve 21 and
+  drain 24; with those groups not drawn, drawing it on the line it measures, the same water on the same side of pump
+  15, is the faithful simplification, and it needs no stub pipe.
 - **Exchanger 10:** below the lower row, with valves 27 and 28 beside pump 15 and evaporator 7: production water
-  passes one side, brine the other. Transducer 37 taps port 4's line before pump 16
-  (vessel 18, safety valve 20 and drain 23 are not drawn).
+  passes one side, brine the other. Transducer 37 sits on port 4's line before pump 16 (frame x 690), under probe 32 and
+  above the pump, drawn like probe 32 (the figure's tee towards vessel 18, safety valve 20 and drain 23 is not drawn,
+  as for 38).
 - **Crossings inside the cabinet:** the line from port 1 through valve 26 to port 5 separates port 2 from port 6, yet
   the DHW return from 6 has to join port 2's line, so at least one internal crossing is unavoidable. The figure has 15
-  (14 hops, plus the return line passing behind resistor 44); this layout needs 10 (see The horizontal arrangement).
+  (14 hops, plus the return line passing behind resistor 44); this layout needs 9 (see The horizontal arrangement).
   Each is declared as data in `src/diagram/geometry.ts` and drawn as a hop, a small gap in one of the two pipes: the DHW
   supply and return across the lines of ports 2, 3 and 4 (5 hops) and across the HTR riser (1), the return trunk across
-  the outlet line (1), the brine feed across port 3's line (1), exchanger 10's brine pipes across each other (1) and the
-  transducer 38 tap across exchanger 10's production pipe (1). Tests fail when two pipes cross anywhere else.
+  the outlet line (1), the brine feed across port 3's line (1) and exchanger 10's brine pipes across each other (1).
+  Tests fail when two pipes cross anywhere else.
 
 ## Source and DHW
 
@@ -562,10 +571,9 @@ The mode changes some of these (they are looked up when drawing; the geometry do
   compressor through exchanger 9 to evaporator 7, which works as the condenser, and the suction colour from
   exchanger 8 back; the condensation and evaporation colours swap along with them.
 - **Passive cooling and defrost:** the compressor is stopped, so the condenser does not change the water
-  temperature. The production legs from valve 27 through pump 15 to the condenser (with the taps on the pump's
-  suction and the drain) take the outlet temperature, as does the leg from exchanger 10 (`prod_10_out`, after
-  valve 27), but only while valves 27/28 are in the exchanger position: without exchanger 10 the water runs through
-  the bypass and the legs keep the return colour.
+  temperature. The production legs from valve 27 through pump 15 to the condenser take the outlet temperature, as
+  does the leg from exchanger 10 (`prod_10_out`, after valve 27), but only while valves 27/28 are in the exchanger
+  position: without exchanger 10 the water runs through the bypass and the legs keep the return colour.
 - **HTR recovery** (heating or active cooling with HTR active): the DHW lines between valve 26 and the tank, outside the
   arm of valve 26, and the pipes to and in an external tank carry HTR water, so they take the DHW temperature.
 - **The tank** body takes the DHW temperature on the same scale (a 25 % tint of the colour). Model C's coil 51 is a
@@ -631,7 +639,7 @@ that moves the fluid: 1.2 s at 100 %, proportionally slower below, never faster 
 
 A pump without a percentage that runs (an on/off entity that reads on, or a speed in rpm above 0) also uses a fixed 3 s.
 
-At 0 % or without a value the pipe is still. Dead-end taps (the transducers' stubs and the HTR drain) are coloured
+At 0 % or without a value the pipe is still. Dead-end taps (the HTR drain) are coloured
 but never animated. With `prefers-reduced-motion: reduce` nothing is animated, the pipes and the fan alike; the colours
 stay the same.
 
@@ -648,10 +656,10 @@ entity.
 
 | Value | Where |
 |---|---|
-| Production outlet (33, "Out") and return (34, "In"), pressure (38), pump 15 | left of probe 33, inside the cabinet under the DG1 stubs for probe 34, right of transducer 38, about 35 units above pump 15 |
+| Production outlet (33, "Out") and return (34, "In"), pressure (38), pump 15 | left of probe 33, inside the cabinet under the DG1 stubs for probe 34, left of the riser under transducer 38, about 35 units above pump 15 |
 | "Demand" while the DG1 demand is on | just above the cabinet's top edge, right of connection 2's stub |
-| Brine outlet (31, "Out") and inlet (32, "In"), pressure (37), pump 16 | at the probes, right of transducer 37, left of the pump |
-| Discharge (30) and suction (29) temperatures, pressures 36 and 35 | below the discharge and suction lines of the probe row |
+| Brine outlet (31, "Out") and inlet (32, "In"), pressure (37), pump 16 | at the probes (the outlet under the pressure value), left of transducer 37, left of the pump |
+| Discharge (30) and suction (29) temperatures, pressures 36 and 35 | one two-row block per pair (temperature over pressure, 16 units apart) under the discharge and suction lines, below the pair |
 | Compressor 11: rpm | inside the refrigerant loop |
 | Superheat (K) and valve opening (%) at 12 | left of evaporator 7, the superheat over the opening |
 | Source: "Out" of the air unit, the ground loop (the hybrid: of its ground loop only) | beside the air unit's top port, or left of the ground loop's up leg |
@@ -734,7 +742,7 @@ see Hysteresis); the threshold constant is this card's own. A re-render happens 
 so state updates keep their entity-based gating, and an observation whose width did not change is ignored. A width
 change that keeps the layout but changes the stroke widths (see Minimum rendered sizes) renders again too.
 
-The horizontal layout is the one drawn today (see The arrangement). The vertical layout follows in a later group of the
+The horizontal layout is the one drawn today (see The arrangement). The vertical layout follows in a later step of the
 `rework-layouts` change: until it is built, `layout: vertical` (and `auto` below the threshold) draws the horizontal
 arrangement, and the phone-width checks are not in the test suite. The former values `full` and `compact` and the
 `detail` option are gone: the card rejects them as configuration errors, and the emulator ignores an old `layout=full`,
@@ -780,7 +788,7 @@ with `panel=1` (a control, a 56 px mock header, and a slot as wide as the window
 
 At any card width pipes render at least 2 px wide, component outlines at least 1.25 px and value labels at least 8 px,
 and the footer wraps onto further lines instead of overflowing. (The label minimum becomes 10 px with the label fonts
-of a later group of `rework-layouts`.)
+of a later step of `rework-layouts`.)
 
 - Strokes: `scale = width / 1000` (the drawing is 1000 units wide). The card sets `--pipe-width: max(3, 2 / scale)` and
   `--outline-width: max(2, 1.25 / scale)` on the svg, in drawing units and rounded up to 0.1 (so the rendered minimum
@@ -857,7 +865,7 @@ A label of the arrangement is at its default place (the frame's place under the 
 source, the tank and tank 50) unless `HORIZONTAL_PLACES` in `src/diagram/label-places.ts` gives it another, each with
 its
 reason in code. The table is what `npm run search-places -- --layout=horizontal --browser=webkit --width=680` found (the
-vertical layout gets its own table in a later group): for every value, over every scenario, installation and naming
+vertical layout gets its own table in a later step): for every value, over every scenario, installation and naming
 (168 cases), the places on a 4-unit grid where the label's box, with its 2 px margin, overlaps no component, no pipe at
 its rendered width, no other label and no outline, stays inside the drawing, and, for a value inside a body (tank 50),
 stays inside it; of those the one nearest the label's default place (the search measures from the defaults, never from
@@ -867,18 +875,26 @@ what its default place meets ("Default place meets"); the reasons below are that
 
 | Label | Place (x, y, alignment) | Why the default place fails |
 |---|---|---|
-| Production In (34) | 320, 160, middle | beside probe 34 the box meets pipes `prod_44_26` and `trunk` (140 cases): inside the cabinet under the DG1 stubs, right of Out in reading order |
-| Pump 16 (brine) | 724, 280, end | the default meets pump 16's symbol in every case |
-| Discharge (30) and (36) | 408, 260 start; 452, 276 start | each meets the other in 140 cases |
-| Suction (29) and (35) | 540, 272 end; 556, 276 start | each meets the other in 140 cases |
+| Production In (34) | 320, 160, middle | beside probe 34 the box meets transducer 38 (168 cases) and pipes `prod_44_26` and `trunk` (140 cases each): inside the cabinet under the DG1 stubs, right of Out in reading order |
+| Pressure 38 | 352, 232, start | right of the riser, beside the transducer, the box meets valve 22's symbol (140 cases): the nearest free place is right of the riser at the height of probe 34, 61 units from the default |
+| Pressure 37 | 656, 256, start | the default (left of transducer 37) meets the brine outlet label (140 cases); it stays beside the transducer, shifted 4 units and left-aligned, and the outlet moves |
+| Brine Out (31) | 644, 272, start | the default meets the brine pressure label (140 cases) and transducer 37 (98 cases): right of line `ln3`, under the pressure value |
+| Pump 16 (brine) | 668, 300, start | the default meets pump 16's symbol in every case; the nearest free place is at the same height left of the pump |
 | Superheat and opening at 12 | 536, 376 and 536, 392, end | each meets the other in every case; left of evaporator 7, 16 units apart |
 | Tank 50 "Demand" | 520, 164, end | the default rows, 13 units apart, meet in 4 cases now that the temperature carries its caption; staggered under it |
 
-Every other label keeps its default place: production Out (left of probe 33), pump 15's value (about 35 units above the
-pump), the brine Out and In, the brine pressure, the compressor speed, the DG1 demand, the source's Out, the external
-tank's temperature and demand and the temperature in tank 50. The search finds them free at 680 px, and the overlap
-tests check them like the rest. Pressure 38 follows its transducer, which the arrangement still moves as an exception to
-the maps.
+Every other label keeps its default place: production Out (left of probe 33), pump 15's value (about 35 units above
+the pump), the brine In, the discharge and suction blocks (see below), the compressor speed, the DG1 demand, the
+source's Out, the external tank's temperature and demand and the temperature in tank 50. The search finds them free at
+680 px, and the overlap tests check them like the rest.
+
+The discharge and suction pairs are two-row blocks (temperature over pressure, 16 units apart, same x and alignment),
+which the search places together like the Out and In pairs (`BLOCK_PAIRS` in `dev/overlaps.ts`). At 680 px, in WebKit
+and Chromium alike, it finds both blocks as recorded: the discharge block starts at x 444 under the line (valve 14 sits
+under the pair's left half) and the suction block ends at x 576, directly under its pair (arrangement x 536 to 576,
+under the probe at about 536 and the transducer at about 568), rows at y 260 and 276 in both.
+The threshold stays 680 px with them: at 660 px the search still moves production Out to x 124 (108 units from its
+default place), so `measure-layout` (WebKit), clean from 640 px, is not the limit.
 
 ### Superheat and the expansion valve opening
 

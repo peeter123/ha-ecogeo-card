@@ -2,7 +2,7 @@
 // threshold", "Labels clear of everything"): every emulator scenario in every installation of the measurement script, in the
 // horizontal layout at the vertical threshold, has no two labels that overlap, no label that overlaps a component or a
 // pipe, and no caption that overlaps a label or a pipe. The boxes are the script's (dev/overlaps.ts). The vertical layout's
-// own phone-width cases come back with its arrangement (rework-layouts group 7).
+// own phone-width cases come back with its arrangement (the vertical arrangement of rework-layouts).
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';
