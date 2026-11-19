@@ -5,7 +5,6 @@ import { arrangementFor } from '../../src/diagram/geometry';
 import { fanDuration } from '../../src/diagram/source';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
-import { SOURCE_LABELS } from '../../src/strings';
 import { states } from '../helpers';
 
 // the coordinates below come from the arrangement (the manual-figure frame's are in test/diagram/simplified.test.ts)
@@ -13,7 +12,6 @@ const horizontal = arrangementFor('horizontal');
 const AIR_PORT_Y = horizontal.airPortY;
 const AIR_UNIT = horizontal.airUnit;
 const CABINET = horizontal.cabinet;
-const GROUND_CAPTION = horizontal.groundCaption;
 const GROUND_LINE_Y = horizontal.groundLineY;
 const GROUND_LOOP = horizontal.groundLoop;
 const GROUND_LINE_X = horizontal.groundLineX;
@@ -38,8 +36,9 @@ const root = (card: EcogeoCard): ShadowRoot => {
 const segments = (card: EcogeoCard): string[] =>
   [...root(card).querySelectorAll('[data-segment]')].map((element) => element.getAttribute('data-segment') ?? '');
 const fan = (card: EcogeoCard): Element | null => root(card).querySelector('.fan-rotor');
-const captions = (card: EcogeoCard): string[] =>
-  [...root(card).querySelectorAll('.source-caption')].map((element) => element.textContent.trim());
+/** The texts the source and tank parts of the SVG draw: none of the source's parts carries a caption (responsive-layout "No in-drawing captions"). */
+const svgTexts = (card: EcogeoCard): string[] =>
+  [...root(card).querySelectorAll('.source text, .dhw-storage text')].map((element) => element.textContent.trim());
 
 const withFan = (speed: string, extra: readonly (readonly [string, string])[] = []): HassLike => ({
   states: states([`sensor.${P}_aerothermal_fan_speed`, speed], ...extra),
@@ -65,7 +64,7 @@ describe('outer-loop source', () => {
     expect(root(card).querySelector('.air-unit')).not.toBeNull();
     expect(root(card).querySelector('.ground-loop')).toBeNull();
     expect(segments(card)).toEqual(expect.arrayContaining(['src_air_feed', 'src_air_coil', 'src_air_exit']));
-    expect(captions(card)).toEqual([SOURCE_LABELS.air]);
+    expect(svgTexts(card)).toEqual([]);
     card.remove();
   });
 
@@ -122,15 +121,15 @@ describe('outer-loop source', () => {
       expect.arrayContaining(['src_gnd_feed', 'src_gnd_down', 'src_gnd_up', 'src_gnd_exit']),
     );
     expect(segments(card).some((id) => id.startsWith('src_air_'))).toBe(false);
-    expect(captions(card)).toEqual([SOURCE_LABELS.ground]);
+    expect(svgTexts(card)).toEqual([]);
     card.remove();
   });
 
-  test('hybrid: the air unit and the ground loop on one brine loop, each with its caption', async () => {
+  test('hybrid: the air unit and the ground loop on one brine loop', async () => {
     const card = await mount({ source: 'hybrid' });
     expect(root(card).querySelector('.air-unit')).not.toBeNull();
     expect(root(card).querySelector('.ground-loop')).not.toBeNull();
-    expect(captions(card)).toEqual([SOURCE_LABELS.air, SOURCE_LABELS.ground]);
+    expect(svgTexts(card)).toEqual([]);
     expect(segments(card)).toEqual(
       expect.arrayContaining([
         'src_hyb_feed',
@@ -165,13 +164,6 @@ describe('outer-loop source', () => {
           );
           expect(GROUND_LINE_Y.hybrid).toBeGreaterThan(CABINET.y + AIR_UNIT.height);
         }
-      }
-      // the captions keep their places: the air unit's above its housing, the ground loop's under its loop
-      const texts = [...root(card).querySelectorAll('.source-caption')];
-      for (const text of texts) {
-        const y = Number(text.getAttribute('y'));
-        if (text.textContent.trim() === SOURCE_LABELS.air) expect(y, source).toBeLessThan(CABINET.y);
-        else expect(y, source).toBe(GROUND_CAPTION.y[source === 'hybrid' ? 'hybrid' : 'ground']);
       }
       card.remove();
     }
@@ -221,12 +213,11 @@ describe('outer-loop source', () => {
     quick.remove();
   });
 
-  test('Fan speed not present: no fan speed label and the fan does not rotate, though the default entity reads 34.5', async () => {
+  test('Fan speed not present: the fan does not rotate, though the default entity reads 34.5', async () => {
     const card = await mount(
       { prefix: P, source: 'air', entities: { source: { fan_speed: 'none' } } },
       withFan('34.5'),
     );
-    expect(root(card).querySelector('[data-label="fan_speed"]')).toBeNull();
     expect(fan(card)?.classList.contains('still')).toBe(true);
     expect(fan(card)?.getAttribute('style') ?? '').not.toContain('--fan-duration');
     card.remove();
@@ -270,14 +261,14 @@ describe('outer-loop source', () => {
 });
 
 describe('fan speed in another unit', () => {
-  test('fan speed in rpm: the fan rotates at the fixed medium speed and the label reads 900 rpm', async () => {
+  test('fan speed in rpm: the fan rotates at the fixed medium speed and no fan speed label is shown', async () => {
     const hass: HassLike = {
       states: states([`sensor.${P}_aerothermal_fan_speed`, '900', 'rpm']),
     };
     const card = await mount({ prefix: P, source: 'air', layout: 'horizontal' }, hass);
     expect(fan(card)?.classList.contains('still')).toBe(false);
     expect(fan(card)?.getAttribute('style') ?? '').toContain('--fan-duration: 3s');
-    expect(root(card).querySelector('[data-label="fan_speed"] .value')?.textContent.trim()).toBe('900 rpm');
+    expect(root(card).querySelector('[data-label="fan_speed"]')).toBeNull();
     card.remove();
   });
 

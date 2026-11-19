@@ -4,7 +4,7 @@ import { EcogeoCard } from '../../src/card/ecogeo-card';
 import { type Point, arrangementFor } from '../../src/diagram/geometry';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
-import { CIRCUIT_LABELS, MODE_LABELS } from '../../src/strings';
+import { MODE_LABELS } from '../../src/strings';
 import { states } from '../helpers';
 
 // the default config draws the simplified level
@@ -109,7 +109,7 @@ describe('cabinet drawing', () => {
     },
   );
 
-  test('port order: 1 to 6 left to right, labelled DG1, outer loop and DHW', async () => {
+  test('port order: 1 to 6 left to right', async () => {
     const card = await mount({ model: 'B', dhw: 'external' });
     const ports = [...root(card).querySelectorAll('[data-kind="port"]')];
     expect(ports.map((port) => Number(port.getAttribute('data-item')))).toEqual([1, 2, 3, 4, 5, 6]);
@@ -122,8 +122,6 @@ describe('cabinet drawing', () => {
       ),
     );
     expect(xs).toEqual([...xs].sort((a, b) => a - b));
-    const labels = [...root(card).querySelectorAll('.circuit-label')].map((label) => label.textContent.trim());
-    expect(labels).toEqual([CIRCUIT_LABELS.dg1, CIRCUIT_LABELS.outerLoop, CIRCUIT_LABELS.dhw]);
     card.remove();
   });
 
@@ -162,7 +160,6 @@ describe('cabinet drawing', () => {
     for (const item of [5, 6, 26]) expect(items(card)).not.toContain(item);
     expect(items(card)).toEqual(expect.arrayContaining([1, 2, 3, 4]));
     expect(segments(card)).toContain('p1_direct');
-    expect(root(card).querySelectorAll('.circuit-label')).toHaveLength(2);
     card.remove();
   });
 

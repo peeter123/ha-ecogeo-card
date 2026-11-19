@@ -7,12 +7,13 @@ import type { Layout } from '../config/options';
 
 /**
  * With `layout: auto`, cards narrower than this (px) get the vertical layout. Until the vertical arrangement is built
- * (rework-layouts group 7) both layouts draw the same arrangement and this stays at the value measured on 2026-11-13 for the
- * former narrow layout with `npm run measure-layout` (scripts/measure-layout.mjs): the narrowest width on the 20 px grid
- * from which the horizontal layout has no label that overlaps another label, a component, a pipe or a caption in any
- * emulator scenario (refine-simplified-layout D4, D6). Group 3 measures it again.
+ * (rework-layouts group 7) both layouts draw the same arrangement. Decided on 2026-11-19 (rework-layouts D7, D8): the
+ * narrowest width on the 20 px grid from 320 to 800 px at which `npm run search-places -- --layout=horizontal` places every
+ * label with its 2 px margin, measured in WebKit. `npm run measure-layout` finds no overlap from 640 px, which is the
+ * tolerance's view of the same drawing; the margin is what makes 680 px the threshold (docs/ecogeo-card.md). The Chromium
+ * measurement is repeated on a host with font smoothing on.
  */
-export const VERTICAL_BELOW = 600;
+export const VERTICAL_BELOW = 680;
 
 /**
  * True when the card shows the vertical layout. With `auto` that depends on the card's width; an unknown width (before the

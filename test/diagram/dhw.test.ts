@@ -14,7 +14,6 @@ import {
   coilMutedColor,
   temperatureColor,
 } from '../../src/diagram/colors';
-import { DHW_LABELS } from '../../src/strings';
 import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 
 // the coordinates below come from the arrangement (the manual-figure frame's are in test/diagram/simplified.test.ts)
@@ -62,7 +61,6 @@ describe('DHW storage', () => {
   test('external: a tank with a coil right of the cabinet, joined to ports 5 and 6', async () => {
     const card = await mount({ model: 'B', dhw: 'external' });
     expect(tanks(card)).toEqual(['external']);
-    expect(root(card).querySelector('.tank-caption')?.textContent.trim()).toBe(DHW_LABELS.externalTank);
     expect(segments(card)).toEqual(expect.arrayContaining(['dhw_ext_in', 'dhw_ext_coil', 'dhw_ext_out']));
     expect(items(card)).toEqual(expect.arrayContaining([5, 6, 26]));
     const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';

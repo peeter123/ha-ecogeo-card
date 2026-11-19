@@ -1,15 +1,14 @@
 // The outer-loop source (add-schematic-card D5, D6; refine-schematic-drawing D11-D14; outer-loop-source spec): the air unit, the ground loop or both on
 // one brine loop, drawn in the zone left of the cabinet (viewBox x 0-240), its top on the cabinet's top line. This
-// file draws what is not a pipe: the air unit's housing (slatted front), finned coil block and fan, the ground line
-// and the captions. The pipes (ports 3/4 up into the run, left to the zone, the serpentine and the ground loop's U)
+// file draws what is not a pipe: the air unit's housing (slatted front), finned coil block and fan, and the ground line
+// (no captions: the tooltips name the parts, rework-layouts "No in-drawing captions"). The pipes (ports 3/4 up into the run, left to the zone, the serpentine and the ground loop's U)
 // are segments in geometry.ts, so pipes.ts colours and animates them like every other pipe. None of these parts is
 // a manual item: the manual's figures stop at connections 3 (brine outlet) and 4 (brine inlet).
 //
-// The live values (labels.ts): the air unit's fan speed and outside temperature go under the housing, its In and Out
-// beside its two ports on the housing's right; the ground loop's In and Out sit at the ground line, beside the legs.
+// The live value (labels.ts): the source's Out only, beside the air unit's top port or at the ground loop's up leg.
 import { css, svg, type SVGTemplateResult } from 'lit';
 import type { AnimationReadings } from '../calc/readings';
-import { AIR_UNIT_FAN_NAME, SOURCE_LABELS } from '../strings';
+import { AIR_UNIT_FAN_NAME } from '../strings';
 import { FAN_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
 import { arrangementOf, drawnSegments, type AirUnitShape, type DrawContext } from './geometry';
 
@@ -50,13 +49,6 @@ export const sourceStyles = css`
   .muted .source-divider,
   .muted .source-ground {
     stroke: var(--disabled-text-color);
-  }
-  .muted .source-caption {
-    fill: var(--disabled-text-color);
-  }
-  .source-caption {
-    fill: var(--secondary-text-color);
-    font-size: 11px;
   }
   .fan-part[role='button'] {
     cursor: pointer;
@@ -143,7 +135,6 @@ function airUnit(
         <g class=${duration === undefined ? 'fan-rotor still' : 'fan-rotor'} style=${duration === undefined ? '' : `--fan-duration: ${String(duration)}s`}>${BLADES}<circle class="fan-hub" r="5" fill="var(--primary-text-color)" /></g>
       </g>
     </g>
-    <text class="source-caption" x=${unit.captionX} y=${unit.captionY} text-anchor="middle">${SOURCE_LABELS.air}</text>
   </g>`;
 }
 
@@ -161,18 +152,16 @@ function pipesAcross(context: DrawContext, lineY: number): number[] {
 }
 
 /** The ground line with its hatching, at `lineY`, leaving out the places where the source pipes pass. */
-function groundLine(context: DrawContext, kind: 'ground' | 'hybrid', lineY: number, muted: boolean): SVGTemplateResult {
-  const { groundLineX, groundCaption } = arrangementOf(context);
+function groundLine(context: DrawContext, lineY: number, muted: boolean): SVGTemplateResult {
+  const { groundLineX } = arrangementOf(context);
   const skip = pipesAcross(context, lineY);
   const ticks = Array.from(
     { length: Math.floor((groundLineX.end - groundLineX.start - 12) / 10) + 1 },
     (_, index) => groundLineX.start + 6 + index * 10,
   ).filter((tick) => !skip.some((pipe) => Math.abs(pipe - tick) < 10));
-  const captionY = groundCaption.y[kind];
   return svg`<g class="ground-loop${muted ? ' muted' : ''}" data-source="ground">
     <path class="source-ground" d="M${groundLineX.start} ${lineY} H${groundLineX.end}" />
     ${ticks.map((tick) => svg`<path class="source-ground" d="M${tick} ${lineY} l-6 8" />`)}
-    <text class="source-caption" x=${groundCaption.x} y=${captionY} text-anchor="middle">${SOURCE_LABELS.ground}</text>
   </g>`;
 }
 
@@ -192,6 +181,6 @@ export function renderSource(
   const kind = context.source === 'hybrid' ? 'hybrid' : 'ground';
   return svg`<g class="source" data-source-kind=${context.source}>
     ${air ? airUnit(unit, readings['source.fan_speed'], !brineActive, taps, scale) : svg``}
-    ${ground ? groundLine(context, kind, groundLineY[kind], !brineActive) : svg``}
+    ${ground ? groundLine(context, groundLineY[kind], !brineActive) : svg``}
   </g>`;
 }

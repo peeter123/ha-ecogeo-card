@@ -1,7 +1,7 @@
 // The DHW storage (add-schematic-card D5, D7; dhw-storage spec): an external tank with a coil right of the cabinet (model B,
 // connections 5 "DHW inter-accumulator outlet" and 6 "inlet"), the integrated tank of model C, or none.
 //
-// - External: this file draws the tank body and its caption. The pipes from ports 5/6 (up into the run and right to
+// - External: this file draws the tank body (no caption: its tooltip names it). The pipes from ports 5/6 (up into the run and right to
 //   the zone) and the coil inside the tank are segments in geometry.ts (dhw_ext_in, dhw_ext_coil, dhw_ext_out), so
 //   pipes.ts colours and animates them like every other pipe. The tank is not a manual item.
 // - Internal (model C): items 50 (tank), 51 (coil), 52 (manual trap), 53 (drain valve), 54 (DHW probe) and the
@@ -43,14 +43,10 @@ export const dhwStyles = css`
   .dhw-storage[role='button']:focus-visible {
     ${focusRingStyles}
   }
-  .tank-caption {
-    fill: var(--secondary-text-color);
-    font-size: 11px;
-  }
 `;
 
 /**
- * The DHW storage outside the cabinet: the external tank's body (a rounded cylinder) and caption (a button for the DHW temperature's
+ * The DHW storage outside the cabinet: the external tank's body (a rounded cylinder; a button for the DHW temperature's
  * more-info, with its name as tooltip); the other storages draw nothing here.
  */
 export function renderDhw(context: DrawContext, taps?: Taps): SVGTemplateResult {
@@ -66,6 +62,5 @@ export function renderDhw(context: DrawContext, taps?: Taps): SVGTemplateResult 
     <title>${DHW_LABELS.externalTank}</title>
     <path class="tank-body" data-dhw-tank="external" d=${body} fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />
     <path class="tank-rim" d=${rim} />
-    <text class="tank-caption" x=${x + width / 2} y=${y - 6} text-anchor="middle">${DHW_LABELS.externalTank}</text>
   </g>`;
 }

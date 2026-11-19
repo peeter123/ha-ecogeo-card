@@ -1,10 +1,11 @@
-// The value labels' placements (refine-simplified-layout D1): where each label sits in an arrangement, as a function of the
-// arrangement's zone constants. Labels.ts reads them from the arrangement; the
+// The value labels' placements (refine-simplified-layout D1, rework-layouts D7): where each of the 19 values sits in an
+// arrangement, as a function of the arrangement's zone constants. Labels.ts reads them from the arrangement; the
 // texts, captions and visibility rules stay there. Positions are viewBox points with an alignment: `start` puts the label's
 // left edge at x, `end` its right edge, `middle` centres it; y is the vertical centre. They sit where the drawing leaves
-// room (checked on the emulator captures): the probe row's values below the discharge line, the compressor's stack inside
-// the refrigerant loop, the source's values under the air unit and beside its ports and the ground loop's legs, the tank's
-// values under the external tank or, for model C, inside tank 50 above its coil (refine-schematic-drawing D8b).
+// room, and on no pipe (found with `npm run search-places`, checked by the overlap browser tests): the probe row's values
+// below the discharge line, the compressor's speed inside the refrigerant loop, the expansion valve's pair left of the
+// evaporator, the source's Out beside its port or its ground loop's up leg, the DHW values under the external tank or,
+// for model C, inside tank 50 above its coil (refine-schematic-drawing D8b).
 import type { RolePath } from '../config/roles';
 import { VALUE_CAPTIONS } from '../strings';
 import type { Visibility, Zones } from './geometry';
@@ -40,65 +41,65 @@ export interface Placement {
 /** Maps a point of the frame's cabinet to the arrangement's own. */
 type PointMap = (x: number, y: number) => readonly [number, number];
 
-interface SimplifiedPlace {
+interface PlaceOverride {
   /** The place, from the zones and the point map of the cabinet. */
   at: (z: Zones, map: PointMap) => Placement;
   reason: string;
 }
 
 /**
- * The labels of the arrangement that are not at the frame's place under the maps (refine-simplified-layout D6),
- * each with its reason: places that the pipe-aware overlap check (dev/overlaps.ts) reported on a label's own pipes, caption or
- * neighbour once the pipes are counted. A place is a function of the arrangement's zones where it hangs on the source, so it
- * follows them.
+ * The labels of the horizontal arrangement whose default place (the frame's place under the maps, or the zone's) fails
+ * and that `npm run search-places -- --layout=horizontal` moved, each with its reason: what the default place's box, with
+ * the 2 px margin, meets (the search prints it under "Default place meets"). Every entry is a constant place; group 5
+ * places the labels of the new bodies from the zones. No label sits on a pipe. The other labels keep their default place,
+ * which the search finds free at 680 px, the vertical threshold: at 660 px the external tank's temperature and demand
+ * meet in 6 cases and the search moves production Out to x 124 to keep it left of In, so the threshold is 680 px.
  */
-export const SIMPLIFIED_PLACES: Readonly<Record<string, SimplifiedPlace>> = {
-  air_unit_out: {
-    at: (z) => ({ x: z.airUnitWallX + 3, y: z.airPortY.top + portLabelDy(z), align: 'start' }),
+export const HORIZONTAL_PLACES: Readonly<Record<string, PlaceOverride>> = {
+  production_in: {
+    at: () => ({ x: 320, y: 160, align: 'middle' }),
     reason:
-      'starts 3 units off the housing so that the outlet caption and its widest value end before the feed pipe at the threshold width',
+      'at its default place beside probe 34 the box, with its 2 px margin, meets pipes prod_44_26 and trunk in all 140 cases that show it (search at 680 px); the nearest free place is inside the cabinet under the DG1 stubs, to the right of the production outlet value so the pair reads in order',
   },
-  dg1_demand: {
-    at: (_z, map) => ({ x: map(320, 118)[0], y: 118, align: 'start' }),
+  brine_pump: {
+    at: () => ({ x: 724, y: 280, align: 'end' }),
     reason:
-      'the demand text 5 units higher, clear of the cabinet top edge that its plate touches at the full place (y 123)',
+      "its default place meets pump 16's symbol in all 168 cases (search at 680 px); this is the nearest place clear of the pump and the brine pipes",
   },
-  fan_speed: {
-    at: (z) => ({ x: z.airUnit.x + 9, y: z.airUnit.y + z.airUnit.height + 12, align: 'start' }),
+  discharge_temperature: {
+    at: () => ({ x: 408, y: 260, align: 'start' }),
     reason:
-      'left-aligned 9 units inside the housing: the outside air value (about 105 units wide at 600 px) centred on the fan reaches the hybrid return pipe at x 6',
+      'its default place meets the discharge pressure label in 140 cases (search at 680 px); starts at x 408, the nearest free place',
   },
-  outside_temperature: {
-    at: (z) => ({ x: z.airUnit.x + 9, y: z.airUnit.y + z.airUnit.height + 25, align: 'start' }),
-    reason: 'under the fan value, on the same left edge',
-  },
-  ground_in: {
-    at: (z) => ({ x: z.groundLoop.downX + 3, y: z.groundLineY.ground + 20, align: 'start' }),
+  discharge_pressure: {
+    at: () => ({ x: 452, y: 276, align: 'start' }),
     reason:
-      'starts 3 units off the down leg (not 6): the legs sit 4 units further right than before, and the widest value must still end left of the cabinet',
+      'its default place meets the discharge temperature label in 140 cases (search at 680 px); starts at x 452 under it, the nearest free place',
   },
-  ground_out: {
-    at: (z) => ({ x: z.groundLoop.upX - 3, y: z.groundLineY.ground + 20, align: 'end' }),
+  suction_temperature: {
+    at: () => ({ x: 540, y: 272, align: 'end' }),
     reason:
-      'ends 3 units off the up leg (not 6) so that the widest value (-12.3, defrost) stays 2 px inside the drawing edge at 600 px',
+      'its default place meets the suction pressure label in 140 cases (search at 680 px); ends at x 540, the nearest free place',
   },
-  hybrid_ground_out: {
-    at: (z) => ({ x: z.groundLoop.upX - 3, y: z.groundLineY.hybrid + 20, align: 'end' }),
+  suction_pressure: {
+    at: () => ({ x: 556, y: 276, align: 'start' }),
     reason:
-      'the same as the ground loop: 3 units off the up leg, so that the widest value stays inside the drawing edge',
+      'its default place meets the suction temperature label in 140 cases (search at 680 px); starts at x 556 under it, the nearest free place',
   },
-  compressor_speed: {
-    at: (_z, map) => ({ x: map(503, 308)[0], y: 308, align: 'middle' }),
+  superheat: {
+    at: () => ({ x: 536, y: 376, align: 'end' }),
     reason:
-      'the stack of three rows is 14 units apart (12 in the frame), since the 8 px text of a 600 px card is taller than 12 units',
+      "its default place meets the valve opening's label in all 168 cases (search at 680 px); ends at x 536, left of evaporator 7, the nearest free place",
   },
-  compressor_percentage: {
-    at: (_z, map) => ({ x: map(503, 322)[0], y: 322, align: 'middle' }),
-    reason: 'the middle row of the compressor stack, 14 units under the speed',
+  expansion_valve: {
+    at: () => ({ x: 536, y: 392, align: 'end' }),
+    reason:
+      "its default place meets the superheat's label in all 168 cases (search at 680 px); ends at x 536, 16 units under the superheat",
   },
-  compressor_power: {
-    at: (_z, map) => ({ x: map(503, 336)[0], y: 336, align: 'middle' }),
-    reason: 'the bottom row of the compressor stack, 14 units under the percentage, still clear of the pipes below',
+  tank_internal_demand: {
+    at: () => ({ x: 520, y: 164, align: 'end' }),
+    reason:
+      'inside tank 50 the default rows, 13 units apart, meet in 4 cases (search at 680 px) now that the temperature carries its caption; ends at x 520 under the temperature, the nearest place inside the tank that keeps both rows apart',
   },
 };
 
@@ -123,13 +124,16 @@ export interface LabelPlaces {
  * The placements of an arrangement: each label's place computed from its zones. `place` maps a
  * point of the frame's cabinet to the arrangement's own: the labels at the cabinet's
  * components go through it, the ones placed from the zones (source, external tank, tank 50) do not.
+ * The 19 values of live-values "Values on the drawing": production out and in, brine out and in, the two pressures, the
+ * two pumps, the discharge and suction pairs, the compressor speed, the superheat and the expansion valve opening, the
+ * source's Out, the DHW temperature and the DG1 and DHW demand.
  */
 export function labelPlacesFor(
   z: Zones,
   place: (x: number, y: number) => readonly [number, number] = (x, y) => [x, y],
 ): LabelPlaces {
-  const { externalTank, internalTank, airUnit, airUnitWallX } = z;
-  /** The external tank's values: centred under the tank, 22 units below its bottom. */
+  const { externalTank, internalTank, airUnitWallX } = z;
+  /** The external tank's values: centred under the tank, 22 units below its bottom, the demand 15 units under that. */
   const EXT_TANK_X = externalTank.x + externalTank.width / 2;
   const EXT_TANK_Y = externalTank.y + externalTank.height + 22;
 
@@ -137,12 +141,10 @@ export function labelPlacesFor(
   const INTERNAL_ROW_Y = internalTank.y + 12;
   const INTERNAL_CENTRE_X = internalTank.x + internalTank.width / 2;
 
-  /** The air unit's fan and outside labels: the first 12 units under the housing, the second 13 below it. */
-  const AIR_LABELS_Y = airUnit.y + airUnit.height + 12;
-  /** The air unit's port labels: 6 units right of the housing's wall, 12 units under (top port) or above (bottom port) the port's pipe. */
+  /** The air unit's Out label: 6 units right of the housing's wall, 12 units under the top port's pipe. */
   const PORT_LABEL_X = airUnitWallX + 6;
   const PORT_LABEL_DY = portLabelDy(z);
-  /** The ground loop's labels: 20 units under the ground line, clear of its hatching. */
+  /** The ground loop's Out label: 20 units under the ground line, clear of its hatching. */
   const GROUND_LABEL_DY = 20;
   /** Every value label of the drawing. */
   const spec = makeSpec;
@@ -151,66 +153,38 @@ export function labelPlacesFor(
     return spec(id, role, px, py, align, extra);
   };
   const specs: readonly LabelSpec[] = [
-    // production: probes 33 and 34, pressure 38, pump 15, and the DG1 setpoint above connections 1/2
-    cab('production_out', 'production.outlet_temperature', 237, 228, 'end', { item: 33 }),
-    cab('production_in', 'production.return_temperature', 291, 247, 'middle', { item: 34 }),
+    // production: probes 33 and 34 (Out, In), pressure 38, pump 15, and the DG1 demand above connections 1/2
+    cab('production_out', 'production.outlet_temperature', 237, 228, 'end', {
+      item: 33,
+      caption: VALUE_CAPTIONS.portOut,
+    }),
+    cab('production_in', 'production.return_temperature', 291, 247, 'middle', {
+      item: 34,
+      caption: VALUE_CAPTIONS.portIn,
+    }),
     cab('production_pressure', 'production.pressure', 360, 537, 'end', { item: 38 }),
     cab('production_pump', 'production.pump', 396, 380, 'end', { item: 15 }),
-    cab('dg1_setpoint', 'heating.setpoint', 291, 96, 'middle', { item: 1 }),
     cab('dg1_demand', 'heating.demand', 320, 123, 'start', { item: 1, demand: true }),
-    // brine: probes 31 and 32, pressure 37, pump 16
-    cab('brine_out', 'brine.outlet_temperature', 633, 247, 'start', { item: 31 }),
-    cab('brine_in', 'brine.inlet_temperature', 697, 247, 'start', { item: 32 }),
+    // brine: probes 31 and 32 (Out, In), pressure 37, pump 16
+    cab('brine_out', 'brine.outlet_temperature', 633, 247, 'start', { item: 31, caption: VALUE_CAPTIONS.portOut }),
+    cab('brine_in', 'brine.inlet_temperature', 697, 247, 'start', { item: 32, caption: VALUE_CAPTIONS.portIn }),
     cab('brine_pressure', 'brine.pressure', 689, 459, 'start', { item: 37 }),
     cab('brine_pump', 'brine.pump', 676, 300, 'end', { item: 16 }),
     // refrigerant: temperatures 30 and 29 and pressures 36 and 35 below the discharge and suction lines, the compressor's
-    // three values inside the loop, the expansion valve's, and the condensation (8) and evaporation (7) temperatures
+    // speed inside the loop, and the expansion valve's opening and superheat beside valve 12
     cab('discharge_temperature', 'compressor.discharge_temperature', 436, 262, 'start', { item: 30 }),
     cab('discharge_pressure', 'compressor.discharge_pressure', 480, 275, 'middle', { item: 36 }),
     cab('suction_temperature', 'compressor.suction_temperature', 528, 262, 'start', { item: 29 }),
     cab('suction_pressure', 'compressor.suction_pressure', 570, 275, 'middle', { item: 35 }),
     cab('compressor_speed', 'compressor.speed', 503, 307, 'middle', { item: 11 }),
-    cab('compressor_percentage', 'compressor.percentage', 503, 319, 'middle', { item: 11 }),
-    cab('compressor_power', 'compressor.power', 503, 331, 'middle', { item: 11 }),
-    cab('condensation_temperature', 'refrigerant.condensation_temperature', 432, 437, 'middle', { item: 8 }),
-    cab('evaporation_temperature', 'refrigerant.evaporation_temperature', 572, 437, 'middle', { item: 7 }),
-    // air unit (also in the hybrid): the fan and the outside air under the housing, the brine In and Out beside the two
-    // ports on the housing's right (refine-schematic-drawing D14). The label of the top port hangs under its pipe, that of the bottom port
-    // sits on its pipe, so the two stay between the pipes and clear of the production labels at the cabinet. Air: In at the
-    // bottom port, Out at the top one. Hybrid (entered at the top): only In, at the top port; the air unit's Out and the ground loop's In would be the same value on the link pipe, which carries no label.
-    spec('fan_speed', 'source.fan_speed', z.airUnit.fanX, AIR_LABELS_Y, 'middle', {
-      source: ['air', 'hybrid'],
-      caption: VALUE_CAPTIONS.fan,
-    }),
-    spec('outside_temperature', 'source.outside_temperature', z.airUnit.fanX, AIR_LABELS_Y + 13, 'middle', {
-      source: ['air', 'hybrid'],
-      caption: VALUE_CAPTIONS.outside,
-    }),
-    spec('air_unit_in', 'brine.outlet_temperature', PORT_LABEL_X, z.airPortY.bottom - PORT_LABEL_DY, 'start', {
-      source: ['air'],
-      caption: VALUE_CAPTIONS.portIn,
-    }),
+    cab('superheat', 'refrigerant.superheat', 527, 376, 'middle', { item: 12 }),
+    cab('expansion_valve', 'refrigerant.expansion_valve', 527, 388, 'middle', { item: 12 }),
+    // source: the Out of the air unit (beside its top port), of the ground loop (left of its up leg) or, in the hybrid, of
+    // its ground loop only (the air unit shows no value and the link pipe carries no label)
     spec('air_unit_out', 'source.air_unit_outlet_temperature', PORT_LABEL_X, z.airPortY.top + PORT_LABEL_DY, 'start', {
       source: ['air'],
       caption: VALUE_CAPTIONS.portOut,
     }),
-    spec('hybrid_air_unit_in', 'brine.outlet_temperature', PORT_LABEL_X, z.airPortY.top + PORT_LABEL_DY, 'start', {
-      source: ['hybrid'],
-      caption: VALUE_CAPTIONS.portIn,
-    }),
-    // ground loop (refine-schematic-drawing D14): In (the brine entering it) right of the down leg and Out (the brine leaving it) left of
-    // the up leg, both just under the ground line; in the hybrid only Out
-    spec(
-      'ground_in',
-      'brine.outlet_temperature',
-      z.groundLoop.downX + 6,
-      z.groundLineY.ground + GROUND_LABEL_DY,
-      'start',
-      {
-        source: ['ground'],
-        caption: VALUE_CAPTIONS.portIn,
-      },
-    ),
     spec('ground_out', 'brine.inlet_temperature', z.groundLoop.upX - 6, z.groundLineY.ground + GROUND_LABEL_DY, 'end', {
       source: ['ground'],
       caption: VALUE_CAPTIONS.portOut,
@@ -226,55 +200,23 @@ export function labelPlacesFor(
         caption: VALUE_CAPTIONS.portOut,
       },
     ),
-    // external tank: stacked under the tank (the arrangement's `externalTank`)
+    // external tank: the DHW temperature and the demand under the tank (the arrangement's `externalTank`)
     spec('tank_external_temperature', 'dhw.temperature', EXT_TANK_X, EXT_TANK_Y, 'middle', {
       dhw: 'external',
       emphasis: true,
+      caption: VALUE_CAPTIONS.dhw,
     }),
-    spec('tank_external_setpoint', 'dhw.setpoint', EXT_TANK_X, EXT_TANK_Y + 15, 'middle', {
-      dhw: 'external',
-      caption: VALUE_CAPTIONS.setpoint,
-    }),
-    spec('tank_external_start_delta', 'dhw.start_delta', EXT_TANK_X, EXT_TANK_Y + 29, 'middle', {
-      dhw: 'external',
-      caption: VALUE_CAPTIONS.startDelta,
-    }),
-    spec('tank_external_demand', 'dhw.demand', EXT_TANK_X, EXT_TANK_Y + 43, 'middle', {
+    spec('tank_external_demand', 'dhw.demand', EXT_TANK_X, EXT_TANK_Y + 15, 'middle', {
       dhw: 'external',
       demand: true,
     }),
-    // model C: one row inside tank 50, in the strip above coil 51: three labels centred at one sixth, one half and five
-    // sixths of the tank's width (even gaps), at the normal label size, with no background plate and with short
-    // captions; the demand text goes on a second line under the row. The labels have a minimum font size, so on cards
-    // narrower than about 560 px while the demand line shows (about 510 px for the three values alone) they grow relative to the drawing and start to touch.
-    spec(
-      'tank_internal_temperature',
-      'dhw.temperature',
-      z.internalTank.x + z.internalTank.width / 6,
-      INTERNAL_ROW_Y,
-      'middle',
-      {
-        dhw: 'internal',
-        bare: true,
-      },
-    ),
-    spec('tank_internal_setpoint', 'dhw.setpoint', INTERNAL_CENTRE_X, INTERNAL_ROW_Y, 'middle', {
+    // model C: the DHW temperature and, under it, the demand, inside tank 50 in the strip above coil 51, with no
+    // background plate
+    spec('tank_internal_temperature', 'dhw.temperature', INTERNAL_CENTRE_X, INTERNAL_ROW_Y, 'middle', {
       dhw: 'internal',
-      caption: VALUE_CAPTIONS.setpointShort,
+      caption: VALUE_CAPTIONS.dhw,
       bare: true,
     }),
-    spec(
-      'tank_internal_start_delta',
-      'dhw.start_delta',
-      z.internalTank.x + (z.internalTank.width * 5) / 6,
-      INTERNAL_ROW_Y,
-      'middle',
-      {
-        dhw: 'internal',
-        caption: VALUE_CAPTIONS.startDeltaShort,
-        bare: true,
-      },
-    ),
     spec('tank_internal_demand', 'dhw.demand', INTERNAL_CENTRE_X, INTERNAL_ROW_Y + 13, 'middle', {
       dhw: 'internal',
       demand: true,

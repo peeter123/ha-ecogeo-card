@@ -33,7 +33,6 @@ const arrangement = arrangementFor('horizontal');
 const AIR_PORT_Y = arrangement.airPortY;
 const AIR_UNIT_WALL_X = arrangement.airUnitWallX;
 const CABINET = arrangement.cabinet;
-const GROUND_CAPTION = arrangement.groundCaption;
 const GROUND_LINE_Y = arrangement.groundLineY;
 const GROUND_LOOP = arrangement.groundLoop;
 const COMPONENTS = arrangement.components;
@@ -706,13 +705,8 @@ describe('outer-loop source geometry (refine-schematic-drawing D11-D13)', () => 
     expect(GROUND_LINE_Y.hybrid).toBeGreaterThan(AIR_UNIT.y + AIR_UNIT.height);
     expect(first('src_hyb_down')[1]).toBe(GROUND_LINE_Y.hybrid);
     expect(last('src_hyb_up')[1]).toBe(GROUND_LINE_Y.hybrid);
-    // the captions stay where they were relative to their device: above the housing, under the loop
-    expect(AIR_UNIT.captionY).toBeLessThan(AIR_UNIT.y);
-    for (const kind of ['ground', 'hybrid'] as const) {
-      expect(GROUND_CAPTION.y[kind]).toBeGreaterThan(GROUND_LINE_Y[kind] + GROUND_LOOP.depth);
-    }
     // everything stays inside the drawing
-    expect(GROUND_CAPTION.y.hybrid).toBeLessThan(viewBox.height);
+    expect(GROUND_LINE_Y.hybrid + GROUND_LOOP.depth).toBeLessThan(viewBox.height);
   });
 
   test('Single loop: one leg down, a half circle, one leg up, both at the ground line, with the roles of the legs', () => {

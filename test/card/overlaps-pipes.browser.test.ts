@@ -1,6 +1,5 @@
-// The pipe and caption part of the overlap check (refine-simplified-layout D4): a label moved onto a pipe and one moved
-// onto a caption are reported as exactly those pairs, a card without such an overlap reports none, and a hop's gap
-// yields no pipe samples. Real layout, so Chromium and WebKit.
+// The pipe part of the overlap check (refine-simplified-layout D4): a label moved onto a pipe is reported as exactly that
+// pair, a card without such an overlap reports none, and a hop's gap yields no pipe samples. Real layout, so Chromium and WebKit.
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';
@@ -60,10 +59,10 @@ function midpoint(root: ShadowRoot, segment: string): [number, number] {
 
 const added = (root: ShadowRoot, before: string[]): string[] => pairs(root).filter((pair) => !before.includes(pair));
 
-describe('Pipe and caption overlaps', () => {
-  test('a clean card reports no pipe or caption pair', async () => {
+describe('Pipe overlaps', () => {
+  test('a clean card reports no pipe pair', async () => {
     const root = await render('source=ground');
-    expect(pairs(root).filter((pair) => pair.includes('pipe:') || pair.startsWith('caption:'))).toEqual([]);
+    expect(pairs(root).filter((pair) => pair.includes('pipe:'))).toEqual([]);
   });
 
   test('a label moved onto a pipe is reported with that pipe, and only that', async () => {
@@ -74,17 +73,6 @@ describe('Pipe and caption overlaps', () => {
     const [x, y] = midpoint(root, 'src_out');
     moveOnto(label, x, y);
     expect(added(root, before)).toEqual(['label compressor_speed x pipe:src_out']);
-  });
-
-  test('a label moved onto a caption is reported with that caption, and only that', async () => {
-    const root = await render('source=ground');
-    const label = root.querySelector<HTMLElement>('.label[data-label="compressor_speed"]');
-    const caption = root.querySelector('text.circuit-label');
-    if (!label || !caption) throw new Error('no label or caption');
-    const before = pairs(root);
-    const { left, right, top, bottom } = caption.getBoundingClientRect();
-    moveOnto(label, (left + right) / 2, (top + bottom) / 2);
-    expect(added(root, before)).toEqual([`caption:${caption.textContent.trim()} x label compressor_speed`]);
   });
 
   test('a label moved past the drawing edge is reported as that edge, and only that', async () => {
@@ -107,35 +95,6 @@ describe('Pipe and caption overlaps', () => {
       const svg = root.querySelector('.diagram svg');
       if (!label || !svg) throw new Error('no label or drawing');
       expect(label.getBoundingClientRect().left - svg.getBoundingClientRect().left, source).toBeGreaterThanOrEqual(2);
-    }
-  });
-
-  test('a caption moved onto a pipe is reported with that pipe', async () => {
-    const root = await render('source=ground');
-    const caption = root.querySelector<SVGTextElement>('text.circuit-label');
-    if (!caption) throw new Error('no caption');
-    const before = pairs(root);
-    const rect = caption.getBoundingClientRect();
-    const [x, y] = midpoint(root, 'src_out');
-    const matrix = caption.getScreenCTM();
-    const scale = matrix === null ? 1 : matrix.a;
-    caption.setAttribute(
-      'transform',
-      `translate(${String((x - (rect.left + rect.right) / 2) / scale)} ${String((y - (rect.top + rect.bottom) / 2) / scale)})`,
-    );
-    expect(added(root, before)).toContain(`caption:${caption.textContent.trim()} x pipe:src_out`);
-  });
-
-  test('a caption box is no taller than its rendered text', async () => {
-    for (const width of [VERTICAL_BELOW, 900]) {
-      const root = await render('source=ground', width);
-      const captions = measureCard(root, { pipes: true }).captions ?? [];
-      expect(captions.length).toBeGreaterThan(0);
-      const rendered = [...root.querySelectorAll('text.circuit-label, text.source-caption, text.tank-caption')];
-      captions.forEach((caption, index) => {
-        const rect = rendered[index]?.getBoundingClientRect();
-        expect(caption.bottom - caption.top).toBeLessThanOrEqual((rect?.height ?? 0) + 0.5);
-      });
     }
   });
 

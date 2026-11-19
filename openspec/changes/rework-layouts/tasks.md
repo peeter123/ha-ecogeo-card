@@ -6,6 +6,12 @@ brings them back. Nothing is deployed before group 9. Every visible group ends w
 `npm run capture`, inspects the captures the group names against the review criteria (docs/ecogeo-card.md, from
 group 1) and returns a text verdict.
 
+Chromium on the development host (decided 2026-11-19, group 3 review): while the host runs an RDP session with font
+smoothing off, the Chromium browser run stops at the preflight. A task whose browser verification ran in WebKit only
+is checked with a note saying so; the Chromium runs (overlap tests, the place search and the threshold measurement)
+are repeated once with font smoothing on before the release group (see Workflow follow-up), and any difference is
+fixed there. Places and thresholds measured in the meantime use WebKit and the search's 2 px margin.
+
 ## 1. Browser preflight and screenshot review loop
 
 - [ ] 1.1 Add the browser preflight (design D11): a setup file of the `browser` Vitest project that measures two
@@ -70,7 +76,7 @@ group 1) and returns a text verdict.
 
 ## 3. One value set, one footer, no captions
 
-- [ ] 3.1 Reduce `labelPlacesFor` to the 19 values (live-values "Values on the drawing", "Refrigerant values",
+- [x] 3.1 Reduce `labelPlacesFor` to the 19 values (live-values "Values on the drawing", "Refrigerant values",
   "Hydraulic values"): delete the compressor percentage and power, condensation and evaporation, fan, outside, air unit
   In, ground In, hybrid air unit In, DG1 setpoint and tank setpoint and start delta-T labels; show the superheat and
   expansion valve opening in the horizontal arrangement; give the production and brine values their Out and In
@@ -78,17 +84,29 @@ group 1) and returns a text verdict.
   B, air, external tank, variant 4, both demands on. Note (group 2 review): the display-precision and °F tests in
   `test/diagram/labels.test.ts` were moved to `tank_external_start_delta` when the superheat label went; move them
   back to the superheat label when this task deletes the start delta-T label.
-- [ ] 3.2 Footer (live-values "Footer", "Power items in the footer"): one item list, no on/off or season; power items
+  Note (2026-11-19, implementer): done; the 19 labels are listed by a unit test (heating capture, model B, air, external
+  tank, variant 4, both demands on), and the precision and degrees F tests moved back to `superheat`. The roles of the
+  deleted labels, their more-info and their editor suggestions are untouched.
+- [x] 3.2 Footer (live-values "Footer", "Power items in the footer"): one item list, no on/off or season; power items
   shown in both layouts. Verify: footer unit tests for heating, DHW, active cooling with HTR and passive cooling pass.
-- [ ] 3.3 Remove the in-drawing captions (responsive-layout "No in-drawing captions"): the circuit labels DG1, Outer
+- [x] 3.3 Remove the in-drawing captions (responsive-layout "No in-drawing captions"): the circuit labels DG1, Outer
   loop, DHW and the source and tank captions, with their strings. Verify: a unit test finds none of those texts in the
   rendered drawing.
-- [ ] 3.4 Re-place the horizontal labels without any on-pipe exception: run
+- [x] 3.4 Re-place the horizontal labels without any on-pipe exception: run
   `npm run search-places -- --layout=horizontal` (adapt the script, design D7) at the threshold, record the places
   with reasons, and re-measure `VERTICAL_BELOW` with `scripts/measure-layout.mjs` (responsive-layout "Vertical
   threshold"). Verify: the overlap browser tests for the horizontal layout at the threshold, 800 and 1000 px pass in
   Chromium and WebKit, and docs/ecogeo-card.md records the threshold, grid, label box and tolerance.
-- [ ] 3.5 Update README.md and docs/ecogeo-card.md (the values shown, the footer). Verify: `npm run check` passes; a
+  Note (2026-11-19, implementer): verified in WebKit only, per the Chromium rule in the intro; the Chromium runs
+  (overlap tests, place search, threshold measurement) are in the Workflow follow-up. `scripts/search-places.mjs` and
+  `scripts/measure-layout.mjs` take `--browser=chromium|webkit`. The places were searched with
+  `--layout=horizontal --browser=webkit --width=680` from each label's default place (the search prints why a default
+  fails). `VERTICAL_BELOW` is 680: the narrowest grid width where the search places every label with its 2 px margin
+  (at 660 px the external tank's temperature and demand meet and production Out moves to x 124); `measure-layout`
+  without the margin is clean from 640 px. The overlap browser tests at 680, 800 and 1000 px pass in WebKit. Decision
+  points for the user: production In sits 105 units from probe 34 (inside the cabinet under the DG1 stubs), and
+  production Out sits next to the source's pipes.
+- [x] 3.5 Update README.md and docs/ecogeo-card.md (the values shown, the footer). Verify: `npm run check` passes; a
   capture subagent checks the horizontal captures at the threshold and 1000 px against the review criteria.
 
 ## 4. Cabinet parts: transducers on their lines, probe pairs
@@ -123,13 +141,17 @@ group 1) and returns a text verdict.
   tank 50 shows temperature and Demand. Verify: dhw-storage unit tests pass.
 - [ ] 5.3 Redraw the air unit with its coil block towards the cabinet, the fan above, and its Out value inside the
   housing (outer-loop-source "Air unit with its value inside", "Fan follows its speed"); decide the value's strip with
-  the screenshot loop (design Open Questions) and record it. Verify: outer-loop-source unit tests pass.
+  the screenshot loop (design Open Questions) and record it. The housing gets a tooltip (component-info "Component
+  name on hover"; the "Air unit" caption is gone since group 3). Verify: outer-loop-source unit tests pass.
 - [ ] 5.4 Draw the ground collector (hatched strip, flat serpentine, Out inside) and the hybrid side by side
   (outer-loop-source "Ground collector", "Hybrid side by side"); colour the collector's halves (temperature-coloring
-  "Water segment temperatures"). Verify: unit tests for the collector's passes, ends and halves' colours pass.
-- [ ] 5.5 Re-place the labels, re-measure the threshold, record the snapshots again. Verify: horizontal overlap
-  browser tests pass in Chromium and WebKit; a capture subagent checks air, ground and hybrid with external, internal,
-  unused and no tank, light and dark, at the threshold and 1000 px, plus the panel view at 1280 x 800.
+  "Water segment temperatures"). The collector gets a tooltip (component-info "Component name on hover"). Verify: unit
+  tests for the collector's passes, ends and halves' colours pass.
+- [ ] 5.5 Re-place the labels, re-measure the threshold, record the snapshots again. Production In sits beside probe
+  34 and production Out beside probe 33, not next to the source (live-values "Hydraulic values"; group 3 accepted
+  both further away until the band frees the space). Verify: horizontal overlap browser tests pass in Chromium and
+  WebKit; a capture subagent checks air, ground and hybrid with external, internal, unused and no tank, light and
+  dark, at the threshold and 1000 px, plus the panel view at 1280 x 800.
 - [ ] 5.6 Update README.md (drawing description, screenshot if it shows the old layout) and docs/ecogeo-card.md (band
   model, bodies, threshold). Verify: `npm run check` passes.
 
@@ -197,6 +219,9 @@ group 1) and returns a text verdict.
 
 ## Workflow follow-up
 
+- Before group 9: with font smoothing on (the user switches it), run the browser project in Chromium, the place
+  search for both layouts and `scripts/measure-layout.mjs` in Chromium; fix any difference from the WebKit results,
+  and check off task 1.1.
 - One fresh Opus review of the whole change before archiving.
 - At archive, edit the Purpose sections of the main specs that still describe the old layouts and side zones
   (responsive-layout, schematic-drawing, outer-loop-source, dhw-storage), and name the change in AGENTS.md.

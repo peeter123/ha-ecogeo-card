@@ -5,7 +5,7 @@
 // (pipes.ts). Valve positions come from circuits.ts; a feature that is `false` removes its parts (geometry.ts), `unused` draws them muted.
 import { css, nothing, svg, type SVGTemplateResult } from 'lit';
 import type { ExchangerFill } from '../config/options';
-import { CIRCUIT_LABELS, componentLabel } from '../strings';
+import { componentLabel } from '../strings';
 import { COIL_MUTED_VAR, MUTED_COLOR } from './colors';
 import { componentRole, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
 import {
@@ -19,7 +19,6 @@ import {
   helixDrawOrder,
   helixHalves,
   HOP,
-  partState,
   pathData,
   roundedPathData,
   type Arrangement,
@@ -101,11 +100,6 @@ export const cabinetStyles = css`
   }
   .symbol-group[role='button']:focus-visible {
     ${focusRingStyles}
-  }
-  .circuit-label {
-    fill: var(--primary-text-color);
-    font-size: 10px;
-    font-weight: 500;
   }
 `;
 
@@ -288,12 +282,6 @@ export function renderCabinet(
   return svg`<g class="cabinet">
     <defs>${gradients.map(gradientDef)}${clipId === undefined ? nothing : svg`<clipPath id=${clipId} data-tank-clip><path d=${externalTankBody(arrangement)} /></clipPath>`}</defs>
     <rect class="outline" x=${cabinet.x} y=${cabinet.y} width=${cabinet.width} height=${cabinet.height} rx="6" />
-    ${arrangement.circuitLabels
-      .filter((label) => partState(label, context) !== 'hidden')
-      .map(
-        (label) =>
-          svg`<text class="circuit-label" x=${label.x} y=${label.y} text-anchor="middle">${CIRCUIT_LABELS[label.key]}</text>`,
-      )}
     ${segments.map((entry) => {
       const state = states.get(entry.part.id);
       return state === undefined

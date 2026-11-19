@@ -130,6 +130,10 @@ and `VERTICAL_PLACES`, each place with its reason, and the captions (Out, In, DH
 layouts. Body labels are placed by functions of the zones (they follow the body). `scripts/search-places.mjs` loses
 `--no-pipes` and the on-pipe set, gains `--layout=horizontal|vertical` and the rule that a body label stays inside
 its body, and searches at the layout's narrowest verified width (vertical: 320 px; horizontal: its threshold).
+The search measures distance from each label's default place (its probe or component), never from a recorded
+place. The horizontal threshold is the narrowest width on the 20 px grid at which the search finds a place for every
+label with its 2 px margin, not only the narrowest width without overlap (decided 2026-11-19 in the group 3 review:
+at 640 and 660 px production Out cleared its neighbours by less than the margin, so the threshold became 680).
 
 ### D8 Fonts and threshold
 

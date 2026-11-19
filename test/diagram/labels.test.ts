@@ -25,7 +25,6 @@ import {
 // the default config draws the simplified level
 const arrangement = arrangementFor('horizontal');
 const AIR_PORT_Y = arrangement.airPortY;
-const AIR_UNIT = arrangement.airUnit;
 const AIR_UNIT_WALL_X = arrangement.airUnitWallX;
 const GROUND_LINE_Y = arrangement.groundLineY;
 const GROUND_LOOP = arrangement.groundLoop;
@@ -91,32 +90,35 @@ const hassOf = (overrides: Parameters<typeof liveStates>[0] = {}, extra: Partial
 });
 
 describe('refrigerant labels', () => {
-  test('compressor label: 2803 rpm, 38.9 % and 786 W near item 11', async () => {
+  test('compressor label: 2803 rpm near item 11, and neither the percentage nor the power', async () => {
     const card = await mount({}, hassOf());
     expect(valueOf(card, 'compressor_speed')).toBe(nb('2803 rpm'));
-    expect(valueOf(card, 'compressor_percentage')).toBe(nb('38.9 %'));
-    expect(valueOf(card, 'compressor_power')).toBe(nb('786 W'));
-    for (const id of ['compressor_speed', 'compressor_percentage', 'compressor_power']) {
-      expect(label(card, id)?.getAttribute('data-label-item')).toBe('11');
-    }
+    expect(label(card, 'compressor_speed')?.getAttribute('data-label-item')).toBe('11');
+    // the percentage and the power stay roles but are not drawn (live-values "Values on the drawing")
+    expect(label(card, 'compressor_percentage')).toBeNull();
+    expect(label(card, 'compressor_power')).toBeNull();
+    expect(card.shadowRoot?.textContent).not.toContain(nb('786 W'));
+    expect(card.shadowRoot?.textContent).not.toContain(nb('38.9 %'));
     card.remove();
   });
 
-  test('the superheat and the valve opening are not on the drawing yet (rework-layouts task 3.1 shows them)', async () => {
+  test('superheat of 6.2 degrees reads 6.2 K near item 12, the valve opening in %', async () => {
     const card = await mount({}, hassOf({ 'refrigerant.superheat': ['6.2', '°C'] }));
-    expect(label(card, 'superheat')).toBeNull();
-    expect(label(card, 'expansion_valve')).toBeNull();
+    expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
+    expect(label(card, 'superheat')?.getAttribute('data-label-item')).toBe('12');
+    expect(valueOf(card, 'expansion_valve')).toBe(nb('58 %'));
+    expect(label(card, 'expansion_valve')?.getAttribute('data-label-item')).toBe('12');
     card.remove();
   });
 
-  test('temperatures and pressures of the probes, and the condensation and evaporation temperatures', async () => {
+  test('temperatures and pressures of the probes, and no condensation or evaporation temperature', async () => {
     const card = await mount({}, hassOf());
     expect(valueOf(card, 'suction_temperature')).toBe(nb('1.0 °C'));
     expect(valueOf(card, 'discharge_temperature')).toBe(nb('52.5 °C'));
     expect(valueOf(card, 'suction_pressure')).toBe(nb('5.7 bar'));
     expect(valueOf(card, 'discharge_pressure')).toBe(nb('16.4 bar'));
-    expect(valueOf(card, 'condensation_temperature')).toBe(nb('27.0 °C'));
-    expect(valueOf(card, 'evaporation_temperature')).toBe(`−5.3${NBSP}°C`);
+    expect(label(card, 'condensation_temperature')).toBeNull();
+    expect(label(card, 'evaporation_temperature')).toBeNull();
     card.remove();
   });
 });
@@ -130,7 +132,10 @@ describe('hydraulic labels', () => {
     expect(label(card, 'production_pump')?.getAttribute('data-label-item')).toBe('15');
     expect(valueOf(card, 'production_in')).toBe(nb('22.0 °C'));
     expect(valueOf(card, 'production_pressure')).toBe(nb('1.2 bar'));
-    expect(valueOf(card, 'dg1_setpoint')).toBe(nb('35.0 °C'));
+    // Out at probe 33, In at probe 34 (live-values "Hydraulic values"); the DG1 setpoint is not drawn
+    expect(label(card, 'production_out')?.querySelector('.caption')?.textContent.trim()).toBe(VALUE_CAPTIONS.portOut);
+    expect(label(card, 'production_in')?.querySelector('.caption')?.textContent.trim()).toBe(VALUE_CAPTIONS.portIn);
+    expect(label(card, 'dg1_setpoint')).toBeNull();
     card.remove();
   });
 
@@ -140,6 +145,8 @@ describe('hydraulic labels', () => {
     expect(valueOf(card, 'brine_in')).toBe(nb('0.5 °C'));
     expect(valueOf(card, 'brine_pressure')).toBe(nb('1.2 bar'));
     expect(valueOf(card, 'brine_pump')).toBe(nb('100.0 %'));
+    expect(label(card, 'brine_out')?.querySelector('.caption')?.textContent.trim()).toBe(VALUE_CAPTIONS.portOut);
+    expect(label(card, 'brine_in')?.querySelector('.caption')?.textContent.trim()).toBe(VALUE_CAPTIONS.portIn);
     card.remove();
   });
 
@@ -158,13 +165,13 @@ describe('hydraulic labels', () => {
     }
   });
 
-  test('part not drawn: no tank labels without DHW storage, no fan speed label with a ground source', async () => {
+  test('part not drawn: no tank labels without DHW storage, no air unit label with a ground source', async () => {
     const noDhw = await mount({ dhw: 'none' }, hassOf());
     expect(labelIds(noDhw).filter((id) => id.startsWith('tank_'))).toEqual([]);
     expect(labelIds(noDhw)).toContain('compressor_speed');
     noDhw.remove();
     const ground = await mount({ source: 'ground' }, hassOf());
-    expect(labelIds(ground)).not.toContain('fan_speed');
+    expect(labelIds(ground)).not.toContain('air_unit_out');
     expect(labelIds(ground)).toContain('compressor_speed');
     ground.remove();
   });
@@ -224,11 +231,11 @@ describe('units, locale and precision', () => {
 
   test('display precision only applies to a value in the role unit: kW shown as W uses the role default', async () => {
     const hass = hassOf(
-      { 'compressor.power': ['0.786', 'kW'] },
-      { entities: { [idOf('compressor.power')]: { display_precision: 3 } } },
+      { 'heating.power': ['4.712', 'kW'] },
+      { entities: { [idOf('heating.power')]: { display_precision: 3 } } },
     );
     const card = await mount({}, hass);
-    expect(valueOf(card, 'compressor_power')).toBe(nb('786 W'));
+    expect(footer(card, 'dg1_power')).toBe(nb('4712 W'));
     card.remove();
   });
 
@@ -242,36 +249,36 @@ describe('units, locale and precision', () => {
     card.remove();
   });
 
-  // a temperature difference (K), shown for the tank's start delta-T
-  test('a start delta-T entity in °C with a display precision of 2 shows 6.20 K', async () => {
+  // a temperature difference (K), shown for the superheat
+  test('a superheat entity in °C with a display precision of 2 shows 6.20 K', async () => {
     const hass = hassOf(
-      { 'dhw.start_delta': ['6.2', '°C'] },
-      { entities: { [idOf('dhw.start_delta')]: { display_precision: 2 } } },
+      { 'refrigerant.superheat': ['6.2', '°C'] },
+      { entities: { [idOf('refrigerant.superheat')]: { display_precision: 2 } } },
     );
     const card = await mount({}, hass);
-    expect(valueOf(card, 'tank_external_start_delta')).toBe(nb('6.20 K'));
+    expect(valueOf(card, 'superheat')).toBe(nb('6.20 K'));
     card.remove();
   });
 
-  test('a Fahrenheit start delta-T entity with a display precision still uses the role default', async () => {
+  test('a Fahrenheit superheat entity with a display precision still uses the role default', async () => {
     const hass = hassOf(
-      { 'dhw.start_delta': ['43.2', '°F'] },
-      { entities: { [idOf('dhw.start_delta')]: { display_precision: 2 } } },
+      { 'refrigerant.superheat': ['43.2', '°F'] },
+      { entities: { [idOf('refrigerant.superheat')]: { display_precision: 2 } } },
     );
     const card = await mount({}, hass);
-    expect(valueOf(card, 'tank_external_start_delta')).toBe(nb('6 K'));
+    expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
     card.remove();
   });
 
-  test('Fahrenheit start delta-T: 43.2 degrees F reads 6 K (the role has no decimals)', async () => {
-    const card = await mount({}, hassOf({ 'dhw.start_delta': ['43.2', '°F'] }));
-    expect(valueOf(card, 'tank_external_start_delta')).toBe(nb('6 K'));
+  test('Fahrenheit superheat: 43.2 degrees F reads 6.2 K', async () => {
+    const card = await mount({}, hassOf({ 'refrigerant.superheat': ['43.2', '°F'] }));
+    expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
     card.remove();
   });
 
   test('kilowatts are converted to watts', async () => {
-    const card = await mount({}, hassOf({ 'compressor.power': ['0.786', 'kW'] }));
-    expect(valueOf(card, 'compressor_power')).toBe(nb('786 W'));
+    const card = await mount({}, hassOf({ 'heating.power': ['4.712', 'kW'] }));
+    expect(footer(card, 'dg1_power')).toBe(nb('4712 W'));
     card.remove();
   });
 
@@ -292,8 +299,8 @@ describe('missing values', () => {
   });
 
   test.each(['unavailable', 'unknown', 'abc'])('state "%s" shows the dash', async (state) => {
-    const card = await mount({}, hassOf({ 'compressor.power': state }));
-    expect(valueOf(card, 'compressor_power')).toBe(NO_VALUE);
+    const card = await mount({}, hassOf({ 'compressor.speed': state }));
+    expect(valueOf(card, 'compressor_speed')).toBe(NO_VALUE);
     card.remove();
   });
 
@@ -340,42 +347,6 @@ describe('roles not present', () => {
     }
   });
 
-  test('a lone season role: its text, its tap entity, and a dash while it reads off', async () => {
-    const winter = await mount({ entities: { unit: { summer: 'none' } } }, hassOf());
-    expect(footer(winter, 'season')).toBe(FOOTER_LABELS.winter);
-    const events: string[] = [];
-    winter.addEventListener('hass-more-info', (event) =>
-      events.push((event as CustomEvent<{ entityId: string }>).detail.entityId),
-    );
-    root(winter).querySelector<HTMLButtonElement>('[data-footer="season"] button')?.click();
-    expect(events).toEqual([idOf('unit.winter')]);
-    winter.remove();
-    const summer = await mount(
-      { entities: { unit: { winter: 'none' } } },
-      hassOf({ 'unit.summer': 'on', 'unit.winter': 'off' }),
-    );
-    expect(footer(summer, 'season')).toBe(FOOTER_LABELS.summer);
-    const summerEvents: string[] = [];
-    summer.addEventListener('hass-more-info', (event) =>
-      summerEvents.push((event as CustomEvent<{ entityId: string }>).detail.entityId),
-    );
-    root(summer).querySelector<HTMLButtonElement>('[data-footer="season"] button')?.click();
-    expect(summerEvents).toEqual([idOf('unit.summer')]);
-    summer.remove();
-    const off = await mount({ entities: { unit: { winter: 'none' } } }, hassOf({ 'unit.summer': 'off' }));
-    expect(footer(off, 'season')).toBe(NO_VALUE);
-    off.remove();
-  });
-
-  test('the season item goes only when both its roles are not present', async () => {
-    const one = await mount({ entities: { unit: { summer: 'none' } } }, hassOf());
-    expect(root(one).querySelector('[data-footer="season"]')).not.toBeNull();
-    one.remove();
-    const both = await mount({ entities: { unit: { summer: 'none', winter: 'none' } } }, hassOf());
-    expect(root(both).querySelector('[data-footer="season"]')).toBeNull();
-    both.remove();
-  });
-
   test('Unknown entity keeps its dash: the label of a bound but unknown entity stays', async () => {
     const card = await mount({ entities: { production: { outlet_temperature: 'sensor.does_not_exist' } } }, hassOf());
     const value = label(card, 'production_out')?.querySelector('.value');
@@ -407,7 +378,7 @@ describe('roles not present', () => {
     card.remove();
   });
 
-  test('unit.on_off none hides the on/off footer item', async () => {
+  test('unit.on_off none changes no footer item: the footer has no on/off item at all', async () => {
     const card = await mount({ entities: { unit: { on_off: 'none' } } }, hassOf());
     expect(root(card).querySelector('[data-footer="on_off"]')).toBeNull();
     expect(root(card).querySelector('[data-footer="cop"]')).not.toBeNull();
@@ -416,32 +387,42 @@ describe('roles not present', () => {
 });
 
 describe('footer', () => {
-  test('heating, winter, system COP 5.8, DG1 4712 W and HTR 0 W', async () => {
+  const footerIds = (card: EcogeoCard): string[] =>
+    [...root(card).querySelectorAll('[data-footer]')].map((element) => element.getAttribute('data-footer') ?? '');
+
+  test('heating, system COP 5.8, DG1 4712 W and HTR 0 W: no on/off state, no season', async () => {
     const card = await mount({}, hassOf());
     expect(root(card).querySelector('.mode')?.textContent.trim()).toBe('Heating');
-    expect(footer(card, 'on_off')).toBe('On');
-    expect(footer(card, 'season')).toBe(FOOTER_LABELS.winter);
     expect(footer(card, 'cop')).toBe('5.8');
     expect(footer(card, 'dg1_power')).toBe(nb('4712 W'));
     expect(footer(card, 'htr_power')).toBe(nb('0 W'));
     expect(root(card).querySelector('[data-footer="condensation_capacity"]')).toBeNull();
     expect(root(card).querySelector('[data-footer="evaporation_capacity"]')).toBeNull();
     expect(footer(card, 'outside_temperature')).toBe(nb('3.8 °C'));
+    expect(footerIds(card)).toEqual(['outside_temperature', 'cop', 'dg1_power', 'htr_power']);
+    expect(root(card).querySelector('.footer')?.textContent).not.toContain('Winter');
     card.remove();
   });
 
-  test('summer is the season while summer is on; the alarm and offline indications show when they apply', async () => {
-    const card = await mount(
-      {},
-      hassOf({ 'unit.summer': 'on', 'unit.winter': 'off', 'unit.alarm': 'on', 'unit.connection': 'off' }),
+  test('the footer is the same in the horizontal and the vertical layout', async () => {
+    const horizontal = await mount({ layout: 'horizontal' }, hassOf());
+    const vertical = await mount({ layout: 'vertical' }, hassOf());
+    expect(root(vertical).querySelector('.footer')?.textContent).toBe(
+      root(horizontal).querySelector('.footer')?.textContent,
     );
-    expect(footer(card, 'season')).toBe(FOOTER_LABELS.summer);
+    expect(footerIds(vertical)).toEqual(footerIds(horizontal));
+    horizontal.remove();
+    vertical.remove();
+  });
+
+  test('the alarm and offline indications show when they apply', async () => {
+    const card = await mount({}, hassOf({ 'unit.alarm': 'on', 'unit.connection': 'off' }));
     expect(root(card).querySelector('.alarm')?.textContent.trim()).toBe(INDICATIONS.alarm);
     expect(root(card).querySelector('.offline')?.textContent.trim()).toBe(INDICATIONS.offline);
     card.remove();
   });
 
-  test('without a season or an on/off state the footer shows dashes', () => {
+  test('without any state the footer shows dashes', () => {
     const rd = readRoles(
       {},
       Object.fromEntries(ROLE_PATHS.map((role) => [role, undefined])) as Record<RolePath, undefined>,
@@ -527,63 +508,44 @@ describe('efficient updates', () => {
 });
 
 describe('source labels', () => {
-  test('air: the fan speed label reads 34.5 % with a no-break space, plus the outside temperature', async () => {
+  test('air: only the Out of the air unit, with its caption, and no fan speed, outside temperature or In', async () => {
     const card = await mount({ source: 'air' }, hassOf());
-    expect(valueOf(card, 'fan_speed')).toBe(`34.5${NBSP}%`);
-    expect(label(card, 'fan_speed')?.querySelector('.caption')?.textContent.trim()).toBe(VALUE_CAPTIONS.fan);
-    expect(valueOf(card, 'outside_temperature')).toBe(nb('3.8 °C'));
-    expect(labelIds(card).some((id) => id.startsWith('ground_'))).toBe(false);
-    card.remove();
-  });
-
-  test('Air unit ports: In shows the brine outlet of the heat pump, Out the air unit outlet, each next to its port', async () => {
-    const card = await mount({ source: 'air' }, hassOf());
-    expect(valueOf(card, 'air_unit_in')).toBe(`−2.8${NBSP}°C`);
-    expect(label(card, 'air_unit_in')?.querySelector('.caption')?.textContent.trim()).toBe('In');
-    expect(label(card, 'air_unit_in')?.getAttribute('data-role')).toBe('brine.outlet_temperature');
     expect(valueOf(card, 'air_unit_out')).toBe(nb('0.5 °C'));
     expect(label(card, 'air_unit_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
     expect(label(card, 'air_unit_out')?.getAttribute('data-role')).toBe('source.air_unit_outlet_temperature');
-    // the old label under the housing is gone: the stack under the housing is the fan and the outside temperature
-    expect(labelIds(card)).not.toContain('air_unit_outlet');
-    const under = LABEL_SPECS.filter((spec) => spec.source?.includes('air') && spec.y > AIR_UNIT.y + AIR_UNIT.height);
-    expect(under.map((spec) => spec.id)).toEqual(['fan_speed', 'outside_temperature']);
-    // In sits at the inlet port (the bottom pass) and Out at the outlet port (the top pass), right of the housing's wall
-    const at = (id: string): LabelSpec | undefined => LABEL_SPECS.find((spec) => spec.id === id);
-    expect(Math.abs((at('air_unit_in')?.y ?? 0) - AIR_PORT_Y.bottom)).toBeLessThan(20);
-    expect(Math.abs((at('air_unit_out')?.y ?? 0) - AIR_PORT_Y.top)).toBeLessThan(20);
-    for (const id of ['air_unit_in', 'air_unit_out']) expect(at(id)?.x, id).toBeGreaterThan(AIR_UNIT_WALL_X);
-    card.remove();
-  });
-
-  test('Single loop: In at the down leg shows the brine outlet, Out at the up leg the brine inlet, both at the ground line', async () => {
-    const card = await mount({ source: 'ground' }, hassOf());
-    expect(valueOf(card, 'ground_in')).toBe(`−2.8${NBSP}°C`);
-    expect(valueOf(card, 'ground_out')).toBe(nb('0.5 °C'));
-    expect(label(card, 'ground_in')?.querySelector('.caption')?.textContent.trim()).toBe('In');
-    expect(label(card, 'ground_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
-    expect(label(card, 'ground_in')?.getAttribute('data-role')).toBe('brine.outlet_temperature');
-    expect(label(card, 'ground_out')?.getAttribute('data-role')).toBe('brine.inlet_temperature');
-    expect(labelIds(card)).not.toContain('fan_speed');
-    const at = (id: string): LabelSpec | undefined => LABEL_SPECS.find((spec) => spec.id === id);
-    // In on the down leg's side, Out on the up leg's, both just under the ground line
-    expect(at('ground_in')?.x).toBeGreaterThan(GROUND_LOOP.downX);
-    expect(at('ground_out')?.x).toBeLessThan(GROUND_LOOP.upX);
-    for (const id of ['ground_in', 'ground_out']) {
-      expect((at(id)?.y ?? 0) - GROUND_LINE_Y.ground, id).toBeGreaterThan(0);
-      expect((at(id)?.y ?? 0) - GROUND_LINE_Y.ground, id).toBeLessThan(30);
+    for (const id of ['fan_speed', 'outside_temperature', 'air_unit_in', 'hybrid_air_unit_in']) {
+      expect(labelIds(card), id).not.toContain(id);
     }
+    expect(labelIds(card).some((id) => id.startsWith('ground_'))).toBe(false);
+    // Out sits at the outlet port (the top pass), right of the housing's wall
+    const out = LABEL_SPECS.find((spec) => spec.id === 'air_unit_out');
+    expect(Math.abs((out?.y ?? 0) - AIR_PORT_Y.top)).toBeLessThan(20);
+    expect(out?.x).toBeGreaterThan(AIR_UNIT_WALL_X);
     card.remove();
   });
 
-  test('Hybrid: the air unit has only its In, the ground loop only its Out, and the link pipe has no label', async () => {
+  test('Single loop: only Out at the up leg, the brine inlet, just under the ground line, and no In', async () => {
+    const card = await mount({ source: 'ground' }, hassOf());
+    expect(valueOf(card, 'ground_out')).toBe(nb('0.5 °C'));
+    expect(label(card, 'ground_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
+    expect(label(card, 'ground_out')?.getAttribute('data-role')).toBe('brine.inlet_temperature');
+    expect(labelIds(card)).not.toContain('ground_in');
+    expect(labelIds(card)).not.toContain('fan_speed');
+    const out = LABEL_SPECS.find((spec) => spec.id === 'ground_out');
+    expect(out?.x).toBeLessThan(GROUND_LOOP.upX);
+    expect((out?.y ?? 0) - GROUND_LINE_Y.ground).toBeGreaterThan(0);
+    expect((out?.y ?? 0) - GROUND_LINE_Y.ground).toBeLessThan(30);
+    card.remove();
+  });
+
+  test('Hybrid: only the ground loop shows its Out, the air unit shows no value and the link pipe has no label', async () => {
     const card = await mount({ source: 'hybrid' }, hassOf());
     const ids = labelIds(card);
-    expect(ids).toEqual(
-      expect.arrayContaining(['fan_speed', 'outside_temperature', 'hybrid_air_unit_in', 'hybrid_ground_out']),
-    );
-    // no air unit Out and no ground In: both would label the link pipe
+    expect(ids).toContain('hybrid_ground_out');
     for (const id of [
+      'fan_speed',
+      'outside_temperature',
+      'hybrid_air_unit_in',
       'ground_in',
       'ground_out',
       'hybrid_ground_in',
@@ -593,51 +555,39 @@ describe('source labels', () => {
     ]) {
       expect(ids, id).not.toContain(id);
     }
-    expect(valueOf(card, 'hybrid_air_unit_in')).toBe(`−2.8${NBSP}°C`);
-    expect(label(card, 'hybrid_air_unit_in')?.getAttribute('data-role')).toBe('brine.outlet_temperature');
-    expect(label(card, 'hybrid_air_unit_in')?.querySelector('.caption')?.textContent.trim()).toBe('In');
     expect(
       ids.some((id) => LABEL_SPECS.find((spec) => spec.id === id)?.role === 'source.air_unit_outlet_temperature'),
     ).toBe(false);
     expect(valueOf(card, 'hybrid_ground_out')).toBe(nb('0.5 °C'));
     expect(label(card, 'hybrid_ground_out')?.getAttribute('data-role')).toBe('brine.inlet_temperature');
     expect(label(card, 'hybrid_ground_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
-    // the hybrid is entered at the top pass: In is at the top port
-    expect(
-      Math.abs((LABEL_SPECS.find((spec) => spec.id === 'hybrid_air_unit_in')?.y ?? 0) - AIR_PORT_Y.top),
-    ).toBeLessThan(20);
     card.remove();
   });
 
-  test('the port labels are ordinary value labels: the same plate and size, never bare or emphasised, and they open more-info', async () => {
+  test('the source label is an ordinary value label: the same plate and size, never bare or emphasised, and it opens more-info', async () => {
     const events: CustomEvent<{ entityId: string }>[] = [];
-    const ids = {
-      air: ['air_unit_in', 'air_unit_out'],
-      ground: ['ground_in', 'ground_out'],
-      hybrid: ['hybrid_air_unit_in', 'hybrid_ground_out'],
-    } as const;
+    const ids = { air: 'air_unit_out', ground: 'ground_out', hybrid: 'hybrid_ground_out' } as const;
     for (const source of ['air', 'ground', 'hybrid'] as const) {
       const card = await mount({ source }, hassOf());
       card.addEventListener('hass-more-info', (event) => events.push(event as CustomEvent<{ entityId: string }>));
-      for (const id of ids[source]) {
-        const element = label(card, id);
-        expect(element?.classList.contains('bare'), id).toBe(false);
-        expect(element?.classList.contains('emphasis'), id).toBe(false);
-        // the value joins its unit with a no-break space
-        expect(valueOf(card, id), id).toMatch(/\d\s°C$/);
-        const role = (element?.getAttribute('data-role') ?? '') as RolePath;
-        events.length = 0;
-        element?.querySelector<HTMLButtonElement>('button.value')?.click();
-        expect(
-          events.map((event) => event.detail.entityId),
-          id,
-        ).toEqual([idOf(role)]);
-      }
+      const id = ids[source];
+      const element = label(card, id);
+      expect(element?.classList.contains('bare'), id).toBe(false);
+      expect(element?.classList.contains('emphasis'), id).toBe(false);
+      // the value joins its unit with a no-break space
+      expect(valueOf(card, id), id).toMatch(/\d\s°C$/);
+      const role = (element?.getAttribute('data-role') ?? '') as RolePath;
+      events.length = 0;
+      element?.querySelector<HTMLButtonElement>('button.value')?.click();
+      expect(
+        events.map((event) => event.detail.entityId),
+        id,
+      ).toEqual([idOf(role)]);
       card.remove();
     }
   });
 
-  describe('port labels touch no pipe or other label', () => {
+  describe('the source label touches no pipe or other label', () => {
     const arr = arrangementFor('horizontal');
     interface Box {
       left: number;
@@ -655,22 +605,13 @@ describe('source labels', () => {
     };
     const apart = (u: Box, v: Box): boolean =>
       u.right <= v.left || v.right <= u.left || u.bottom <= v.top || v.bottom <= u.top;
-    const SOURCE_IDS = new Set([
-      'fan_speed',
-      'outside_temperature',
-      'air_unit_in',
-      'air_unit_out',
-      'hybrid_air_unit_in',
-      'ground_in',
-      'ground_out',
-      'hybrid_ground_out',
-    ]);
+    const SOURCE_IDS = new Set(['air_unit_out', 'ground_out', 'hybrid_ground_out']);
 
     test.each(['air', 'ground', 'hybrid'] as const)('%s', (source) => {
       const context = { model: 'B', dhw: 'external', source, features: mergeFeatures(4, {}) } as const;
       const shown = arr.labels.specs.filter((spec) => partState(spec, context) !== 'hidden');
       const mine = shown.filter((spec) => SOURCE_IDS.has(spec.id));
-      expect(mine.length).toBeGreaterThanOrEqual(source === 'ground' ? 2 : 3);
+      expect(mine).toHaveLength(1);
       const pipes = drawnSegments(context).map(({ part }) => part);
       // the housing, the coil block, the cabinet, and the ground line with its hatching
       const solids: [string, Box][] = [
@@ -710,50 +651,20 @@ describe('source labels', () => {
         // the value text stays on the card: the wide estimate must not reach the cabinet or the left edge
         expect(box.right, spec.id).toBeLessThan(arr.cabinet.x);
       }
-      // every other label below the cabinet's top (the probe labels at the cabinet's left edge, for one) keeps 8 units
-      // clear of every pipe of the source (the labels of the pipe run above the cabinet sit by design under the top lines)
-      for (const other of shown.filter((item) => !SOURCE_IDS.has(item.id) && item.y > arr.cabinet.y)) {
-        // the full level's production column (Out and In captions, ending at the cabinet wall): 58 units is an upper estimate for production values
-        // (about 49 units measured at 1000 px; production water has no minus sign, unlike the 64-unit source estimate)
-        const width =
-          other.caption === undefined ? 40 : ['production_out', 'production_in'].includes(other.id) ? 58 : WIDTH;
-        const left = other.align === 'start' ? other.x : other.align === 'end' ? other.x - width : other.x - width / 2;
-        const box: Box = { left, right: left + width, top: other.y - HEIGHT / 2, bottom: other.y + HEIGHT / 2 };
-        for (const pipe of pipes.filter((candidate) => candidate.id.startsWith('src_'))) {
-          pipe.points.slice(1).forEach((end, index) => {
-            const start = pipe.points[index] ?? end;
-            const run: Box = {
-              left: Math.min(start[0], end[0]) - 8,
-              right: Math.max(start[0], end[0]) + 8,
-              top: Math.min(start[1], end[1]) - 8,
-              bottom: Math.max(start[1], end[1]) + 8,
-            };
-            expect(apart(box, run), `${other.id} ${pipe.id}`).toBe(true);
-          });
-        }
-      }
     });
-  });
-
-  test('a stopped or unavailable fan still shows its label: 0 % or a dash', async () => {
-    const stopped = await mount({ source: 'air' }, hassOf({ 'source.fan_speed': '0' }));
-    expect(valueOf(stopped, 'fan_speed')).toBe(`0.0${NBSP}%`);
-    stopped.remove();
-    const missing = await mount({ source: 'air' }, hassOf({ 'source.fan_speed': 'unavailable' }));
-    expect(valueOf(missing, 'fan_speed')).toBe(NO_VALUE);
-    missing.remove();
   });
 });
 
 describe('DHW tank labels', () => {
-  test('external tank: 52.1 °C, setpoint 58 °C, start delta-T 8 K, each joined to its unit', async () => {
+  test('external tank: 52.1 °C with its DHW caption, and neither the setpoint nor the start delta-T', async () => {
     const card = await mount({ model: 'B', dhw: 'external' }, hassOf({ 'dhw.start_delta': ['8', '°C'] }));
     expect(valueOf(card, 'tank_external_temperature')).toBe(nb('52.1 °C'));
-    expect(valueOf(card, 'tank_external_setpoint')).toBe(nb('58 °C'));
-    expect(valueOf(card, 'tank_external_start_delta')).toBe(nb('8 K'));
-    expect(label(card, 'tank_external_start_delta')?.querySelector('.caption')?.textContent.trim()).toBe(
-      VALUE_CAPTIONS.startDelta,
+    expect(label(card, 'tank_external_temperature')?.querySelector('.caption')?.textContent.trim()).toBe(
+      VALUE_CAPTIONS.dhw,
     );
+    expect(label(card, 'tank_external_setpoint')).toBeNull();
+    expect(label(card, 'tank_external_start_delta')).toBeNull();
+    expect(root(card).querySelector('.tank-caption')).toBeNull();
     card.remove();
   });
 
@@ -795,19 +706,12 @@ describe('DHW tank labels', () => {
     card.remove();
   });
 
-  test('model C: the tank values are one row inside tank 50 above coil 51, and nothing is under an external tank', async () => {
+  test('model C: the DHW temperature with its caption and the demand inside tank 50 above coil 51, and nothing under an external tank', async () => {
     const card = await mount({ model: 'C' }, hassOf({ 'dhw.demand': 'on' }));
     const ids = labelIds(card).filter((id) => id.startsWith('tank_'));
-    expect(ids).toEqual([
-      'tank_internal_temperature',
-      'tank_internal_setpoint',
-      'tank_internal_start_delta',
-      'tank_internal_demand',
-    ]);
+    expect(ids).toEqual(['tank_internal_temperature', 'tank_internal_demand']);
     expect(valueOf(card, 'tank_internal_temperature')).toBe(nb('52.1 °C'));
-    // the captions are the external tank's
-    expect(label(card, 'tank_internal_setpoint')?.textContent).toContain(VALUE_CAPTIONS.setpointShort);
-    expect(label(card, 'tank_internal_start_delta')?.textContent).toContain(VALUE_CAPTIONS.startDeltaShort);
+    expect(label(card, 'tank_internal_temperature')?.textContent).toContain(VALUE_CAPTIONS.dhw);
     // no background plate and no emphasised size: the values sit on the tank's tint at the normal label size
     for (const id of ids) {
       expect(label(card, id)?.classList.contains('bare'), id).toBe(true);
@@ -828,10 +732,8 @@ describe('DHW tank labels', () => {
     // normal size), rounded up with a margin of 2 to 3 units. The estimate holds for cards about 842 px or wider,
     // where 0.95cqw is at least 8 px
     const SIZE: Record<string, [number, number]> = {
-      tank_internal_temperature: [36, 13],
-      tank_internal_setpoint: [43, 13],
-      tank_internal_start_delta: [33, 13],
-      tank_internal_demand: [41, 13],
+      tank_internal_temperature: [66, 13],
+      tank_internal_demand: [41, 12],
     };
     const boxOf = (id: string): Box => {
       const spec = arr.labels.specs.find((item) => item.id === id);
@@ -860,12 +762,9 @@ describe('DHW tank labels', () => {
         expect(box.top, id).toBeGreaterThan(tank.y + 2);
         expect(box.bottom, id).toBeLessThan(coilTop);
       }
-      const rowY = ['temperature', 'setpoint', 'start_delta'].map(
-        (name) => arr.labels.specs.find((item) => item.id === 'tank_internal_' + name)?.y,
-      );
-      expect(new Set(rowY).size).toBe(1);
-      // the demand text sits under the row
-      expect(arr.labels.specs.find((item) => item.id === 'tank_internal_demand')?.y).toBeGreaterThan(rowY[0] ?? 0);
+      const temperatureY = arr.labels.specs.find((item) => item.id === 'tank_internal_temperature')?.y;
+      // the demand text sits under the temperature
+      expect(arr.labels.specs.find((item) => item.id === 'tank_internal_demand')?.y).toBeGreaterThan(temperatureY ?? 0);
     });
 
     test('no overlap with each other, other labels, components or pipes', () => {
@@ -1047,14 +946,7 @@ describe('footer power items and efficiency (add-htr-state)', () => {
       'heating.power': '5211',
       'htr.power': '1835',
     });
-    expect(shown(items)).toEqual([
-      'On',
-      FOOTER_LABELS.winter,
-      `Outside ${nb('3.8 °C')}`,
-      'COP 4.6',
-      `DG1 ${nb('5211 W')}`,
-      `HTR ${nb('1835 W')}`,
-    ]);
+    expect(shown(items)).toEqual([`Outside ${nb('3.8 °C')}`, 'COP 4.6', `DG1 ${nb('5211 W')}`, `HTR ${nb('1835 W')}`]);
     expect(items.map((item) => item.id)).not.toContain('condensation_capacity');
     expect(items.map((item) => item.id)).not.toContain('evaporation_capacity');
   });
@@ -1174,5 +1066,148 @@ describe('footer power items and efficiency (add-htr-state)', () => {
   test('only the system COP set to none falls back to the register COP', () => {
     const items = footerOf('heating', { 'unit.cop': '5.1' }, { none: ['unit.system_cop'] });
     expect(items.find((item) => item.id === 'cop')?.text).toBe('5.1');
+  });
+});
+
+describe('the 19 values (live-values "Values on the drawing")', () => {
+  const HEATING_BOTH_DEMANDS = { 'heating.demand': 'on', 'dhw.demand': 'on' } as const;
+
+  test('heating, model B, air, external tank, variant 4, both demands on: exactly these 19 labels', async () => {
+    const card = await mount({ model: 'B', source: 'air', dhw: 'external', variant: 4 }, hassOf(HEATING_BOTH_DEMANDS));
+    expect(labelIds(card).sort()).toEqual(
+      [
+        'production_out',
+        'production_in',
+        'brine_out',
+        'brine_in',
+        'production_pressure',
+        'brine_pressure',
+        'production_pump',
+        'brine_pump',
+        'discharge_temperature',
+        'discharge_pressure',
+        'suction_temperature',
+        'suction_pressure',
+        'compressor_speed',
+        'expansion_valve',
+        'superheat',
+        'air_unit_out',
+        'tank_external_temperature',
+        'dg1_demand',
+        'tank_external_demand',
+      ].sort(),
+    );
+    expect(labelIds(card)).toHaveLength(19);
+    card.remove();
+  });
+
+  test('the deleted labels are in no arrangement of any source or tank', () => {
+    const DELETED = [
+      'compressor_percentage',
+      'compressor_power',
+      'condensation_temperature',
+      'evaporation_temperature',
+      'fan_speed',
+      'outside_temperature',
+      'air_unit_in',
+      'ground_in',
+      'hybrid_air_unit_in',
+      'dg1_setpoint',
+      'tank_external_setpoint',
+      'tank_external_start_delta',
+      'tank_internal_setpoint',
+      'tank_internal_start_delta',
+    ];
+    const ids = LABEL_SPECS.map((spec) => spec.id);
+    for (const id of DELETED) expect(ids, id).not.toContain(id);
+  });
+
+  test('ground source: Out of the collector is the only source value', async () => {
+    const card = await mount({ model: 'B', source: 'ground', dhw: 'external' }, hassOf(HEATING_BOTH_DEMANDS));
+    expect(labelIds(card)).toContain('ground_out');
+    expect(labelIds(card)).not.toContain('ground_in');
+    card.remove();
+  });
+
+  test('no in-drawing caption names a group or part (responsive-layout "No in-drawing captions")', async () => {
+    const CAPTIONS = ['DG1', 'Outer loop', 'DHW', 'Air unit', 'Ground loop', 'DHW tank'];
+    for (const layout of ['horizontal', 'vertical'] as const) {
+      for (const source of ['air', 'ground', 'hybrid'] as const) {
+        for (const [model, dhw] of [
+          ['B', 'external'],
+          ['C', 'internal'],
+        ] as const) {
+          const card = await mount({ model, source, dhw, layout }, hassOf(HEATING_BOTH_DEMANDS));
+          const drawn = [...root(card).querySelectorAll('svg text')].map((text) => text.textContent.trim());
+          for (const caption of CAPTIONS)
+            expect(drawn, `${layout} ${source} ${model} ${caption}`).not.toContain(caption);
+          expect(root(card).querySelector('.circuit-label, .source-caption, .tank-caption')).toBeNull();
+          card.remove();
+        }
+      }
+    }
+  });
+});
+
+describe('footer items by mode (live-values "Footer", "Power items in the footer")', () => {
+  const ids = (card: EcogeoCard): string[] =>
+    [...root(card).querySelectorAll('[data-footer]')].map((element) => element.getAttribute('data-footer') ?? '');
+  const text = (card: EcogeoCard, id: string): string | undefined =>
+    root(card)
+      .querySelector(`[data-footer="${id}"]`)
+      ?.textContent.replaceAll(/[ \t\r\n]+/g, ' ')
+      .trim();
+
+  test('heating: outside temperature, COP, DG1 and HTR', async () => {
+    const card = await mount({}, hassOf({ 'unit.system_cop': '4.6', 'heating.power': '5211', 'htr.power': '1835' }));
+    expect(root(card).querySelector('.mode')?.textContent.trim()).toBe(MODE_LABELS.heating);
+    expect(ids(card)).toEqual(['outside_temperature', 'cop', 'dg1_power', 'htr_power']);
+    expect(text(card, 'cop')).toBe('COP 4.6');
+    expect(text(card, 'dg1_power')).toBe(`DG1 ${nb('5211 W')}`);
+    expect(text(card, 'htr_power')).toBe(`HTR ${nb('1835 W')}`);
+    card.remove();
+  });
+
+  test('DHW: outside temperature, COP and DHW only', async () => {
+    const card = await mount({}, hassOf({ 'dhw.demand': 'on', 'dhw.power': '5043' }));
+    expect(root(card).querySelector('.mode')?.textContent.trim()).toBe(MODE_LABELS.dhw);
+    expect(ids(card)).toEqual(['outside_temperature', 'cop', 'dhw_power']);
+    expect(text(card, 'dhw_power')).toBe(`DHW ${nb('5043 W')}`);
+    card.remove();
+  });
+
+  test('active cooling with HTR: outside temperature, EER, Cooling and HTR', async () => {
+    const card = await mount(
+      { features: { htr: true, active_cooling: true } },
+      hassOf({
+        'unit.summer': 'on',
+        'unit.winter': 'off',
+        'cooling.capacity': '4000',
+        'htr.power': '3200',
+      }),
+    );
+    expect(root(card).querySelector('.mode')?.textContent.trim()).toBe(MODE_LABELS.active_cooling);
+    expect(ids(card)).toEqual(['outside_temperature', 'cop', 'cooling_power', 'htr_power']);
+    expect(text(card, 'cop')).toContain('EER');
+    expect(text(card, 'cooling_power')).toBe(`Cooling ${nb('4000 W')}`);
+    expect(text(card, 'htr_power')).toBe(`HTR ${nb('3200 W')}`);
+    card.remove();
+  });
+
+  test('passive cooling: outside temperature and COP, no power item', async () => {
+    const card = await mount(
+      { features: { passive_cooling: true } },
+      hassOf({
+        'unit.summer': 'on',
+        'unit.winter': 'off',
+        'compressor.speed': '0',
+        'compressor.percentage': '0',
+        'compressor.power': '0',
+        'production.pump': '40',
+      }),
+    );
+    expect(root(card).querySelector('.mode')?.textContent.trim()).toBe(MODE_LABELS.passive_cooling);
+    expect(ids(card)).toEqual(['outside_temperature', 'cop']);
+    card.remove();
   });
 });

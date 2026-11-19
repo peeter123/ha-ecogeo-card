@@ -3,7 +3,7 @@
 // topology rule checked on it for every source, DHW storage and model.
 import { describe, expect, test } from 'vitest';
 import { DHW_STORAGES, SOURCES } from '../../src/config/options';
-import { SIMPLIFIED_PLACES } from '../../src/diagram/label-places';
+import { HORIZONTAL_PLACES } from '../../src/diagram/label-places';
 import type { FeatureState, Features } from '../../src/config/variants';
 import {
   MAX_CROSSINGS,
@@ -192,9 +192,9 @@ describe('arrangementFor: the simplified arrangement', () => {
   });
 
   test('the labels with a place of their own have a reason, are in the arrangement and sit where the table says', () => {
-    const ids = Object.keys(SIMPLIFIED_PLACES);
+    const ids = Object.keys(HORIZONTAL_PLACES);
     expect(ids.length).toBeGreaterThan(0);
-    for (const [id, place] of Object.entries(SIMPLIFIED_PLACES)) {
+    for (const [id, place] of Object.entries(HORIZONTAL_PLACES)) {
       expect(place.reason.length, id).toBeGreaterThan(20);
       const spec = simplified.labels.specs.find((label) => label.id === id);
       expect(spec, id).toBeDefined();
@@ -246,17 +246,10 @@ describe('arrangementFor: the simplified arrangement', () => {
       if (twin === undefined) continue;
       expect(twin.at).toEqual([fx(crossing.at[0]), fy(crossing.at[1])]);
     }
-    frame.circuitLabels.forEach((label, index) => {
-      expect([simplified.circuitLabels[index]?.x, simplified.circuitLabels[index]?.y]).toEqual([
-        fx(label.x),
-        fy(label.y),
-      ]);
-    });
     const cabinetLabels = [
       'production_out',
       'production_in',
       'production_pump',
-      'dg1_setpoint',
       'dg1_demand',
       'brine_out',
       'brine_in',
@@ -267,13 +260,11 @@ describe('arrangementFor: the simplified arrangement', () => {
       'suction_temperature',
       'suction_pressure',
       'compressor_speed',
-      'compressor_percentage',
-      'compressor_power',
-      'condensation_temperature',
-      'evaporation_temperature',
+      'superheat',
+      'expansion_valve',
     ];
-    // the labels with a place of their own (SIMPLIFIED_PLACES) are checked below
-    for (const id of cabinetLabels.filter((label) => SIMPLIFIED_PLACES[label] === undefined)) {
+    // the labels with a place of their own (HORIZONTAL_PLACES) are checked above
+    for (const id of cabinetLabels.filter((label) => HORIZONTAL_PLACES[label] === undefined)) {
       const [a, b] = [
         // the maps start from the frame's default places
         frame.labels.specs.find((spec) => spec.id === id),

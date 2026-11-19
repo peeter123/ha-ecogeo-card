@@ -17,7 +17,7 @@ import type { Readings } from '../calc/readings';
 import type { DhwStorage } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { Features } from '../config/variants';
-import { DHW_LABELS, FOOTER_LABELS, HEATING_LABELS, NO_VALUE, ON_OFF_LABELS } from '../strings';
+import { DHW_LABELS, FOOTER_LABELS, HEATING_LABELS, NO_VALUE } from '../strings';
 import { arrangementOf, partState, type DrawContext } from './geometry';
 import type { Align, LabelSpec, Placement } from './label-places';
 
@@ -178,7 +178,7 @@ export interface FooterInputs {
 }
 
 /**
- * The footer's values: the on/off state, the season, the outside temperature, the efficiency and the mode's power items
+ * The footer's values (the same in both layouts): the outside temperature, the efficiency and the mode's power items
  * (add-htr-state D2): heating DG1 (`heating.power`, else `heating.capacity`) and HTR (`htr.power`), dhw DHW (`dhw.power`,
  * else `heating.capacity`), active_cooling Cooling (`cooling.capacity`) and HTR, no power item in any other mode. HTR
  * shows only with the feature `true`, a DHW tank in use and an `htr.power` entity, also at 0 W. The efficiency is
@@ -226,13 +226,6 @@ export function footerItems(
   /** The item of a role, or of its fallback role while the role has no entity. */
   const withFallback = (id: string, role: RolePath, fallback: RolePath, caption: string): FooterItem | undefined =>
     number(id, absent.has(role) ? fallback : role, caption);
-  const onOff = readings['unit.on_off'];
-  const season =
-    readings['unit.summer'] === true
-      ? FOOTER_LABELS.summer
-      : readings['unit.winter'] === true
-        ? FOOTER_LABELS.winter
-        : undefined;
   // The efficiency: the system COP, else the register COP; 0 is no efficiency whichever role feeds it.
   const efficiencyRole: RolePath = absent.has('unit.system_cop') ? 'unit.cop' : 'unit.system_cop';
   const efficiency = item(
@@ -258,25 +251,6 @@ export function footerItems(
           ? [number('cooling_power', 'cooling.capacity', FOOTER_LABELS.cooling), htr]
           : [];
   const items = [
-    item(
-      'on_off',
-      ['unit.on_off'],
-      undefined,
-      onOff === undefined
-        ? undefined
-        : typeof onOff === 'boolean'
-          ? ON_OFF_LABELS[onOff ? 'on' : 'off']
-          : (ON_OFF_LABELS[onOff.toLowerCase()] ?? onOff),
-    ),
-    item(
-      'season',
-      // The tap opens the summer entity while it reads on or the winter role is not present, else the winter one.
-      readings['unit.summer'] === true || notPresent.has('unit.winter')
-        ? ['unit.summer', 'unit.winter']
-        : ['unit.winter', 'unit.summer'],
-      undefined,
-      season,
-    ),
     number('outside_temperature', 'source.outside_temperature', FOOTER_LABELS.outside),
     efficiency,
     ...power,

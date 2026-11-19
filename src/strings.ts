@@ -82,20 +82,7 @@ export const CONFIG_ERRORS = {
     `Invalid option dhw: ${dhw} does not fit model ${model}${dhw === 'none' && model === 'C' ? ' (model C always has its tank; use unused)' : ''}`,
 } as const;
 
-/** The labels of the circuits at the cabinet's top connections (manual items 1/2, 3/4 and 5/6). */
-export const CIRCUIT_LABELS = {
-  dg1: 'DG1',
-  outerLoop: 'Outer loop',
-  dhw: 'DHW',
-} as const;
-
-/** The captions of the outer-loop source parts (not manual items). */
-export const SOURCE_LABELS = {
-  air: 'Air unit',
-  ground: 'Ground loop',
-} as const;
-
-/** The caption of the external DHW tank (not a manual item: ports 5/6 are the "DHW inter-accumulator"). */
+/** The name of the external DHW tank, a tooltip (not a manual item: ports 5/6 are the "DHW inter-accumulator"). */
 export const DHW_LABELS = {
   externalTank: 'DHW tank',
   /** Shown beside the tank values only while the DHW demand is on. */
@@ -107,21 +94,14 @@ export const HEATING_LABELS = { demand: 'Demand' } as const;
 
 /** The small captions in front of a value label where its position alone would not say what it is. */
 export const VALUE_CAPTIONS = {
-  setpoint: 'Setpoint',
-  startDelta: 'Start ΔT',
-  /** Short captions of the row inside model C's tank 50 (refine-schematic-drawing D8b); the external tank keeps the full ones. */
-  setpointShort: 'Set',
-  startDeltaShort: 'ΔT',
-  fan: 'Fan',
-  outside: 'Outside',
-  /** The source ports, from the device's point of view: In where the brine enters it, Out where it leaves. */
+  /** Out and In: where the water or brine leaves or enters the part (the probes of the production and brine circuits, the source). */
   portIn: 'In',
   portOut: 'Out',
-  /** The short caption of the DHW tank's temperature, so it is not read as a brine value. */
+  /** The short caption of the DHW temperature, so it is not read as a brine value. */
   dhw: 'DHW',
 } as const;
 
-/** The footer's captions and the texts of its season and on/off values. */
+/** The footer's captions. */
 export const FOOTER_LABELS = {
   outside: 'Outside',
   cop: 'COP',
@@ -130,11 +110,9 @@ export const FOOTER_LABELS = {
   dhw: 'DHW',
   cooling: 'Cooling',
   htr: 'HTR',
-  summer: 'Summer',
-  winter: 'Winter',
 } as const;
 
-/** The heat pump's on/off text (register 5058) by its lower-case state; any other state is shown as it is. */
+/** The on/off text of a state (a binary reading, or register 5058's) by its lower-case state; any other state is shown as it is. */
 export const ON_OFF_LABELS: Readonly<Record<string, string>> = {
   on: 'On',
   off: 'Off',

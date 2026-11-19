@@ -19,7 +19,7 @@ import type { CircuitId, Circuits } from '../calc/circuits';
 import type { DhwStorage, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
-import { SIMPLIFIED_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
+import { HORIZONTAL_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
 
 /** A rectangle in viewBox units. */
 interface Rect {
@@ -48,8 +48,6 @@ export interface AirUnitShape {
   };
   readonly slats: { readonly y0: number; readonly step: number; readonly count: number };
   readonly dividerY: number;
-  readonly captionX: number;
-  readonly captionY: number;
   readonly passes: {
     readonly y0: number;
     readonly step: number;
@@ -121,8 +119,6 @@ export interface Zones extends ZoneBase {
   readonly loopBend: number;
   /** The ground line (the surface) of the ground loop: on the cabinet's top line, or in the hybrid under the air unit. */
   readonly groundLineY: { readonly ground: number; readonly hybrid: number };
-  /** Where the ground loop's caption sits (under the bottom of the loop). */
-  readonly groundCaption: { readonly x: number; readonly y: { readonly ground: number; readonly hybrid: number } };
   /**
    * The external coil: its centre line is the tank's, and it sits in the lower part of the tank (the tank's top plus 62
    * and 146). `rx` is its half width, `port6X` the x of port 6's vertical inside the tank (14 units inside the left wall).
@@ -160,10 +156,6 @@ function deriveZones(base: ZoneBase): Zones {
     airCoilBend: airUnit.passes.step / 2,
     loopBend: (groundLoop.downX - groundLoop.upX) / 2,
     groundLineY,
-    groundCaption: {
-      x: (groundLoop.downX + groundLoop.upX) / 2,
-      y: { ground: groundLineY.ground + groundLoop.depth + 28, hybrid: groundLineY.hybrid + groundLoop.depth + 28 },
-    },
     externalCoil: {
       cx: externalTank.x + externalTank.width / 2,
       top: externalTank.y + Math.round(62 * k),
@@ -215,10 +207,8 @@ const FRAME_ZONES: Zones = deriveZones({
     fins: { x: 52, step: 6, count: 13, y0: FRAME_CABINET.y + 20, y1: FRAME_CABINET.y + 86 },
     // the slats of the housing's front, in the gutters left and right of the fan: the first y, the step and how many
     slats: { y0: FRAME_CABINET.y + 134, step: 9, count: 8 },
-    // where the fan section starts (a divider under the coil block) and where the caption sits
+    // where the fan section starts (a divider under the coil block)
     dividerY: FRAME_CABINET.y + 114,
-    captionX: 88,
-    captionY: FRAME_CABINET.y - 8,
     // the serpentine: four passes (an even number, so that it enters and leaves on the right), 15 apart, bending at x `left` and `right`
     passes: { y0: FRAME_CABINET.y + 30, step: 15, count: 4, left: 44, right: 132 },
   },
@@ -614,7 +604,7 @@ const segmentsFor = (z: Zones): readonly Segment[] => [
   seg('tap_48', ['dhw_coil'], '490,138 490,118', DHWT, { dhw: 'internal', stub: true }),
   seg('tap_49', ['dhw_coil'], '540,118 540,138', DHWT, { dhw: 'internal', stub: true }),
   // Outer-loop source (left zone). Port 3 (brine out) rises to y 85 and runs left to x 226, port 4 (brine in) comes back
-  // at y 50 from x 206: both stay above the DG1 stubs (y > 110) and the circuit labels, and port 4's pipe is the higher
+  // at y 50 from x 206: both stay above the DG1 stubs (y > 110), and port 4's pipe is the higher
   // one so that the two do not cross. Air unit (refine-schematic-drawing D13): the feed comes down the column x 226 to the bottom pass,
   // the exit leaves the top pass and rises at x 206 (left of the feed's column, so no pipe crosses another); both
   // leave the housing's right wall. Ground loop (refine-schematic-drawing D12): feed, one leg down with the bottom's first quarter
@@ -816,18 +806,6 @@ const CROSSINGS: readonly Crossing[] = [
   { over: 'prod_10_out', under: 'prod_tap_a', at: [368, 448] },
 ];
 
-/** A circuit label under the top edge: the text key, where it sits and what it needs. */
-export interface CircuitLabel extends Pick<Visibility, 'dhw'> {
-  key: 'dg1' | 'outerLoop' | 'dhw';
-  x: number;
-  y: number;
-}
-const CIRCUIT_LABELS: readonly CircuitLabel[] = [
-  { key: 'dg1', x: 291, y: 112 },
-  { key: 'outerLoop', x: 660, y: 112 },
-  { key: 'dhw', x: 776, y: 112, dhw: 'external' },
-];
-
 /** What decides which parts are drawn: the DHW storage, the source and the feature states. */
 export interface DrawContext {
   /** The model: with `dhw: unused` it decides which tank is drawn (B external, C internal). */
@@ -850,14 +828,13 @@ export type ShownLayout = 'horizontal' | 'vertical';
 
 /**
  * One complete arrangement of the drawing (refine-simplified-layout D1): the viewBox, the cabinet and the zone constants
- * (`Zones`), the components, segments, crossings and circuit labels, and the value labels' placements. Every consumer reads it from the draw context; none reads a module constant.
+ * (`Zones`), the components, segments, crossings and the value labels' placements. Every consumer reads it from the draw context; none reads a module constant.
  */
 export interface Arrangement extends Zones {
   readonly id: ArrangementId;
   readonly components: readonly Component[];
   readonly segments: readonly Segment[];
   readonly crossings: readonly Crossing[];
-  readonly circuitLabels: readonly CircuitLabel[];
   readonly labels: LabelPlaces;
 }
 
@@ -981,8 +958,6 @@ const SIMPLIFIED_ZONES: Zones = deriveZones({
     },
     slats: { y0: scaleY(FRAME_CABINET.y + 134), step: round2(9 * K), count: 8 },
     dividerY: scaleY(FRAME_CABINET.y + 114),
-    captionX: airX(88),
-    captionY: FRAME_CABINET.y - 8,
     passes: { y0: scaleY(FRAME_CABINET.y + 30), step: round2(15 * K), count: 4, left: airX(44), right: airX(132) },
   },
   // the legs 2.8 (down) and 0.8 (up) units left of the scale's (so that the Out value, up to 77 units wide, stays inside the drawing): the In label (up to 64 units wide) right of the down leg ends at the cabinet's edge
@@ -1038,13 +1013,12 @@ function buildArrangement(): Arrangement {
     components,
     segments,
     crossings,
-    circuitLabels: CIRCUIT_LABELS.map((label) => ({ ...label, x: simplifiedX(label.x), y: simplifiedY(label.y) })),
     labels: {
       specs: labels.specs.map((spec) => {
         if (spec.id === 'production_pressure') {
           return { ...spec, x: stubX + 32, y: TRANSDUCER_38_Y, align: 'start' as const };
         }
-        const place = SIMPLIFIED_PLACES[spec.id]?.at(zones, (x, y) => [simplifiedX(x), simplifiedY(y)]);
+        const place = HORIZONTAL_PLACES[spec.id]?.at(zones, (x, y) => [simplifiedX(x), simplifiedY(y)]);
         return place === undefined ? spec : { ...spec, ...place };
       }),
     },
@@ -1054,7 +1028,7 @@ function buildArrangement(): Arrangement {
 const ARRANGEMENT = buildArrangement();
 
 /**
- * The manual-figure frame the arrangement is mapped from (rework-layouts D1): its zones, lists, crossings, circuit labels and
+ * The manual-figure frame the arrangement is mapped from (rework-layouts D1): its zones, lists, crossings and
  * default label places. Its crossing list holds only the crossings the arrangement keeps (not `prod_10_in x prod_tap_a`, whose stub the arrangement shortens; group 4 removes the stub). Not drawn by any layout; the tests of the maps (test/diagram/simplified.test.ts) compare the arrangement with it.
  */
 export const FRAME = {
@@ -1062,7 +1036,6 @@ export const FRAME = {
   components: componentsFor(FRAME_ZONES),
   segments: segmentsFor(FRAME_ZONES),
   crossings: CROSSINGS,
-  circuitLabels: CIRCUIT_LABELS,
   labels: labelPlacesFor(FRAME_ZONES),
 };
 
@@ -1075,6 +1048,19 @@ export function arrangementFor(layout: ShownLayout): Arrangement {
     case 'horizontal':
     case 'vertical':
       return ARRANGEMENT;
+  }
+}
+
+/**
+ * The labels' places of a layout before `HORIZONTAL_PLACES` applies: the default places under the maps. The place search
+ * (scripts/search-places.mjs) measures each label's distance from these, never from a recorded place, so a rerun does not
+ * depend on the table it replaces.
+ */
+export function defaultLabelPlaces(layout: ShownLayout): LabelPlaces {
+  switch (layout) {
+    case 'horizontal':
+    case 'vertical':
+      return labelPlacesFor(SIMPLIFIED_ZONES, (x, y) => [simplifiedX(x), simplifiedY(y)]);
   }
 }
 

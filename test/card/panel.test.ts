@@ -129,7 +129,7 @@ describe('isPanel', () => {
   });
 
   test('the layout follows the drawing width: a panel in a short window is vertical with auto although the card is wide', async () => {
-    // (420 - 56 - 64) * 1000 / 545 = 550 px, below the 600 px threshold
+    // (420 - 56 - 64) * 1000 / 545 = 550 px, below the vertical threshold
     const card = await show(1280, 420, true);
     expect(card.shownLayout).toBe('vertical');
     expect(card.shadowRoot?.querySelector('ha-card')?.getAttribute('data-layout')).toBe('vertical');

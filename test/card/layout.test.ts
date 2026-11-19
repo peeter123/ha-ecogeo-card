@@ -78,8 +78,8 @@ describe('layout option', () => {
 });
 
 describe('VERTICAL_BELOW', () => {
-  test('stays at 640 px or less', () => {
-    expect(VERTICAL_BELOW).toBeLessThanOrEqual(640);
+  test('stays at 680 px or less', () => {
+    expect(VERTICAL_BELOW).toBeLessThanOrEqual(680);
   });
 });
 

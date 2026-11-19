@@ -22,11 +22,13 @@ for the explanation of what the card shows and where each part comes from.
 - The active circuits move: dashes run in the direction of the flow at a speed that follows the pump or the
   compressor, the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode
   are muted. `prefers-reduced-motion` stops all animation.
-- Live values beside their components (temperatures, pressures, pump and compressor speeds, power, the tank's values;
-  the expansion valve's opening and the superheat are not on the drawing yet) and a footer with the mode, season,
-  outside temperature, COP (EER while cooling) and the power items of the mode (DG1 and HTR while heating, DHW while
-  producing DHW, Cooling and HTR in active cooling). The card formats the numbers itself with Home Assistant's locale
-  and keeps every number joined to its unit by a no-break space.
+- Live values beside their components, 19 in all: the production and brine temperatures with Out and In captions, both
+  pressures and pump speeds, the discharge and suction temperatures and pressures, the compressor speed, the expansion
+  valve's opening and the superheat, the source's Out, the DHW temperature, and the DG1 and DHW demand. The drawing
+  carries no captions naming its parts; hover a part for its name. Below it a footer shows the mode, the outside
+  temperature, COP (EER while cooling) and the power items of the mode (DG1 and HTR while heating, DHW while producing
+  DHW, Cooling and HTR in active cooling), and the alarm and offline indications. The card formats the numbers itself
+  with Home Assistant's locale and keeps every number joined to its unit by a no-break space.
 - A visual editor (add the card from the picker, or edit it) for the unit, the entity prefix, the features and the
   appearance; it writes only what you set and keeps every other key.
 - Read-only: tapping a value, or a component with an entity of its own, opens the entity's more-info dialog; the card
@@ -64,11 +66,11 @@ runs. In the card editor, the help link opens this README. How a release is made
 [docs/ecogeo-card.md](docs/ecogeo-card.md), and what each one changed is in [CHANGELOG.md](CHANGELOG.md).
 
 The card measures its own width and chooses a layout from it (the `layout` option, see Options). With `layout: auto`
-(the default) it shows the horizontal layout from 600 px wide, which is a panel view or a wide section, and the vertical
+(the default) it shows the horizontal layout from 680 px wide, which is a panel view or a wide section, and the vertical
 layout below that, which is what a phone gets. The horizontal layout is the drawing described in this README; the
 vertical layout, a taller arrangement for phones, is still to come, and until then `layout: vertical` (and `auto` below
-600 px) draws the horizontal one. Pipes and outlines never render thinner than 2 px and 1.25 px, and the footer wraps.
-Once vertical, the card returns to horizontal only at 624 px (24 px of hysteresis), so a scrollbar appearing with the
+680 px) draws the horizontal one. Pipes and outlines never render thinner than 2 px and 1.25 px, and the footer wraps.
+Once vertical, the card returns to horizontal only at 704 px (24 px of hysteresis), so a scrollbar appearing with the
 layout cannot make it flip back and forth. Set `layout: horizontal` or `layout: vertical` to force one. In a panel view
 the card also fits the screen: the drawing is kept within the window's height below Home Assistant's header (and above
 the footer), narrower and centred when the card is wider than that, and the layout and line widths follow the drawing's
@@ -112,7 +114,7 @@ fault.
 | `states` | group | `off: [OFF]`, `defrost: [Defrost]` | The state texts that mean off (the on/off entity) and defrost (the compressor mode entity); a list replaces its default, case-insensitive. See Using another source in the docs. |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
-| `layout` | `auto`, `horizontal`, `vertical` | `auto` | `auto` shows the vertical layout while the card is narrower than 600 px and the horizontal layout otherwise (and before the width is known), with 24 px of hysteresis once vertical (see Layout in the docs); `horizontal` and `vertical` use that layout at any width. Until the vertical arrangement is built, both draw the horizontal one. The former values `full` and `compact` are errors. |
+| `layout` | `auto`, `horizontal`, `vertical` | `auto` | `auto` shows the vertical layout while the card is narrower than 680 px and the horizontal layout otherwise (and before the width is known), with 24 px of hysteresis once vertical (see Layout in the docs); `horizontal` and `vertical` use that layout at any width. Until the vertical arrangement is built, both draw the horizontal one. The former values `full` and `compact` are errors. |
 
 ### Source and DHW
 
@@ -154,17 +156,17 @@ dhw: internal
 
 | `source` | Drawn |
 |---|---|
-| `air` | An air unit with a four-pass coil and a fan, its brine In and Out values at its two ports on the side facing the heat pump. |
-| `ground` | A ground loop: a single U-shaped loop below a ground line, with its In and Out values at the line. |
-| `hybrid` | Both, in series on one brine loop (the air unit shows only its In and the ground loop only its Out). |
+| `air` | An air unit with a four-pass coil and a fan, its Out value beside its top port. |
+| `ground` | A ground loop: a single U-shaped loop below a ground line, with its Out value at the line. |
+| `hybrid` | Both, in series on one brine loop (only the ground loop shows its Out; the air unit shows no value). |
 
 The top of the air unit or of the ground line is level with the top of the heat pump.
 
 | `dhw` | Drawn |
 |---|---|
-| `external` | A tank with a coil right of the cabinet, joined to ports 5/6 (model B). |
+| `external` | A tank with a coil right of the cabinet, joined to ports 5/6 (model B), with the DHW temperature and the DHW demand under it. |
 | `internal` | The integrated tank 50 with coil 51 inside the cabinet (model C). |
-| `unused` | The model's tank (external on B, integrated on C) drawn muted, with no tank values and no DHW circuit active; HTR is drawn if its feature says so. |
+| `unused` | The model's tank (external on B, integrated on C) drawn muted, with no tank value and no DHW circuit active; HTR is drawn if its feature says so. |
 | `none` | Nothing DHW related (model B only). |
 
 ### Features
@@ -232,10 +234,10 @@ keeps its label with a dash. `none` alone is still an entity setting, so the car
 | `htr.power` | `sensor.<prefix>_heating_power_htr` | W, 0 dec. | 9 |
 | `source.fan_speed` | `sensor.<prefix>_aerothermal_fan_speed` | %, 1 dec. | air unit |
 | `source.air_unit_outlet_temperature` | `sensor.<prefix>_brine_temperature_air_unit_outlet` | °C, 1 dec. | air unit |
-| `source.outside_temperature` | `sensor.<prefix>_outside_temperature` | °C, 1 dec. | air unit / footer |
-| `unit.on_off` | `sensor.<prefix>_heatpump_on_off` | text | footer |
-| `unit.summer` | `binary_sensor.<prefix>_summer` | on/off | footer |
-| `unit.winter` | `binary_sensor.<prefix>_winter` | on/off | footer |
+| `source.outside_temperature` | `sensor.<prefix>_outside_temperature` | °C, 1 dec. | footer |
+| `unit.on_off` | `sensor.<prefix>_heatpump_on_off` | text | mode (not shown) |
+| `unit.summer` | `binary_sensor.<prefix>_summer` | on/off | mode (not shown) |
+| `unit.winter` | `binary_sensor.<prefix>_winter` | on/off | mode (not shown) |
 | `unit.alarm` | `binary_sensor.<prefix>_alarm` | on/off | footer |
 | `unit.connection` | `binary_sensor.<prefix>_status` | on/off | footer |
 | `unit.cop` | `sensor.<prefix>_cop` | 1 dec., no unit | footer |

@@ -5,8 +5,10 @@
 // `g.air-unit`, and the marks of `g.ground-loop`). The threshold is the narrowest width at which every case has zero overlaps and
 // every wider measured width does too (a width of the 20 px grid). Paste it into VERTICAL_BELOW in src/lib/layout.ts.
 //
-// The check counts pipes and captions too (dev/overlaps.ts) and prints the most frequent pairs; `--no-pipes` leaves them
-// out, which is the measurement of before refine-simplified-layout.
+// The check counts pipes too (dev/overlaps.ts) and prints the most frequent pairs. `--browser=chromium|webkit` (default
+// chromium) picks the engine: on a host where Chromium measures text with whole-pixel advances (Windows with font
+// smoothing off, the RDP case; the browser tests' preflight stops there) measure with `--browser=webkit` and record that
+// the numbers came from WebKit.
 //
 // The boxes, the exclusions, the installations and the tolerance are in dev/overlaps.ts, shared with the browser
 // test that guards the threshold (test/card/overlaps.browser.test.ts). Starts and stops its own Vite server, like
@@ -14,7 +16,7 @@
 /// <reference lib="dom" />
 /* global document, HTMLElement, requestAnimationFrame */
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { createServer } from 'vite';
 
 const GRID = Array.from({ length: 25 }, (_, index) => 320 + index * 20);
@@ -22,16 +24,19 @@ const GRID = Array.from({ length: 25 }, (_, index) => 320 + index * 20);
 const only = process.argv.find((arg) => arg.startsWith('--widths='));
 const WIDTHS = only === undefined ? GRID : only.slice('--widths='.length).split(',').map(Number);
 const quiet = process.argv.includes('--quiet');
-// Pipes and captions count by default (refine-simplified-layout D4); `--no-pipes` measures labels and components only.
-const pipes = !process.argv.includes('--no-pipes');
+const browserArg = process.argv.find((arg) => arg.startsWith('--browser='))?.slice('--browser='.length) ?? 'chromium';
+if (browserArg !== 'chromium' && browserArg !== 'webkit') {
+  console.error(`--browser needs chromium or webkit, got "${browserArg}"`);
+  process.exit(2);
+}
 
 /** Runs in the page: the shared check of dev/overlaps.ts, served by the Vite dev server. */
-async function measureInPage(/** @type {boolean} */ withPipes) {
+async function measureInPage() {
   const path = '/dev/overlaps.ts';
   const shared = await import(path);
   const root = document.querySelector('ecogeo-card')?.shadowRoot;
   if (!root) throw new Error('the card has no shadow root');
-  return shared.overlapPairs(shared.measureCard(root, { pipes: withPipes }));
+  return shared.overlapPairs(shared.measureCard(root, { pipes: true }));
 }
 
 const server = await createServer({
@@ -53,7 +58,7 @@ try {
   );
   const names = /** @type {readonly string[]} */ (loaded['SCENARIO_NAMES']);
 
-  browser = await chromium.launch();
+  browser = await (browserArg === 'webkit' ? webkit : chromium).launch();
   const page = await browser.newPage({ viewport: { width: 1200, height: 1000 } });
   /** @type {string[]} */
   const problems = [];
@@ -73,7 +78,7 @@ try {
         }, width);
         // Let the layout settle: two frames.
         await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
-        const pairs = await page.evaluate(measureInPage, pipes);
+        const pairs = await page.evaluate(measureInPage);
         results.get(width)?.set(`${name} / ${installation.name}`, pairs);
       }
     }
@@ -84,6 +89,7 @@ try {
   await server.close();
 }
 
+console.log(`Measured with ${browserArg}.`);
 let cleanFrom;
 for (const width of WIDTHS) {
   const cases = results.get(width) ?? new Map();
@@ -110,7 +116,7 @@ if (only !== undefined) {
   );
 }
 
-if (pipes) {
+{
   // The most frequent pairs over every measured width and case, to show what the drawing collides on.
   /** @type {Map<string, number>} */
   const tally = new Map();

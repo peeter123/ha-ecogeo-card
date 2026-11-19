@@ -155,10 +155,9 @@ describe('tap a component', () => {
     card.remove();
   });
 
-  test("valve 12's tap opens the opening's entity at the simplified level, where its two values are not shown (refine-simplified-layout D5)", async () => {
+  test("valve 12's tap opens the opening's entity", async () => {
     const card = await mount(live, hass);
     const seen = listen(card);
-    expect(root(card).querySelector('[data-label="superheat"], [data-label="expansion_valve"]')).toBeNull();
     group(card, 12).dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(seen).toEqual([`sensor.${P}_expansion_valve_position`]);
     card.remove();

@@ -121,12 +121,12 @@ describe.each(LAYOUTS)('Footer wraps, %s layout', (layout) => {
     expect(new Set(items.map((item) => Math.round(item.getBoundingClientRect().top))).size).toBeGreaterThan(1);
   });
 
-  // add-htr-state: the longest footer (active cooling with HTR: mode, on/off, season, outside, EER, Cooling, HTR) at the
+  // add-htr-state: the longest footer (active cooling with HTR: mode, outside, EER, Cooling, HTR) at the
   // narrowest width the horizontal layout is drawn once vertical (the threshold plus the hysteresis) fits the panel allowance.
   test('the longest footer (active cooling with HTR, EER) at the threshold plus the hysteresis is inside the card and the allowance', async () => {
     const { root } = await show(VERTICAL_BELOW + VERTICAL_HYSTERESIS, { layout }, 'active_cooling_htr');
     const ids = [...root.querySelectorAll('[data-footer]')].map((item) => item.getAttribute('data-footer'));
-    expect(ids).toEqual(['on_off', 'season', 'outside_temperature', 'cop', 'cooling_power', 'htr_power']);
+    expect(ids).toEqual(['outside_temperature', 'cop', 'cooling_power', 'htr_power']);
     expect(root.querySelector('[data-footer="cop"] .caption')?.textContent).toBe('EER');
     const footer = root.querySelector('.footer');
     const card = root.querySelector('ha-card');

@@ -206,7 +206,7 @@ card reads what it finds.
 - A yes/no role (demand, summer, winter, alarm, connection) reads `on`, `true`, `yes` and `1` as on, and `off`,
   `false`, `no` and `0` as off, from any domain.
 - The on/off, compressor mode, compressor speed and pump roles also take an on/off entity (`binary_sensor`, `switch` or
-  `input_boolean`). Its label (compressor speed, pumps) or footer item (on/off) reads "On" or "Off". On the on/off role,
+  `input_boolean`). Its label (compressor speed, pumps) reads "On" or "Off". On the on/off role,
   off means the unit is off; on the compressor mode role, on means defrost. A sensor that reads `1` on a text role stays
   text.
 - Text roles are compared with `states`, which replaces the firmware's texts:
@@ -377,10 +377,10 @@ external tank is 134 x 144 with a dome of 11 and a coil of half width 40. The to
 line and the tank's dome stay on the cabinet's top line (y 130). The source zone ends at x 190 (the feed's column; its
 legs at x 84 and 130, the housing's wall at x 108; the run above the cabinet joins at x 198), the tank zone starts at x
 840 and the tank (x 853 to 987) is centred in it. The air unit is 12 units left of where the scale puts it and the
-ground loop's legs at x 84 and 130 (0.8 and 2.8 units left of the scaled position), so that the brine In and Out labels
-(up to 64 units wide at the nominal label size, about 72 at 600 px) fit between the housing and the feed's column and
-between the loop and the cabinet. The pipes of the source and of ports 5 and 6 are generated from these constants, so
-they stay connected to the ports, which follow `fx`.
+ground loop's legs at x 84 and 130 (0.8 and 2.8 units left of the scaled position), so that the Out label (up to 64
+units wide at the nominal label size, about 67 at 680 px, measured with the place search) fits between the housing and
+the feed's column and between the loop and the cabinet. The pipes of the source and of ports 5 and 6 are generated from
+these constants, so they stay connected to the ports, which follow `fx`.
 
 **Exceptions to the maps** (`SIMPLIFIED_EXCEPTIONS`, each with its reason in code): pressure transducer 38 and its
 stub sat in the cut band (y 520), so they move up, between the two production lines of exchanger 10 (y 448 and 492) on
@@ -435,13 +435,14 @@ connections.
 ### Outer-loop source (`source`)
 
 Connection 3 (brine outlet) and 4 (brine inlet) rise from the top edge into the pipe run above the cabinet, above the
-DG1 stubs and the circuit labels. Port 4's pipe is the higher one (y 50, port 3's runs at y 85), so the two never
+DG1 stubs. Port 4's pipe is the higher one (y 50, port 3's runs at y 85), so the two never
 cross on their way left. They belong to the brine circuit: they are active with it, defrost included.
 
 The top of the source sits on the cabinet's top line (y 130): the air unit's housing, or the ground loop's ground
 line when there is no air unit, so that the thick top lines of the unit and of the source are level (the external
-tank's top is level with them too). In the hybrid the air unit sits there and the ground loop below it. The captions
-keep their places relative to their device: "Air unit" above the housing, "Ground loop" under the loop.
+tank's top is level with them too). In the hybrid the air unit sits there and the ground loop below it. The drawing
+carries no captions that name a group or part ("DG1", "Outer loop", "DHW", "Air unit", "Ground loop", "DHW tank"): the
+tooltips name the parts.
 
 - **Air:** a housing with a slatted front (slats left and right of the fan), a coil block with a frame and 13 thin
   vertical fins, and a fan under it. The brine tube winds over the fins in four passes joined by rounded U-bends (half
@@ -464,15 +465,12 @@ keep their places relative to their device: "Air unit" above the housing, "Groun
   edge to port 4, left of the housing. Series keeps the drawing free of crossings in the narrow zone, which two
   branches in parallel would not.
 
-The source shows the brine temperature entering and leaving each device where its pipes meet it, so that the outer
-loop reads at a glance without looking into the cabinet (probes 31 and 32 stay inside it). The captions are from
-the device's point of view: "In" where the brine enters the device, "Out" where it leaves. The air unit's "In" is
-`brine.outlet_temperature` (the heat pump's brine outlet feeds the unit) and its "Out"
-`source.air_unit_outlet_temperature`; the ground loop's "In" is `brine.outlet_temperature` at the down leg and its
-"Out" `brine.inlet_temperature` at the up leg, both at the ground line. In the hybrid the air unit shows only its "In"
-and the ground loop only its "Out"; the link pipe between them (the air unit's "Out", the ground loop's "In")
-carries no label. The fan speed and the outside temperature stay under the
-housing. These are ordinary value labels (see Live values).
+The source shows one value, its Out: the brine temperature leaving the device, which is the heat pump's brine inlet,
+so the outer loop reads at a glance without looking into the cabinet (probes 31 and 32 stay inside it). The air unit's
+Out is `source.air_unit_outlet_temperature`, beside its top port; the ground loop's Out is `brine.inlet_temperature`,
+left of the up leg at the ground line; the hybrid shows only the ground loop's Out, and the link pipe between the air
+unit and the loop carries no label. There is no In value, no fan speed and no outside temperature on the drawing (their
+roles stay in the config, and the fan still turns by its speed). It is an ordinary value label (see Live values).
 
 ### DHW storage (`dhw`)
 
@@ -506,8 +504,7 @@ housing. These are ordinary value labels (see Live values).
   configuration error; use `unused`.
 
 The tank body takes the DHW temperature colour through the custom property `--dhw-tank-color` (see Colours). The
-fan speed, outside temperature, the In and Out temperatures of the air unit and of the ground loop and the tank
-values are live labels (see Live values).
+source's Out and the tank's DHW temperature and demand are live labels (see Live values).
 
 ## Colours
 
@@ -651,29 +648,28 @@ entity.
 
 | Value | Where |
 |---|---|
-| Production outlet (33) and return (34), pressure (38), pump 15 | left of probe 33, under probe 34, right of transducer 38, above pump 15 |
-| DG1 setpoint, and "Demand" while the DG1 demand is on | above the DG1 label at connections 1/2, and right of port 2 |
-| Brine outlet (31) and inlet (32), pressure (37), pump 16 | under the probes, under probe 37, left of the pump |
+| Production outlet (33, "Out") and return (34, "In"), pressure (38), pump 15 | left of probe 33, inside the cabinet under the DG1 stubs for probe 34, right of transducer 38, about 35 units above pump 15 |
+| "Demand" while the DG1 demand is on | just above the cabinet's top edge, right of connection 2's stub |
+| Brine outlet (31, "Out") and inlet (32, "In"), pressure (37), pump 16 | at the probes, right of transducer 37, left of the pump |
 | Discharge (30) and suction (29) temperatures, pressures 36 and 35 | below the discharge and suction lines of the probe row |
-| Compressor 11: rpm, %, W | a stack inside the refrigerant loop |
-| Superheat (K) and valve opening (%) at 12 | not on the drawing at the moment (see Superheat and the expansion valve opening); tap valve 12 for the opening |
-| Condensation (8) and evaporation (7) temperatures | under exchangers 8 and 7 |
-| Air unit: fan, outside temperature | under the housing |
-| Air unit: In (brine outlet of the heat pump) and Out (air unit outlet temperature); a hybrid: only In | right of the housing, next to the ports: air, In at the bottom port and Out at the top one; hybrid, In at the top port |
-| Ground loop: In (brine outlet) and Out (brine inlet); a hybrid: only Out | at the ground line, In right of the down leg and Out left of the up leg |
-| Tank: temperature, setpoint, start delta-T (K), "Demand" while on | under the external tank; on model C as one row inside tank 50, in the strip above coil 51, with no background plate, at the normal label size and with the short captions "Set" and "ΔT" (the "Demand" text under the row) |
+| Compressor 11: rpm | inside the refrigerant loop |
+| Superheat (K) and valve opening (%) at 12 | left of evaporator 7, the superheat over the opening |
+| Source: "Out" of the air unit, the ground loop (the hybrid: of its ground loop only) | beside the air unit's top port, or left of the ground loop's up leg |
+| Tank: temperature with its "DHW" caption, and "Demand" while on | under the external tank; on model C inside tank 50, above coil 51, with no background plate |
 
-The labels have a minimum font size, so on a card narrower than about 560 px (measured with the demand line showing;
-about 510 px for the three values alone) the labels inside tank 50 start to touch; narrower cards get the vertical
-layout.
+These 19 are all the card draws. The compressor percentage and power, the condensation and evaporation temperatures,
+the fan speed, the outside temperature (it is in the footer), the air unit's and ground loop's In, the DG1 setpoint and
+the DHW setpoint and start delta-T have no label; their roles stay configurable and keep their more-info and
+suggestions. Tap valve 12 or a component with an entity for its more-info.
 
 A value of a part that is not drawn is not shown (no DHW storage, or an unused tank (`dhw: unused`), no tank values; a
 source that is not drawn, no source values). A drawn value with no value shows a muted dash and keeps its place. A role
 set to `none` shows nothing (see Using another source).
 
-The footer shows the mode, the on/off state, the season, the outside temperature, the efficiency (COP or EER), the
-power items of the mode, and the alarm and offline indications. An item whose role is `none` is left out; the season
-only when both summer and winter are `none`.
+The footer is one list, the same in both layouts: the mode, the outside temperature, the efficiency (COP or EER), the
+power items of the mode, and the alarm and offline indications. It shows no on/off state and no season (the roles
+`unit.on_off`, `unit.summer` and `unit.winter` still feed the derived mode). An item whose role is `none` is left
+out.
 
 The power items follow the mode, because the firmware's DHW power already includes the HTR heat: showing DG1, DHW and
 HTR together while heating would count that heat twice. By mode, the items of one mode add up to the useful heat (DG1
@@ -716,9 +712,9 @@ The card formats every number itself (`src/calc/display.ts`), never through `has
   state ("45.6" is "45.6 Hz", "2400" is "2400 rpm").
 - The decimals come from the entity's `display_precision` in the entity registry when it has one and the entity's unit
   is the role's own unit; else (no precision, or a converted value such as kW shown as W, a Fahrenheit probe) from the
-  role table (1 for temperatures, bar and %, 0 for rpm, W, the valve opening, the DHW setpoint and start delta-T).
+  role table (1 for temperatures, the superheat, bar and %, 0 for rpm, W and the valve opening).
 - The unit is the role's own, joined to the number by a no-break space: °C for temperatures, K for temperature
-  differences (superheat, start delta-T), bar, %, rpm and W. The COP has none.
+  differences (the superheat), bar, %, rpm and W. The COP has none.
 - A state in °F is converted to °C, one in kW to W and a pressure in kPa, MPa, Pa, mbar or psi to bar (see Using another
   source); a unit the card cannot convert is shown as the entity reports it, except temperature, difference and power,
   which have no value. A temperature difference in °F is converted back with the same absolute formula (43.2 °F is 6.2
@@ -730,7 +726,7 @@ The card formats every number itself (`src/calc/display.ts`), never through `has
 
 The card observes its own width (a `ResizeObserver` on the card element) and derives a layout from it and from the
 `layout` option (`auto`, `horizontal` or `vertical`, default `auto`). `horizontal` and `vertical` force that layout at
-any width. With `auto` the card is vertical while it is narrower than the vertical threshold (600 px,
+any width. With `auto` the card is vertical while it is narrower than the vertical threshold (680 px,
 `VERTICAL_BELOW`) and horizontal from the threshold up; before the first width is known (or while the card is not
 displayed, width 0) it is horizontal. The rule is `nextVertical` in `src/lib/layout.ts` (based on the narrow-layout
 predicate copied from the hrv-ventilation repo's `src/diagram/labels.ts`, whose deviations the file's header records;
@@ -748,7 +744,7 @@ arrangement, and the phone-width checks are not in the test suite. The former va
 
 A page scrollbar can appear and disappear as the layout flips, which changes the card's width by about 15-17 px near
 the threshold. So with `auto` a card that is already vertical returns to horizontal only at the threshold plus 24 px,
-624 px (`VERTICAL_HYSTERESIS` in `src/lib/layout.ts`); going vertical still happens below the threshold, at 600 px. The
+704 px (`VERTICAL_HYSTERESIS` in `src/lib/layout.ts`); going vertical still happens below the threshold, at 680 px. The
 decision is the pure function `nextVertical(layout, width, currentlyVertical)`, which the card calls with whether the
 layout it showed last was vertical because `auto` chose it. A vertical layout that `layout: vertical` forced does not
 count: after a switch to `auto` the card shows what a newly loaded card of that width shows. Forced layouts ignore the
@@ -765,12 +761,12 @@ drawing would be taller than the screen and the footer would be below the fold. 
 footer allowance) * viewBox width / viewBox height`. The header height is Home Assistant's `--header-height` (56 px if
 unset) plus its `--safe-area-inset-top` (0 if unset); outside a panel view the card reads neither. The footer allowance
 is 64 px: one footer line is about 20 px with 8 + 12 px of padding. The longest footer (active cooling with HTR: mode,
-on/off, season, outside temperature, EER, Cooling and HTR) wraps to two lines at the narrowest widths of the horizontal
-layout, about 60 px at 624 px (`sizes.browser.test.ts` checks it stays within the allowance), so the footer stays on
-screen even then (in a 1280 x 800 window it stays on one line); a one-line footer leaves up to 24 px of free space under
-it. The width is never below 320 px, the narrowest width verified for the vertical layout (a window too short for that
-scrolls). In a 1280 x 800 px window the horizontal arrangement (1000 x 545) is 1247 px wide; for a 1280 px wide card, a
-window about 820 px or more tall leaves the drawing at the card's width.
+outside temperature, EER, Cooling and HTR) fits one line (37 px) from the threshold plus the hysteresis, 704 px, up, and
+wraps to two lines (58 px) only at phone widths such as 320 px (`sizes.browser.test.ts` checks it stays within the
+allowance at 704 px and inside the card at 320 px); a one-line footer leaves up to 27 px of free space under it. The
+width is never below 320 px, the narrowest width verified for the vertical layout (a window too short for that scrolls).
+In a 1280 x 800 px window the horizontal arrangement (1000 x 545) is 1247 px wide; for a 1280 px wide card, a window
+about 820 px or more tall leaves the drawing at the card's width.
 
 The card sets the width as the `max-width` of the drawing and centres it, and recomputes on the window's `resize`. The
 layout choice (`nextVertical`, with its hysteresis) and the stroke widths take the drawing's width, not the card's, so
@@ -790,27 +786,30 @@ of a later group of `rework-layouts`.)
   `--outline-width: max(2, 1.25 / scale)` on the svg, in drawing units and rounded up to 0.1 (so the rendered minimum
   still holds after rounding). The stroke rules of the drawing (pipes, outlines, the flow overlay) read them, with 3 and
   2 as the fallbacks, so a card of unknown width draws as before. The overlay's dash pattern and the gaps of the hops
-  scale with `--pipe-width`. From 667 px up `scale` is 0.667 or more and the widths stay 3 and 2; between 600 px (the
-  threshold) and 667 px the pipes are up to 3.4 units wide, and the threshold measurement below was taken with that.
-  Decorative thin lines (fins, the air unit's divider, the ground hatching, the tank rim) are fractions of
-  `--outline-width`.
+  scale with `--pipe-width`. From 667 px up `scale` is 0.667 or more and the widths stay 3 and 2; the threshold (680 px)
+  is above that, so the horizontal layout always draws pipes 3 and outlines 2 units wide. Decorative thin lines (fins,
+  the air unit's divider, the ground hatching, the tank rim) are fractions of `--outline-width`.
 - Fonts: the labels are `max(8px, 0.95cqw)` and the external tank's temperature `max(9px, 1.2cqw)`, in both layouts.
 - Footer: a wrapping flex row with row and column gaps, in both layouts.
 
 Browser tests measure these in Chromium and WebKit: `test/card/sizes.browser.test.ts` the rendered stroke widths and the
-label font floor (320, 360, 500 and 599 px, and the designed widths at 1000 px), the wrapping footer (every item inside
-the card at 320 px, the longest footer inside the card and the footer allowance at 624 px) and the band at the
-threshold, each for `layout: horizontal` and `layout: vertical`; `test/card/layout.browser.test.ts` the layout at real
-widths; `test/card/panel.browser.test.ts` the panel fit in a 1280 x 800 window.
+label font floor (320, 500 and 679 px, the last one px under the threshold, and the designed widths at 1000 px), the
+wrapping footer (every item inside the card at 320 px, the longest footer inside the card and the footer allowance at
+704 px) and the band at the threshold, each for `layout: horizontal` and `layout: vertical`;
+`test/card/layout.browser.test.ts` the layout at real widths; `test/card/panel.browser.test.ts` the panel fit in a 1280
+x 800 window.
 
 ### The vertical threshold
 
-The threshold is 600 px (`VERTICAL_BELOW`; measured on 2026-11-13 with pipes and captions counted, after
-refine-simplified-layout drew the arrangement and gave some labels places of their own; it is measured again when the
-labels are reduced to the 19 values, a later group of `rework-layouts`). It is the narrowest card width at which the
-horizontal layout has no value label that overlaps another label, a component, a pipe or a caption in any emulator
-scenario, on the 20 px grid from 320 to 800 px with every wider grid width also clean. The grid, the label box (the em
-box of the text, see below) and the tolerance (0.5 px) are what the result depends on.
+The threshold is 680 px (`VERTICAL_BELOW`; decided on 2026-11-19 from WebKit measurements, see Browser below). It is the
+narrowest card width at which the place search puts every one of the 19 labels where its box, with a 2 px margin,
+overlaps no other label, component, pipe at its rendered stroke width, outline or the drawing's edge, in any emulator
+scenario, on the 20 px grid from 320 to 800 px with every wider grid width also clean. The overlap measurement of `npm
+run measure-layout` (no margin, 0.5 px tolerance) is clean from 640 px; the margin is the 40 px between them. What the
+result depends on: the grid (20 px steps from 320 to 800 px, 25 widths); the label box, the em box of the text with the
+half-leading above and below trimmed; the tolerance, 0.5 px (two boxes overlap when they share more than that in both
+directions); and the margin, 2 px horizontally and 1 px vertically around the label box, which the search keeps and the
+measurement does not.
 
 Method (`npm run measure-layout`, `scripts/measure-layout.mjs`, Playwright): every emulator scenario is opened in the
 forced horizontal layout, in seven installations (a ground loop on model B, an air unit, the hybrid, model C with its
@@ -818,24 +817,17 @@ internal tank on a ground loop and on an air unit, and the unused-tank cases: a 
 on model C), and the card is set to every width from 320 to 800 px in 20 px steps (`--widths=a,b,c` measures only those,
 to iterate on a place, and prints no threshold). At each width the script compares, in the DOM, the bounding boxes of
 the value labels with each other, with the boxes of the drawing's component groups (the symbol groups, the DHW storage,
-the air unit and the marks of the ground loop), with the pipes and with the captions, and checks that no label's box
-leaves the drawing (`label X x edge`: the box extends past the svg's box by more than the tolerance, which the other
-pairs cannot see). A label that crosses the cabinet's outline, partly inside and partly outside, is reported as
-`label X x cabinet`. A label's box leaves out the half-leading above and below its text; two boxes overlap when they
-share more than 0.5 px in both directions. The labels inside tank 50 on model C are not compared with tank 50, which
-they sit on by design. The threshold is the narrowest width with zero overlaps in every case, provided every wider
-measured width is also clean. `--no-pipes` leaves the pipes and captions out, which is the measurement of before
-refine-simplified-layout (580 px on that drawing).
+the air unit and the marks of the ground loop) and with the pipes, and checks that no label's box leaves the drawing
+(`label X x edge`: the box extends past the svg's box by more than the tolerance, which the other pairs cannot see). A
+label that crosses the cabinet's outline, partly inside and partly outside, is reported as `label X x cabinet`. The
+labels inside tank 50 on model C are not compared with tank 50, which they sit on by design. The threshold is the
+narrowest width with zero overlaps in every case, provided every wider measured width is also clean.
 
-Pipes and captions (refine-simplified-layout D4): every `path.pipe` is sampled along its rendered length at 1 px steps,
-each sample a square of the pipe's rendered stroke width, and a label overlaps the pipe when a sample shares more than
-0.5 px with its box in both directions. A hop is a gap in the path data, so each subpath is sampled on its own and a
-label over a hop's gap does not count; the halves of a helix share their segment's name. The captions
-(`text.circuit-label`, `text.source-caption`, `text.tank-caption`) are boxed like labels, as the em box of their text,
-and a caption overlapping a label or a pipe counts (captions inside a part's group, such as the ground loop's, are
-checked against pipes only; as that part they are already checked against labels). The `bare` labels inside tank 50
-ignore pipe samples inside tank 50's box. Pairs read `label X x pipe:<segment>`, `caption:<text> x label X` and
-`caption:<text> x pipe:<segment>`.
+Pipes (refine-simplified-layout D4): every `path.pipe` is sampled along its rendered length at 1 px steps, each sample
+a square of the pipe's rendered stroke width, and a label overlaps the pipe when a sample shares more than 0.5 px with
+its box in both directions. A hop is a gap in the path data, so each subpath is sampled on its own and a label over a
+hop's gap does not count; the halves of a helix share their segment's name. The `bare` labels inside tank 50 ignore pipe
+samples inside tank 50's box. Pairs read `label X x pipe:<segment>`. There are no in-drawing captions to check any more.
 
 The boxes, exclusions, installations and tolerance live in `dev/overlaps.ts`, shared by the script and by the browser
 test `test/card/overlaps.browser.test.ts`, which runs the same check (with pipes) in the horizontal layout at the
@@ -843,47 +835,56 @@ threshold, 800 and 1000 px in headless Chromium and WebKit so that a change to t
 overlaps back fails `npm test`. The layout at real widths (`test/card/layout.browser.test.ts`) is also a browser test:
 happy-dom has no layout.
 
-Two choices decide the result. A label's box is its em box, with the half-leading trimmed, because the line boxes of the
-stacked compressor rows overlap at every width. And the tolerance is 0.5 px; with no tolerance (boxes that merely touch
-count) the threshold is the same, 600 px (re-measured 2026-11-13 with the tolerance set to 0; it was 680 px before
-refine-simplified-layout).
+Browser: the numbers here were measured with `npm run measure-layout -- --browser=webkit` (and the places searched
+with `npm run search-places -- --browser=webkit`), because the host was a remote desktop session with font smoothing
+off, where Chromium measures text with whole-pixel advances and its label boxes are about 2 px wider (see Text widths
+and font smoothing). Both scripts take `--browser=chromium|webkit` (default chromium). The Chromium side, the threshold
+and the places on a host with font smoothing on, is still to be run.
 
-History: the first measurement (add-compact-layout, labels and components only) gave 700 px, then 640 px once the
-compressor rows were spaced 12 units apart. With pipes and captions counted on the drawing before
-refine-simplified-layout the threshold was 700 px (171 overlaps at 640 px and 660 px, 126 at 680 px, 3242 at 320 px; the
-most frequent pairs were the compressor rows, the superheat against the expansion valve opening, the production inlet
-against pipes `prod_44_26` and `trunk`, the discharge and suction temperatures against their pressures and the DG1
-caption against the DG1 setpoint). The wider, shorter cabinet (see The arrangement) and the places in the next section
-brought it to 600 px (no overlaps from 600 px; 3 at 580 px, all the air unit's Out label against the feed pipe in the
-defrost scenario; 179 at 560 px, 2662 at 320 px). Below 600 px the labels stop shrinking at their 8 px minimum while the
-drawing keeps shrinking, so what remains are rows that are 12 to 13 units apart (the discharge and suction temperatures
-against their pressures, the fan against the outside temperature), and the Out label against the feed pipe.
+Result (the 19 values, the places below): `measure-layout` finds no overlaps from 640 px up (82 at 620 px in 58 of the
+84 cases, 85 at 600 px, 2421 at 320 px); the place search with its margin finds a place for every label at 680 px,
+and at
+660 px the external tank's temperature and demand meet in 6 cases and production Out moves to x 124, 131 units from
+probe 33, so the threshold is 680 px. Below 640 px the labels stop shrinking at their 8 px minimum while the drawing
+keeps shrinking, so what remains are the discharge and suction rows against each other and the lines, the production
+inlet against the pipes next to probe 34 and the superheat against the opening. History: before this change the
+threshold was 600 px with 28 labels (700 px before refine-simplified-layout); the Out and In captions that widen the
+production and brine values cost 80 px.
 
 ### The label places
 
-A label of the arrangement is at its place in the frame under the maps (or at its zone's place for the source, the tank
-and tank 50), unless `SIMPLIFIED_PLACES` in `src/diagram/label-places.ts` gives it another, each with its reason in
-code. A later group of `rework-layouts` replaces this table with per-layout places found by `npm run search-places`
-(that script still searches with the rules of the former narrow layout until then). Today's table:
+A label of the arrangement is at its default place (the frame's place under the maps, or its zone's place for the
+source, the tank and tank 50) unless `HORIZONTAL_PLACES` in `src/diagram/label-places.ts` gives it another, each with
+its
+reason in code. The table is what `npm run search-places -- --layout=horizontal --browser=webkit --width=680` found (the
+vertical layout gets its own table in a later group): for every value, over every scenario, installation and naming
+(168 cases), the places on a 4-unit grid where the label's box, with its 2 px margin, overlaps no component, no pipe at
+its rendered width, no other label and no outline, stays inside the drawing, and, for a value inside a body (tank 50),
+stays inside it; of those the one nearest the label's default place (the search measures from the defaults, never from
+a recorded place), the Out and In pairs together and in reading order (Out left of In, or above it). No label sits on a
+pipe, and there is no exception list: a label with no place is a decision point. The search also prints, per label,
+what its default place meets ("Default place meets"); the reasons below are that output at 680 px.
 
-| Label | Place | Why |
+| Label | Place (x, y, alignment) | Why the default place fails |
 |---|---|---|
-| Air unit outlet (the top port's value) | starts 3 units off the housing's wall, 12 units under the top port | "Out" and its widest value (-12.3 in the defrost scenario) end before the feed pipe at 600 px |
-| Fan, outside temperature | left-aligned 9 units inside the housing, 12 and 25 units under it | the outside value (about 105 units wide at 600 px) centred on the fan reaches the hybrid return pipe |
-| Compressor 11: rpm, %, W | x 497, y 308, 322 and 336 (a pitch of 14 units instead of 12) | the text of a 600 px card is taller than 12 units |
-| DG1 demand | y 118 instead of 123 | the plate touches the cabinet's top edge at 123 |
-| Ground loop In (ground) | 3 units off the down leg (x 130), start-aligned | the legs moved right for the Out value, and the widest In value must still end left of the cabinet (x 200) |
-| Ground loop Out (ground; hybrid) | 3 units off the up leg (x 84), end-aligned | the widest value (-12.3, defrost) crossed the drawing's left edge at 600 px; it now stays 2 px or more inside it in Chromium and WebKit |
+| Production In (34) | 320, 160, middle | beside probe 34 the box meets pipes `prod_44_26` and `trunk` (140 cases): inside the cabinet under the DG1 stubs, right of Out in reading order |
+| Pump 16 (brine) | 724, 280, end | the default meets pump 16's symbol in every case |
+| Discharge (30) and (36) | 408, 260 start; 452, 276 start | each meets the other in 140 cases |
+| Suction (29) and (35) | 540, 272 end; 556, 276 start | each meets the other in 140 cases |
+| Superheat and opening at 12 | 536, 376 and 536, 392, end | each meets the other in every case; left of evaporator 7, 16 units apart |
+| Tank 50 "Demand" | 520, 164, end | the default rows, 13 units apart, meet in 4 cases now that the temperature carries its caption; staggered under it |
 
-The brine outlet and inlet, pump 16's speed and the DG1 setpoint keep their places under the maps: with the cabinet's
-extra width they clear pipes `ln3`, `ln4_a`, `src_out` and the DG1 caption at 600 px and above, so they need no place of
-their own.
+Every other label keeps its default place: production Out (left of probe 33), pump 15's value (about 35 units above the
+pump), the brine Out and In, the brine pressure, the compressor speed, the DG1 demand, the source's Out, the external
+tank's temperature and demand and the temperature in tank 50. The search finds them free at 680 px, and the overlap
+tests check them like the rest. Pressure 38 follows its transducer, which the arrangement still moves as an exception to
+the maps.
 
 ### Superheat and the expansion valve opening
 
-The two values at item 12 are not on the drawing at the moment (the former `detail: simplified` left them out because
-they put several pairs on the drawing, and the `full` level is gone); a later group of `rework-layouts` shows them in
-the horizontal layout. Tapping valve 12 still opens the opening's entity.
+Valve 12 shows two values, in both layouts: the superheat in K over the opening in %, both left of evaporator 7 in the
+horizontal layout (16 units apart). Their roles are `refrigerant.superheat` and `refrigerant.expansion_valve`; tapping
+the valve opens the opening's entity.
 
 ## Installation
 
