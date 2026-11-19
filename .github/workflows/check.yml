@@ -12,7 +12,7 @@ jobs:
   check:
     name: Check and verify dist
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -23,8 +23,12 @@ jobs:
         with:
           version: 0.13.1
       - run: npm ci
-      - run: npx playwright install --with-deps chromium webkit
+      - name: Install the Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+        timeout-minutes: 10
       - name: Install the Roboto font
-        run: sudo apt-get install -y --no-install-recommends fonts-roboto
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-roboto
       - run: npm run check
       - run: npm run verify-dist

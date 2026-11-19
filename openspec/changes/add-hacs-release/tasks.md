@@ -158,6 +158,8 @@ this change's artifacts: values from `private/installation.md` are used only in 
 - Before archiving (from the group 6 review, 2026-11-18): in `check.yml`, give the Playwright install step
   `timeout-minutes: 10` and the job 15 instead of 30 (the first run on d575f3a spent 29 minutes on a slow Ubuntu
   mirror), and run `apt-get update` in the Roboto step itself. Decision points for the user: GitHub's immutable
-  releases setting, and whether tag pushes should also run the workflows.
+  releases setting, and whether tag pushes should also run the workflows. Decided 2026-11-19: tag pushes run both
+  workflows, which the bare `push:` trigger already does (the `v1.0.0` push ran Check and Validate), so the
+  triggers stay; releases stay mutable, so a release asset can still be replaced.
 - Investigate why 13 Chromium overlap browser tests fail locally on Windows since the evening of 2026-11-18 while
   WebKit and CI pass on the same code (the user chose to release on CI's result).
