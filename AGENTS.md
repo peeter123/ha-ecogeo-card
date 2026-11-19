@@ -39,7 +39,10 @@ threshold per detail level, the compact layout on the simplified arrangement, an
 `openspec/changes/archive/2026-11-17-refine-simplified-layout/`. The seventh, `add-htr-state` (HTR recovery from
 `htr_active` in heating and active cooling, optional roles with a fallback when their prefix default is absent, the
 footer's power items by mode and the system COP, and the heat power labels and suggestions in the editor), is
-archived in `openspec/changes/archive/2026-11-18-add-htr-state/`.
+archived in `openspec/changes/archive/2026-11-18-add-htr-state/`. The eighth, `add-hacs-release` (the HACS manifest,
+one version in the package, the bundle and its load message, the release and dist checks, the Home Assistant quality
+checks, the GitHub workflows and the published 1.0.0), is archived in
+`openspec/changes/archive/2026-11-19-add-hacs-release/`.
 
 ## Rules in short
 
