@@ -45,6 +45,12 @@ DHW storage).
 - **WHEN** the DHW demand is on
 - **THEN** the tank shows "Demand" inside its body, touching neither the coil nor the wall
 
+#### Scenario: Stacked at phone width
+- **WHEN** the card renders model B with `dhw: external` in the vertical layout at 320 px, the DHW demand on
+- **THEN** the DHW temperature and "Demand" are stacked, the temperature above, inside the external tank above its
+  coil, touching neither each other, the coil nor the wall (schematic-drawing "One body height in the band",
+  decided by the user 2026-11-20)
+
 #### Scenario: DHW temperature unavailable
 - **WHEN** the DHW temperature is unavailable
 - **THEN** the tank body is drawn in the muted colour and its label shows no number
@@ -53,6 +59,7 @@ DHW storage).
 
 ### Requirement: Internal tank for model C
 With `dhw: internal`, the card SHALL draw the integrated storage inside the cabinet, after the manual's C figure:
+
 - tank 50 with coil 51, drawn as a helix as on the external tank, and DHW probe 54
 - tap water inlet 47, DHW outlet 48 and recirculation 49 as stubs on the cabinet's top edge
 
@@ -67,9 +74,39 @@ Manual trap 52 and drain valve 53 SHALL NOT be drawn: they have no live value.
 - **THEN** the DHW temperature without a caption and "Demand" are shown inside tank 50, above coil 51, touching no
   drawn part, the tank wall or another label
 
+#### Scenario: Model C tank values stacked
+- **WHEN** the config sets `model: C`, the DHW demand is on, and the card renders the vertical layout at 320 px
+- **THEN** the DHW temperature and "Demand" are stacked, the temperature above, inside tank 50 in the added height
+  above coil 51 (schematic-drawing "Vertical arrangement", decided by the user 2026-11-20), touching no drawn part, the
+  tank wall or each other
+
 #### Scenario: Simplified model C
 - **WHEN** the config sets `model: C`
 - **THEN** coil 51 is drawn as a helix, and the manual trap 52 and drain valve 53 are not drawn
+
+### Requirement: Unused DHW storage
+With `dhw: unused`, the card SHALL draw the model's tank (on model B the external tank with connections 5 and 6, on
+model C tank 50 with coil 51) and valve 26 in the muted style: the tank body (fill and outline), the coil, valve 26 and
+the DHW pipes muted and never animated. The tank SHALL show no values. HTR SHALL follow its own feature state, as with a
+tank in use, but the HTR circuit and the DHW coil SHALL never be active (see operating-mode).
+
+#### Scenario: Unused external tank
+- **WHEN** the config sets `model: B` and `dhw: unused`
+- **THEN** the tank, its coil, the pipes from connections 5 and 6 and valve 26 are drawn muted, and the tank shows
+  no values
+
+#### Scenario: Unused internal tank
+- **WHEN** the config sets `model: C` and `dhw: unused`
+- **THEN** tank 50, coil 51 and valve 26 are drawn muted inside the cabinet, and the tank shows no values
+
+#### Scenario: HTR kept with an unused tank
+- **WHEN** the config sets `model: C`, `dhw: unused` and HTR is `true`
+- **THEN** exchanger 9, pump 17 and valve 22 are drawn, as with `dhw: internal` (valve 25 is not drawn in either case,
+  decided by the user 2026-11-20)
+
+#### Scenario: DHW mode with an unused tank
+- **WHEN** `dhw` is `unused` and the unit reports DHW mode
+- **THEN** the mode label shows "DHW", and the tank, coil and DHW pipes stay muted
 
 ## REMOVED Requirements
 

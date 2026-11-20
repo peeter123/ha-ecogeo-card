@@ -139,7 +139,7 @@ describe('component-to-role table', () => {
     expect(COMPONENT_ROLES[7]).toBe('refrigerant.evaporation_temperature');
     expect(COMPONENT_ROLES[50]).toBe('dhw.temperature');
     expect(COMPONENT_ROLES[54]).toBe('dhw.temperature');
-    for (const item of [9, 10, 13, 14, 17, 22, 25, 27, 28, 44, 45])
+    for (const item of [9, 10, 13, 14, 17, 22, 27, 28, 44, 45])
       expect(COMPONENT_ROLES[item], String(item)).toBeUndefined();
   });
 });

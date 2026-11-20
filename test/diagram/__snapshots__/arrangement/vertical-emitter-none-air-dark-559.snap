@@ -1,0 +1,736 @@
+layout: vertical
+labels:
+production_out | label middle rotated | left: 7.567567567567568%; top: 53.19949811794228%
+production_in | label middle rotated | left: 12.972972972972974%; top: 53.19949811794228%
+production_pressure | label middle rotated | left: 17.83783783783784%; top: 54.20326223337516%
+production_pump | label start | left: 25.945945945945947%; top: 77.79171894604768%
+dg1_demand | label middle | left: 28.10810810810811%; top: 28.10539523212045%
+brine_out | label middle rotated | left: 71.89189189189189%; top: 53.19949811794228%
+brine_in | label middle rotated | left: 84.86486486486487%; top: 53.19949811794228%
+brine_pressure | label middle rotated | left: 89.72972972972974%; top: 52.69761606022585%
+brine_pump | label middle rotated | left: 85.94594594594595%; top: 70.26348808030113%
+discharge_temperature | label start | left: 39.5945945945946%; top: 51.276035131744045%
+discharge_pressure | label start | left: 39.5945945945946%; top: 55.29109159347554%
+suction_temperature | label start | left: 55.54054054054054%; top: 51.276035131744045%
+suction_pressure | label start | left: 55.54054054054054%; top: 55.29109159347554%
+compressor_speed | label middle | left: 50%; top: 59.30614805520703%
+expansion_valve | label middle | left: 57.027027027027025%; top: 86.3237139272271%
+air_unit_out | label middle | left: 65%; top: 12.547051442910917%
+tank_external_temperature | label middle emphasis bare | left: 87.83783783783784%; top: 6.273525721455458%
+footer: outside_temperature, cop, dg1_power, htr_power
+svg:
+<svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 740 797" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #d7263d 10.5%, #f2711c); --ecogeo-coil-muted: var(--disabled-text-color); --pipe-width: 3; --outline-width: 2">
+          <g class="source" data-source-kind="air">
+    <g data-source="air" class="air-unit" aria-label="Air unit">
+    <title>Air unit</title>
+    <rect class="source-outline" rx="6" x="416" y="6" width="130" height="176">
+</rect>
+    <path class="source-divider" d="M416 84 H546">
+</path>
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="air-divider" x="416" y="82.5" width="130" height="3">
+</rect>
+    <rect class="source-frame" data-coil-block="" data-obstacle="air-coil" rx="3" x="426" y="116" width="110" height="58">
+</rect>
+    <path class="source-fin" d="M430 124 H532">
+</path>
+<path class="source-fin" d="M430 132 H532">
+</path>
+<path class="source-fin" d="M430 140 H532">
+</path>
+<path class="source-fin" d="M430 148 H532">
+</path>
+<path class="source-fin" d="M430 156 H532">
+</path>
+<path class="source-fin" d="M430 164 H532">
+</path>
+    <g class="fan-part" aria-label="Air unit fan" role="button" tabindex="0">
+      <title>Air unit fan</title>
+      <circle class="fan-ring" data-obstacle="air-fan" cx="481" cy="46" r="28">
+</circle>
+      <circle class="fan-hit" fill="transparent" stroke="none" cx="481" cy="46" r="28">
+</circle>
+      <g class="fan" data-fan="" transform="translate(481 46) scale(0.82)">
+        <g class="fan-rotor" style="--fan-duration: 3.4782608695652173s">
+<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(0)">
+</path>
+<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(72)">
+</path>
+<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(144)">
+</path>
+<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(216)">
+</path>
+<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(288)">
+</path>
+<circle class="fan-hub" r="5" fill="var(--primary-text-color)">
+</circle>
+</g>
+      </g>
+    </g>
+  </g>
+    
+  </g>
+<g data-dhw="external" class="dhw-storage" aria-label="DHW tank" role="button" tabindex="0">
+    <title>DHW tank</title>
+    <path class="tank-body" data-dhw-tank="external" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" d="M570 20 A80 14 0 0 1 730 20 V168 A80 14 0 0 1 570 168 Z">
+</path>
+    <path class="tank-rim" d="M570 20 A80 14 0 0 0 730 20">
+</path>
+    <rect class="obstacle" data-obstacle="tank-rim" fill="none" stroke="none" x="570" y="20" width="160" height="14">
+</rect>
+  </g>
+<g class="cabinet">
+    <defs>
+<linearGradient x1="0" x2="0" id="ecogeoN-x7-left" y1="1" y2="0" data-muted="false">
+      <stop offset="0" style="stop-color: color-mix(in srgb, #5fa8e0 23.5%, #1e5aa8)">
+</stop>
+      <stop offset="1" style="stop-color: color-mix(in srgb, #5fa8e0 55%, #1e5aa8)">
+</stop>
+    </linearGradient>
+<linearGradient x1="0" x2="0" id="ecogeoN-x7-right" y1="0" y2="1" data-muted="false">
+      <stop offset="0" style="stop-color: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)">
+</stop>
+      <stop offset="1" style="stop-color: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)">
+</stop>
+    </linearGradient>
+<linearGradient x1="0" x2="0" id="ecogeoN-x8-left" y1="1" y2="0" data-muted="false">
+      <stop offset="0" style="stop-color: color-mix(in srgb, #e8a317 20%, #8ecae6)">
+</stop>
+      <stop offset="1" style="stop-color: color-mix(in srgb, #e8a317 52%, #8ecae6)">
+</stop>
+    </linearGradient>
+<linearGradient x1="0" x2="0" id="ecogeoN-x8-right" y1="0" y2="1" data-muted="false">
+      <stop offset="0" style="stop-color: color-mix(in srgb, #d7263d 12.5%, #f2711c)">
+</stop>
+      <stop offset="1" style="stop-color: color-mix(in srgb, #e8a317 70%, #8ecae6)">
+</stop>
+    </linearGradient>
+<linearGradient x1="0" x2="0" id="ecogeoN-x9-left" y1="1" y2="0" data-muted="true">
+      <stop offset="0" style="stop-color: var(--disabled-text-color)">
+</stop>
+      <stop offset="1" style="stop-color: var(--disabled-text-color)">
+</stop>
+    </linearGradient>
+<linearGradient x1="0" x2="0" id="ecogeoN-x9-right" y1="0" y2="1" data-muted="false">
+      <stop offset="0" style="stop-color: color-mix(in srgb, #d7263d 12.5%, #f2711c)">
+</stop>
+      <stop offset="1" style="stop-color: color-mix(in srgb, #d7263d 12.5%, #f2711c)">
+</stop>
+    </linearGradient>
+<linearGradient x1="0" x2="0" id="ecogeoN-x10-left" y1="1" y2="0" data-muted="true">
+      <stop offset="0" style="stop-color: var(--disabled-text-color)">
+</stop>
+      <stop offset="1" style="stop-color: var(--disabled-text-color)">
+</stop>
+    </linearGradient>
+<linearGradient x1="0" x2="0" id="ecogeoN-x10-right" y1="0" y2="1" data-muted="true">
+      <stop offset="0" style="stop-color: var(--disabled-text-color)">
+</stop>
+      <stop offset="1" style="stop-color: var(--disabled-text-color)">
+</stop>
+    </linearGradient>
+<clipPath data-tank-clip="" id="ecogeoN-tank-clip">
+<path d="M570 20 A80 14 0 0 1 730 20 V168 A80 14 0 0 1 570 168 Z">
+</path>
+</clipPath>
+</defs>
+    <rect class="outline" rx="6" x="10" y="238" width="720" height="544">
+</rect>
+    <path class="pipe " data-segment="p1_up" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M75 268 L75 238">
+</path>
+<path class="flow " data-flow="p1_up" style="--flow-duration: 1.2012012012012012s" d="M75 268 L75 238">
+</path>
+<path class="pipe " data-segment="p2_in" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M152 238 L152 273 M152 287 L152 306">
+</path>
+<path class="flow " data-flow="p2_in" style="--flow-duration: 1.2012012012012012s" d="M152 238 L152 273 M152 287 L152 306">
+</path>
+<path class="pipe " data-segment="prod_44_26" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M75 534 L75 292">
+</path>
+<path class="flow " data-flow="prod_44_26" style="--flow-duration: 1.2012012012012012s" d="M75 534 L75 292">
+</path>
+<path class="pipe " data-segment="prod_8_44" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M287 590 L159 590 M145 590 L75 590">
+</path>
+<path class="flow " data-flow="prod_8_44" style="--flow-duration: 1.2012012012012012s" d="M287 590 L159 590 M145 590 L75 590">
+</path>
+<path class="pipe " data-segment="prod_15_8" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M239 658 L287 658">
+</path>
+<path class="flow " data-flow="prod_15_8" style="--flow-duration: 1.2012012012012012s" d="M239 658 L287 658">
+</path>
+<path class="pipe " data-segment="trunk" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M152 306 L152 658">
+</path>
+<path class="flow " data-flow="trunk" style="--flow-duration: 1.2012012012012012s" d="M152 306 L152 658">
+</path>
+<path class="pipe " data-segment="prod_27_in" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M152 658 L180 658">
+</path>
+<path class="flow " data-flow="prod_27_in" style="--flow-duration: 1.2012012012012012s" d="M152 658 L180 658">
+</path>
+<path class="pipe " data-segment="prod_27_15" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M204 658 L215 658">
+</path>
+<path class="flow " data-flow="prod_27_15" style="--flow-duration: 1.2012012012012012s" d="M204 658 L215 658">
+</path>
+<path class="pipe muted" data-segment="prod_10_in" d="M152 658 L152 759 L358 759">
+</path>
+<path class="pipe muted" data-segment="prod_10_out" d="M358 715 L192 715 L192 670">
+</path>
+<path class="pipe muted" data-segment="dhw_sup_a" d="M87 280 L203 280">
+</path>
+<path class="pipe muted" data-segment="dhw_sup_b" d="M203 280 L374 280">
+</path>
+<path class="pipe muted" data-segment="dhw_sup_c" d="M374 280 L677 280 L677 238">
+</path>
+<path class="pipe muted" data-segment="dhw_ret_c" d="M717 238 L717 306 L374 306">
+</path>
+<path class="pipe muted" data-segment="dhw_ret_b" d="M374 306 L182 306">
+</path>
+<path class="pipe muted" data-segment="dhw_ret_a" d="M182 306 L152 306">
+</path>
+<path class="pipe muted" data-segment="htr_in" d="M182 306 L182 338">
+</path>
+<path class="pipe muted" data-segment="htr_pump" d="M182 362 L182 371">
+</path>
+<path class="pipe muted" data-segment="htr_to_9" d="M182 389 L182 545 L203 545">
+</path>
+<path class="pipe muted" data-segment="htr_riser" d="M203 499 L203 313 M203 299 L203 280">
+</path>
+<path class="pipe " data-segment="ref_discharge" style="stroke: color-mix(in srgb, #d7263d 12.5%, #f2711c)" d="M356 380 L227 380 L227 499">
+</path>
+<path class="flow " data-flow="ref_discharge" style="--flow-duration: 3.084832904884319s" d="M356 380 L227 380 L227 499">
+</path>
+<path class="pipe " data-segment="ref_9_14" style="stroke: color-mix(in srgb, #d7263d 12.5%, #f2711c)" d="M227 545 L283 545">
+</path>
+<path class="flow " data-flow="ref_9_14" style="--flow-duration: 3.084832904884319s" d="M227 545 L283 545">
+</path>
+<path class="pipe " data-segment="ref_14_8" style="stroke: color-mix(in srgb, #d7263d 12.5%, #f2711c)" d="M311 555 L311 590">
+</path>
+<path class="flow " data-flow="ref_14_8" style="--flow-duration: 3.084832904884319s" d="M311 555 L311 590">
+</path>
+<path class="pipe " data-segment="ref_7_14" style="stroke: color-mix(in srgb, #5fa8e0 55%, #1e5aa8)" d="M455 590 L455 545 L311 545">
+</path>
+<path class="flow " data-flow="ref_7_14" style="--flow-duration: 3.084832904884319s" d="M455 590 L455 545 L311 545">
+</path>
+<path class="pipe " data-segment="ref_suction" style="stroke: color-mix(in srgb, #5fa8e0 55%, #1e5aa8)" d="M311 535 L505 535 L505 380 L384 380">
+</path>
+<path class="flow " data-flow="ref_suction" style="--flow-duration: 3.084832904884319s" d="M311 535 L505 535 L505 380 L384 380">
+</path>
+<path class="pipe " data-segment="ref_8_13" style="stroke: color-mix(in srgb, #e8a317 70%, #8ecae6)" d="M311 658 L356 658">
+</path>
+<path class="flow " data-flow="ref_8_13" style="--flow-duration: 3.084832904884319s" d="M311 658 L356 658">
+</path>
+<path class="pipe " data-segment="ref_13_12" style="stroke: color-mix(in srgb, #e8a317 70%, #8ecae6)" d="M384 658 L410 658">
+</path>
+<path class="flow " data-flow="ref_13_12" style="--flow-duration: 3.084832904884319s" d="M384 658 L410 658">
+</path>
+<path class="pipe " data-segment="ref_12_7" style="stroke: color-mix(in srgb, #5fa8e0 23.5%, #1e5aa8)" d="M434 658 L455 658">
+</path>
+<path class="flow " data-flow="ref_12_7" style="--flow-duration: 3.084832904884319s" d="M434 658 L455 658">
+</path>
+<path class="pipe " data-segment="ln4_a" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M607 238 L607 273 M607 287 L607 299 M607 313 L607 548">
+</path>
+<path class="flow " data-flow="ln4_a" style="--flow-duration: 1.2s" d="M607 238 L607 273 M607 287 L607 299 M607 313 L607 548">
+</path>
+<path class="pipe " data-segment="ln4_b" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M607 572 L607 590">
+</path>
+<path class="flow " data-flow="ln4_b" style="--flow-duration: 1.2s" d="M607 572 L607 590">
+</path>
+<path class="pipe " data-segment="br_feed7" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M607 590 L559 590 M545 590 L479 590">
+</path>
+<path class="flow " data-flow="br_feed7" style="--flow-duration: 1.2s" d="M607 590 L559 590 M545 590 L479 590">
+</path>
+<path class="pipe " data-segment="brine_7_28" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M479 658 L520 658">
+</path>
+<path class="flow " data-flow="brine_7_28" style="--flow-duration: 1.2s" d="M479 658 L520 658">
+</path>
+<path class="pipe " data-segment="brine_28_ln3" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M544 658 L552 658">
+</path>
+<path class="flow " data-flow="brine_28_ln3" style="--flow-duration: 1.2s" d="M544 658 L552 658">
+</path>
+<path class="pipe " data-segment="ln3" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 658 L552 313 M552 299 L552 287 M552 273 L552 238">
+</path>
+<path class="flow " data-flow="ln3" style="--flow-duration: 1.2s" d="M552 658 L552 313 M552 299 L552 287 M552 273 L552 238">
+</path>
+<path class="pipe muted" data-segment="br_10_in" d="M607 590 L607 715 L382 715">
+</path>
+<path class="pipe muted" data-segment="br_10_28" d="M382 759 L532 759 L532 722 M532 708 L532 670">
+</path>
+<path class="pipe " data-segment="p1_stub" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M75 238 L75 226">
+</path>
+<path class="pipe " data-segment="p2_stub" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M152 226 L152 238">
+</path>
+<path class="pipe muted" data-segment="dhw_ext_in" d="M677 238 L677 198 L600 198 L600 96 L612 96">
+</path>
+<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M677 238 L677 198 L600 198 L600 96 L612 96">
+</path>
+<g class="helix muted" data-segment="dhw_ext_coil">
+    <path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M688 102.89 C688 93.7 612 100.59 612 109.78">
+</path>
+<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M688 116.67 C688 107.48 612 114.37 612 123.56">
+</path>
+<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M688 130.44 C688 121.26 612 128.15 612 137.33">
+</path>
+<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M688 144.22 C688 135.04 612 141.93 612 151.11">
+</path>
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M612 96 C612 105.19 688 112.07 688 102.89">
+</path>
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M612 109.78 C612 118.96 688 125.85 688 116.67">
+</path>
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M612 123.56 C612 132.74 688 139.63 688 130.44">
+</path>
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M612 137.33 C612 146.52 688 153.41 688 144.22">
+</path>
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M612 151.11 C612 160.3 665.2 158 688 158">
+</path>
+    
+  </g>
+<path class="pipe muted" data-segment="dhw_ext_out" d="M688 158 L700 158 L700 198 L717 198 L717 238">
+</path>
+<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M688 158 L700 158 L700 198 L717 198 L717 238">
+</path>
+<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 238 L552 216">
+</path>
+<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M552 238 L552 216">
+</path>
+<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M607 204 L607 238">
+</path>
+<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 204 L607 238">
+</path>
+<path class="pipe " data-segment="src_air_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 216 L448 216 L448 174">
+</path>
+<path class="flow " data-flow="src_air_feed" style="--flow-duration: 1.2s" d="M552 216 L448 216 L448 174">
+</path>
+<path class="pipe " data-segment="src_air_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M448 174 L448 139 A11 11 0 0 1 459 128 L459 128 A11 11 0 0 1 470 139 L470 151 A11 11 0 0 0 481 162 L481 162 A11 11 0 0 0 492 151 L492 139 A11 11 0 0 1 503 128 L503 128 A11 11 0 0 1 514 139 L514 174">
+</path>
+<path class="flow " data-flow="src_air_coil" style="--flow-duration: 1.2s" d="M448 174 L448 139 A11 11 0 0 1 459 128 L459 128 A11 11 0 0 1 470 139 L470 151 A11 11 0 0 0 481 162 L481 162 A11 11 0 0 0 492 151 L492 139 A11 11 0 0 1 503 128 L503 128 A11 11 0 0 1 514 139 L514 174">
+</path>
+<path class="pipe " data-segment="src_air_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M514 174 L514 204 L607 204">
+</path>
+<path class="flow " data-flow="src_air_exit" style="--flow-duration: 1.2s" d="M514 174 L514 204 L607 204">
+</path>
+    <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
+    <title>Production outlet (1)</title>
+    <g transform="translate(75 238)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
+<rect x="-5" y="-6" width="10" height="6">
+</rect>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="2" data-kind="port" aria-label="Production return (2)">
+    <title>Production return (2)</title>
+    <g transform="translate(152 238)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
+<rect x="-5" y="-6" width="10" height="6">
+</rect>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="3" data-kind="port" aria-label="Brine outlet (3)">
+    <title>Brine outlet (3)</title>
+    <g transform="translate(552 238)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
+<rect x="-5" y="-6" width="10" height="6">
+</rect>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="4" data-kind="port" aria-label="Brine inlet (4)">
+    <title>Brine inlet (4)</title>
+    <g transform="translate(607 238)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
+<rect x="-5" y="-6" width="10" height="6">
+</rect>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="5" data-kind="port" aria-label="DHW inter-accumulator outlet (5)">
+    <title>DHW inter-accumulator outlet (5)</title>
+    <g transform="translate(677 238)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
+<rect x="-5" y="-6" width="10" height="6">
+</rect>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="6" data-kind="port" aria-label="DHW inter-accumulator inlet (6)">
+    <title>DHW inter-accumulator inlet (6)</title>
+    <g transform="translate(717 238)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol port" transform="rotate(0)">
+<rect x="-5" y="-6" width="10" height="6">
+</rect>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="7" data-kind="exchanger" aria-label="Evaporator (7)" role="button" tabindex="0">
+    <title>Evaporator (7)</title>
+    <g transform="translate(467 624)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol exchanger" transform="rotate(0)">
+<path class="exchanger-fill" stroke="none" data-half="left" d="M0 -43 H-16 A4 4 0 0 0 -20 -39 V39 A4 4 0 0 0 -16 43 H0 Z" fill="url(#ecogeoN-x7-left)" fill-opacity="0.55">
+</path>
+<path class="exchanger-fill" stroke="none" data-half="right" d="M0 -43 H16 A4 4 0 0 1 20 -39 V39 A4 4 0 0 1 16 43 H0 Z" fill="url(#ecogeoN-x7-right)" fill-opacity="0.55">
+</path>
+<rect x="-20" width="40" rx="4" y="-43" height="86">
+</rect>
+<path d="M-12 -34 V34 M12 -34 V34">
+</path>
+<circle cx="-12" r="3.5" fill="var(--card-background-color, transparent)" cy="-34">
+</circle>
+<circle cx="12" r="3.5" fill="var(--card-background-color, transparent)" cy="-34">
+</circle>
+<circle cx="-12" r="3.5" fill="var(--card-background-color, transparent)" cy="34">
+</circle>
+<circle cx="12" r="3.5" fill="var(--card-background-color, transparent)" cy="34">
+</circle>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="8" data-kind="exchanger" aria-label="Condenser (8)" role="button" tabindex="0">
+    <title>Condenser (8)</title>
+    <g transform="translate(299 624)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol exchanger" transform="rotate(0)">
+<path class="exchanger-fill" stroke="none" data-half="left" d="M0 -43 H-16 A4 4 0 0 0 -20 -39 V39 A4 4 0 0 0 -16 43 H0 Z" fill="url(#ecogeoN-x8-left)" fill-opacity="0.55">
+</path>
+<path class="exchanger-fill" stroke="none" data-half="right" d="M0 -43 H16 A4 4 0 0 1 20 -39 V39 A4 4 0 0 1 16 43 H0 Z" fill="url(#ecogeoN-x8-right)" fill-opacity="0.55">
+</path>
+<rect x="-20" width="40" rx="4" y="-43" height="86">
+</rect>
+<path d="M-12 -34 V34 M12 -34 V34">
+</path>
+<circle cx="-12" r="3.5" fill="var(--card-background-color, transparent)" cy="-34">
+</circle>
+<circle cx="12" r="3.5" fill="var(--card-background-color, transparent)" cy="-34">
+</circle>
+<circle cx="-12" r="3.5" fill="var(--card-background-color, transparent)" cy="34">
+</circle>
+<circle cx="12" r="3.5" fill="var(--card-background-color, transparent)" cy="34">
+</circle>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="9" data-kind="exchanger" aria-label="HTR system exchanger (9)">
+    <title>HTR system exchanger (9)</title>
+    <g transform="translate(215 522)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol exchanger" transform="rotate(0)">
+<path class="exchanger-fill" stroke="none" data-half="left" d="M0 -32 H-16 A4 4 0 0 0 -20 -28 V28 A4 4 0 0 0 -16 32 H0 Z" fill="url(#ecogeoN-x9-left)" fill-opacity="0.55">
+</path>
+<path class="exchanger-fill" stroke="none" data-half="right" d="M0 -32 H16 A4 4 0 0 1 20 -28 V28 A4 4 0 0 1 16 32 H0 Z" fill="url(#ecogeoN-x9-right)" fill-opacity="0.55">
+</path>
+<rect x="-20" width="40" rx="4" y="-32" height="64">
+</rect>
+<path d="M-12 -23 V23 M12 -23 V23">
+</path>
+<circle cx="-12" r="3.5" fill="var(--card-background-color, transparent)" cy="-23">
+</circle>
+<circle cx="12" r="3.5" fill="var(--card-background-color, transparent)" cy="-23">
+</circle>
+<circle cx="-12" r="3.5" fill="var(--card-background-color, transparent)" cy="23">
+</circle>
+<circle cx="12" r="3.5" fill="var(--card-background-color, transparent)" cy="23">
+</circle>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="11" data-kind="compressor" aria-label="Compressor (11)" role="button" tabindex="0">
+    <title>Compressor (11)</title>
+    <g transform="translate(370 380)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol compressor" transform="rotate(0)">
+<circle r="14">
+</circle>
+<path class="compressor-fill" fill="currentColor" d="M9 -10.7 L-13.73 -2.75 A14 14 0 0 1 9 -10.7 Z">
+</path>
+<path class="compressor-fill" fill="currentColor" d="M9 10.7 L-13.73 2.75 A14 14 0 0 0 9 10.7 Z">
+</path>
+<path class="compressor-lines" d="M9 -10.7 L-13 -3 M9 10.7 L-13 3">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="12" data-kind="expansion_valve" aria-label="Electronic expansion valve (12)" role="button" tabindex="0">
+    <title>Electronic expansion valve (12)</title>
+    <g transform="translate(422 658)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol expansion_valve" transform="rotate(0)">
+<path d="M-12 -6 V6 L0 0 L12 -6 V6 L0 0 Z">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="13" data-kind="filter_dryer" aria-label="Filter dryer (13)">
+    <title>Filter dryer (13)</title>
+    <g transform="translate(370 658)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol filter_dryer" transform="rotate(0)">
+<rect x="-14" y="-5" width="28" height="10" rx="5">
+</rect>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="14" data-kind="inversion_valve" aria-label="Cycle inversion valve (14)">
+    <title>Cycle inversion valve (14)</title>
+    <g transform="translate(297 545)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol inversion_valve" transform="rotate(0)">
+<rect x="-10" y="-14" width="20" height="28" rx="3">
+</rect>
+<path d="M-14 0 H-10 M10 -10 H14 M10 0 H14 M10 10 H14">
+</path>
+<path d="M-14 0 H-5 V10 H14 M14 0 H5 V-10 H14">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="29" data-kind="probe_t" aria-label="Suction temperature probe (29)" role="button" tabindex="0">
+    <title>Suction temperature probe (29)</title>
+    <g transform="translate(420 364)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(0)">
+<circle r="9">
+</circle>
+<path d="M0 9 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(0)">T</text>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="30" data-kind="probe_t" aria-label="Discharge temperature probe (30)" role="button" tabindex="0">
+    <title>Discharge temperature probe (30)</title>
+    <g transform="translate(297 364)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(0)">
+<circle r="9">
+</circle>
+<path d="M0 9 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(0)">T</text>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="35" data-kind="transducer_p" aria-label="Suction pressure transducer (35)" role="button" tabindex="0">
+    <title>Suction pressure transducer (35)</title>
+    <g transform="translate(442 364)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(0)">
+<circle r="9">
+</circle>
+<path d="M0 9 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(0)">P</text>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="36" data-kind="transducer_p" aria-label="Discharge pressure transducer (36)" role="button" tabindex="0">
+    <title>Discharge pressure transducer (36)</title>
+    <g transform="translate(319 364)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(0)">
+<circle r="9">
+</circle>
+<path d="M0 9 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(0)">P</text>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="10" data-kind="exchanger" aria-label="Passive cooling / defrosting exchanger (10)">
+    <title>Passive cooling / defrosting exchanger (10)</title>
+    <g transform="translate(370 737)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol exchanger" transform="rotate(0)">
+<path class="exchanger-fill" stroke="none" data-half="left" d="M0 -31 H-16 A4 4 0 0 0 -20 -27 V27 A4 4 0 0 0 -16 31 H0 Z" fill="url(#ecogeoN-x10-left)" fill-opacity="0.55">
+</path>
+<path class="exchanger-fill" stroke="none" data-half="right" d="M0 -31 H16 A4 4 0 0 1 20 -27 V27 A4 4 0 0 1 16 31 H0 Z" fill="url(#ecogeoN-x10-right)" fill-opacity="0.55">
+</path>
+<rect x="-20" width="40" rx="4" y="-31" height="62">
+</rect>
+<path d="M-12 -22 V22 M12 -22 V22">
+</path>
+<circle cx="-12" r="3.5" fill="var(--card-background-color, transparent)" cy="-22">
+</circle>
+<circle cx="12" r="3.5" fill="var(--card-background-color, transparent)" cy="-22">
+</circle>
+<circle cx="-12" r="3.5" fill="var(--card-background-color, transparent)" cy="22">
+</circle>
+<circle cx="12" r="3.5" fill="var(--card-background-color, transparent)" cy="22">
+</circle>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="15" data-kind="pump" aria-label="Production circulator pump (15)" role="button" tabindex="0">
+    <title>Production circulator pump (15)</title>
+    <g transform="translate(227 658)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol pump" transform="rotate(0)">
+<circle r="12">
+</circle>
+<path d="M-5 -7 V7 L8 0 Z" fill="currentColor">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="16" data-kind="pump" aria-label="Brine circulator pump (16)" role="button" tabindex="0">
+    <title>Brine circulator pump (16)</title>
+    <g transform="translate(607 560)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol pump" transform="rotate(90)">
+<circle r="12">
+</circle>
+<path d="M-5 -7 V7 L8 0 Z" fill="currentColor">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="17" data-kind="pump" aria-label="HTR circulator pump (17)">
+    <title>HTR circulator pump (17)</title>
+    <g transform="translate(182 350)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol pump" transform="rotate(90)">
+<circle r="12">
+</circle>
+<path d="M-5 -7 V7 L8 0 Z" fill="currentColor">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="22" data-kind="valve" aria-label="HTR system retention valve (22)">
+    <title>HTR system retention valve (22)</title>
+    <g transform="translate(182 380)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol valve" transform="rotate(0)">
+<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="26" data-kind="valve3" aria-label="DHW valve (26)" role="button" tabindex="0">
+    <title>DHW valve (26)</title>
+    <g transform="translate(75 280)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol valve3" transform="rotate(270)">
+<path d="M-12 -6 V6 L0 0 Z" fill="currentColor">
+</path>
+<path d="M12 -6 V6 L0 0 Z" fill="currentColor">
+</path>
+<path d="M-6 12 H6 L0 0 Z" fill="none">
+</path>
+<rect x="-4" y="-21" width="8" height="8">
+</rect>
+<path d="M0 -13 V-8">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="27" data-kind="valve3" aria-label="Passive cooling production valve (27)">
+    <title>Passive cooling production valve (27)</title>
+    <g transform="translate(192 658)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol valve3" transform="rotate(0)">
+<path d="M-12 -6 V6 L0 0 Z" fill="currentColor">
+</path>
+<path d="M12 -6 V6 L0 0 Z" fill="currentColor">
+</path>
+<path d="M-6 12 H6 L0 0 Z" fill="none">
+</path>
+<rect x="-4" y="-21" width="8" height="8">
+</rect>
+<path d="M0 -13 V-8">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="28" data-kind="valve3" aria-label="Passive cooling brine valve (28)">
+    <title>Passive cooling brine valve (28)</title>
+    <g transform="translate(532 658)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol valve3" transform="rotate(0)">
+<path d="M-12 -6 V6 L0 0 Z" fill="currentColor">
+</path>
+<path d="M12 -6 V6 L0 0 Z" fill="currentColor">
+</path>
+<path d="M-6 12 H6 L0 0 Z" fill="none">
+</path>
+<rect x="-4" y="-21" width="8" height="8">
+</rect>
+<path d="M0 -13 V-8">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="31" data-kind="probe_t" aria-label="Brine outlet temperature probe (31)" role="button" tabindex="0">
+    <title>Brine outlet temperature probe (31)</title>
+    <g transform="translate(536 350)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(270)">
+<circle r="9">
+</circle>
+<path d="M0 9 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">T</text>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="32" data-kind="probe_t" aria-label="Brine inlet temperature probe (32)" role="button" tabindex="0">
+    <title>Brine inlet temperature probe (32)</title>
+    <g transform="translate(591 350)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(270)">
+<circle r="9">
+</circle>
+<path d="M0 9 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">T</text>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="33" data-kind="probe_t" aria-label="Production outlet temperature probe (33)" role="button" tabindex="0">
+    <title>Production outlet temperature probe (33)</title>
+    <g transform="translate(59 350)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(270)">
+<circle r="9">
+</circle>
+<path d="M0 9 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">T</text>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="34" data-kind="probe_t" aria-label="Production return temperature probe (34)" role="button" tabindex="0">
+    <title>Production return temperature probe (34)</title>
+    <g transform="translate(136 350)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol probe_t" transform="rotate(270)">
+<circle r="9">
+</circle>
+<path d="M0 9 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">T</text>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="37" data-kind="transducer_p" aria-label="Brine pressure transducer (37)" role="button" tabindex="0">
+    <title>Brine pressure transducer (37)</title>
+    <g transform="translate(591 380)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(270)">
+<circle r="9">
+</circle>
+<path d="M0 9 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">P</text>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="38" data-kind="transducer_p" aria-label="Production pressure transducer (38)" role="button" tabindex="0">
+    <title>Production pressure transducer (38)</title>
+    <g transform="translate(136 380)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol transducer_p" transform="rotate(270)">
+<circle r="9">
+</circle>
+<path d="M0 9 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">P</text>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="44" data-kind="resistor" aria-label="Outlet resistor (44)">
+    <title>Outlet resistor (44)</title>
+    <g transform="translate(75 562)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol resistor" transform="rotate(90)">
+<rect x="-28" y="-6" width="56" height="12" rx="2">
+</rect>
+<path d="M-18 -6 V6 M18 -6 V6">
+</path>
+</g>
+</g>
+  </g>
+<g class="symbol-group normal" data-item="45" data-kind="thermostat" aria-label="Safety thermostat (45)">
+    <title>Safety thermostat (45)</title>
+    <g transform="translate(59 516)">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol thermostat" transform="rotate(270)">
+<rect x="-7" y="-7" width="14" height="14">
+</rect>
+<path d="M0 7 V16">
+</path>
+<text class="glyph" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" stroke="none" transform="rotate(-270)">T</text>
+</g>
+</g>
+  </g>
+  </g>
+        </svg>

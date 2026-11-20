@@ -1,5 +1,5 @@
 // `npm run measure-layout`: measures the vertical threshold (add-compact-layout D6, rework-layouts D8). Opens every emulator scenario in
-// the forced horizontal layout, sets the card's width from 320 to 800 px in 20 px steps and,
+// the forced horizontal layout (`--layout=vertical` forces the vertical one, to check the phone widths), sets the card's width from 320 to 800 px in 20 px steps and,
 // per width, checks overlaps in the DOM: the bounding boxes of the value labels (the card's `.label` elements)
 // against each other and against the component groups of the drawing (`g.symbol-group`, `g.dhw-storage`,
 // `g.air-unit`, `g.ground-collector` and the obstacles the bodies register). The threshold is the narrowest width at which every case has zero overlaps and
@@ -24,6 +24,11 @@ const GRID = Array.from({ length: 25 }, (_, index) => 320 + index * 20);
 const only = process.argv.find((arg) => arg.startsWith('--widths='));
 const WIDTHS = only === undefined ? GRID : only.slice('--widths='.length).split(',').map(Number);
 const quiet = process.argv.includes('--quiet');
+const layoutArg = process.argv.find((arg) => arg.startsWith('--layout='))?.slice('--layout='.length) ?? 'horizontal';
+if (layoutArg !== 'horizontal' && layoutArg !== 'vertical') {
+  console.error(`--layout needs horizontal or vertical, got "${layoutArg}"`);
+  process.exit(2);
+}
 const browserArg = process.argv.find((arg) => arg.startsWith('--browser='))?.slice('--browser='.length) ?? 'chromium';
 if (browserArg !== 'chromium' && browserArg !== 'webkit') {
   console.error(`--browser needs chromium or webkit, got "${browserArg}"`);
@@ -65,7 +70,7 @@ try {
   page.on('pageerror', (error) => problems.push(error.message));
   for (const installation of INSTALLATIONS) {
     for (const name of names) {
-      const query = `scenario=${name}&${installation.query}&layout=horizontal`;
+      const query = `scenario=${name}&${installation.query}&layout=${layoutArg}`;
       await page.goto(new URL(`dev/index.html?${query}`, base).href);
       await page.locator('#cards[data-ready]').waitFor();
       if (await page.locator('.error:not([hidden])').count()) {
@@ -89,7 +94,7 @@ try {
   await server.close();
 }
 
-console.log(`Measured with ${browserArg}.`);
+console.log(`Measured with ${browserArg}, ${layoutArg} layout.`);
 let cleanFrom;
 for (const width of WIDTHS) {
   const cases = results.get(width) ?? new Map();

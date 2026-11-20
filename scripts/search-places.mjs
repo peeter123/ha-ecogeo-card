@@ -1,5 +1,5 @@
 // `npm run search-places -- --layout=horizontal|vertical`: searches the label places of a layout (refine-simplified-layout
-// D7, add-compact-layout D8, rework-layouts D7). For every one of the 19 values it finds, over every emulator scenario,
+// D7, add-compact-layout D8, rework-layouts D7). For every one of the 18 values it finds, over every emulator scenario,
 // installation and naming at the layout's narrowest verified width, the places where the label overlaps no component, no
 // pipe at its rendered width, no other label and no outline (the cabinet's, a body's), stays inside the drawing, and, for a
 // label inside a body (BODY_LABELS of dev/overlaps.ts: tank 50, the external tank, the air unit, the collector, the emitter), inside that body, with about 2 px of margin
@@ -79,9 +79,9 @@ const ALIGNS = /** @type {const} */ (['start', 'middle', 'end']);
 
 /**
  * Runs in the page: for each label of the card, which candidate places are free of obstacles, as packed bits.
- * @param {{ step: number; cell: number; marginX: number; marginY: number; bodies: Readonly<Record<string, string>>; homes: Readonly<Record<string, { x: number; y: number; align: string }>>; partners: Readonly<Record<string, string>> }} options
+ * @param {{ step: number; cell: number; marginX: number; marginY: number; bodies: Readonly<Record<string, string>>; homes: Readonly<Record<string, { x: number; y: number; align: string }>>; partners: Readonly<Record<string, string>>; rows: number; headShift: number }} options
  */
-async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partners }) {
+async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partners, rows, headShift }) {
   const path = '/dev/overlaps.ts';
   const shared = await import(path);
   const root = document.querySelector('ecogeo-card')?.shadowRoot;
@@ -143,7 +143,14 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
     bottom: cabinet.bottom - drawing.top,
   };
   const nx = Math.floor(vb.width / step) + 1;
-  const ny = Math.floor(vb.height / step) + 1;
+  // the same number of rows in every case, so that the packed bits line up
+  const ny = rows;
+  // where tank 50 is drawn the vertical layout stretches its head: the cabinet's labels (not the bodies') lie `headShift` units lower
+  const shift = root.querySelector('[data-dhw-tank="internal"]') === null ? 0 : headShift;
+  /** @param {string} id */
+  // (a label whose default place is above the cabinet, the DG1 demand beside the stubs, lies in the join lane, which the head does not move)
+  const shiftOf = (id) =>
+    bodies[id] !== undefined || (homes[id] !== undefined && homes[id].y * scale < cab.top) ? 0 : shift;
   const aligns = ['start', 'middle', 'end'];
   const results = [];
   // why each label's default place (its home, before the recorded places) fails: what its box, with the margin, overlaps
@@ -171,7 +178,7 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
       if (home === undefined) return { id: label.id, box: undefined };
       const x = home.x * scale + 0;
       const left = home.align === 'start' ? x : home.align === 'end' ? x - w : x - w / 2;
-      const y = home.y * scale;
+      const y = (home.y + shiftOf(label.id)) * scale;
       return {
         id: label.id,
         box: { left: left - marginX, right: left + w + marginX, top: y - h / 2 - marginY, bottom: y + h / 2 + marginY },
@@ -262,8 +269,10 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
     for (const align of aligns) {
       for (let iy = 0; iy < ny; iy += 1) {
         for (let ix = 0; ix < nx; ix += 1, at += 1) {
+          // a turned (rotated) label is centred on its place: only the middle alignment is a candidate
+          if (label.rotated === true && align !== 'middle') continue;
           const x = ix * step * scale;
-          const y = iy * step * scale;
+          const y = (iy * step + shiftOf(label.id)) * scale;
           const left = align === 'start' ? x : align === 'end' ? x - w : x - w / 2;
           // the box with its margin
           const l = left - marginX;
@@ -298,6 +307,7 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
       bits: btoa(text),
       homeHits: homeHits(label.id),
       homeFree,
+      rotated: label.rotated === true,
     });
   }
   return { vb: { width: vb.width, height: vb.height }, labels: results };
@@ -321,7 +331,7 @@ const fontPx = (/** @type {number} */ width) => Math.max(10, (FONT_K * width) / 
 const WIDTH = WIDTH_OPTION > 0 ? WIDTH_OPTION : LAYOUT === 'vertical' ? 320 : VERTICAL_BELOW;
 /** @type {import('playwright').Browser | undefined} */
 let browser;
-/** @type {Map<string, { feasible: Uint8Array; w: number; h: number; sizes: Map<number, { w: number; h: number }>; homeHits: Map<string, number>; homeFree: boolean }>} */
+/** @type {Map<string, { feasible: Uint8Array; w: number; h: number; sizes: Map<number, { w: number; h: number }>; homeHits: Map<string, number>; homeFree: boolean; rotated: boolean }>} */
 const found = new Map();
 /** @type {{ width: number; height: number } | undefined} */
 let viewBox;
@@ -333,8 +343,12 @@ let loadedBodies;
 let outInPairs;
 /** @type {readonly (readonly [string, string])[] | undefined} */
 let blockPairs;
+/** @type {readonly (readonly [string, string, string])[] | undefined} */
+let rowGroups;
 /** @type {number | undefined} */
 let rowGap;
+/** The rows of the candidate grid: the same for every case, the tallest drawing's (tank 50's head stretches the vertical one). */
+const grid = { rows: 0, headShift: 0 };
 /** @type {((out: object, inn: object) => boolean) | undefined} */
 let loadedInOrder;
 let cases = 0;
@@ -349,15 +363,27 @@ try {
   const installations = /** @type {readonly { name: string; query: string }[]} */ (overlaps['INSTALLATIONS']);
   const namings = /** @type {readonly string[]} */ (foreign['NAMINGS']);
   loadedBodies = overlaps['BODY_LABELS'];
+  const tallest = [false, true].map(
+    (internal) =>
+      geometry['arrangementFor'](LAYOUT, { source: 'hybrid', tank: !internal, emitter: 'underfloor', internal }).viewBox
+        .height,
+  );
+  grid.rows = Math.floor(Math.max(...tallest) / STEP) + 1;
+  grid.headShift = LAYOUT === 'vertical' ? geometry['VERTICAL_TANK_HEAD'].extra : 0;
   outInPairs = overlaps['OUT_IN_PAIRS'];
   blockPairs = overlaps['BLOCK_PAIRS'];
-  rowGap = overlaps['PAIR_ROW_GAP'];
+  rowGroups = overlaps['ROW_GROUPS'];
+  rowGap = overlaps['PAIR_ROW_GAP'][LAYOUT];
   loadedInOrder = overlaps['inOrder'];
   // each label's own place: its default place under the maps, before HORIZONTAL_PLACES (a rerun never measures from a
   // recorded place)
   // (with an emitter its demand is a body label, `emitter_demand`; without one, `dg1_demand` has its own default place)
-  for (const emitter of ['underfloor', 'none']) {
-    const key = { source: 'hybrid', tank: true, emitter };
+  for (const [emitter, internal] of [
+    ['underfloor', true],
+    ['underfloor', false],
+    ['none', false],
+  ]) {
+    const key = { source: 'hybrid', tank: !internal, emitter, internal };
     for (const spec of geometry['defaultLabelPlaces'](LAYOUT, key).specs) {
       homes[spec.id] = { x: spec.x, y: spec.y, align: spec.align };
     }
@@ -397,6 +423,8 @@ try {
           marginX: MARGIN_X,
           marginY: MARGIN_Y,
           bodies: loadedBodies ?? {},
+          rows: grid.rows,
+          headShift: grid.headShift,
           homes,
           partners: Object.fromEntries(
             (blockPairs ?? []).flatMap(([top, bottom]) => [
@@ -417,6 +445,7 @@ try {
               sizes: new Map([[cases, { w: label.w, h: label.h }]]),
               homeHits: new Map(label.homeHits.map((/** @type {string} */ hit) => [hit, 1])),
               homeFree: label.homeFree,
+              rotated: label.rotated === true,
             });
           } else {
             for (let i = 0; i < bits.length; i += 1) entry.feasible[i] = (entry.feasible[i] ?? 0) & (bits[i] ?? 0);
@@ -440,7 +469,7 @@ if (viewBox === undefined) throw new Error('nothing measured');
 const ids = [...found.keys()];
 
 const nx = Math.floor(viewBox.width / STEP) + 1;
-const ny = Math.floor(viewBox.height / STEP) + 1;
+const ny = grid.rows;
 /** The feasible places of a label: viewBox points with an alignment. */
 const placesOf = (/** @type {Uint8Array} */ bits) => {
   /** @type {{ x: number; y: number; align: (typeof ALIGNS)[number] }[]} */
@@ -490,7 +519,12 @@ const apartEverywhere = (
  * (dev/overlaps.ts inOrder: the Out box left of the In box, or above it in a column) at every case's real widths, at the search
  * width, at about the middle and at the far end of the layout's range (1000 px horizontal, 1 px under the threshold vertical).
  */
-const PAIRS = outInPairs ?? [];
+/** The values that sit above their part: the vertical layout's pump 15 value (schematic-drawing "Gap places in the vertical layout"). */
+const ABOVE_ONLY = new Set(LAYOUT === 'vertical' ? ['production_pump'] : []);
+/** The vertical layout's rotated rows (Out, In, pressure left to right): their Out and In are no ordinary pair. */
+const GROUPS = LAYOUT === 'vertical' ? (rowGroups ?? []) : [];
+const inGroup = new Set(GROUPS.flat());
+const PAIRS = (outInPairs ?? []).filter(([out]) => !inGroup.has(out));
 /** The refrigerant pairs' two-row blocks: same alignment and x, the pressure `rowGap` units under the temperature. */
 const BLOCKS = blockPairs ?? [];
 const isBlock = (/** @type {string} */ id) => BLOCKS.some((pair) => pair[0] === id);
@@ -574,11 +608,81 @@ const distanceOf = (/** @type {string} */ id, /** @type {{ x: number; y: number;
 const freeFor = (/** @type {string} */ id, /** @type {boolean} */ keepAlign) =>
   (candidates.get(id) ?? [])
     .filter((place) => !keepAlign || place.align === homes[id]?.align)
+    // a value that must sit above its part (the pump 15 value in the vertical layout) is no lower than its default place
+    .filter((place) => !ABOVE_ONLY.has(id) || place.y <= (homes[id]?.y ?? Infinity))
     .filter((place) =>
       [...chosen].every(([otherId, other]) => other.align === 'zone' || apartEverywhere(id, place, otherId, other)),
     )
     .map((place) => ({ ...place, distance: distanceOf(id, place) }))
     .sort((x, y) => x.distance - y.distance);
+/**
+ * Whether two rotated labels, the left one at `a` and the right one at `b`, read as neighbours of one row (rework-layouts D7): the
+ * left one's box lies left of the right one's by the margin, and the shorter one's vertical extent lies within the longer one's,
+ * at the search width, at about the middle and at the far end of the range, with the text sizes of one case (`size`).
+ */
+const sideBySide = (
+  /** @type {{ x: number; y: number; align: string }} */ a,
+  /** @type {{ w: number; h: number }} */ sizeA,
+  /** @type {{ x: number; y: number; align: string }} */ b,
+  /** @type {{ w: number; h: number }} */ sizeB,
+) =>
+  [WIDTH, (WIDTH + WIDE) / 2, WIDE].every((width) => {
+    const [boxA, boxB] = [pxBoxAt(a, sizeA, width), pxBoxAt(b, sizeB, width)];
+    const nested =
+      (boxA.top >= boxB.top && boxA.bottom <= boxB.bottom) || (boxB.top >= boxA.top && boxB.bottom <= boxA.bottom);
+    return boxA.right + MARGIN_X <= boxB.left && nested;
+  });
+/** The same in every case that shows both labels. */
+const sideBySideEverywhere = (
+  /** @type {string} */ idA,
+  /** @type {{ x: number; y: number; align: string }} */ a,
+  /** @type {string} */ idB,
+  /** @type {{ x: number; y: number; align: string }} */ b,
+) => {
+  const sizesA = found.get(idA)?.sizes ?? new Map();
+  const sizesB = found.get(idB)?.sizes ?? new Map();
+  for (const [index, sizeA] of sizesA) {
+    const sizeB = sizesB.get(index);
+    if (sizeB !== undefined && !sideBySide(a, sizeA, b, sizeB)) return false;
+  }
+  return true;
+};
+// The rotated rows first: Out, In and the pressure of a side, left to right, Out and In side by side at the same height and the
+// pressure next to them. The nearest places of the three together win (the sum of their distances from their parts).
+for (const group of GROUPS) {
+  const [idA, idB, idC] = group;
+  const lists = group.map((id) => freeFor(id, false).slice(0, 3000));
+  const [listA, listB, listC] = lists;
+  const widest = (/** @type {string} */ id) => ({ w: found.get(id)?.w ?? 0, h: found.get(id)?.h ?? 0 });
+  /** @type {{ x: number; y: number; align: string; distance: number }[] | undefined} */
+  let bestRow;
+  let bestSum = Infinity;
+  for (const a of listA ?? []) {
+    if (a.distance >= bestSum) break;
+    for (const b of listB ?? []) {
+      if (a.distance + b.distance >= bestSum) break;
+      if (!sideBySide(a, widest(idA), b, widest(idB)) || !sideBySideEverywhere(idA, a, idB, b)) continue;
+      if (!apartEverywhere(idA, a, idB, b)) continue;
+      for (const c of listC ?? []) {
+        const sum = a.distance + b.distance + c.distance;
+        if (sum >= bestSum) break;
+        if (!sideBySide(b, widest(idB), c, widest(idC)) || !sideBySideEverywhere(idB, b, idC, c)) continue;
+        if (!apartEverywhere(idB, b, idC, c) || !apartEverywhere(idA, a, idC, c)) continue;
+        bestRow = [a, b, c];
+        bestSum = sum;
+        break;
+      }
+    }
+  }
+  if (bestRow === undefined) missing.push(...group);
+  else {
+    const row = bestRow;
+    group.forEach((id, index) => {
+      const place = row[index];
+      if (place !== undefined) chosen.set(id, place);
+    });
+  }
+}
 for (const [outId, inId] of [...PAIRS, ...BLOCKS]) {
   const block = isBlock(outId);
   // a block's rows must line up exactly, so its candidates are matched through a lookup, not a nearest-first prefix
@@ -711,7 +815,8 @@ console.log(
 );
 for (const [id, place] of chosen) {
   if (isBody(id) || (found.get(id)?.homeHits.size ?? 0) === 0) continue;
-  console.log(`  ${id}: { x: ${String(place.x)}, y: ${String(place.y)}, align: '${place.align}' },`);
+  const turned = found.get(id)?.rotated === true ? ', rotate: -90' : '';
+  console.log(`  ${id}: { x: ${String(place.x)}, y: ${String(place.y)}, align: '${place.align}'${turned} },`);
 }
 if (missing.length > 0) {
   console.log(`\nNo place for: ${missing.join(', ')}. Decision point (design Risks): not a pipe exception.`);

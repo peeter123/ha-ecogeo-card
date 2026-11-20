@@ -5,13 +5,14 @@
 ### Requirement: Values on the drawing
 The drawing SHALL show these values, and no others: production out and in (33, 34), brine out and in (31, 32), the
 production and brine pressures (38, 37), the speeds of pumps 15 and 16, the discharge and suction temperatures and
-pressures (30, 36, 29, 35), the compressor speed (11), the expansion valve opening and the superheat (12), the
-source's Out, the DHW temperature, and the DG1 and DHW demand. A value whose part is not drawn SHALL NOT be shown.
+pressures (30, 36, 29, 35), the compressor speed (11), the expansion valve opening (12), the source's Out, the DHW
+temperature, and the DG1 and DHW demand. A value whose part is not drawn SHALL NOT be shown.
 
 #### Scenario: Heating with every part
 - **WHEN** the card renders model B, `source: air`, `dhw: external`, variant 4 in heating with both demands on
-- **THEN** exactly those 19 values are shown, and no compressor percentage or power, condensation or evaporation
-  temperature, fan speed, outside temperature, air unit In, DG1 setpoint, DHW setpoint or start delta-T
+- **THEN** exactly those 18 values are shown, and no superheat (decided by the user 2026-11-20), compressor percentage
+  or power, condensation or evaporation temperature, fan speed, outside temperature, air unit In, DG1 setpoint, DHW
+  setpoint or start delta-T
 
 #### Scenario: Ground source
 - **WHEN** the card renders `source: ground`
@@ -20,15 +21,16 @@ source's Out, the DHW temperature, and the DG1 and DHW demand. A value whose par
 ### Requirement: Refrigerant values
 The card SHALL show the discharge temperature 30 and pressure 36 together beside their pair, the suction temperature
 29 and pressure 35 together beside theirs (schematic-drawing "Refrigerant probe pairs"), the compressor 11 speed in
-rpm, and the expansion valve 12 opening in % with the superheat in K beside valve 12.
+rpm, and the expansion valve 12 opening in %, centred under valve 12. The superheat SHALL NOT be shown (decided by the
+user 2026-11-20).
 
 #### Scenario: Compressor label
 - **WHEN** the compressor runs at 2803 rpm and 38.9 % and draws 786 W
 - **THEN** the label near item 11 reads "2803 rpm", and neither "38.9 %" nor "786 W" is shown
 
-#### Scenario: Superheat and valve opening
-- **WHEN** the superheat entity reports 6.2 °C and the expansion valve opening 58 %
-- **THEN** the labels near item 12 read "6.2 K" and "58 %"
+#### Scenario: Valve opening without superheat
+- **WHEN** the superheat entity reports 6.2 °C and the expansion valve opening 58 %, in either layout
+- **THEN** one label near item 12 reads "58 %", centred under valve 12, and no "6.2 K" is shown
 
 #### Scenario: Probe pair values
 - **WHEN** the discharge reads 47.6 °C and 16.2 bar and the suction 4.3 °C and 6.9 bar
@@ -37,13 +39,19 @@ rpm, and the expansion valve 12 opening in % with the superheat in K beside valv
 
 ### Requirement: Hydraulic values
 The card SHALL show temperatures 31-34 with Out and In captions beside their probes, pressures 37/38 beside their
-transducers, and the speeds of pumps 15 and 16 in % at the pumps. Values of parts that are not drawn, and the values
-of an unused tank (`dhw: unused`), SHALL NOT be shown.
+transducers, and the speeds of pumps 15 and 16 in whole percentages at the pumps (decided by the user 2026-11-20; see
+"Locale and precision"). In the vertical layout some of them are drawn rotated (responsive-layout "Rotated values in
+the vertical layout"), with the same texts. Values of parts that are not drawn, and the values of an unused tank
+(`dhw: unused`), SHALL NOT be shown.
 
 #### Scenario: Production labels
 - **WHEN** the production outlet reads 25.2 °C, the production pressure 1.7 bar and pump 15 runs at 99.9 %
-- **THEN** "25.2 °C" with an Out caption is shown beside probe 33, "1.7 bar" beside transducer 38 and "99.9 %" at
+- **THEN** "25.2 °C" with an Out caption is shown beside probe 33, "1.7 bar" beside transducer 38 and "100 %" at
   pump 15
+
+#### Scenario: Whole-percent pump 16
+- **WHEN** pump 16 runs at 42.4 %
+- **THEN** the label at pump 16 reads "42 %", with a no-break space before the %
 
 #### Scenario: Brine captions
 - **WHEN** the brine outlet reads 2.3 °C and the brine inlet 5.7 °C
@@ -111,6 +119,50 @@ It SHALL be the same in both layouts.
 - **THEN** the footer shows "Heating", the outside temperature, "COP 4.6", "DG1 5211 W" and "HTR 1835 W", and no
   on/off state, season, condensation or evaporation item
 
+### Requirement: The card's own units
+The card SHALL format every number itself, not through Home Assistant's state formatting. Every value SHALL be
+shown with the card's own unit for its role, joined by a no-break space: rpm, %, W, bar, °C for temperatures, and
+K for temperature differences (superheat, start delta-T). The COP has no unit. A value whose entity reports a unit
+the card cannot convert to the role's unit SHALL instead be shown as the entity's number with the entity's own unit,
+joined by a no-break space.
+
+#### Scenario: Percent keeps its space
+- **WHEN** Home Assistant's language is English and pump 16 runs at 99.9 %
+- **THEN** the label reads "100 %" with a no-break space, not "100%" or "99.9 %"
+
+#### Scenario: Compressor speed in Hz
+- **WHEN** the compressor speed entity reports 45 with the unit Hz
+- **THEN** the label near item 11 reads "45 Hz", not "45 rpm"
+
+#### Scenario: Pump speed in rpm
+- **WHEN** the pump 15 entity reports 2400 with the unit rpm
+- **THEN** the label at pump 15 reads "2400 rpm", not "2400 %"
+
+### Requirement: Locale and precision
+Numbers SHALL use Home Assistant's locale and number format setting. The decimals SHALL come from the entity's
+display precision when Home Assistant has one and the entity's unit is the card's unit for the role, and from the
+card's default for the role otherwise (a converted value, such as kW shown in W, uses the role default). A
+temperature difference reported in °C counts as the card's unit K, since the number is unchanged. A value shown with
+the entity's own unit (see "The card's own units") SHALL take its decimals from the entity's display precision, or
+else keep the decimals of its state. The speeds of pumps 15 and 16 in % SHALL show whole percentages (0 decimals),
+whatever the entity's display precision (decided by the user 2026-11-20).
+
+#### Scenario: Locale
+- **WHEN** Home Assistant's number format uses a decimal comma
+- **THEN** the production outlet reads "25,2 °C"
+
+#### Scenario: Display precision
+- **WHEN** the production outlet entity has a display precision of 0 and reads 25.2 °C
+- **THEN** the label reads "25 °C"
+
+#### Scenario: Passed-through decimals
+- **WHEN** the compressor speed entity reports 45.6 Hz without a display precision
+- **THEN** the label reads "45.6 Hz"
+
+#### Scenario: Pump precision ignored
+- **WHEN** the pump 15 entity has a display precision of 1 and reads 99.9 %
+- **THEN** the label at pump 15 reads "100 %"
+
 ### Requirement: Unit conversion
 Units SHALL be converted where needed: °F to °C, kW to W, and kPa, MPa, Pa, mbar and psi to bar. A temperature
 difference reported in °F SHALL be converted back with the same absolute formula, because Home Assistant converted
@@ -121,8 +173,9 @@ it as an absolute temperature.
 - **THEN** it is shown and coloured as 25 °C
 
 #### Scenario: Fahrenheit superheat
-- **WHEN** the superheat entity reports 43.2 °F
-- **THEN** the label reads "6.2 K"
+- **WHEN** the superheat entity, a temperature difference, reports 43.2 °F
+- **THEN** the card reads it as 6.2 K (a unit test of the readings), and no label shows it, as the superheat is no
+  longer drawn (decided by the user 2026-11-20)
 
 #### Scenario: Pressure in kPa
 - **WHEN** the production pressure entity reports 150 kPa
@@ -167,8 +220,8 @@ optional role set to `none` likewise hands its footer item to its fallback role.
 
 ### Requirement: Refrigerant values beside their components
 **Reason**: The detail levels and the compact layout are gone; the refrigerant values are one set in both layouts,
-with the superheat and valve opening always shown and the compressor percentage and power, condensation and
-evaporation temperatures no longer drawn.
+with the valve opening always shown and the superheat (decided by the user 2026-11-20), the compressor percentage and
+power, and the condensation and evaporation temperatures no longer drawn.
 **Migration**: See "Refrigerant values".
 
 ### Requirement: Hydraulic values beside their components

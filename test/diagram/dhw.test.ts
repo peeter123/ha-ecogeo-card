@@ -142,7 +142,7 @@ describe('DHW storage', () => {
     expect(shape.kind).toBe('helix');
     // the tank's centre line is the coil's centre line
     expect(EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2).toBe(shape.cx);
-    expect(EXTERNAL_TANK).toMatchObject({ width: 160, height: 170 });
+    expect(EXTERNAL_TANK).toMatchObject({ width: 160, height: 176 });
     // the whole tank lies above the cabinet's top edge, its bottom on the band's bottom edge
     expect(EXTERNAL_TANK.y + EXTERNAL_TANK.height).toBe(horizontal.band.bottom);
     expect(horizontal.band.bottom).toBeLessThan(CABINET.y);
@@ -420,10 +420,10 @@ describe('unused DHW storage', () => {
   });
 
   // dhw-storage "HTR kept with an unused tank"
-  test('model C unused with HTR true: exchanger 9, pump 17 and valves 22/25 are drawn, as with internal', async () => {
+  test('model C unused with HTR true: exchanger 9, pump 17 and valve 22 are drawn, as with internal', async () => {
     const unused = await mount({ model: 'C', dhw: 'unused', features: { htr: true } });
     const internal = await mount({ model: 'C', dhw: 'internal', features: { htr: true } });
-    for (const item of [9, 17, 22, 25]) expect(items(unused), String(item)).toContain(item);
+    for (const item of [9, 17, 22]) expect(items(unused), String(item)).toContain(item);
     expect(items(unused)).toEqual(items(internal));
     // the HTR parts follow HTR, not the tank: they are not muted by the unused tank
     expect(symbol(unused, 9)?.classList.contains('muted')).toBe(false);

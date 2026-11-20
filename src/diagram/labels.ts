@@ -33,7 +33,7 @@ export const labelStyles = css`
     width: 100%;
     height: auto;
   }
-  /* One drawing unit is 1 cqw / 10: above the threshold the labels grow with the drawing, never below 10 px (LABEL_FONT_K). */
+  /* One drawing unit is 1 cqw / 10 in the horizontal layout (viewBox 1000 wide) and 1 cqw / 7.4 in the vertical one (740 wide): the labels grow with the drawing above 770 px (horizontal) and 417 px (vertical), never below 10 px (LABEL_FONT_K). */
   .label {
     position: absolute;
     display: inline-flex;
@@ -56,6 +56,9 @@ export const labelStyles = css`
   }
   .label.bare {
     background: none;
+  }
+  .label.rotated {
+    transform: translate(-50%, -50%) rotate(-90deg);
   }
   [data-layout='vertical'] .label {
     font-size: ${unsafeCSS(labelFontSize('vertical'))};
@@ -103,6 +106,8 @@ export interface ShownLabel {
   caption?: string;
   emphasis: boolean;
   bare?: true;
+  /** Turned by -90 degrees about its anchor (the vertical layout's values along vertical pipes). */
+  rotate?: -90;
   /** The value as text; the dash while the value is missing. */
   text: string;
   missing: boolean;
@@ -140,6 +145,7 @@ export function labelsFor(
       ...place,
       emphasis: label.emphasis === true,
       ...(label.bare === true ? { bare: true as const } : {}),
+      ...(label.rotate === undefined ? {} : { rotate: label.rotate }),
       entityId,
       ...(label.item === undefined ? {} : { item: label.item }),
       ...(caption === undefined ? {} : { caption }),
@@ -303,7 +309,7 @@ export function renderLabels(
   return html`${labels.map((label) => {
     const { left, top } = cssPosition(label, viewBox);
     return html`<span
-      class="label ${label.align}${label.emphasis ? ' emphasis' : ''}${label.bare === true ? ' bare' : ''}"
+      class="label ${label.align}${label.emphasis ? ' emphasis' : ''}${label.bare === true ? ' bare' : ''}${label.rotate === undefined ? '' : ' rotated'}"
       data-label=${label.id}
       data-role=${label.role}
       data-label-item=${label.item ?? nothing}

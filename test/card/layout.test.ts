@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { LitElement } from 'lit';
 import '../../src/index';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
+import { arrangementFor } from '../../src/diagram/geometry';
 import { configErrors } from '../../src/config/options';
 import { resolveConfig } from '../../src/config/resolve';
 import { VERTICAL_BELOW, VERTICAL_HYSTERESIS, isVertical, nextVertical, strokeWidths } from '../../src/lib/layout';
@@ -144,6 +145,22 @@ describe('strokeWidths', () => {
   });
 });
 
+describe('strokeWidths of the vertical arrangement (a viewBox 740 units wide)', () => {
+  test('a unit renders width / 740 px, so the strokes are in units of that scale', () => {
+    expect(strokeWidths(320, 740)).toEqual({ pipe: 4.7, outline: 2.9 });
+    expect(strokeWidths(360, 740)).toEqual({ pipe: 4.2, outline: 2.6 });
+    expect(strokeWidths(559, 740)).toEqual({ pipe: 3, outline: 2 });
+  });
+
+  test('the rendered minimum holds after rounding at every width', () => {
+    for (let width = 200; width <= 700; width += 1) {
+      const { pipe, outline } = strokeWidths(width, 740);
+      expect(pipe * (width / 740), String(width)).toBeGreaterThanOrEqual(2 - 1e-9);
+      expect(outline * (width / 740), String(width)).toBeGreaterThanOrEqual(1.25 - 1e-9);
+    }
+  });
+});
+
 describe('card layout from its width', () => {
   test('unknown width (before the first observation) is horizontal', async () => {
     const card = await mount();
@@ -192,7 +209,7 @@ describe('card layout from its width', () => {
     await resize(card, 380);
     expect(rendered).toHaveBeenCalledTimes(1);
     expect(card.shadowRoot?.querySelector('svg')?.getAttribute('style')).toContain(
-      `--pipe-width: ${String(strokeWidths(380).pipe)}`,
+      `--pipe-width: ${String(strokeWidths(380, arrangementFor('vertical').viewBox.width).pipe)}`,
     );
   });
 

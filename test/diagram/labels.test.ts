@@ -101,10 +101,11 @@ describe('refrigerant labels', () => {
     card.remove();
   });
 
-  test('superheat of 6.2 degrees reads 6.2 K near item 12, the valve opening in %', async () => {
+  // live-values "Refrigerant values": the superheat is no longer drawn (design D14); the opening is the one value of valve 12
+  test('the valve opening reads in % near item 12, and the superheat entity shows no label', async () => {
     const card = await mount({}, hassOf({ 'refrigerant.superheat': ['6.2', '°C'] }));
-    expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
-    expect(label(card, 'superheat')?.getAttribute('data-label-item')).toBe('12');
+    expect(label(card, 'superheat')).toBeNull();
+    expect(card.shadowRoot?.textContent).not.toContain(nb('6.2 K'));
     expect(valueOf(card, 'expansion_valve')).toBe(nb('58 %'));
     expect(label(card, 'expansion_valve')?.getAttribute('data-label-item')).toBe('12');
     card.remove();
@@ -123,11 +124,11 @@ describe('refrigerant labels', () => {
 });
 
 describe('hydraulic labels', () => {
-  test('production labels: 25.2 °C at probe 33 and 99.9 % at pump 15', async () => {
+  test('production labels: 25.2 °C at probe 33 and 100 % at pump 15', async () => {
     const card = await mount({}, hassOf());
     expect(valueOf(card, 'production_out')).toBe(nb('25.2 °C'));
     expect(label(card, 'production_out')?.getAttribute('data-label-item')).toBe('33');
-    expect(valueOf(card, 'production_pump')).toBe(nb('99.9 %'));
+    expect(valueOf(card, 'production_pump')).toBe(nb('100 %'));
     expect(label(card, 'production_pump')?.getAttribute('data-label-item')).toBe('15');
     expect(valueOf(card, 'production_in')).toBe(nb('22.0 °C'));
     expect(valueOf(card, 'production_pressure')).toBe(nb('1.2 bar'));
@@ -143,7 +144,7 @@ describe('hydraulic labels', () => {
     expect(valueOf(card, 'brine_out')).toBe(`−2.8${NBSP}°C`);
     expect(valueOf(card, 'brine_in')).toBe(nb('0.5 °C'));
     expect(valueOf(card, 'brine_pressure')).toBe(nb('1.2 bar'));
-    expect(valueOf(card, 'brine_pump')).toBe(nb('100.0 %'));
+    expect(valueOf(card, 'brine_pump')).toBe(nb('100 %'));
     expect(label(card, 'brine_out')?.querySelector('.caption')?.textContent.trim()).toBe(VALUE_CAPTIONS.portOut);
     expect(label(card, 'brine_in')?.querySelector('.caption')?.textContent.trim()).toBe(VALUE_CAPTIONS.portIn);
     card.remove();
@@ -177,10 +178,10 @@ describe('hydraulic labels', () => {
 });
 
 describe('units, locale and precision', () => {
-  test('percent keeps its space: 100 % reads "100.0 %" with a no-break space', async () => {
+  test('percent keeps its space: 99.9 % reads "100 %" with a no-break space', async () => {
     const card = await mount({}, hassOf());
     const text = valueOf(card, 'brine_pump') ?? '';
-    expect(text).toBe(`100.0${NBSP}%`);
+    expect(text).toBe(`100${NBSP}%`);
     expect(text).not.toBe('100%');
     card.remove();
   });
@@ -216,7 +217,7 @@ describe('units, locale and precision', () => {
     expect(displayPrecision(undefined)).toBeUndefined();
     const role = ROLE_BY_PATH.get('production.pump');
     if (role === undefined) throw new Error('no role');
-    expect(decimalsOf(role, undefined)).toBe(1);
+    expect(decimalsOf(role, undefined)).toBe(0);
     expect(decimalsOf(role, 3)).toBe(3);
   });
 
@@ -248,30 +249,14 @@ describe('units, locale and precision', () => {
     card.remove();
   });
 
-  // a temperature difference (K), shown for the superheat
-  test('a superheat entity in °C with a display precision of 2 shows 6.20 K', async () => {
+  // the display precision of a value in the card's unit (the role's unit %)
+  test('a valve opening entity in % with a display precision of 2 shows 58.00 %', async () => {
     const hass = hassOf(
-      { 'refrigerant.superheat': ['6.2', '°C'] },
-      { entities: { [idOf('refrigerant.superheat')]: { display_precision: 2 } } },
+      { 'refrigerant.expansion_valve': ['58', '%'] },
+      { entities: { [idOf('refrigerant.expansion_valve')]: { display_precision: 2 } } },
     );
     const card = await mount({}, hass);
-    expect(valueOf(card, 'superheat')).toBe(nb('6.20 K'));
-    card.remove();
-  });
-
-  test('a Fahrenheit superheat entity with a display precision still uses the role default', async () => {
-    const hass = hassOf(
-      { 'refrigerant.superheat': ['43.2', '°F'] },
-      { entities: { [idOf('refrigerant.superheat')]: { display_precision: 2 } } },
-    );
-    const card = await mount({}, hass);
-    expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
-    card.remove();
-  });
-
-  test('Fahrenheit superheat: 43.2 degrees F reads 6.2 K', async () => {
-    const card = await mount({}, hassOf({ 'refrigerant.superheat': ['43.2', '°F'] }));
-    expect(valueOf(card, 'superheat')).toBe(nb('6.2 K'));
+    expect(valueOf(card, 'expansion_valve')).toBe(nb('58.00 %'));
     card.remove();
   });
 
@@ -908,6 +893,17 @@ describe('units from another source', () => {
     card.remove();
   });
 
+  // live-values "Locale and precision": the pump speeds in % are whole percentages, whatever the entity's display precision
+  test.each([
+    ['production_pump', 'production.pump', '99.9', '100'],
+    ['brine_pump', 'brine.pump', '42.4', '42'],
+  ] as const)('%s in %% shows whole percentages, a display precision of 1 ignored', async (id, role, state, text) => {
+    const hass = hassOf({ [role]: [state, '%'] }, { entities: { [idOf(role)]: { display_precision: 1 } } });
+    const card = await mount({}, hass);
+    expect(valueOf(card, id)).toBe(nb(`${text} %`));
+    card.remove();
+  });
+
   test('pump speed in rpm keeps its own unit, joined by a no-break space', async () => {
     const card = await mount({ layout: 'horizontal' }, hassOf({ 'production.pump': ['2400', 'rpm'] }));
     const text = valueOf(card, 'production_pump');
@@ -1129,10 +1125,10 @@ describe('footer power items and efficiency (add-htr-state)', () => {
   });
 });
 
-describe('the 19 values (live-values "Values on the drawing")', () => {
+describe('the 18 values (live-values "Values on the drawing")', () => {
   const HEATING_BOTH_DEMANDS = { 'heating.demand': 'on', 'dhw.demand': 'on' } as const;
 
-  test('heating, model B, air, external tank, variant 4, both demands on: exactly these 19 labels', async () => {
+  test('heating, model B, air, external tank, variant 4, both demands on: exactly these 18 labels', async () => {
     const card = await mount({ model: 'B', source: 'air', dhw: 'external', variant: 4 }, hassOf(HEATING_BOTH_DEMANDS));
     expect(labelIds(card).sort()).toEqual(
       [
@@ -1150,14 +1146,13 @@ describe('the 19 values (live-values "Values on the drawing")', () => {
         'suction_pressure',
         'compressor_speed',
         'expansion_valve',
-        'superheat',
         'air_unit_out',
         'tank_external_temperature',
         'emitter_demand',
         'tank_external_demand',
       ].sort(),
     );
-    expect(labelIds(card)).toHaveLength(19);
+    expect(labelIds(card)).toHaveLength(18);
     card.remove();
   });
 

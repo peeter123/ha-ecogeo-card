@@ -1,8 +1,8 @@
-// No overlaps above the threshold (add-compact-layout D6, D7; refine-simplified-layout D4, D6; responsive-layout "Vertical
-// threshold", "Labels clear of everything"): every emulator scenario in every installation of the measurement script, in the
-// horizontal layout at the vertical threshold, has no two labels that overlap, no label that overlaps a component or a
-// pipe, and no caption that overlaps a label or a pipe. The boxes are the script's (dev/overlaps.ts). The vertical layout's
-// own phone-width cases come back with its arrangement (the vertical arrangement of rework-layouts).
+// No overlaps in a layout's verified range (add-compact-layout D6, D7; refine-simplified-layout D4, D6; rework-layouts D7; responsive-layout
+// "Vertical threshold", "Labels clear of everything"): every emulator scenario in every installation of the measurement script has no
+// two labels that overlap, no label that overlaps a component, a pipe, the drawing's edge or an outline (a rotated label by its
+// rotated box). The horizontal layout is measured at the vertical threshold, 800 and 1000 px, the vertical layout at 320, 360,
+// 412 px and 1 px under the threshold. The boxes are the script's (dev/overlaps.ts).
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';
@@ -18,12 +18,17 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-describe('No overlaps above the threshold', () => {
-  for (const width of [VERTICAL_BELOW, 800, 1000])
+const RANGES = [
+  { layout: 'horizontal', widths: [VERTICAL_BELOW, 800, 1000] },
+  { layout: 'vertical', widths: [320, 360, 412, VERTICAL_BELOW - 1] },
+] as const;
+
+describe.each(RANGES)('No overlaps in the verified range of the $layout layout', ({ layout, widths }) => {
+  for (const width of widths)
     for (const naming of NAMINGS)
       for (const installation of INSTALLATIONS) {
         test.each(SCENARIO_NAMES)(`${naming} ${installation.name}: %s at ${String(width)} px`, async (name) => {
-          const state = parseState(`?scenario=${name}&${installation.query}&naming=${naming}&layout=horizontal`);
+          const state = parseState(`?scenario=${name}&${installation.query}&naming=${naming}&layout=${layout}`);
           const wrapper = document.createElement('div');
           wrapper.style.fontFamily = EMULATOR_FONT.family;
           wrapper.style.fontSize = EMULATOR_FONT.size;

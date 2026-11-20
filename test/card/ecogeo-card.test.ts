@@ -32,7 +32,7 @@ describe('ecogeo-card frame', () => {
     const card = await mount();
     const svg = card.shadowRoot?.querySelector('svg');
     expect(svg).not.toBeNull();
-    expect(svg?.getAttribute('viewBox')).toBe('0 0 1000 749');
+    expect(svg?.getAttribute('viewBox')).toBe('0 0 1000 755');
     expect(svg?.querySelector('g.cabinet')).not.toBeNull();
     card.remove();
   });

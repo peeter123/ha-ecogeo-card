@@ -1,10 +1,10 @@
 // The arrangement (refine-simplified-layout D2, D3, rework-layouts D1-D3): the cabinet's contents under the monotone maps
-// (compared with the cabinet frame, `FRAME`), and every topology rule checked on it for every source, DHW storage and
-// model. The band above the cabinet (slots, bodies, join lane) is checked in band.test.ts.
+// (compared with the cabinet frame, `FRAME`), and every topology rule checked on it, in both layouts, for every source, DHW
+// storage and model. The band above the cabinet (slots, bodies, join lane) is checked in band.test.ts.
 import { describe, expect, test } from 'vitest';
 import { apart, boxOf, type Box } from './boxes';
 import { DHW_STORAGES, EMITTERS, SOURCES } from '../../src/config/options';
-import { HORIZONTAL_PLACES, LABEL_FONT_K } from '../../src/diagram/label-places';
+import { HORIZONTAL_PLACES, LABEL_FONT_K, PAIR_ROW_GAP } from '../../src/diagram/label-places';
 import { VERTICAL_BELOW } from '../../src/lib/layout';
 import type { FeatureState, Features } from '../../src/config/variants';
 import {
@@ -32,11 +32,19 @@ import {
   type Component,
   type DrawContext,
   type Point,
+  type ShownLayout,
 } from '../../src/diagram/geometry';
 
 /** The cabinet frame the arrangement is mapped from. */
 const frame = FRAME;
 const simplified = arrangementFor('horizontal');
+
+const LAYOUTS: readonly ShownLayout[] = ['horizontal', 'vertical'];
+/** A context drawn in a layout's arrangement. */
+const inLayout = (context: DrawContext, layout: ShownLayout): DrawContext => ({
+  ...context,
+  arrangement: arrangementOf(context, layout),
+});
 
 const featuresOf = (state: FeatureState): Features => ({
   active_cooling: state,
@@ -99,7 +107,7 @@ describe('arrangementFor: the simplified arrangement', () => {
     expect(simplified.cabinet.height).toBe(502);
     expect(simplified.viewBox.height).toBe(simplified.cabinet.y + simplified.cabinet.height + 15);
     // the band's height is added, the cabinet is cut: the drawing is still much wider than tall
-    expect(simplified.viewBox.height / simplified.viewBox.width).toBeLessThan(0.75);
+    expect(simplified.viewBox.height / simplified.viewBox.width).toBeLessThan(0.76);
   });
 
   test('the frame is the cabinet frame: 720 units wide, the width of the widest band, with its top edge at y 0', () => {
@@ -202,7 +210,6 @@ describe('arrangementFor: the simplified arrangement', () => {
       'suction_temperature',
       'suction_pressure',
       'compressor_speed',
-      'superheat',
       'expansion_valve',
     ];
     // the labels with a place of their own (HORIZONTAL_PLACES) are checked above
@@ -225,8 +232,9 @@ describe('arrangementFor: the simplified arrangement', () => {
   });
 });
 
-describe('the invariants of the full level on the simplified arrangement', () => {
-  test.each(CONTEXTS.map((context) => [name(context), context] as const))('%s', (_name, context) => {
+describe.each(LAYOUTS)('the invariants of the cabinet on the %s arrangement', (layout) => {
+  const v4 = inLayout(VARIANT_4, layout);
+  test.each(CONTEXTS.map((context) => [name(context), inLayout(context, layout)] as const))('%s', (_name, context) => {
     const arrangement = arrangementOf(context);
     const { cabinet } = arrangement;
     const components = drawnComponents(context).map((entry) => entry.part);
@@ -324,10 +332,11 @@ describe('the invariants of the full level on the simplified arrangement', () =>
     }
   });
 
-  test('every declared crossing is a real crossing of the simplified pipes', () => {
-    for (const crossing of simplified.crossings) {
-      const over = simplified.segments.find((segment) => segment.id === crossing.over);
-      const under = simplified.segments.find((segment) => segment.id === crossing.under);
+  test('every declared crossing is a real crossing of the pipes', () => {
+    const own = arrangementFor(layout);
+    for (const crossing of own.crossings) {
+      const over = own.segments.find((segment) => segment.id === crossing.over);
+      const under = own.segments.find((segment) => segment.id === crossing.under);
       if (over === undefined || under === undefined) throw new Error('no segment');
       expect(crossingPoints(over.points, under.points), `${crossing.over} / ${crossing.under}`).toContainEqual(
         crossing.at,
@@ -336,9 +345,9 @@ describe('the invariants of the full level on the simplified arrangement', () =>
   });
 
   test('HTR placement: exchanger 9 is on the discharge line between compressor 11 and valve 14, its water joins the DHW lines', () => {
-    const context = { ...VARIANT_4 };
+    const context = { ...v4 };
     const ids = new Set(drawnSegments(context).map((entry) => entry.part.id));
-    for (const item of [9, 17, 22, 25])
+    for (const item of [9, 17, 22])
       expect(drawnComponents(context).some((entry) => entry.part.item === item)).toBe(true);
     const port = (item: number, index: number): Point => {
       const part = drawnComponents(context).find((entry) => entry.part.item === item)?.part;
@@ -361,7 +370,7 @@ describe('the invariants of the full level on the simplified arrangement', () =>
   });
 
   test('Probe placement: each probe sits on the line of its own temperature', () => {
-    const context = { ...VARIANT_4 };
+    const context = { ...v4 };
     const roles: [number, string][] = [
       [33, 'production.outlet_temperature'],
       [34, 'production.return_temperature'],
@@ -382,12 +391,10 @@ describe('the invariants of the full level on the simplified arrangement', () =>
   });
 
   test('No empty band: the lowest drawn part or pipe in the cabinet is at most 40 units over the bottom edge', () => {
-    const { cabinet } = simplified;
+    const { cabinet } = arrangementFor(layout);
     const bottom = cabinet.y + cabinet.height;
-    const lowestPart = Math.max(...drawnComponents(VARIANT_4).map((entry) => boxOf(entry.part).y1));
-    const lowestPipe = Math.max(
-      ...drawnSegments(VARIANT_4).flatMap((entry) => entry.part.points.map((point) => point[1])),
-    );
+    const lowestPart = Math.max(...drawnComponents(v4).map((entry) => boxOf(entry.part).y1));
+    const lowestPipe = Math.max(...drawnSegments(v4).flatMap((entry) => entry.part.points.map((point) => point[1])));
     const lowest = Math.max(lowestPart, lowestPipe);
     expect(lowest).toBeLessThanOrEqual(bottom);
     expect(bottom - lowest).toBeLessThanOrEqual(40);
@@ -407,7 +414,7 @@ describe('the invariants of the full level on the simplified arrangement', () =>
   };
 
   test.each(PAIRS)('Transducers and pairs: $name items share one pipe with no part between them', ({ items, gap }) => {
-    for (const context of CONTEXTS) {
+    for (const context of CONTEXTS.map((entry) => inLayout(entry, layout))) {
       const [one, two] = items.map((item) => partOf(context, item));
       if (one === undefined || two === undefined) throw new Error('no pair');
       const [portOne, portTwo] = [portsOf(one)[0], portsOf(two)[0]];
@@ -442,14 +449,14 @@ describe('the invariants of the full level on the simplified arrangement', () =>
       [38, 34],
       [37, 32],
     ] as const) {
-      const [lower, upper] = [partOf(VARIANT_4, under), partOf(VARIANT_4, over)];
+      const [lower, upper] = [partOf(v4, under), partOf(v4, over)];
       expect(lower.x, String(under)).toBe(upper.x);
       expect(lower.rotation).toBe(upper.rotation);
       expect(lower.y).toBeGreaterThan(upper.y);
       expect(lower.y - upper.y).toBeLessThan(40);
     }
-    expect(drawnSegments(VARIANT_4).map((entry) => entry.part.id)).not.toContain('prod_tap_a');
-    expect(drawnSegments(VARIANT_4).map((entry) => entry.part.id)).not.toContain('brine_tap_a');
+    expect(drawnSegments(v4).map((entry) => entry.part.id)).not.toContain('prod_tap_a');
+    expect(drawnSegments(v4).map((entry) => entry.part.id)).not.toContain('brine_tap_a');
   });
 
   test('Discharge pair: transducer 36 is 22 units from probe 30, like the suction pair', () => {
@@ -466,18 +473,18 @@ describe('the invariants of the full level on the simplified arrangement', () =>
       [30, 'discharge_temperature', 'discharge_pressure'],
       [29, 'suction_temperature', 'suction_pressure'],
     ] as const) {
-      const top = simplified.labels.specs.find((spec) => spec.id === temperature);
-      const bottom = simplified.labels.specs.find((spec) => spec.id === pressure);
+      const own = arrangementFor(layout);
+      const top = own.labels.specs.find((spec) => spec.id === temperature);
+      const bottom = own.labels.specs.find((spec) => spec.id === pressure);
       if (top === undefined || bottom === undefined) throw new Error('no labels');
       expect(bottom.align, String(pair)).toBe(top.align);
       expect(bottom.x, String(pair)).toBe(top.x);
-      // the row pitch follows the label height at the threshold (20 units for a 10 px label there), never less than 12
-      expect(bottom.y - top.y, String(pair)).toBeGreaterThanOrEqual(12);
-      expect(bottom.y - top.y, String(pair)).toBeLessThanOrEqual(24);
-      expect(top.y, String(pair)).toBeGreaterThan(partOf(VARIANT_4, pair).y);
+      // the row pitch follows the label height at the layout's narrowest verified width (PAIR_ROW_GAP)
+      expect(bottom.y - top.y, String(pair)).toBe(PAIR_ROW_GAP[layout]);
+      expect(top.y, String(pair)).toBeGreaterThan(partOf(v4, pair).y);
       // the block is under or next to its pair: its anchor lies within the pair's span, padded by 30 units
       const pairItems = pair === 30 ? [30, 36] : [29, 35];
-      const xs = pairItems.map((item) => partOf(VARIANT_4, item).x);
+      const xs = pairItems.map((item) => partOf(v4, item).x);
       expect(top.x, String(pair)).toBeGreaterThanOrEqual(Math.min(...xs) - 30);
       expect(top.x, String(pair)).toBeLessThanOrEqual(Math.max(...xs) + 30);
     }
@@ -573,8 +580,8 @@ describe('pressure values beside their transducers on wider cards', () => {
 
 // design D1: a part keeps its neighbours as well as its order. Thermostat 45 is resistor 44's safety thermostat, so it stands
 // next to it on riser 1, on the same pipe, with no other part between them.
-describe('Thermostat 45 next to resistor 44', () => {
-  test.each(CONTEXTS.map((context) => [name(context), context] as const))('%s', (_name, context) => {
+describe.each(LAYOUTS)('Thermostat 45 next to resistor 44, %s layout', (layout) => {
+  test.each(CONTEXTS.map((context) => [name(context), inLayout(context, layout)] as const))('%s', (_name, context) => {
     const drawn = drawnComponents(context).map((entry) => entry.part);
     const [resistor, thermostat] = [44, 45].map((item) => drawn.find((part) => part.item === item));
     if (context.features.backup_heater === false) {

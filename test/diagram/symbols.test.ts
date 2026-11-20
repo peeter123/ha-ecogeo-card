@@ -14,7 +14,6 @@ const KINDS: readonly ComponentKind[] = [
   'exchanger',
   'compressor',
   'valve',
-  'drain_valve',
   'resistor',
   'filter_dryer',
   'expansion_valve',

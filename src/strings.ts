@@ -143,7 +143,6 @@ export const COMPONENT_NAMES: Readonly<Record<number, string>> = {
   16: 'Brine circulator pump',
   17: 'HTR circulator pump',
   22: 'HTR system retention valve',
-  25: 'HTR system discharge valve',
   26: 'DHW valve',
   27: 'Passive cooling production valve',
   28: 'Passive cooling brine valve',

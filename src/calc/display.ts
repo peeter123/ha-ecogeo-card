@@ -27,6 +27,9 @@ export function displayPrecision(entry: unknown): number | undefined {
     : undefined;
 }
 
+/** The pump speeds show whole percentages whatever their entity's display precision (live-values "Locale and precision", design D14). */
+const WHOLE_PERCENT_ROLES: ReadonlySet<RolePath> = new Set<RolePath>(['production.pump', 'brine.pump']);
+
 /** The decimals of a role: the entity's display precision when it has one, else the role table's default. */
 export const decimalsOf = (role: RoleSpec, precision: number | undefined): number => precision ?? role.decimals ?? 0;
 
@@ -80,9 +83,11 @@ export function formatReading(
     entityId === undefined || !(own || passThrough) ? undefined : displayPrecision(context.entities?.[entityId]);
   // A passed-through number keeps the decimals its state reports when the entity has no display precision.
   const decimals =
-    passThrough && precision === undefined
-      ? decimalsInState(entityId === undefined ? undefined : context.states?.[entityId]?.state)
-      : decimalsOf(role, precision);
+    WHOLE_PERCENT_ROLES.has(path) && !passThrough
+      ? 0
+      : passThrough && precision === undefined
+        ? decimalsInState(entityId === undefined ? undefined : context.states?.[entityId]?.state)
+        : decimalsOf(role, precision);
   const number = formatNumber(value, context.locale, decimals, false);
   const unit = passThrough ? entityUnit : role.unit;
   return unit === undefined ? number : `${number}${NBSP}${unit}`;

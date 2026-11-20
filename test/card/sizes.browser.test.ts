@@ -1,7 +1,6 @@
 // Minimum rendered sizes and the layout band at real widths (responsive-layout spec: Layout hysteresis, Minimum rendered
 // sizes), measured in Chromium and WebKit: rendered stroke widths, the 10 px label font floor, the wrapping footer and the band
-// at the threshold. Both layouts are checked; the vertical one renders the horizontal arrangement until the vertical arrangement of
-// rework-layouts is built.
+// at the threshold. Both layouts are checked, each in its own arrangement (the vertical viewBox is 740 units wide).
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';
@@ -81,8 +80,8 @@ describe.each(LAYOUTS)('Thin card, %s layout', (layout) => {
     }
   });
 
-  test('the minimum holds at 320 px, at 500 px and just below the threshold', async () => {
-    for (const width of [320, 500, VERTICAL_BELOW - 1]) {
+  test('the minimum holds at 320, 412 and 500 px and just below the threshold', async () => {
+    for (const width of [320, 412, 500, VERTICAL_BELOW - 1]) {
       const { root, card } = await show(width, { layout });
       for (const pipe of root.querySelectorAll<SVGGraphicsElement>('path.pipe')) {
         expect(renderedStroke(pipe), `${String(width)} pipe`).toBeGreaterThanOrEqual(2);

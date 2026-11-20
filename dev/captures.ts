@@ -100,6 +100,40 @@ export const CAPTURES: readonly CaptureStep[] = [
       ),
     ),
   ),
+  // the vertical layout: every scenario at 360 px with the automatic layout (a phone) and at 320 px forced vertical (the narrowest
+  // verified width), light and dark at 320 px
+  ...SCENARIO_NAMES.map((name) => step(`phone-${name}`, `scenario=${name}&width=360`)),
+  ...(['light', 'dark'] as const).flatMap((theme) =>
+    SCENARIO_NAMES.map((name) =>
+      step(`vertical-${theme}-${name}`, `scenario=${name}&layout=vertical&width=320&theme=${theme}`),
+    ),
+  ),
+  // the band and the emitter in the vertical layout: every source above every DHW storage (DHW mode) and every emitter above
+  // every source (heating), light and dark, at 320 px and 1 px under the threshold
+  ...(['air', 'ground', 'hybrid'] as const).flatMap((source) =>
+    BAND_STORAGES.flatMap(({ name, query }) =>
+      (['light', 'dark'] as const).flatMap((theme) =>
+        [320, VERTICAL_BELOW - 1].map((width) =>
+          step(
+            `vertical-band-${source}-${name}-${theme}-${String(width)}`,
+            `scenario=dhw&source=${source}&${query}&layout=vertical&width=${String(width)}&theme=${theme}`,
+          ),
+        ),
+      ),
+    ),
+  ),
+  ...EMITTERS.flatMap((emitter) =>
+    (['air', 'ground', 'hybrid'] as const).flatMap((source) =>
+      (['light', 'dark'] as const).flatMap((theme) =>
+        [320, VERTICAL_BELOW - 1].map((width) =>
+          step(
+            `vertical-emitter-${emitter}-${source}-${theme}-${String(width)}`,
+            `scenario=heating&source=${source}&emitter=${emitter}&layout=vertical&width=${String(width)}&theme=${theme}`,
+          ),
+        ),
+      ),
+    ),
+  ),
   // rework-layouts 5.5: the band with every source above every DHW storage, light and dark, at the vertical threshold and 1000 px
   ...(['air', 'ground', 'hybrid'] as const).flatMap((source) =>
     BAND_STORAGES.flatMap(({ name, query }) =>

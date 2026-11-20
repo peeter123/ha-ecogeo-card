@@ -17,7 +17,7 @@ No connection SHALL show its item number, and no connection caption (DG1, outer 
 #### Scenario: No DHW
 - **WHEN** the config sets `dhw: none`
 - **THEN** connections 5 and 6 and valve 26 are not drawn, and ports 1/2 connect directly to the production circuit
-- **AND** the HTR group (9, 17, 22, 25) is not drawn, and the discharge line runs from compressor 11 straight to
+- **AND** the HTR group (9, 17, 22) is not drawn, and the discharge line runs from compressor 11 straight to
   valve 14
 
 #### Scenario: No crossings
@@ -65,30 +65,45 @@ light theme and stay visible on a dark one; the part between the lines stays unf
 The cabinet SHALL contain the hydraulic circuits in the topology of the manual's B4 figure:
 - **Production:** pump 15, DHW valve 26, probes 33/34, transducer 38, outlet resistor 44 with safety thermostat 45.
 - **Brine:** pump 16, probes 31/32, transducer 37, exchanger 10 with valves 27/28.
-- **HTR:** exchanger 9, pump 17, valves 22/25.
+- **HTR:** exchanger 9, pump 17, valve 22.
 
-No component SHALL show its item number. Vessels 18/19, safety valves 20/21 and drain valves 23/24, and the stub
-pipes that lead only to them, SHALL NOT be drawn; nor SHALL items 42 and 43 (cooling outlet and inlet of the inverter)
-and 46 (electrical panel). None of them carries a live value.
+No component SHALL show its item number. Vessels 18/19, safety valves 20/21, drain valves 23/24 and the HTR system
+discharge valve 25 (decided by the user 2026-11-20), and the stub pipes that lead only to them, SHALL NOT be drawn;
+nor SHALL items 42 and 43 (cooling outlet and inlet of the inverter) and 46 (electrical panel). None of them carries a
+live value.
 
 #### Scenario: Hydraulic items
 - **WHEN** the card renders variant 4 with every feature `true`
-- **THEN** items 9, 10, 15, 16, 17, 22, 25-28, 31-34, 37, 38, 44 and 45 are drawn
+- **THEN** items 9, 10, 15, 16, 17, 22, 26-28, 31-34, 37, 38, 44 and 45 are drawn
 
 #### Scenario: Simplified hydraulics
 - **WHEN** the card renders variant 4 with every feature `true`
-- **THEN** no hydraulic component shows an item number, and items 18-21, 23 and 24 and their stub pipes are not
+- **THEN** no hydraulic component shows an item number, and items 18-21, 23, 24 and 25 and their stub pipes are not
   drawn
 
 #### Scenario: HTR placement
 - **WHEN** the card renders variant 4 with HTR `true`
 - **THEN** exchanger 9 sits on the compressor discharge line between compressor 11 and valve 14, and its water
-  lines with pump 17 and valves 22/25 join the DHW lines of connections 5/6
+  lines with pump 17 and valve 22 join the DHW lines of connections 5/6
 
 #### Scenario: Probe placement
 - **WHEN** the card renders
 - **THEN** probe 33 sits on the production outlet line, 34 on the production return, 31 on the brine outlet, 32 on
   the brine inlet, 30 on the compressor discharge and 29 on the compressor suction, as in the manual figure
+
+### Requirement: Optional parts follow their feature state
+A part whose feature is `false` SHALL NOT be drawn, and its pipes SHALL be closed off as in a variant without
+that part. A part whose feature is `unused` SHALL be drawn in the muted style and never active, except exchanger
+10 with valves 27/28 in `defrost`, which are drawn active (see operating-mode). A part whose feature is `true`
+SHALL be drawn normally.
+
+#### Scenario: Without passive cooling
+- **WHEN** passive cooling is `false`
+- **THEN** exchanger 10 and valves 27/28 are not drawn, and the production and brine circuits bypass them
+
+#### Scenario: Unused HTR
+- **WHEN** HTR is `unused`
+- **THEN** exchanger 9, pump 17 and valve 22 are drawn muted, with no flow animation, and valve 25 is not drawn
 
 ### Requirement: Theme aware
 The drawing SHALL use Home Assistant theme variables for its outlines, text and muted colours, and SHALL be
@@ -117,6 +132,14 @@ other, and no part SHALL be drawn left or right of the cabinet.
 - **THEN** every pipe between a connection and its part lies between the cabinet's top edge and the band, and no such
   pipe passes above another part
 
+### Requirement: One body height in the band
+The emitter, the source's bodies (the air unit, the ground collector, both of the hybrid) and the external tank SHALL
+share one body height in both layouts, each standing on the band's bottom edge (decided by the user 2026-11-20).
+
+#### Scenario: Equal body heights
+- **WHEN** the card renders any emitter, source and DHW storage, in either layout
+- **THEN** every drawn body in the band (emitter, air unit, ground collector, external tank) has the same height
+
 ### Requirement: Arrangement keeps the topology
 Each layout's arrangement SHALL keep the port order on the top edge, the probe placements, the HTR placement, no
 crossing of pipes outside the cabinet, every crossing inside the cabinet drawn as a hop and no more crossings than the
@@ -134,12 +157,18 @@ manual figure. Every drawn part SHALL lie inside its zone (cabinet or band) and 
 ### Requirement: Vertical arrangement
 The vertical layout's cabinet SHALL hold the same parts and pipes as the horizontal one, in the same order along every
 pipe, with more height between the rows of parts, so that the values fit between the pipes at phone width. The band
-SHALL span the drawing's width.
+SHALL span the drawing's width. With model C, tank 50 SHALL be taller in the vertical layout than in the horizontal
+one, the added height lying above coil 51, so that its values stack there (decided by the user 2026-11-20).
 
 #### Scenario: Taller cabinet
 - **WHEN** the card renders the same configuration in both layouts
 - **THEN** the vertical cabinet's height-to-width ratio is larger than the horizontal one's, and both draw the same
   set of parts and pipes
+
+#### Scenario: Taller tank 50
+- **WHEN** the card renders `model: C` with `dhw: internal` in both layouts
+- **THEN** tank 50's wall is taller in the vertical layout, coil 51 and every other part keep their size, and the
+  room between the tank's top and coil 51 is larger than in the horizontal layout
 
 ### Requirement: Cabinet layout with value lanes
 The cabinet's parts SHALL follow the topology of the manual figures (the port order, the order of the parts along
@@ -147,12 +176,31 @@ every pipe, the probe and HTR placements and the crossings) but not their coordi
 rows and columns with lanes between them, where a row lane is a horizontal strip across the whole cabinet that no
 part enters and only vertical pipes cross, and a column lane is the same in the vertical direction. Both layouts SHALL
 be derived from this one layout: the horizontal layout widens column lanes and the vertical layout heightens row
-lanes, and every value in the cabinet sits in a lane beside its part.
+lanes, and every value in the cabinet sits in a lane beside its part, except as "Gap places in the vertical layout"
+allows.
 
 #### Scenario: Lanes free of parts
 - **WHEN** the card renders any configuration, in either layout
 - **THEN** no part lies in a row lane or a column lane, a row lane is crossed only by vertical pipes and a column lane
   only by horizontal ones
+
+### Requirement: Gap places in the vertical layout
+In the vertical layout, a rotated value (responsive-layout "Rotated values in the vertical layout") and the pump 15
+value above pump 15 SHALL sit in a lane or in a gap between vertical pipes beside their part, even where that gap is
+not a lane through the whole cabinet; in a gap they SHALL touch no part and no pipe (decided by the user 2026-11-20).
+
+#### Scenario: Values in lanes
+- **WHEN** a unit test checks every cabinet value of every configuration, in the frame and in both layouts
+- **THEN** each value's box lies in a row lane or a column lane, except, in the vertical layout, the rotated values and
+  the pump 15 value, whose boxes touch no part and no pipe and lie beside their part
+
+### Requirement: Compressor and exchanger 10 centred
+Compressor 11 and exchanger 10 SHALL be centred on the cabinet's vertical centre line in both layouts, keeping the
+topology of "Cabinet layout with value lanes" (decided by the user 2026-11-20).
+
+#### Scenario: Centred compressor and exchanger 10
+- **WHEN** the card renders variant 4 in either layout
+- **THEN** the centres of compressor 11 and exchanger 10 lie within 2 units of the cabinet's vertical centre line
 
 #### Scenario: Same order in both layouts
 - **WHEN** the same configuration is rendered once in each layout

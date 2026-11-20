@@ -146,7 +146,7 @@ describe('cabinet drawing', () => {
     const card = await mount({ variant: 4 });
     const drawn = new Set(items(card));
     for (const item of [7, 8, 11, 12, 13, 14, 29, 30, 35, 36]) expect(drawn.has(item), String(item)).toBe(true);
-    for (const item of [9, 10, 15, 16, 17, 22, 25, 26, 27, 28, 31, 32, 33, 34, 37, 38, 44, 45]) {
+    for (const item of [9, 10, 15, 16, 17, 22, 26, 27, 28, 31, 32, 33, 34, 37, 38, 44, 45]) {
       expect(drawn.has(item), String(item)).toBe(true);
     }
     for (const item of [18, 19, 20, 21, 23, 24, 39, 40, 41]) expect(drawn.has(item), String(item)).toBe(false);
@@ -181,13 +181,13 @@ describe('cabinet drawing', () => {
     card.remove();
   });
 
-  test('unused HTR: exchanger 9, pump 17 and valves 22/25 are drawn muted', async () => {
+  test('unused HTR: exchanger 9, pump 17 and valve 22 are drawn muted', async () => {
     const card = await mount({ features: { htr: 'unused' } });
-    for (const item of [9, 17, 22, 25]) expect(group(card, item)?.classList.contains('muted'), String(item)).toBe(true);
+    for (const item of [9, 17, 22]) expect(group(card, item)?.classList.contains('muted'), String(item)).toBe(true);
     expect(group(card, 11)?.classList.contains('muted')).toBe(false);
     const muted = (selector: string): boolean[] =>
       [...root(card).querySelectorAll(selector)].map((path) => path.classList.contains('muted'));
-    expect(muted('[data-segment^="htr_"]')).toEqual([true, true, true, true, true]);
+    expect(muted('[data-segment^="htr_"]')).toEqual([true, true, true, true]);
     expect(muted('[data-segment="ref_discharge"], [data-segment="ref_9_14"]')).toEqual([false, false]);
     card.remove();
   });

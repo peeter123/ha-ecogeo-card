@@ -9,8 +9,8 @@
 // tall, its top edge at y 0, the parts in rows and columns with lanes between them (`ROW_LANES`, `COLUMN_LANES`, where the cabinet's
 // values sit). The frame keeps the figures' topology (the port order, the order of the parts along every pipe, the probe and HTR
 // placements, the pairs, the transducers on their lines, the crossings as hops) and the item numbers, not their coordinates. The
-// one drawn arrangement (`arrangementFor`, the horizontal layout's; the vertical layout shares it until its own is built) maps the
-// frame to its own units (rework-layouts D2). Only the parts the drawing shows are in the lists: the service and safety parts of
+// two drawn arrangements (`arrangementFor`: the horizontal layout's and the vertical one's) map the
+// frame to their own units (rework-layouts D2). Only the parts the drawing shows are in the lists: the service and safety parts of
 // the figure (items 18-21, 23, 24, 39-41, 52, 53) are not drawn. Ports 1-6 sit on the cabinet's top edge in the manual's order.
 // Inside, from the top: the DHW supply and return lines of valve 26, the probe row, the compressor row with the discharge line
 // that runs along it and down through HTR exchanger 9 to inversion valve 14, condenser 8 and evaporator 7, the valve 27 / pump 15 /
@@ -28,7 +28,13 @@ import type { CircuitId, Circuits } from '../calc/circuits';
 import type { DhwStorage, Emitter, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
-import { HORIZONTAL_PLACES, labelPlacesFor, type LabelPlaces, type PlaceOverride } from './label-places';
+import {
+  HORIZONTAL_PLACES,
+  VERTICAL_PLACES,
+  labelPlacesFor,
+  type LabelPlaces,
+  type PlaceOverride,
+} from './label-places';
 
 /** A rectangle in viewBox units. */
 export interface Rect {
@@ -138,6 +144,8 @@ export interface BandKey {
   readonly tank: boolean;
   /** The emitter: its kind, or `none` for no emitter (an empty slot; the stubs of connections 1/2). */
   readonly emitter: Emitter;
+  /** Whether tank 50 is drawn (model C with internal storage, muted or not): only then does the vertical y map stretch its head. */
+  readonly internal?: boolean;
 }
 
 export type BandSlotName = 'emitter' | 'source' | 'tank';
@@ -161,6 +169,12 @@ export interface CabinetZones {
   readonly internalTank: Rect;
   /** Coil 51's centre (model C), inside tank 50; its port stubs reach back to the tank wall (symbols.ts). */
   readonly coil51: { readonly x: number; readonly y: number };
+  /**
+   * How much lower the cabinet's parts lie than in the arrangement without tank 50's head stretch (`VERTICAL_TANK_HEAD`): 0, or
+   * the stretch in the vertical layout where tank 50 is drawn. A recorded place of the vertical layout is a place of the arrangement
+   * without the stretch; `PlaceOverride.at` adds this to reach the same spot beside its part with the stretch.
+   */
+  readonly headShift: number;
 }
 
 /** The band's parts, placed for one `BandKey`. */
@@ -185,23 +199,34 @@ export type Zones = CabinetZones & BandZones;
 /** The band's sizes in viewBox units (rework-layouts D3, D4). */
 export const BAND = {
   /** The bodies' height: the tallest (the tank's); every body's bottom edge is the band's bottom. */
-  height: 170,
+  height: 176,
   /** The top of the band, below the viewBox's top margin. */
   top: 6,
   /** The join lane between the band's bottom and the cabinet's top edge. */
   joinLane: 56,
   /** The smallest gap between two slots. */
   gap: 24,
-  air: { width: 130, height: 168 },
-  collector: { width: 170, height: 112 },
+  air: { width: 130, height: 176 },
+  collector: { width: 170, height: 176 },
   /** The gap between the air unit and the collector of the hybrid. */
   hybridGap: 12,
-  tank: { width: 160, height: 170, dome: 14 },
+  tank: { width: 160, height: 176, dome: 14 },
   /** The emitter's body: both kinds share the slot's width; the bottom pipes rise 34 units inside each side. */
-  emitter: { width: 200, height: 124 },
-  /** The jogs' distances above the cabinet's top edge. */
-  jog: { out: 22, in: 34, link: 46, tank: 28 },
+  emitter: { width: 200, height: 176 },
 } as const;
+
+/**
+ * The jogs' distances above the cabinet's top edge, per layout: port 3's pipe jogs lowest, port 4's above it, the hybrid's link
+ * highest, so a vertical never meets a horizontal. The horizontal layout stretches the cabinet so that port 4 (x 827) lies left of
+ * the tank's slot and the tank's jog (28) is free to be lower than port 4's. In the vertical layout the frame is not stretched: the
+ * widest band fills the 720 units, the tank's slot (x 570-730) covers port 4 (x 607), and the tank's pipe from port 5 runs left to its
+ * coil's inlet (x 600) over port 4's riser, so the tank's jog (40) lies above port 4's (34): port 4's riser ends below it and
+ * the two pipes do not cross. Both stay below the link (46) and above the stubs of connections 47-49 (12).
+ */
+export const BAND_JOGS: Readonly<Record<ShownLayout, { out: number; in: number; link: number; tank: number }>> = {
+  horizontal: { out: 22, in: 34, link: 46, tank: 28 },
+  vertical: { out: 22, in: 34, link: 46, tank: 40 },
+};
 
 /** The width of the source's body (the air unit, the collector, or both side by side). */
 export const sourceWidth = (source: Source): number =>
@@ -281,15 +306,15 @@ const round2 = (value: number): number => Math.round(value * 100) / 100;
 export function airUnitShape(x0: number, bottom: number): AirUnitShape {
   const { width, height } = BAND.air;
   const y = bottom - height;
-  const coil: Rect = { x: x0 + 10, y: y + 102, width: 110, height: 58 };
+  const coil: Rect = { x: x0 + 10, y: y + 110, width: 110, height: 58 };
   return {
     x: x0,
     y,
     width,
     height,
-    fan: { cx: x0 + width / 2, cy: y + 36, radius: 28 },
-    dividerY: y + 70,
-    strip: { x: x0 + 8, y: y + 74, width: width - 16, height: 24 },
+    fan: { cx: x0 + width / 2, cy: y + 40, radius: 28 },
+    dividerY: y + 78,
+    strip: { x: x0 + 8, y: y + 82, width: width - 16, height: 24 },
     coil,
     fins: { x0: coil.x + 4, x1: coil.x + coil.width - 4, y0: coil.y + 8, step: 8, count: 6 },
     passes: { x0: x0 + 32, step: 22, count: 4, top: coil.y + 12, bottom: coil.y + 46 },
@@ -308,7 +333,7 @@ export function collectorShape(x0: number, bottom: number): CollectorShape {
     hatch: { x: x0, y, width, height: 14 },
     strip: { x: x0 + 8, y: y + 18, width: width - 16, height: 24 },
     serpentine: { x: x0 + 8, y: y + 48, width: width - 16, height: height - 48 },
-    passes: { y0: y + 54, step: 14, count: 4, left: x0 + 34, right: x0 + width - 14 },
+    passes: { y0: y + 54, step: 30, count: 4, left: x0 + 34, right: x0 + width - 14 },
     feedX: x0 + 14,
   };
 }
@@ -317,8 +342,8 @@ export function collectorShape(x0: number, bottom: number): CollectorShape {
 export const STUB_LENGTH = 12;
 
 /** The pass spacing of the underfloor loop, and the columns of the radiator. */
-const UNDERFLOOR = { top: 50, step: 14, count: 5, inset: 52 } as const;
-const RADIATOR = { count: 6, width: 10, gap: 8, top: 44, bottom: 116, inletY: 54, outletY: 106 } as const;
+const UNDERFLOOR = { top: 50, step: 26, count: 5, inset: 52 } as const;
+const RADIATOR = { count: 6, width: 10, gap: 8, top: 52, bottom: 168, inletY: 62, outletY: 158 } as const;
 
 /** The emitter placed with its left edge at `x0` and its bottom edge at `bottom`. */
 export function emitterShape(kind: EmitterShape['kind'], x0: number, bottom: number): EmitterShape {
@@ -424,6 +449,7 @@ const FRAME_ZONES: CabinetZones = {
   cabinet: FRAME_CABINET,
   internalTank: { x: 358, y: 8, width: 174, height: 66 },
   coil51: { x: 439, y: 55 },
+  headShift: 0,
 };
 
 /**
@@ -453,7 +479,7 @@ export const ROW_LANES: readonly Lane[] = [
     from: 76,
     to: 100,
     holds:
-      'nothing: the room between the hot-water lines of row A and the probe row; the vertical layout heightens it for the production values under those lines',
+      'nothing in either layout: the room between the hot-water lines of row A and the probe row (the horizontal layout narrows it, the vertical layout leaves it as it is)',
   },
   {
     id: 'under-compressor-row',
@@ -461,15 +487,14 @@ export const ROW_LANES: readonly Lane[] = [
     from: 156,
     to: 228,
     holds:
-      'the discharge and suction blocks (temperature over pressure, two rows) under their pairs 30/36 and 29/35, the compressor speed in a third row under 11, and the pressure values under 38 and 37 in the vertical layout',
+      'the discharge and suction blocks (temperature over pressure, two rows) under their pairs 30/36 and 29/35, the compressor speed in a third row under 11, in both layouts (the vertical layout heightens the lane for the three rows)',
   },
   {
     id: 'under-valve-row',
     axis: 'row',
     from: 408,
     to: 444,
-    holds:
-      'the superheat and the opening beside each other under valve 12 (one row); the vertical layout may stack them',
+    holds: 'the expansion valve opening alone, centred under valve 12 (one row, in both layouts)',
   },
 ];
 
@@ -508,14 +533,6 @@ export const COLUMN_LANES: readonly Lane[] = [
     holds: 'the value of pump 15, right of the pump, between the heat-recovery column and exchanger 8 / tank 50',
   },
   {
-    id: 'before-compressor',
-    axis: 'column',
-    from: 318,
-    to: 358,
-    holds:
-      'nothing yet: opens the compressor row so that the lane under it has room for the pair blocks and the compressor speed',
-  },
-  {
     id: 'riser-3',
     axis: 'column',
     from: 542,
@@ -539,7 +556,6 @@ export type ComponentKind =
   | 'exchanger'
   | 'compressor'
   | 'valve'
-  | 'drain_valve'
   | 'resistor'
   | 'filter_dryer'
   | 'expansion_valve'
@@ -650,6 +666,12 @@ const c = (
 ): Component => ({ item, kind, x, y, rotation, ...extra });
 
 /**
+ * The frame's vertical centre line (rework-layouts D1, decided by the user 2026-11-20): compressor 11, filter dryer 13 and exchanger
+ * 10 are centred on it, so they read as the middle of the drawing. The horizontal x map keeps it the cabinet's centre (`HORIZONTAL_LANE_EXTRA`).
+ */
+export const CENTRE = FRAME_CABINET.width / 2;
+
+/**
  * The columns of the cabinet frame (x from the cabinet's left edge) that carry parts and risers. Four risers carry the pipes up to
  * the connections: riser 1 (connection 1, valve 26, resistor 44), riser 2 (connection 2, the production trunk), riser 3
  * (connection 3, the brine outlet) and riser 4 (connection 4, the brine inlet).
@@ -661,7 +683,7 @@ const COL = {
   /** The bodies of probes 34 and 38 (their stems end on riser 2). */
   body2: 126,
   riser2: 142,
-  /** The HTR water column: pump 17, valves 22 and 25. */
+  /** The HTR water column: pump 17, and valve 22. */
   htr: 172,
   /** Where the HTR water leaves exchanger 9 upwards into the DHW supply line. */
   htrRiser: 193,
@@ -673,11 +695,11 @@ const COL = {
   probe30: 287,
   transducer36: 309,
   /** Compressor 11 and filter dryer 13 share a column. */
-  compressor: 372,
+  compressor: CENTRE,
   probe29: 410,
   transducer35: 432,
   valve12: 412,
-  hx10: 405,
+  hx10: CENTRE,
   hx7: 457,
   /** The suction line's riser into the compressor row. */
   suction: 495,
@@ -712,12 +734,11 @@ const ROW = {
   hx9Bottom: 283,
   /** Valve 14's centre: its left port is on the row of exchanger 9's bottom port. */
   valve14: 283,
-  /** Pump 16 on riser 4, resistor 44 on riser 1 and drain valve 25 under the HTR column. */
+  /** Pump 16 on riser 4 and resistor 44 on riser 1. */
   pump16: 298,
   resistor: 300,
   /** Thermostat 45, resistor 44's safety thermostat: on riser 1 right above the resistor, no part between them. */
   thermostat: 254,
-  valve25: 305,
   /** The top ports of exchangers 8 and 7, their centre, and the row of their bottom ports (the production and brine lines). */
   hxTop: 328,
   hx: 362,
@@ -808,7 +829,6 @@ const componentsFor = (z: CabinetZones): readonly Component[] => [
   c(16, 'pump', COL.riser4, ROW.pump16, 90),
   c(17, 'pump', COL.htr, ROW.probe, 90, { feature: 'htr', dhw: 'any' }),
   c(22, 'valve', COL.htr, ROW.trans, 0, { feature: 'htr', dhw: 'any' }),
-  c(25, 'drain_valve', COL.htr, ROW.valve25, 0, { feature: 'htr', dhw: 'any' }),
   c(26, 'valve3', COL.riser1, ROW.dhwSup, 270, { dhw: 'any', unusedMuted: true }),
   c(27, 'valve3', COL.valve27, ROW.line, 0, { feature: 'passive_cooling' }),
   c(28, 'valve3', COL.valve28, ROW.line, 0, { feature: 'passive_cooling' }),
@@ -966,11 +986,6 @@ const cabinetSegments = (): readonly Segment[] => {
     seg('htr_to_9', ['htr'], p([COL.htr, ROW.trans + 9], [COL.htr, ROW.hx9Bottom], [hx9Left, ROW.hx9Bottom]), DHWT, {
       feature: 'htr',
       dhw: 'any',
-    }),
-    seg('htr_drain', ['htr'], p([COL.htr, ROW.hx9Bottom], [COL.htr, ROW.valve25 - 9]), DHWT, {
-      feature: 'htr',
-      dhw: 'any',
-      stub: true,
     }),
     seg('htr_riser', ['htr'], p([hx9Left, ROW.hx9Top], [hx9Left, dhwSup]), DHWT, { feature: 'htr', dhw: 'any' }),
     // Internal (model C, items 47-49 on the top edge): short stubs into the tank
@@ -1193,16 +1208,16 @@ const route = (...points: Point[]): Point[] =>
  * The pipes of the band (rework-layouts D3): the external tank's and the source's, each rising from its port in the join lane,
  * with at most one horizontal jog, into its part. Authored in the arrangement's own units from the zones.
  *
- * The jogs' heights keep the pipes apart: port 3's pipe jogs lowest (`jog.out`), port 4's above it (`jog.in`), the hybrid's link
- * highest (`jog.link`), so a vertical never meets a horizontal. The external tank is joined with a mirrored helix: port 5 (the
+ * The jogs' heights keep the pipes apart (`BAND_JOGS`): port 3's pipe jogs lowest, port 4's above it, the hybrid's link
+ * highest, so a vertical never meets a horizontal. The external tank is joined with a mirrored helix: port 5 (the
  * left one) reaches the coil's upper left end through the column left of the coil, port 6 the coil's lower right end through
  * the column right of it, so the two do not cross. The air unit and the collector are entered and left on their bottom faces.
  */
-function bandSegments(z: Zones): readonly Segment[] {
+function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
   const { ports, cabinet, key } = z;
   const top = cabinet.y;
   const tank = z.externalCoil;
-  const level = bandJogs(top);
+  const level = bandJogs(top, layout);
   const segments: Segment[] = [];
   const { emitter } = z;
   if (emitter === undefined) {
@@ -1375,11 +1390,11 @@ export interface DrawContext {
   arrangement?: Arrangement;
 }
 
-/** Which arrangement a card shows. */
-type ArrangementId = 'horizontal';
-
 /** The layout the card shows now (card-config `layout`, resolved): horizontal or vertical. */
 export type ShownLayout = 'horizontal' | 'vertical';
+
+/** Which arrangement a card shows. */
+type ArrangementId = ShownLayout;
 
 /**
  * One complete arrangement of the drawing (refine-simplified-layout D1): the viewBox, the cabinet and the zone constants
@@ -1397,7 +1412,7 @@ export type Arrangement = Zones & {
 // maps, the band above it is placed from the maps' ports.
 
 /** A monotone piecewise-linear map of one axis: breakpoints `[from, to]` in the frame's units, ascending. Beyond the first and the last it keeps their offset (slope 1). */
-type AxisMap = readonly (readonly [from: number, to: number])[];
+export type AxisMap = readonly (readonly [from: number, to: number])[];
 
 export function mapAxis(map: AxisMap, value: number): number {
   const first = map[0];
@@ -1443,19 +1458,20 @@ function laneMap(
 /**
  * The extra width the horizontal layout gives each column lane (units added to the lane's frame width; the lanes not listed keep
  * theirs). The cabinet grows from 720 to 980 units (x 0-720 becomes 10-990), so it fills the drawing's width. The lanes are the ones
- * that hold values beside their parts (`COLUMN_LANES`): 64 left of probe 33 (production Out), 48 between riser 1 and probes 34/38
- * (production In and pressure), 30 right of pump 15 (its value), 78 between riser 3 and probes 32/37 (brine Out, pressure and
- * the pump 16 value) and 40 right of riser 4 (brine In); 260 in all. The widths are what the 89 units of the widest value at the
- * threshold need (the place search's "widest box"), and the lanes before riser 4 take at most 220 so that port 4 (x 827) stays left of
- * the tank's slot (x 830-990), as in the band's tests. The compressor row's lane stays as it is. The parts keep their size and every
- * column of parts keeps its slope 1.
+ * that hold values beside their parts (`COLUMN_LANES`). The widening is balanced about the frame's centre line (`CENTRE`, x 360), so
+ * compressor 11 and exchanger 10 stay centred in the stretched cabinet (the frame's x 360 lands on the drawing's x 500): 130 in the lanes
+ * left of it (62 left of probe 33 for production Out, 46 between riser 1 and probes 34/38 for production In and the pressure, 22 right
+ * of pump 15 for its value) and 130 in the lanes right of it (84 between riser 3 and probes 32/37 for brine Out, the pressure and the
+ * pump 16 value, 46 right of riser 4 for brine In); 260 in all. The widths are what the widest values at the threshold need (the place
+ * search's "widest box"), and the lanes before riser 4 take at most 220 so that port 4 (x 827) stays left of the tank's slot (x 830-990),
+ * as in the band's tests. The parts keep their size and every column of parts keeps its slope 1.
  */
 export const HORIZONTAL_LANE_EXTRA: Readonly<Record<string, number>> = {
-  'left-edge': 64,
-  'riser-1': 48,
-  'before-exchanger-8': 30,
-  'riser-3': 78,
-  'riser-4': 40,
+  'left-edge': 62,
+  'riser-1': 46,
+  'before-exchanger-8': 22,
+  'riser-3': 84,
+  'riser-4': 46,
 };
 
 /** The horizontal layout's x map: `HORIZONTAL_LANE_EXTRA` over the column lanes. */
@@ -1464,7 +1480,7 @@ export const HORIZONTAL_MAP_X: AxisMap = laneMap(COLUMN_LANES, HORIZONTAL_LANE_E
 /**
  * The horizontal layout's y changes: the row lanes that hold no value in this layout narrow (the one above the probe row, which
  * holds none, by 10 units), so the drawing stays wide. The lane under the compressor row keeps its 44 units for the pair
- * blocks and the compressor speed, the one under the valve row its 36 for the superheat and the opening.
+ * blocks and the compressor speed, the one under the valve row its 36 for the opening.
  */
 export const HORIZONTAL_LANE_SHRINK: Readonly<Record<string, number>> = { 'above-probes': -18 };
 
@@ -1479,16 +1495,90 @@ export const HORIZONTAL_MAP_Y: AxisMap = laneMap(
   FRAME_CABINET.height,
 );
 
-const mapX = (x: number): number => mapAxis(HORIZONTAL_MAP_X, x);
-const mapY = (y: number): number => mapAxis(HORIZONTAL_MAP_Y, y);
+/**
+ * The vertical layout's x map: the identity, the cabinet at x 10-730 (rework-layouts D2). The frame is 720 units wide, the width
+ * of the widest band (the emitter 200, the hybrid source 312, the tank 160 and two gaps of 24), so the vertical layout needs no
+ * x stretch. Its viewBox is 740 wide (the cabinet and a margin of 10 at each side), not the horizontal layout's 1000: every
+ * unit renders `width / 740` px, which `strokeWidths` and the label fonts (`LABEL_FONT_K`) take into account.
+ */
+export const VERTICAL_MAP_X: AxisMap = laneMap(COLUMN_LANES, {}, 10, FRAME_CABINET.width);
 
-/** The heights of the horizontal jogs in the join lane, from the cabinet's top edge. */
-export const bandJogs = (top: number): { out: number; in: number; link: number; tank: number } => ({
-  out: top - BAND.jog.out,
-  in: top - BAND.jog.in,
-  link: top - BAND.jog.link,
-  tank: top - BAND.jog.tank,
+/**
+ * The vertical layout's y changes: what each row lane gains so that the cabinet's values get rows of their own at 320 px, where
+ * a label's box is 10 px = 23 units tall (found with `npm run search-places -- --layout=vertical --width=320`, in Chromium and
+ * WebKit; `VERTICAL_LANE_REASONS` says why each lane has its height). The lane over the probe row (76-100) and the one under the valve
+ * row (408-444) gain nothing: the opening needs one row of 36 units there, and the lane over the probe row
+ * holds no value.
+ */
+export const VERTICAL_LANE_EXTRA: Readonly<Record<string, number>> = {
+  'under-compressor-row': 24,
+};
+
+/** Why each row lane has the height `VERTICAL_LANE_EXTRA` gives it. */
+export const VERTICAL_LANE_REASONS: Readonly<Record<string, string>> = {
+  'under-compressor-row':
+    'three rows of values (the pair blocks and the compressor speed) at a 32 unit pitch, the label height at 320 px with its margin (PAIR_ROW_GAP), need 96 units plus the margin to the lane edges; the frame lane is 72, so 24 more put every block, with 2 px of margin, at the pair it belongs to in Chromium and WebKit',
+};
+
+/** The vertical layout's y map: `VERTICAL_LANE_EXTRA` over the row lanes, the cabinet's top edge under the band. */
+export const VERTICAL_MAP_Y: AxisMap = laneMap(
+  ROW_LANES,
+  VERTICAL_LANE_EXTRA,
+  BAND.top + BAND.height + BAND.joinLane,
+  FRAME_CABINET.height,
+);
+
+/**
+ * The head of tank 50 in the vertical layout: the frame's y 10-24 holds only tank 50's wall (its top is at y 8) and vertical pipes
+ * (the stubs 47-49, the risers of connections 1/2): no symbol, and the DHW lines, valve 26, coil 51 and probe 54 start below
+ * it. The vertical y map adds 28 units there, found with the place search at 320 px (24 leave no place for tank 50's two values
+ * stacked, in Chromium and in WebKit; 26 leave one value blocked by 1 px of margin in one case, 28 do), so the temperature and Demand stack above coil 51 (rework-layouts D2). It is
+ * not a value lane: it is the one y-map breakpoint inside a body, and it applies only where tank 50 is drawn
+ * (`BandKey.internal`): elsewhere the range holds only vertical pipes, and growing it would leave an empty strip.
+ */
+export const VERTICAL_TANK_HEAD = { from: 10, to: 24, extra: 28 } as const;
+
+/** The vertical y map where tank 50 is drawn: `VERTICAL_MAP_Y` with the head stretched. */
+export const VERTICAL_MAP_Y_TANK50: AxisMap = laneMap(
+  [
+    { id: 'tank-head', axis: 'row', from: VERTICAL_TANK_HEAD.from, to: VERTICAL_TANK_HEAD.to, holds: 'tank 50 head' },
+    ...ROW_LANES,
+  ],
+  { ...VERTICAL_LANE_EXTRA, 'tank-head': VERTICAL_TANK_HEAD.extra },
+  BAND.top + BAND.height + BAND.joinLane,
+  FRAME_CABINET.height,
+);
+
+/** The two maps of a layout. */
+const MAPS: Readonly<Record<ShownLayout, { x: AxisMap; y: AxisMap }>> = {
+  horizontal: { x: HORIZONTAL_MAP_X, y: HORIZONTAL_MAP_Y },
+  vertical: { x: VERTICAL_MAP_X, y: VERTICAL_MAP_Y },
+};
+
+/** The axis maps a layout and band key draw with: the vertical layout stretches tank 50's head only where tank 50 is drawn. */
+export const axisMapsOf = (layout: ShownLayout, key: Pick<BandKey, 'internal'> = {}): { x: AxisMap; y: AxisMap } => ({
+  x: MAPS[layout].x,
+  y: layout === 'vertical' && key.internal === true ? VERTICAL_MAP_Y_TANK50 : MAPS[layout].y,
 });
+
+/** The frame's coordinates under a layout's maps; `internal`: tank 50 is drawn, so the vertical layout stretches its head. */
+const mapperOf = (
+  layout: ShownLayout,
+  internal = false,
+): { mapX: (x: number) => number; mapY: (y: number) => number } => {
+  const maps = MAPS[layout];
+  const y = layout === 'vertical' && internal ? VERTICAL_MAP_Y_TANK50 : maps.y;
+  return { mapX: (x) => mapAxis(maps.x, x), mapY: (v) => mapAxis(y, v) };
+};
+
+/** The heights of the horizontal jogs in the join lane of a layout, from the cabinet's top edge. */
+export const bandJogs = (
+  top: number,
+  layout: ShownLayout = 'horizontal',
+): { out: number; in: number; link: number; tank: number } => {
+  const jog = BAND_JOGS[layout];
+  return { out: top - jog.out, in: top - jog.in, link: top - jog.link, tank: top - jog.tank };
+};
 
 /** The emitter a context without one draws: the option's default. */
 const DEFAULT_EMITTER: Emitter = 'underfloor';
@@ -1498,35 +1588,54 @@ export const bandKeyOf = (context: Pick<DrawContext, 'model' | 'dhw' | 'source' 
   source: context.source,
   tank: drawnStorage(context) === 'external',
   emitter: context.emitter ?? DEFAULT_EMITTER,
+  internal: drawnStorage(context) === 'internal',
 });
 
 /** The widest band: the hybrid source with the tank and the emitter; `arrangementFor` without a key. */
 const WIDEST_KEY: BandKey = { source: 'hybrid', tank: true, emitter: DEFAULT_EMITTER };
 
-const CABINET_ZONES: CabinetZones = (() => {
-  const cabinet: Rect = {
-    x: mapX(FRAME_CABINET.x),
-    y: mapY(FRAME_CABINET.y),
-    width: mapX(FRAME_CABINET.x + FRAME_CABINET.width) - mapX(FRAME_CABINET.x),
-    height: mapY(FRAME_CABINET.y + FRAME_CABINET.height) - mapY(FRAME_CABINET.y),
+/** The cabinet's zones under a layout's maps: the viewBox is the cabinet plus a margin of 10 units at the right and 15 below. */
+const CABINET_ZONES: Readonly<Record<string, CabinetZones>> = (() => {
+  const zonesOf = (layout: ShownLayout, internal: boolean): CabinetZones => {
+    const { mapX, mapY } = mapperOf(layout, internal);
+    const cabinet: Rect = {
+      x: mapX(FRAME_CABINET.x),
+      y: mapY(FRAME_CABINET.y),
+      width: mapX(FRAME_CABINET.x + FRAME_CABINET.width) - mapX(FRAME_CABINET.x),
+      height: mapY(FRAME_CABINET.y + FRAME_CABINET.height) - mapY(FRAME_CABINET.y),
+    };
+    const tank = FRAME_ZONES.internalTank;
+    return {
+      viewBox: { width: cabinet.x + cabinet.width + 10, height: cabinet.y + cabinet.height + 15 },
+      cabinet,
+      internalTank: {
+        x: mapX(tank.x),
+        y: mapY(tank.y),
+        width: round2(mapX(tank.x + tank.width) - mapX(tank.x)),
+        height: round2(mapY(tank.y + tank.height) - mapY(tank.y)),
+      },
+      // coil 51's supply port is where the mapped DHW line of valve 26 ends, whatever the maps stretch in between
+      coil51: { x: mapX(FRAME_ZONES.coil51.x - 75) + 75, y: mapY(FRAME_ZONES.coil51.y) },
+      headShift: round2(mapY(FRAME_CABINET.height) - mapAxis(MAPS[layout].y, FRAME_CABINET.height)),
+    };
   };
-  const tank = FRAME_ZONES.internalTank;
   return {
-    viewBox: { width: 1000, height: cabinet.y + cabinet.height + 15 },
-    cabinet,
-    internalTank: {
-      x: mapX(tank.x),
-      y: mapY(tank.y),
-      width: round2(mapX(tank.x + tank.width) - mapX(tank.x)),
-      height: tank.height,
-    },
-    // coil 51's supply port is where the mapped DHW line of valve 26 ends, whatever the maps stretch in between
-    coil51: { x: mapX(FRAME_ZONES.coil51.x - 75) + 75, y: mapY(FRAME_ZONES.coil51.y) },
+    horizontal: zonesOf('horizontal', false),
+    vertical: zonesOf('vertical', false),
+    'vertical|internal': zonesOf('vertical', true),
+    'horizontal|internal': zonesOf('horizontal', true),
   };
 })();
 
+const zonesFor = (layout: ShownLayout, key: BandKey): CabinetZones => {
+  const zones = CABINET_ZONES[key.internal === true ? `${layout}|internal` : layout];
+  if (zones === undefined) throw new Error('no cabinet zones');
+  return zones;
+};
+
 /** The band's parts placed for a key: the slots from the ports (rework-layouts D3), the bodies in them. */
-function bandZonesFor(key: BandKey, cabinet: CabinetZones): BandZones {
+function bandZonesFor(layout: ShownLayout, key: BandKey, cabinet: CabinetZones): BandZones {
+  const { mapX } = mapperOf(layout, key.internal === true);
   const top = cabinet.cabinet.y;
   const bottom = top - BAND.joinLane;
   const ports = {
@@ -1570,8 +1679,8 @@ function bandZonesFor(key: BandKey, cabinet: CabinetZones): BandZones {
       ? undefined
       : {
           cx: tankShape.x + tankShape.width / 2,
-          top: tankShape.y + 84,
-          bottom: tankShape.y + 146,
+          top: tankShape.y + 90,
+          bottom: tankShape.y + 152,
           rx: 38,
           inX: tankShape.x + tankShape.width / 2 - 38 - 12,
           outX: tankShape.x + tankShape.width / 2 + 38 + 12,
@@ -1591,11 +1700,19 @@ function bandZonesFor(key: BandKey, cabinet: CabinetZones): BandZones {
 
 const ARRANGEMENTS = new Map<string, Arrangement>();
 
+/** The recorded label places of each layout. */
+const PLACES: Readonly<Record<ShownLayout, Readonly<Record<string, PlaceOverride>>>> = {
+  horizontal: HORIZONTAL_PLACES,
+  vertical: VERTICAL_PLACES,
+};
+
 function buildArrangement(
+  layout: ShownLayout,
   key: BandKey,
-  places: Readonly<Record<string, PlaceOverride>> = HORIZONTAL_PLACES,
+  places: Readonly<Record<string, PlaceOverride>> = PLACES[layout],
 ): Arrangement {
-  const zones: Zones = { ...CABINET_ZONES, ...bandZonesFor(key, CABINET_ZONES) };
+  const { mapX, mapY } = mapperOf(layout, key.internal === true);
+  const zones: Zones = { ...zonesFor(layout, key), ...bandZonesFor(layout, key, zonesFor(layout, key)) };
   const place = (x: number, y: number): readonly [number, number] => [mapX(x), mapY(y)];
   const components = componentsFor(zones).map((part): Component => {
     if (part.item === 50 || part.item === 51) return part;
@@ -1605,15 +1722,15 @@ function buildArrangement(
     ...part,
     points: part.points.map(([x, y]): Point => [mapX(x), mapY(y)]),
   }));
-  const segments = [...cabinet, ...bandSegments(zones)];
+  const segments = [...cabinet, ...bandSegments(zones, layout)];
   const crossings = CROSSINGS.map((crossing): Crossing => ({
     ...crossing,
     at: place(crossing.at[0], crossing.at[1]),
   }));
-  const labels = labelPlacesFor(zones, place);
+  const labels = labelPlacesFor(zones, place, layout);
   return {
     ...zones,
-    id: 'horizontal',
+    id: layout,
     components,
     segments,
     crossings,
@@ -1638,48 +1755,47 @@ export const FRAME = {
   labels: labelPlacesFor(FRAME_ZONES),
 };
 
-/** The horizontal arrangement of a band key with another place table than `HORIZONTAL_PLACES` (not cached): for the tests of the override path. */
+/** The arrangement of a layout and band key with another place table than the layout's own (not cached): for the tests of the override path. */
 export const arrangementWithPlaces = (
   places: Readonly<Record<string, PlaceOverride>>,
   key: BandKey = WIDEST_KEY,
-): Arrangement => buildArrangement(key, places);
+  layout: ShownLayout = 'horizontal',
+): Arrangement => buildArrangement(layout, key, places);
 
 /**
- * The arrangement of a shown layout and band key: a pure function of them (rework-layouts D2, D3), built once per key. Until the
- * vertical arrangement is built (the vertical arrangement), both layouts draw the same one. Without a key, the widest band's.
+ * The arrangement of a shown layout and band key: a pure function of them (rework-layouts D2, D3), built once per layout and key.
+ * Without a key, the widest band's.
  */
 export function arrangementFor(layout: ShownLayout, key: BandKey = WIDEST_KEY): Arrangement {
-  // until the vertical arrangement is built both layouts share it
-  const id = `${layout === 'vertical' ? 'horizontal' : layout}|${key.source}|${String(key.tank)}|${key.emitter}`;
+  const id = `${layout}|${key.source}|${String(key.tank)}|${key.emitter}|${String(key.internal === true)}`;
   const known = ARRANGEMENTS.get(id);
   if (known !== undefined) return known;
-  const built = buildArrangement(key);
+  const built = buildArrangement(layout, key);
   ARRANGEMENTS.set(id, built);
   return built;
 }
 
 /**
- * The labels' places of a layout before `HORIZONTAL_PLACES` applies: the default places under the maps. The place search
+ * The labels' places of a layout before its place table (`HORIZONTAL_PLACES`, `VERTICAL_PLACES`) applies: the default places under the maps. The place search
  * (scripts/search-places.mjs) measures each label's distance from these, never from a recorded place, so a rerun does not
  * depend on the table it replaces.
  */
 export function defaultLabelPlaces(layout: ShownLayout, key: BandKey = WIDEST_KEY): LabelPlaces {
-  switch (layout) {
-    case 'horizontal':
-    case 'vertical':
-      return labelPlacesFor({ ...CABINET_ZONES, ...bandZonesFor(key, CABINET_ZONES) }, (x, y) => [mapX(x), mapY(y)]);
-  }
+  const { mapX, mapY } = mapperOf(layout, key.internal === true);
+  const cabinet = zonesFor(layout, key);
+  return labelPlacesFor({ ...cabinet, ...bandZonesFor(layout, key, cabinet) }, (x, y) => [mapX(x), mapY(y)], layout);
 }
 
-/** The arrangement a draw context carries, or, without one, the horizontal layout's for its band key. */
+/** The arrangement a draw context carries, or, without one, the `layout`'s (the horizontal one's by default) for its band key. */
 export const arrangementOf = (
   context: Partial<Pick<DrawContext, 'arrangement' | 'model' | 'dhw' | 'source' | 'emitter'>>,
+  layout: ShownLayout = 'horizontal',
 ): Arrangement =>
   context.arrangement ??
   (context.model === undefined || context.dhw === undefined || context.source === undefined
-    ? arrangementFor('horizontal')
+    ? arrangementFor(layout)
     : arrangementFor(
-        'horizontal',
+        layout,
         bandKeyOf({ model: context.model, dhw: context.dhw, source: context.source, emitter: context.emitter }),
       ));
 
@@ -1795,8 +1911,6 @@ function localPorts(component: Component): readonly Point[] {
         [0, -9],
         [0, 9],
       ];
-    case 'drain_valve':
-      return [[0, -9]];
     case 'resistor':
       return [
         [-28, 0],

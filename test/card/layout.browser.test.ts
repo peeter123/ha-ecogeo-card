@@ -4,6 +4,7 @@ import '../../dev/ha-stubs';
 import '../../src/index';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import type { CardConfig } from '../../src/lib/config';
+import { VERTICAL_BELOW, VERTICAL_HYSTERESIS } from '../../src/lib/layout';
 
 afterEach(() => {
   document.body.replaceChildren();
@@ -63,6 +64,34 @@ describe('layout at real widths', () => {
     wrapper.style.width = '1000px';
     await expectLayout(card, 'horizontal');
     wrapper.style.width = '360px';
+    await expectLayout(card, 'vertical');
+  });
+});
+
+describe('the automatic layout at the threshold (responsive-layout "Layout choice", "Layout hysteresis")', () => {
+  test('a freshly loaded card is vertical 1 px under the threshold and horizontal at it', async () => {
+    const under = await show(VERTICAL_BELOW - 1);
+    await expect.poll(() => under.card.width).toBe(VERTICAL_BELOW - 1);
+    await expectLayout(under.card, 'vertical');
+    const at = await show(VERTICAL_BELOW);
+    await expect.poll(() => at.card.width).toBe(VERTICAL_BELOW);
+    await expectLayout(at.card, 'horizontal');
+  });
+
+  test('a card that went vertical stays vertical up to the threshold plus the hysteresis, and returns at it', async () => {
+    const { card, wrapper } = await show(VERTICAL_BELOW - 1);
+    await expectLayout(card, 'vertical');
+    for (const [width, layout] of [
+      [VERTICAL_BELOW, 'vertical'],
+      [VERTICAL_BELOW + VERTICAL_HYSTERESIS - 1, 'vertical'],
+      [VERTICAL_BELOW + VERTICAL_HYSTERESIS, 'horizontal'],
+    ] as const) {
+      wrapper.style.width = `${String(width)}px`;
+      await expect.poll(() => card.width).toBe(width);
+      await expectLayout(card, layout);
+    }
+    // and it goes vertical again below the threshold, without the hysteresis
+    wrapper.style.width = `${String(VERTICAL_BELOW - 1)}px`;
     await expectLayout(card, 'vertical');
   });
 });

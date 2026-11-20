@@ -229,7 +229,8 @@ export class EcogeoCard extends LitElement {
       )
     ) {
       const layout = this.shownLayout;
-      const stroke = strokeWidths(this.drawingWidthFor(this.arrangementViewBox(layout)));
+      const viewBox = this.arrangementViewBox(layout);
+      const stroke = strokeWidths(this.drawingWidthFor(viewBox), viewBox.width);
       return (
         (layout === 'vertical') !== this.renderedVertical ||
         this.fittedWidth(layout) !== this.renderedDrawing ||
@@ -272,7 +273,8 @@ export class EcogeoCard extends LitElement {
     const vertical = layout === 'vertical';
     this.renderedVertical = vertical;
     this.renderedAutoVertical = vertical && this.resolved?.layout === 'auto';
-    const stroke = strokeWidths(this.drawingWidthFor(this.arrangementViewBox(layout)));
+    const drawingViewBox = this.arrangementViewBox(layout);
+    const stroke = strokeWidths(this.drawingWidthFor(drawingViewBox), drawingViewBox.width);
     this.renderedStroke = stroke;
     const fitted = this.fittedWidth(layout);
     this.renderedDrawing = fitted;

@@ -280,7 +280,7 @@ describe('flow animation', () => {
 
   test('stubs are coloured but never animated', () => {
     const { get } = scenario({ mode: 'heating', emitter: 'none' }, HEATING);
-    for (const id of ['p1_stub', 'p2_stub', 'htr_drain']) {
+    for (const id of ['p1_stub', 'p2_stub']) {
       const state = arrangementFor('horizontal', { source: 'air', tank: true, emitter: 'none' }).segments.find(
         (segment) => segment.id === id,
       );

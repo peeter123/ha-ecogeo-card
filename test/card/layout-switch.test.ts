@@ -1,5 +1,5 @@
-// The switch between the layouts with a mocked width (responsive-layout spec: Layout choice, Layout hysteresis). Both layouts
-// draw the same arrangement until the vertical arrangement of rework-layouts is built.
+// The switch between the layouts with a mocked width (responsive-layout spec: Layout choice, Layout hysteresis, Same values in
+// both layouts).
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { arrangementFor } from '../../src/diagram/geometry';
 import '../../src/index';
@@ -131,6 +131,37 @@ describe('Hysteresis counts only a vertical layout that auto chose', () => {
   });
 });
 
+describe('Same values in both layouts (responsive-layout)', () => {
+  const labelTexts = (card: EcogeoCard): string[] =>
+    [...root(card).querySelectorAll('[data-label]')].map(
+      (element) => `${element.getAttribute('data-label') ?? ''}: ${element.textContent.replace(/\s+/g, ' ').trim()}`,
+    );
+
+  test.each([{}, { source: 'air', dhw: 'none', emitter: 'radiator' }, { model: 'C', dhw: 'internal' }] as const)(
+    'the same labels with the same texts and the same footer, config %j',
+    async (config) => {
+      const horizontal = await show(1000, { ...config, layout: 'horizontal' });
+      const vertical = await show(360, { ...config, layout: 'vertical' });
+      expect(layoutOf(horizontal)).toBe('horizontal');
+      expect(layoutOf(vertical)).toBe('vertical');
+      expect(labelTexts(vertical).length).toBeGreaterThan(10);
+      expect(labelTexts(vertical)).toEqual(labelTexts(horizontal));
+      expect(footerIds(vertical)).toEqual(footerIds(horizontal));
+    },
+  );
+
+  test('the vertical drawing is taller for its width than the horizontal one at 400 px', async () => {
+    const [horizontal, vertical] = [await show(400, { layout: 'horizontal' }), await show(400, { layout: 'vertical' })];
+    const ratio = (card: EcogeoCard): number => {
+      const [, , width, height] = (root(card).querySelector('svg')?.getAttribute('viewBox') ?? '')
+        .split(' ')
+        .map(Number);
+      return (height ?? 0) / (width ?? 1);
+    };
+    expect(ratio(vertical)).toBeGreaterThan(ratio(horizontal));
+  });
+});
+
 describe('the arrangement of the shown layout (refine-simplified-layout D1)', () => {
   test.each([
     [1000, 'horizontal'],
@@ -144,7 +175,12 @@ describe('the arrangement of the shown layout (refine-simplified-layout D1)', ()
     );
   });
 
-  test('until the vertical arrangement is built both layouts draw the same one', () => {
-    expect(arrangementFor('vertical')).toBe(arrangementFor('horizontal'));
+  test('the two layouts draw their own arrangements: the vertical one is narrower and taller', () => {
+    const [horizontal, vertical] = [arrangementFor('horizontal'), arrangementFor('vertical')];
+    expect(vertical).not.toBe(horizontal);
+    expect(vertical.viewBox.width).toBeLessThan(horizontal.viewBox.width);
+    expect(vertical.viewBox.height / vertical.viewBox.width).toBeGreaterThan(
+      horizontal.viewBox.height / horizontal.viewBox.width,
+    );
   });
 });

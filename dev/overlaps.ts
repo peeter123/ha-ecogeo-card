@@ -45,7 +45,7 @@ export interface Box {
   right: number;
   bottom: number;
 }
-export type LabelBox = Box & { id: string; bare: boolean };
+export type LabelBox = Box & { id: string; bare: boolean; rotated: boolean };
 export type PartBox = Box & { id: string; item: string | null };
 /** The samples of one pipe: squares of the rendered stroke width, in px, along its rendered length. */
 export interface PipeSamples {
@@ -111,13 +111,16 @@ export function measureCard(root: ParentNode, options: { pipes?: boolean } = {})
     const style = getComputedStyle(element);
     const leading = (Number.parseFloat(style.lineHeight) - Number.parseFloat(style.fontSize)) / 2;
     const { left, top, right, bottom } = box(element);
+    // a turned label's half-leading is at its sides, not above and below its text
+    const rotated = element.classList.contains('rotated');
     return {
       id: element.getAttribute('data-label') ?? '?',
       bare: element.classList.contains('bare'),
-      left,
-      right,
-      top: top + leading,
-      bottom: bottom - leading,
+      rotated,
+      left: rotated ? left + leading : left,
+      right: rotated ? right - leading : right,
+      top: rotated ? top : top + leading,
+      bottom: rotated ? bottom : bottom - leading,
     };
   });
   const groups = [...root.querySelectorAll('g.symbol-group, g.dhw-storage, g.air-unit, g.ground-collector, g.emitter')];
@@ -230,6 +233,16 @@ export const BODY_LABELS: Readonly<Record<string, string>> = {
   emitter_demand: 'emitter:body',
 };
 
+/**
+ * The rotated values of the vertical layout that read as one row, left to right (rework-layouts D7): Out, In and the pressure of
+ * the production side and of the brine side. Out and In sit side by side at the same height (the shorter one's vertical extent lies
+ * within the longer one's), with the pressure next to them; read by scripts/search-places.mjs and the unit tests.
+ */
+export const ROW_GROUPS: readonly (readonly [string, string, string])[] = [
+  ['production_out', 'production_in', 'production_pressure'],
+  ['brine_out', 'brine_in', 'brine_pressure'],
+];
+
 /** The Out and In values that read as a pair (refine-simplified-layout D7), production and brine; read by scripts/search-places.mjs only. */
 export const OUT_IN_PAIRS: readonly (readonly [string, string])[] = [
   ['production_out', 'production_in'],
@@ -238,7 +251,7 @@ export const OUT_IN_PAIRS: readonly (readonly [string, string])[] = [
 
 /**
  * The refrigerant probe pairs' values (rework-layouts D6, D7): temperature over pressure, one two-row block under the pair
- * (same alignment and x, `PAIR_ROW_GAP` units between the rows, which follows the label height at the threshold); read by scripts/search-places.mjs only.
+ * (same alignment and x, `PAIR_ROW_GAP` units between the rows, which follows the label height at the layout's narrowest verified width); read by scripts/search-places.mjs only.
  */
 export const BLOCK_PAIRS: readonly (readonly [string, string])[] = [
   ['discharge_temperature', 'discharge_pressure'],

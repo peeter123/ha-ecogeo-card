@@ -6,9 +6,8 @@
 import type { Layout } from '../config/options';
 
 /**
- * With `layout: auto`, cards narrower than this (px) get the vertical layout. Until the vertical arrangement is built
- * (the vertical arrangement of rework-layouts) both layouts draw the same arrangement. Decided on 2026-11-20 (rework-layouts D7, D8):
- * the narrowest width on the 20 px grid at which `npm run search-places -- --layout=horizontal` finds every one of the 19 labels
+ * With `layout: auto`, cards narrower than this (px) get the vertical layout. Decided on 2026-11-20 (rework-layouts D7, D8):
+ * the narrowest width on the 20 px grid at which `npm run search-places -- --layout=horizontal` finds every one of the 18 labels
  * free at its own place, with its 2 px margin (the value blocks under their pairs, the hydraulic values beside their parts, the
  * body values inside their bodies), in Chromium and in WebKit. Both engines find every label free at its default place at
  * 560 px, so `HORIZONTAL_PLACES` has no entry; at 540 px the search finds no place at all for the two values inside tank 50
@@ -48,7 +47,7 @@ export interface StrokeWidths {
   outline: number;
 }
 
-/** The widths the drawing is designed with (they apply from a card width of 1000 * 2 / 3 px up, and while the width is unknown). */
+/** The widths the drawing is designed with (they apply from a card width of 1000 * 2 / 3 px up in the horizontal layout, and while the width is unknown). */
 export const DEFAULT_STROKES: StrokeWidths = { pipe: 3, outline: 2 };
 
 /** The thinnest a pipe and an outline may render, in px. */
@@ -59,12 +58,13 @@ const MIN_OUTLINE_PX = 1.25;
 const ceilTenth = (value: number): number => Math.ceil(value * 10 - 1e-9) / 10;
 
 /**
- * The stroke widths in drawing units for a card `width` px wide: `scale = width / 1000`, pipe `max(3, 2 / scale)` and
- * outline `max(2, 1.25 / scale)`, rounded up to 0.1. An unknown width (undefined or 0) gives the designed widths.
+ * The stroke widths in drawing units for a drawing `width` px wide whose viewBox is `viewBoxWidth` units wide (1000 for the
+ * horizontal arrangement, 740 for the vertical one): `scale = width / viewBoxWidth`, pipe `max(3, 2 / scale)` and outline
+ * `max(2, 1.25 / scale)`, rounded up to 0.1. An unknown width (undefined or 0) gives the designed widths.
  */
-export function strokeWidths(width: number | undefined): StrokeWidths {
+export function strokeWidths(width: number | undefined, viewBoxWidth = 1000): StrokeWidths {
   if (width === undefined || !(width > 0)) return DEFAULT_STROKES;
-  const scale = width / 1000;
+  const scale = width / viewBoxWidth;
   return {
     pipe: Math.max(DEFAULT_STROKES.pipe, ceilTenth(MIN_PIPE_PX / scale)),
     outline: Math.max(DEFAULT_STROKES.outline, ceilTenth(MIN_OUTLINE_PX / scale)),

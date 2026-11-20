@@ -16,8 +16,10 @@ for the explanation of what the card shows and where each part comes from.
   safety parts that have no live value (components show their name and manual item number on hover), for any model,
   variant, outer-loop source (air, ground or hybrid), DHW storage and heat emitter (an underfloor loop, a radiator or
   none). The parts keep the figures' topology but not their coordinates: the cabinet is laid out in rows and columns
-  with lanes between them, where the values sit, 720 units wide, and the horizontal layout widens the column lanes to a
-  cabinet 980 units wide.
+  with lanes between them, where the values sit, 720 units wide, with compressor 11 and exchanger 10 on its centre line;
+  the horizontal layout widens the column lanes, equally on both sides of that line, to a cabinet 980 units wide, and
+  the vertical layout heightens the row lanes. The emitter, the source and the external tank stand in a band above it,
+  all of one height.
 - Pipes coloured by temperature on an absolute scale (blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at
   30 °C, orange at 50 °C, red at 70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe
   with no probe value is muted. The plate exchangers are filled on each side with a gradient from the colour of the pipe
@@ -25,15 +27,16 @@ for the explanation of what the card shows and where each part comes from.
 - The active circuits move: dashes run in the direction of the flow at a speed that follows the pump or the compressor,
   the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode are muted.
   `prefers-reduced-motion` stops all animation.
-- Live values beside their components, 19 in all: the production and brine temperatures with Out and In captions, both
-  pressures and pump speeds, the discharge and suction temperatures and pressures, the compressor speed, the expansion
-  valve's opening and the superheat, the source's Out, the DHW temperature, and the DG1 and DHW demand. The drawing
+- Live values beside their components, 18 in all: the production and brine temperatures with Out and In captions, both
+  pressures and pump speeds (whole percentages), the discharge and suction temperatures and pressures, the compressor
+  speed, the expansion valve's opening, the source's Out, the DHW temperature, and the DG1 and DHW demand. The drawing
   carries no captions naming its parts; hover a part for its name. The source's Out and the DHW temperature are bare
-  numbers inside the air unit, the ground collector and the tank, which have no Out or DHW caption. Labels are at least
-  10 px, and grow with the drawing from a 770 px card. Below it a footer shows the mode, the outside temperature, COP
-  (EER while cooling) and the power items of the mode (DG1 and HTR while heating, DHW while producing DHW, Cooling and
-  HTR in active cooling), and the alarm and offline indications. The card formats the numbers itself with Home
-  Assistant's locale and keeps every number joined to its unit by a no-break space.
+  numbers inside the air unit, the ground collector and the tank, which have no Out or DHW caption. Labels are at
+  least 10 px, and grow with the drawing from a 770 px card (horizontal) or a 417 px card (vertical). Below it a
+  footer shows the mode, the outside temperature, COP (EER while cooling) and the power items of the mode (DG1 and HTR
+  while heating, DHW while producing DHW, Cooling and HTR in active cooling), and the alarm and offline indications.
+  The card formats the numbers itself with Home Assistant's locale and keeps every number joined to its unit by a
+  no-break space.
 - A visual editor (add the card from the picker, or edit it) for the unit, the entity prefix, the features and the
   appearance; it writes only what you set and keeps every other key.
 - Read-only: tapping a value, or a component with an entity of its own, opens the entity's more-info dialog; the card
@@ -72,15 +75,21 @@ runs. In the card editor, the help link opens this README. How a release is made
 
 The card measures its own width and chooses a layout from it (the `layout` option, see Options). With `layout: auto`
 (the default) it shows the horizontal layout from 560 px wide, which is a panel view or a wide section, and the vertical
-layout below that, which is what a phone gets. The horizontal layout is the drawing described in this README; the
-vertical layout, a taller arrangement for phones, is still to come, and until then `layout: vertical` (and `auto` below
-560 px) draws the horizontal one. Pipes and outlines never render thinner than 2 px and 1.25 px, and the footer wraps.
+layout below that, which is what a phone gets. Both draw the same parts, the same 18 values and the same footer. The
+horizontal layout is a wide drawing with the values beside their parts. The vertical layout is a taller arrangement of
+the same cabinet (740 units wide, with more height between the rows) that works from 320 px up: the hydraulic values
+along the vertical pipes (production and brine Out, In and pressure, and the brine pump) are turned to read from bottom
+to top beside their probes, the pump 15 value sits above the pump, and with model C the tank's two values stack. Pipes
+and outlines never render thinner than 2 px and 1.25 px, and the footer wraps.
 Once vertical, the card returns to horizontal only at 584 px (24 px of hysteresis), so a scrollbar appearing with the
 layout cannot make it flip back and forth. Set `layout: horizontal` or `layout: vertical` to force one. In a panel view
 the card also fits the screen: the drawing is kept within the window's height below Home Assistant's header (and above
 the footer), narrower and centred when the card is wider than that, and the layout and line widths follow the drawing's
 own width. A tall window or a sections view is not affected: the drawing fills the card. How the threshold was
 measured is in [docs/ecogeo-card.md](docs/ecogeo-card.md).
+
+![The vertical layout on a phone, 360 px wide: the hydraulic values turned along their
+pipes](docs/images/phone-heating.png)
 
 ## Configuration
 
@@ -120,7 +129,7 @@ fault.
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
 | `emitter` | `underfloor`, `radiator`, `none` | `underfloor` | The heat emitter drawn above connections 1 and 2, on the DG1 heating circuit: an underfloor loop (a flat serpentine in a floor strip), a panel radiator, or none (connections 1 and 2 then end in short stubs). It follows the DG1 production circuit: coloured and animated while that circuit is active, muted otherwise, and its "Demand" value sits inside it. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
-| `layout` | `auto`, `horizontal`, `vertical` | `auto` | `auto` shows the vertical layout while the card is narrower than 560 px and the horizontal layout otherwise (and before the width is known), with 24 px of hysteresis once vertical (see Layout in the docs); `horizontal` and `vertical` use that layout at any width. Until the vertical arrangement is built, both draw the horizontal one. The former values `full` and `compact` are errors. |
+| `layout` | `auto`, `horizontal`, `vertical` | `auto` | `auto` shows the vertical layout while the card is narrower than 560 px and the horizontal layout otherwise (and before the width is known), with 24 px of hysteresis once vertical (see Layout in the docs); `horizontal` and `vertical` use that layout at any width. The former values `full` and `compact` are errors. |
 
 ### Source and DHW
 
@@ -222,11 +231,11 @@ keeps its label with a dash. `none` alone is still an entity setting, so the car
 | `production.outlet_temperature` | `sensor.<prefix>_production_out` | °C, 1 dec. | 33 |
 | `production.return_temperature` | `sensor.<prefix>_production_in` | °C, 1 dec. | 34 |
 | `production.pressure` | `sensor.<prefix>_pressure_production` | bar, 1 dec. | 38 |
-| `production.pump` | `sensor.<prefix>_production_pump` | %, 1 dec. | 15 |
+| `production.pump` | `sensor.<prefix>_production_pump` | %, 0 dec. | 15 |
 | `brine.outlet_temperature` | `sensor.<prefix>_brine_out` | °C, 1 dec. | 31 |
 | `brine.inlet_temperature` | `sensor.<prefix>_brine_in` | °C, 1 dec. | 32 |
 | `brine.pressure` | `sensor.<prefix>_pressure_brine` | bar, 1 dec. | 37 |
-| `brine.pump` | `sensor.<prefix>_brine_pump` | %, 1 dec. | 16 |
+| `brine.pump` | `sensor.<prefix>_brine_pump` | %, 0 dec. | 16 |
 | `compressor.speed` | `sensor.<prefix>_compressor_rpm` | rpm, 0 dec. | 11 |
 | `compressor.percentage` | `sensor.<prefix>_compressor_percentage` | %, 1 dec. | 11 |
 | `compressor.power` | `sensor.<prefix>_power_consumption` | W, 0 dec. | 11 |
@@ -427,7 +436,9 @@ covers every scenario, each source, each DHW value, the band (every source above
 the vertical threshold and 1000 px), the emitter (every kind above every source in heating, light and dark, at the same
 two widths, and the radiator without its fill), model C, each feature `false` and `unused`, the other variants, the dark
 theme, the foreign naming (heating, heating with HTR recovery, DHW, defrost and off), the panel view, and the horizontal
-layout at the vertical threshold (every scenario, light and dark), 800 and 1000 px. An old `detail=` or
+layout at the vertical threshold (every scenario, light and dark), 800 and 1000 px, and the vertical layout (every
+scenario at 360 px with the automatic layout, every scenario forced vertical at 320 px, light and dark, and the band and
+the emitters above every source at 320 px and 1 px under the threshold). An old `detail=` or
 `layout=full`/`layout=compact` in a URL is ignored. The first run needs the browser: `npx playwright install chromium`.
 
 `dist/ecogeo-card.js` is the committed, deployable bundle. `npm run format` rewrites files with Prettier.

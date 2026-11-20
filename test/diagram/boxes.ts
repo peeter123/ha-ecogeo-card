@@ -28,7 +28,6 @@ export function localBox(part: Component): [number, number, number, number] {
       return [-20, -span, 20, span];
     }
     case 'valve':
-    case 'drain_valve':
       return [-6, -9, 6, 9];
     case 'resistor':
       return [-28, -6, 28, 6];

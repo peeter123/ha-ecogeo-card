@@ -85,19 +85,58 @@ with how it was measured, including the label box, the margin and the tolerance 
 - **THEN** it names the threshold in px, the grid it was searched on, and the label box and tolerance used
 
 ### Requirement: Same values in both layouts
-Both layouts SHALL draw the same parts and show the same value labels (live-values "Values on the drawing") and the
-same footer (live-values "Footer"). They SHALL differ only in the arrangement: the vertical layout's cabinet is taller
-relative to its width, so the drawing is taller than the horizontal one at the same width.
+Both layouts SHALL draw the same parts and show the same value labels with the same texts (live-values "Values on
+the drawing") and the same footer (live-values "Footer"). They SHALL differ only in the arrangement (the vertical
+drawing is taller relative to its width) and in the orientation of the vertical layout's rotated values ("Rotated
+values in the vertical layout", decided by the user 2026-11-20).
 
 #### Scenario: Same labels
 - **WHEN** the same configuration and states are rendered once with `layout: horizontal` and once with
   `layout: vertical`
-- **THEN** both show the same set of value labels with the same texts, and the same footer items
+- **THEN** both show the same set of value labels with the same texts, whatever their orientation, and the same
+  footer items
 
 #### Scenario: Vertical is taller
 - **WHEN** the same configuration is rendered 400 px wide once with `layout: horizontal` and once with
   `layout: vertical`
 - **THEN** the vertical drawing's height-to-width ratio is larger than the horizontal one's
+
+### Requirement: Rotated values in the vertical layout
+In the vertical layout the card SHALL draw production Out, production In, pressure 38, brine Out, brine In, pressure
+37 and the pump 16 value rotated by -90°, reading from bottom to top, each along its vertical pipe next to its probe
+or part. Every other value SHALL stay horizontal, the pump 15 value above pump 15. The horizontal layout SHALL rotate
+no label. (Decided by the user 2026-11-20.)
+
+#### Scenario: Rotated hydraulic values
+- **WHEN** the card renders model B, `source: air`, `dhw: external`, variant 4 in heating in the vertical layout
+- **THEN** production Out, In and pressure 38, brine Out, In and pressure 37 and the pump 16 value are turned -90°
+  and read from bottom to top, each beside its probe, transducer or pump, with the same texts as in the horizontal
+  layout
+
+#### Scenario: Horizontal values in the vertical layout
+- **WHEN** the card renders the same configuration in the vertical layout
+- **THEN** the discharge and suction blocks, the compressor speed, the expansion valve opening, the pump 15 value and
+  the values inside bodies are not rotated, and the pump 15 value sits above pump 15
+
+#### Scenario: Rotated value beside its part
+- **WHEN** a unit test checks the vertical arrangement's rotated values for every source, DHW storage and emitter
+- **THEN** each rotated value's box touches no part and no pipe and lies within the bound distance of its probe,
+  transducer or pump
+
+#### Scenario: Nothing rotated in the horizontal layout
+- **WHEN** the card renders any configuration in the horizontal layout
+- **THEN** no value label is rotated
+
+### Requirement: Out and In side by side in the vertical layout
+In the vertical layout the rotated Out and In values of each side (production, brine) SHALL sit side by side at the
+same height, with that side's pressure next to them; on the brine side their order from left to right SHALL be Out,
+In, pressure (decided by the user 2026-11-20).
+
+#### Scenario: Out and In side by side
+- **WHEN** the card renders the vertical layout
+- **THEN** the vertical extent of the shorter of brine Out and brine In lies within that of the longer one, brine Out,
+  brine In and pressure 37 follow each other in that order from left to right, production Out and In likewise share
+  their vertical extent, and pressure 38 sits next to them
 
 ### Requirement: Labels clear of everything
 In a layout's verified range no value label SHALL overlap another label, a component, a pipe at its rendered stroke

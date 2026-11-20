@@ -1,6 +1,6 @@
 // The cabinet's lanes (rework-layouts D1, schematic-drawing "Cabinet layout with value lanes"): no part's box enters a lane, a row
 // lane is crossed only by vertical pipes and a column lane only by horizontal ones, in the frame the lists are authored in and
-// in the horizontal arrangement under its maps, for every model, DHW storage, source and emitter.
+// in both arrangements under their maps, for every model, DHW storage, source and emitter.
 import { describe, expect, test } from 'vitest';
 import { DHW_STORAGES, EMITTERS, SOURCES } from '../../src/config/options';
 import type { FeatureState, Features } from '../../src/config/variants';
@@ -11,18 +11,22 @@ import {
   HORIZONTAL_MAP_Y,
   ROW_LANES,
   arrangementOf,
+  axisMapsOf,
   drawnComponents,
   drawnSegments,
   mapAxis,
   routePoints,
   type Component,
   type DrawContext,
+  type AxisMap,
   type Lane,
   type Point,
   type Rect,
   type Segment,
+  type ShownLayout,
 } from '../../src/diagram/geometry';
-import { BODY_LABELS } from '../../dev/overlaps';
+import { BODY_LABELS, ROW_GROUPS } from '../../dev/overlaps';
+import { strokeWidths } from '../../src/lib/layout';
 import { apart, boxOf, type Box } from './boxes';
 
 const featuresOf = (state: FeatureState): Features => ({
@@ -134,12 +138,14 @@ describe('the lane check itself', () => {
   });
 });
 
-describe('Lanes free of parts: the horizontal arrangement', () => {
+const LAYOUTS: readonly ShownLayout[] = ['horizontal', 'vertical'];
+
+describe.each(LAYOUTS)('Lanes free of parts: the %s arrangement', (layout) => {
   const lanes: readonly Lane[] = [...ROW_LANES, ...COLUMN_LANES];
-  const mapped = (lane: Lane): Lane =>
+  const mapped = (lane: Lane, maps: { x: AxisMap; y: AxisMap }): Lane =>
     lane.axis === 'row'
-      ? { ...lane, from: mapAxis(HORIZONTAL_MAP_Y, lane.from), to: mapAxis(HORIZONTAL_MAP_Y, lane.to) }
-      : { ...lane, from: mapAxis(HORIZONTAL_MAP_X, lane.from), to: mapAxis(HORIZONTAL_MAP_X, lane.to) };
+      ? { ...lane, from: mapAxis(maps.y, lane.from), to: mapAxis(maps.y, lane.to) }
+      : { ...lane, from: mapAxis(maps.x, lane.from), to: mapAxis(maps.x, lane.to) };
 
   test.each(
     CONTEXTS.map(
@@ -150,13 +156,14 @@ describe('Lanes free of parts: the horizontal arrangement', () => {
         ] as const,
     ),
   )('%s', (_name, context) => {
-    const arrangement = arrangementOf(context);
+    const arrangement = arrangementOf(context, layout);
     const { cabinet } = arrangement;
-    const components = drawnComponents(context).map((entry) => entry.part);
-    const segments = drawnSegments(context).map((entry) => entry.part);
+    const components = drawnComponents({ ...context, arrangement }).map((entry) => entry.part);
+    const segments = drawnSegments({ ...context, arrangement }).map((entry) => entry.part);
     const parts = partBoxes(components, arrangement.internalTank, cabinet.y);
     expect(parts.length).toBeGreaterThan(10);
-    for (const lane of lanes.map(mapped)) {
+    const maps = axisMapsOf(layout, arrangement.key);
+    for (const lane of lanes.map((entry) => mapped(entry, maps))) {
       const box = laneBox(lane, cabinet);
       for (const { item, box: part } of parts) {
         expect(apart(box, part), `item ${String(item)} enters ${lane.id}`).toBe(true);
@@ -167,7 +174,8 @@ describe('Lanes free of parts: the horizontal arrangement', () => {
   });
 });
 
-// design D1 "every value in the cabinet sits in a lane": each cabinet label lies in a row lane or a column lane. A label counts as a
+// design D1 "every value in the cabinet sits in a lane": each cabinet label lies in a row lane or a column lane (in the vertical layout the
+// rotated values and the pump 15 value are checked as gap places below instead). A label counts as a
 // cabinet label when it is not a body label (BODY_LABELS of dev/overlaps.ts: the values inside the emitter, the air unit, the
 // collector, the external tank and tank 50, which sit in their bodies) and its anchor is inside the cabinet's outline (the DG1
 // demand beside the stubs of connections 1/2 is above the top edge, in the band, and is exempt).
@@ -187,7 +195,6 @@ describe('Values in lanes', () => {
     suction_temperature: [53, 18],
     suction_pressure: [61, 18],
     compressor_speed: [82, 18],
-    superheat: [46, 18],
     expansion_valve: [43, 18],
   };
   const inCabinet = (spec: { id: string; y: number }, top: number): boolean =>
@@ -203,6 +210,48 @@ describe('Values in lanes', () => {
       expect(lane, spec.id).toBeDefined();
     }
   });
+
+  // the vertical layout's values that stay horizontal and sit in the lanes, at the widest box of 320 px (the search's "widest box")
+  const VERTICAL_SIZES: Readonly<Record<string, readonly [number, number]>> = {
+    discharge_temperature: [82, 23],
+    discharge_pressure: [92, 23],
+    suction_temperature: [69, 23],
+    suction_pressure: [79, 23],
+    compressor_speed: [106, 23],
+    expansion_valve: [56, 23],
+  };
+
+  test.each([
+    ['without tank 50', { model: 'B', dhw: 'external', source: 'hybrid' }],
+    ['with tank 50 (the stretched head)', { model: 'C', dhw: 'internal', source: 'ground' }],
+  ] as const)(
+    'every horizontal cabinet label of the vertical arrangement has its whole box in a lane, %s',
+    (_name, context) => {
+      const arrangement = arrangementOf(context, 'vertical');
+      const maps = axisMapsOf('vertical', arrangement.key);
+      const specs = arrangement.labels.specs.filter((spec) => VERTICAL_SIZES[spec.id] !== undefined);
+      expect(specs.map((spec) => spec.id).sort()).toEqual(Object.keys(VERTICAL_SIZES).sort());
+      const lanes = [...ROW_LANES, ...COLUMN_LANES].map((lane) =>
+        lane.axis === 'row'
+          ? { ...lane, from: mapAxis(maps.y, lane.from), to: mapAxis(maps.y, lane.to) }
+          : { ...lane, from: mapAxis(maps.x, lane.from), to: mapAxis(maps.x, lane.to) },
+      );
+      for (const spec of specs) {
+        const [width, height] = VERTICAL_SIZES[spec.id] ?? [0, 0];
+        const left = spec.align === 'start' ? spec.x : spec.align === 'end' ? spec.x - width : spec.x - width / 2;
+        const [top, bottom] = [spec.y - height / 2, spec.y + height / 2];
+        const lane = lanes.find((entry) =>
+          entry.axis === 'row'
+            ? top >= entry.from && bottom <= entry.to
+            : left >= entry.from && left + width <= entry.to,
+        );
+        expect(
+          lane,
+          `${spec.id} box ${String(left)}-${String(left + width)} x ${String(top)}-${String(bottom)}`,
+        ).toBeDefined();
+      }
+    },
+  );
 
   test('every cabinet label of the horizontal arrangement has its whole box in a lane', () => {
     const arrangement = arrangementOf({ model: 'B', dhw: 'external', source: 'hybrid' });
@@ -226,4 +275,140 @@ describe('Values in lanes', () => {
       ).toBeDefined();
     }
   });
+});
+
+// schematic-drawing "Gap places in the vertical layout", responsive-layout "Rotated values in the vertical layout" and "Out and In side
+// by side in the vertical layout": in the vertical layout the rotated values and the pump 15 value sit in gaps between vertical pipes
+// beside their part, not in lanes through the cabinet. Each touches no part and no pipe (at the pipe width of a 320 px card) and lies
+// within a bound distance of its part; the Out, In and pressure of a side form one row.
+describe('Gap places in the vertical layout', () => {
+  /** The widest box of each such value at 320 px, in units (the place search's "widest box"): width, then height; the turned ones are 23 wide. */
+  const SIZES: Readonly<Record<string, readonly [number, number]>> = {
+    production_out: [23, 120],
+    production_in: [23, 105],
+    production_pressure: [23, 79],
+    brine_out: [23, 120],
+    brine_in: [23, 119],
+    brine_pressure: [23, 79],
+    brine_pump: [23, 69],
+    production_pump: [69, 23],
+  };
+  const PART: Readonly<Record<string, number>> = {
+    production_out: 33,
+    production_in: 34,
+    production_pressure: 38,
+    brine_out: 31,
+    brine_in: 32,
+    brine_pressure: 37,
+    brine_pump: 16,
+    production_pump: 15,
+  };
+  /** The most a value's box may be from its part's box, in units (the recorded places are 10 to 46 units from their part). */
+  const MAX_GAP = 60;
+  /** Half of a pipe's stroke at 320 px (`strokeWidths`), the stroke the search measures obstacles with. */
+  const HALF_PIPE = strokeWidths(320, 740).pipe / 2;
+
+  const boxOfSpec = (spec: { x: number; y: number; align: string; id: string }): Box => {
+    const [width, height] = SIZES[spec.id] ?? [0, 0];
+    const left = spec.align === 'start' ? spec.x : spec.align === 'end' ? spec.x - width : spec.x - width / 2;
+    return { x0: left, y0: spec.y - height / 2, x1: left + width, y1: spec.y + height / 2 };
+  };
+  const gap = (a: Box, b: Box): number =>
+    Math.hypot(Math.max(a.x0 - b.x1, b.x0 - a.x1, 0), Math.max(a.y0 - b.y1, b.y0 - a.y1, 0));
+
+  test.each(
+    CONTEXTS.filter((context) => context.features.htr === true).map(
+      (context) => [`${context.model} ${context.dhw} ${context.source} ${context.emitter ?? ''}`, context] as const,
+    ),
+  )('%s: touching no part and no pipe, beside the part', (_name, context) => {
+    const arrangement = arrangementOf(context, 'vertical');
+    const drawn = { ...context, arrangement };
+    const components = drawnComponents(drawn).map((entry) => entry.part);
+    const parts = partBoxes(components, arrangement.internalTank, arrangement.cabinet.y);
+    const pipes = drawnSegments(drawn)
+      .map((entry) => entry.part)
+      .filter((segment) => segment.shape === undefined);
+    for (const spec of arrangement.labels.specs.filter((entry) => SIZES[entry.id] !== undefined)) {
+      const box = boxOfSpec(spec);
+      for (const { item, box: part } of parts) {
+        expect(apart(box, part), `${spec.id} touches item ${String(item)}`).toBe(true);
+      }
+      for (const segment of pipes) {
+        const points = routePoints(segment);
+        points.slice(1).forEach(([x, y], index) => {
+          const [x0, y0] = points[index] ?? [x, y];
+          const piece: Box = {
+            x0: Math.min(x0, x) - HALF_PIPE,
+            y0: Math.min(y0, y) - HALF_PIPE,
+            x1: Math.max(x0, x) + HALF_PIPE,
+            y1: Math.max(y0, y) + HALF_PIPE,
+          };
+          expect(apart(box, piece), `${spec.id} touches pipe ${segment.id}`).toBe(true);
+        });
+      }
+      const own = parts.find((entry) => entry.item === PART[spec.id]);
+      if (own === undefined) continue;
+      expect(gap(box, own.box), `${spec.id} beside item ${String(PART[spec.id])}`).toBeLessThanOrEqual(MAX_GAP);
+    }
+  });
+
+  // responsive-layout "Horizontal values in the vertical layout": the pump 15 value is horizontal and sits above pump 15
+  test.each(CONTEXTS.filter((context) => context.features.htr === true && context.features.backup_heater === true))(
+    'the pump 15 value sits above pump 15, horizontal, overlapping it horizontally (%#)',
+    (context) => {
+      const arrangement = arrangementOf(context, 'vertical');
+      const spec = arrangement.labels.specs.find((entry) => entry.id === 'production_pump');
+      const pump = arrangement.components.find((part) => part.item === 15);
+      if (spec === undefined || pump === undefined) throw new Error('no pump 15 value');
+      expect(spec.rotate).toBeUndefined();
+      const box = boxOfSpec(spec);
+      const body = boxOf(pump);
+      expect(box.y1, 'the box ends above the pump').toBeLessThanOrEqual(body.y0);
+      expect(Math.min(box.x1, body.x1) - Math.max(box.x0, body.x0), 'and overlaps it horizontally').toBeGreaterThan(0);
+    },
+  );
+
+  test('the rotated values are turned by -90 degrees, centred on their place; the pump 15 value and the rest are not', () => {
+    const specs = arrangementOf({ model: 'B', dhw: 'external', source: 'hybrid' }, 'vertical').labels.specs;
+    const turned = specs.filter((spec) => spec.rotate === -90).map((spec) => spec.id);
+    expect(turned.sort()).toEqual(
+      [
+        'production_out',
+        'production_in',
+        'production_pressure',
+        'brine_out',
+        'brine_in',
+        'brine_pressure',
+        'brine_pump',
+      ].sort(),
+    );
+    for (const spec of specs.filter((entry) => entry.rotate !== undefined)) expect(spec.align, spec.id).toBe('middle');
+    expect(specs.find((spec) => spec.id === 'production_pump')?.rotate).toBeUndefined();
+    // the horizontal layout turns nothing
+    for (const key of [{}, { dhw: 'internal', model: 'C' }] as const)
+      expect(
+        arrangementOf({ model: 'B', dhw: 'external', source: 'air', ...key }, 'horizontal').labels.specs.filter(
+          (spec) => spec.rotate !== undefined,
+        ),
+      ).toEqual([]);
+  });
+
+  test.each(ROW_GROUPS)(
+    '%s, %s and %s form one row: in this order from left to right, Out and In at the same height',
+    (...ids) => {
+      for (const context of CONTEXTS.filter((entry) => entry.features.htr === true)) {
+        const specs = arrangementOf(context, 'vertical').labels.specs;
+        const boxes = ids.map((id) =>
+          boxOfSpec(specs.find((spec) => spec.id === id) ?? { id, x: NaN, y: NaN, align: 'middle' }),
+        );
+        const [out, inn, pressure] = boxes;
+        if (out === undefined || inn === undefined || pressure === undefined) throw new Error('no boxes');
+        expect(out.x1, 'Out left of In').toBeLessThanOrEqual(inn.x0);
+        expect(inn.x1, 'In left of the pressure').toBeLessThanOrEqual(pressure.x0);
+        const within = (a: Box, b: Box): boolean => a.y0 >= b.y0 && a.y1 <= b.y1;
+        expect(within(out, inn) || within(inn, out), 'Out and In share their vertical extent').toBe(true);
+        expect(within(inn, pressure) || within(pressure, inn), 'the pressure shares it too').toBe(true);
+      }
+    },
+  );
 });

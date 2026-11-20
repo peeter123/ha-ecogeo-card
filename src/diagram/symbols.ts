@@ -131,8 +131,6 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
       return svg`<circle r="14" />${COMPRESSOR_FILLS.map((d) => svg`<path class="compressor-fill" d=${d} fill="currentColor" />`)}<path class="compressor-lines" d="${COMPRESSOR_LINES}" />`;
     case 'valve':
       return svg`<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z" />`;
-    case 'drain_valve':
-      return svg`<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z" />`;
     case 'resistor':
       return svg`<rect x="-28" y="-6" width="56" height="12" rx="2" /><path d="M-18 -6 V6 M18 -6 V6" />`;
     case 'filter_dryer':

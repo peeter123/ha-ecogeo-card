@@ -62,9 +62,24 @@ hand-made cabinets, one per layout (rejected: twice the geometry to keep in step
 
 Decided 2026-11-20 in the group 7 review: "every value in the cabinet sits in a lane" is checked by a unit test (each
 cabinet label's box lies in a row lane or a column lane, in the frame and mapped), so a value that lands in a row of
-parts, as the compressor speed first did, fails the build rather than the vertical layout later. A part keeps its
+parts, as the compressor speed first did, fails the build rather than the vertical layout later (the vertical
+layout's rotated values and its pump 15 value are checked for no part and no pipe instead, D7). A part keeps its
 neighbours as well as its order: safety thermostat 45 stands next to resistor 44 on riser 1, with no other part
 between them (schematic-drawing "outlet resistor 44 with safety thermostat 45"), not only in the right order.
+
+Refinements of the frame (decided by the user 2026-11-20), in both layouts:
+
+- The HTR system discharge valve 25 (`drain_valve`, manual-figure, under the HTR column) and its stub segment
+  `htr_drain` are deleted, like the drain valves 23/24 of the full level: no live value. The HTR group is exchanger 9,
+  pump 17 and valve 22.
+- Compressor 11 (today at frame x 372) and the passive cooling and defrosting exchanger 10 (today at x 405) are centred
+  on the frame's vertical centre line, x 360, so they read as the middle of the drawing. Their rows and the topology
+  rules (the order along every pipe, the pairs, no more crossings) stay; the parts and pipes around them move as far as
+  that needs, and the lanes are recorded again. "Centred" means the symbol's centre lies within 2 units of the centre
+  line, in the frame and in both arrangements: the vertical x map is the identity, and the horizontal x map (D2)
+  splits its widening so that the frame's centre line lands on the horizontal cabinet's centre.
+- The expansion valve opening sits alone, centred under valve 12, in the row lane under the valve row (the superheat
+  is no longer drawn, D14).
 
 ### D2 Two arrangements by maps: horizontal stretches x, vertical stretches y
 
@@ -74,8 +89,20 @@ between them (schematic-drawing "outlet resistor 44 with safety thermostat 45"),
 - Horizontal: an x map that widens the column lanes (slope 1 over every column of parts) so the cabinet is about
   980 units wide and the values sit beside their parts, and a y map that may narrow the row lanes so the drawing stays
   wide. Without the widening the band arrangement would make the horizontal drawing almost square.
+- Horizontal, centring (decided by the user 2026-11-20): the lanes left of the frame's centre line gain as much as the
+  lanes right of it, so compressor 11 and exchanger 10 (D1) stay centred in the stretched cabinet; if that balance
+  costs the threshold (D7), it is a decision point for the user.
 - Vertical: the identity x map (the frame is already the band's width, D1) and a y map that heightens the row lanes,
   so the values get rows of their own between the parts at phone width.
+- Vertical, tank 50 (decided by the user 2026-11-20): the y map adds 28 units of height in row A above coil 51 (the
+  user's "about 26"; at 26 the Demand missed its margin by 1 px, so 28 was measured), at a breakpoint inside the row
+  where only tank 50's wall and vertical pipes run, so tank 50's temperature and Demand stack above the coil
+  (dhw-storage "Model C tank values"). This breakpoint is not a value lane: it is the one allowed vertical y-map
+  breakpoint inside a body. Tank 50's wall stretches with it; the breakpoint crosses no other symbol, so coil 51, probe
+  54 and every other part keep their size. The stretch applies only where tank 50 is drawn (model C with internal
+  storage): elsewhere the same range holds only vertical pipes, and growing it would leave an empty strip in the cabinet
+  (decided 2026-11-20 when the plan was reviewed). The vertical arrangement is built per configuration key, so the key
+  carries whether tank 50 is drawn. The horizontal layout does not change.
 
 Groups 4-6 found the horizontal breakpoints on the manual-figure frame (the x stretch of group 5, `HORIZONTAL_MAP_X`).
 After the cabinet is re-authored (D1), both maps are found again with the screenshot loop and the place search, and
@@ -91,8 +118,12 @@ band's bottom and the cabinet's top edge. Each slot is centred over its port pai
 to keep the order and a minimum gap otherwise; ports 3/4 and 5/6 lie close together (x 638-728 and 768-800 in today's
 simplified frame), so the source slot usually shifts left of its ports. A pipe from a port rises straight into the join
 lane, takes at most one horizontal jog there, and rises into its part. The viewBox spans the cabinet plus a small
-margin, so the cabinet fills almost the whole width (the goal of the change). The band's height is the tallest body's
-(the tank's, or the air unit's) at the arrangement's scale. Empty slots (`emitter: none`, `dhw: none` or `unused`
+margin, so the cabinet fills almost the whole width (the goal of the change). The emitter, the source's bodies (the
+air unit, the ground collector, both of the hybrid) and the external tank share one body height of 176 units, which is
+the band's height, in both layouts (decided by the user 2026-11-20; the band was 170, the tank's height, with lower
+emitter, air unit and collector bodies). The 6 units more let the external tank's temperature and Demand stack inside
+it at 320 px in the vertical layout; the horizontal drawing grows about 6 units, and the bound of the horizontal
+aspect test (viewBox height over width) goes from 0.75 to 0.76. Empty slots (`emitter: none`, `dhw: none` or `unused`
 internal tank on model C, which draws tank 50 inside) leave their space to the others. Model C's stubs 47-49 on the
 top edge stay below the join lane.
 
@@ -115,6 +146,11 @@ found "Out -12.3 °C" wider than the air unit and "DHW 48.2 °C" about as wide a
 tooltip name it. "Demand" stays, as it is the value itself. A label inside a body counts the body's outline, coil, fins
 and fan as obstacles, so the existing overlap measure covers it once the bodies are registered as components
 (dev/overlaps.ts).
+
+With the one body height of D3 (decided by the user 2026-11-20) every body is 176 units tall; the external tank's two
+values stack (temperature over Demand) in its upper part at every width, and how the emitter, the air unit and the
+collector use their added height (taller housing, deeper strip) is recorded in the code with its reason, keeping the
+drawings' rules (outer-loop-source, heating-emitter) and the body values inside their bodies.
 
 ### D5 The emitter
 
@@ -143,7 +179,7 @@ go in `src/strings.ts`; the emitter's tap entity is `heating.demand` (component-
 
 ### D7 One label set, places per arrangement
 
-`Tier` and `KEY_LABELS` go: every label in `labelPlacesFor` is one of the 19 (live-values "Values on the drawing"); the
+`Tier` and `KEY_LABELS` go: every label in `labelPlacesFor` is one of the 18 (live-values "Values on the drawing"); the
 rest are deleted, and their roles stay in the config (proposal, Out of scope). `FULL_PLACES`, `SIMPLIFIED_PLACES`,
 `COMPACT_PLACES`, `COMPACT_CAPTIONS`, `STACKED_CAPTIONS` and `ON_PIPE_COMPACT` are replaced by `HORIZONTAL_PLACES` and
 `VERTICAL_PLACES`, each place with its reason, and the Out and In captions of probes 31-34 belong to the label spec in
@@ -166,6 +202,34 @@ for every label, not only when every label is free at its default place. A body 
 the search finds its zone place blocked but a free place inside the body, the zone constants move to that place; the
 search reports a blocked zone place (and exits non-zero) instead of listing it as placed from the zones.
 
+The cabinet refinements of D1 and D14 (decided by the user 2026-11-20: no superheat, whole-percent pumps, no valve 25,
+compressor 11 and exchanger 10 centred, the opening centred under valve 12) and the body height of D3 change the
+horizontal obstacles, so the horizontal places and the threshold are found again by this rule, in Chromium and WebKit,
+before the vertical places.
+
+Rotated values in the vertical layout (decided by the user 2026-11-20, after the first vertical search at 320 px
+found no place beside their probes for the production and brine values, and a prototype with rotated labels found a
+place for every label at 320 px, with no overlap at 320, 360, 412, 480 and 559 px in Chromium and WebKit):
+
+- Rotated -90° (reading bottom to top), each along its vertical pipe next to its probe or part: production Out, In
+  and pressure 38; brine Out, In and pressure 37; the pump 16 value. Their texts are the horizontal layout's (the Out
+  and In captions included); only the orientation differs. A place records its rotation (`rotate: -90`), and
+  `labels.ts` turns the label about its anchor.
+- Horizontal: the probe pair blocks (30/36, 29/35), the compressor speed, the expansion valve opening, the body values
+  and the pump 15 value. The pump 15 value sits above pump 15, as it is short with whole percentages (D14); with no
+  allowed place there, the implementer reports a decision point rather than rotating it.
+- On each side the Out and In readings sit side by side at the same height (the shorter one's vertical extent lies
+  within the longer one's), with the pressure next to them: brine Out, In, pressure from left to right (the prototype's
+  Out, pressure, In is swapped, as the user asked: "swap the pressure and in reading such that they align
+  vertically"); on the production side Out and In likewise share their vertical extent, with the pressure beside them.
+- Lane exception: a rotated value may sit in a gap between vertical pipes beside its part, even where that gap is not
+  a lane through the whole cabinet, as long as it touches no part and no pipe (schematic-drawing "Gap places in the
+  vertical layout"). The pump 15 value above pump 15 takes the same exception, as the user named its place. The lanes
+  unit test checks these labels for no part, no pipe and a bounded distance from their part instead of for a lane.
+- The search (`search-places.mjs`) and the overlap measure (dev/overlaps.ts) measure a rotated label by its rotated
+  box (width and height swapped about the anchor); `VERTICAL_PLACES` records the rotation with each place and its
+  reason. The horizontal layout rotates nothing.
+
 ### D8 Fonts and threshold
 
 Labels get one rule per layout: `max(10px, k cqw)`, `k` chosen per layout so the labels' height in viewBox units is
@@ -173,7 +237,9 @@ about the same in both arrangements at the threshold; the 8 px floor goes. `layo
 `VERTICAL_BELOW`, measured by `scripts/measure-layout.mjs` on the horizontal layout over the 20 px grid (a target, not
 a promise: about 600 px), plus `nextVertical(layout, width, current)` with the 24 px hysteresis. Before the width is
 known the card renders horizontal, as it rendered full before. The per-layout font comes with the re-authored cabinet
-(D1), so the horizontal places and threshold are measured once, with both.
+(D1), so the horizontal places and threshold are measured once, with both. A rotated label (D7, vertical layout only,
+decided by the user 2026-11-20) takes the same font rule as the others: its text height, now across the pipe, is the
+label height the lanes and gaps are sized by, and its length runs along the pipe.
 
 ### D9 Captions and footer
 
@@ -221,12 +287,32 @@ date is set when it is published) and runs `npm run release`. This deviates from
 openspec/config.yaml by the user's decision of 2026-11-19 (nobody uses 1.0.0 yet). Replacing the GitHub release and
 the `v1.0.0` tag is not a task; it happens only on the user's explicit request.
 
+### D14 No superheat, whole-percent pumps
+
+Decided by the user 2026-11-20: the superheat adds little to the schematic, so its label goes from `labelPlacesFor`
+in both layouts and the cabinet shows 18 values. The `refrigerant.superheat` role (firmware-entity) stays configurable
+with its suggestions and more-info behaviour, like the other roles that lost their label (proposal, Out of scope).
+The `difference` quantity and its °F rule in `src/lib/units.ts` stay: `dhw.start_delta` and `refrigerant.superheat`
+still have the quantity, the editor's suggestions (`src/suggest/suggest.ts`) use it to accept K, °C and °F entities,
+and the readings (`src/calc/readings.ts`) still convert every role, which `test/calc/readings.test.ts` checks. What
+goes are the superheat label's tests in `test/diagram/labels.test.ts`: the °F label test is deleted, and the
+display-precision tests that use the superheat label move to a label that is still drawn.
+
+The pump speeds (`production.pump`, `brine.pump`) show whole percentages in both layouts, "100 %" instead of
+"99.9 %", with the no-break space before % kept: their role default goes from 1 decimal to 0, and a pump value in %
+takes 0 decimals even when its entity has a display precision (live-values "Locale and precision"), so the label is
+short enough to sit horizontally above pump 15 in the vertical layout (D7). A pump bound to an on/off entity still
+reads "On" or "Off", and one in another unit (such as rpm) keeps that unit's decimals.
+
 ## Risks / Trade-offs
 
-- [19 values do not fit the vertical layout at 320 px] -> The cabinet's row lanes (D1) and the vertical y map (D2)
-  give the values their rows, and body values have no captions (D4). If the search still reports a label without a
-  place, that is a decision point for the user (a larger minimum width, or a value fewer), not a reason to put a label
-  on a pipe.
+- [18 values do not fit the vertical layout at 320 px] -> The cabinet's row lanes (D1) and the vertical y map (D2)
+  give the values their rows, body values have no captions (D4), and the hydraulic values beside vertical pipes are
+  rotated along them (D7, decided by the user 2026-11-20). If the search still reports a label without a place, that
+  is a decision point for the user (a larger minimum width, or a value fewer), not a reason to put a label on a pipe.
+- [Rotated values read less easily] -> Only the vertical layout's hydraulic values along vertical pipes turn, all the
+  same way (bottom to top), with unchanged texts; the refrigerant blocks, the compressor speed, the opening, the pump
+  15 value and the body values stay horizontal.
 - [The re-authored cabinet loses a topology rule of the manual figure] -> The topology unit tests (port order, the
   order along every pipe, probe and HTR placements, pairs, transducers, crossings and hops) stay and must pass
   unchanged in what they assert; only coordinates in tests change.

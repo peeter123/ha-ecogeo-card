@@ -33,7 +33,7 @@ const segments = (card: EcogeoCard): Set<string> =>
 const itemTexts = (card: EcogeoCard): number => root(card).querySelectorAll('[data-item] text:not(.glyph)').length;
 
 const REFRIGERANT = [7, 8, 11, 12, 13, 14, 29, 30, 35, 36];
-const HYDRAULIC = [9, 10, 15, 16, 17, 22, 25, 26, 27, 28, 31, 32, 33, 34, 37, 38, 44, 45];
+const HYDRAULIC = [9, 10, 15, 16, 17, 22, 26, 27, 28, 31, 32, 33, 34, 37, 38, 44, 45];
 const LEFT_OUT = [18, 19, 20, 21, 23, 24, 39, 40, 41, 52, 53];
 const LEFT_OUT_STUBS = ['prod_tap_b', 'prod_drain', 'brine_tap_b', 'brine_drain'];
 
@@ -54,19 +54,20 @@ describe('the drawn parts', () => {
     card.remove();
   });
 
-  test('Hydraulic components: the circuits without item numbers, 18-21, 23, 24 and their stub pipes not drawn', async () => {
+  test('Hydraulic components: the circuits without item numbers, 18-21, 23-25 and their stub pipes not drawn', async () => {
     const card = await mount({ variant: 4, features: ALL_TRUE });
     for (const item of HYDRAULIC) expect(items(card).has(item), String(item)).toBe(true);
-    for (const item of [18, 19, 20, 21, 23, 24]) expect(items(card).has(item), String(item)).toBe(false);
+    for (const item of [18, 19, 20, 21, 23, 24, 25]) expect(items(card).has(item), String(item)).toBe(false);
     for (const id of LEFT_OUT_STUBS) expect(segments(card).has(id), id).toBe(false);
     expect(itemTexts(card)).toBe(0);
     card.remove();
   });
 
-  test('the transducers, valves 22/25 and thermostat 45 stay; the transducers have no stub pipe', async () => {
+  test('the transducers, valve 22 and thermostat 45 stay; the transducers have no stub pipe', async () => {
     const card = await mount({ features: ALL_TRUE });
-    for (const item of [35, 36, 37, 38, 22, 25, 45]) expect(items(card).has(item), String(item)).toBe(true);
-    expect(segments(card).has('htr_drain')).toBe(true);
+    for (const item of [35, 36, 37, 38, 22, 45]) expect(items(card).has(item), String(item)).toBe(true);
+    expect(items(card).has(25), '25').toBe(false);
+    expect(segments(card).has('htr_drain')).toBe(false);
     // the transducers sit on their lines: no stub pipe leads to them (schematic-drawing "Transducers on their lines")
     for (const id of ['prod_tap_a', 'brine_tap_a']) expect(segments(card).has(id), id).toBe(false);
     card.remove();
