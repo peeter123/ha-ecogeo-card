@@ -533,14 +533,20 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 
 ## 10. Release 1.0.0 again
 
-- [ ] 10.1 Rewrite the 1.0.0 section of CHANGELOG.md for the reworked card (layouts, emitter, values, band, cabinet
+- [x] 10.1 Rewrite the 1.0.0 section of CHANGELOG.md for the reworked card (layouts, emitter, values, band, cabinet
   layout); keep `package.json` at 1.0.0 (design D13); run `npm run release`. Verify: `npm run release` passes and
   `npm run verify-dist` passes.
-- [ ] 10.2 The live installation's emitter is underfloor (confirmed by the user 2026-11-19, recorded in
+  Done (2026-11-20): the 1.0.0 section of CHANGELOG.md describes the reworked card (layouts, band, emitter, 18
+  values, cabinet layout, footer, removed options); its heading has no date until the release is replaced;
+  `package.json` stays at 1.0.0; `npm run release` and `npm run verify-dist` pass (dist 163088 bytes).
+- [x] 10.2 The live installation's emitter is underfloor (confirmed by the user 2026-11-19, recorded in
   `private/installation.md`), the default, so the dashboard config needs no `emitter`. Deploy `dist/ecogeo-card.js`
   explicitly, bump the dashboard resource's `?v=` (id and value in `private/installation.md`) and record the deploy
   there. Verify: a subagent takes light screenshots of the schematic view at 1170 px with zoom 3 (vertical) and at
   1280 x 800 (horizontal), returns a verdict against the review criteria, and the system log shows no `ecogeo` errors.
+  Done (2026-11-20): `dist/ecogeo-card.js` uploaded (no conflict), resource `?v=15` -> `?v=16`, dashboard config hash
+  unchanged (in `private/installation.md`); the subagent's light screenshots of both widths pass the review
+  criteria; no `ecogeo` or `frontend.js` entries in system_log. Details in `private/installation.md`.
 
 ## Workflow follow-up
 
