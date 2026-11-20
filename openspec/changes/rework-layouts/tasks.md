@@ -519,17 +519,22 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 - [x] 9.2 Extend `.github/workflows/check.yml`: run the visual project after `npm run check`, and a `workflow_dispatch`
   input that runs it with `--update` and uploads the reference folder as an artifact. Verify: `npm run lint:ha`
   (workflow schema, yamllint) passes.
-  Done (2026-11-20): the step is skipped until a PNG exists: on CI (`CI=true`) Vitest fails a missing reference and
-  writes the image only to the attachments folder. The input `update_references` runs `--update` and uploads
-  `visual-references`. After any failed step another step uploads `.vitest/attachments/` as `visual-diffs`, which
-  holds files only when a comparison failed or a reference was missing. Both use `actions/upload-artifact@v7`.
-- [ ] 9.3 Record the references through that workflow input once the user allows a push of the branch, commit them, and
+  Done (2026-11-20): the step was skipped until a PNG existed (until task 9.3 removed that guard): on CI (`CI=true`)
+  Vitest fails a missing reference and writes the image only to the attachments folder. The input `update_references`
+  runs `--update` and uploads `visual-references`. After any failed step another step uploads `.vitest/attachments/` as
+  `visual-diffs`, which holds files only when a comparison failed or a reference was missing. Both use
+  `actions/upload-artifact@v7`.
+- [x] 9.3 Record the references through that workflow input once the user allows a push of the branch, commit them, and
   remove the compare step's guard that skips it while no reference exists (design D12). Verify: the next CI run passes
   the visual project, and a deliberately moved part in a scratch branch fails it naming the render (checked by the
   review, then discarded).
   Done so far (2026-11-20): recorded on Linux by Check run 44796692252 (`update_references=true`), the 16 references
-  committed in test/visual/references/, and the compare step's guard removed from check.yml. Open: the verify (the
-  next CI run, and the scratch-branch failure test).
+  committed in test/visual/references/, and the compare step's guard removed from check.yml.
+  Done (2026-11-20): Check run 44799380087 on that commit ran the comparison and passed 16 of 16 (its first attempt
+  timed out installing the Playwright system packages from a slow mirror, before any test). A scratch branch that moved
+  the vertical pump 15 value by 5 units failed it in run 44804517434 on the 8 vertical renders, each named (120 px
+  light, 147 px dark), with the `visual-diffs` artifact uploaded; the review opened two diff images (only that label
+  differs), and the branch was deleted.
 - [x] 9.4 Document the visual references in docs/ecogeo-card.md (what they cover, how to record them again). Verify:
   `npm run check` passes.
   Done (2026-11-20): section Visual references of docs/ecogeo-card.md, and the script in README.md.
