@@ -527,6 +527,9 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
   remove the compare step's guard that skips it while no reference exists (design D12). Verify: the next CI run passes
   the visual project, and a deliberately moved part in a scratch branch fails it naming the render (checked by the
   review, then discarded).
+  Done so far (2026-11-20): recorded on Linux by Check run 44796692252 (`update_references=true`), the 16 references
+  committed in test/visual/references/, and the compare step's guard removed from check.yml. Open: the verify (the
+  next CI run, and the scratch-branch failure test).
 - [x] 9.4 Document the visual references in docs/ecogeo-card.md (what they cover, how to record them again). Verify:
   `npm run check` passes.
   Done (2026-11-20): section Visual references of docs/ecogeo-card.md, and the script in README.md.

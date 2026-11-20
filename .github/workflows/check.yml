@@ -36,10 +36,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends fonts-roboto
       - run: npm run check
-      # Skipped while no references are committed: on CI Vitest fails a comparison that has no reference and writes
-      # the image only to the attachments folder.
+      # A missing reference fails here: on CI Vitest fails a comparison that has no reference and writes the image
+      # only to the attachments folder. Record the references again through the update_references input.
       - name: Compare the visual references
-        if: ${{ !inputs.update_references && hashFiles('test/visual/references/*.png') != '' }}
+        if: ${{ !inputs.update_references }}
         run: npm run test:visual
       - name: Upload the visual diffs
         if: ${{ failure() && !inputs.update_references }}

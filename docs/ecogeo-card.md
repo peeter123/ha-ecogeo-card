@@ -1340,10 +1340,10 @@ of 0.1: three runs on one host were pixel-identical, and moving one part by 4 to
 pass.
 
 The references are `test/visual/references/<layout>-<theme>-<installation>-chromium-linux.png`, committed. CI compares
-them after `npm run check`; the step is skipped while the folder holds no PNG, because on CI (`CI=true`, which
-turns off writing) Vitest fails a comparison that has no reference with "No existing reference screenshot found" and
-writes the image only to the attachments folder, not to the reference path. A drawing change that moves pixels fails
-there until the references are recorded again:
+them after `npm run check`, and a missing reference fails the step: on CI (`CI=true`, which turns off writing)
+Vitest fails a comparison that has no reference with "No existing reference screenshot found" and writes the image
+only to the attachments folder, not to the reference path. A drawing change that moves pixels fails there until the
+references are recorded again:
 
 1. In GitHub, run the Check workflow by hand (Actions, Check, Run workflow) with `update_references` ticked on the
    branch. It runs the project with `--update` and uploads the folder as the `visual-references` artifact.
