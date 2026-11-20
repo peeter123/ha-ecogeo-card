@@ -721,8 +721,8 @@ var C = {
 		},
 		source: {
 			air: "Air unit",
-			ground: "Ground loop",
-			hybrid: "Air unit and ground loop"
+			ground: "Ground collector",
+			hybrid: "Air unit and ground collector"
 		},
 		dhw: {
 			external: "External tank",
@@ -5020,7 +5020,8 @@ Do("ecogeo-card", class extends Ue {
 		return ol(e, this.hass, this.renderedHass, this.entityIds);
 	}
 	arrangementViewBox(e) {
-		return Ui(e).viewBox;
+		let t = this.resolved;
+		return Ui(e, t === void 0 ? void 0 : Fi(t)).viewBox;
 	}
 	fittedWidth(e) {
 		if (!this.inPanel || !(this.width > 0)) return 0;
