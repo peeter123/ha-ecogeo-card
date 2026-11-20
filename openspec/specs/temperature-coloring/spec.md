@@ -37,13 +37,14 @@ take the colour of the nearest end. The scale SHALL NOT depend on the other temp
 
 ### Requirement: Water segment temperatures
 Each water pipe segment SHALL take the temperature of the probe that defines it:
-- production outlet 33 on the supply from the condenser to connection 1 (or 5 in DHW mode)
-- production return 34 on the return from connection 2 (or 6) to the condenser
+- production outlet 33 on the supply from the condenser to connection 1 (or 5 in DHW mode), and on from connection
+  1 to the emitter (heating-emitter)
+- production return 34 from the emitter to connection 2, and on the return from connection 2 (or 6) to the condenser
 - brine inlet 32 from connection 4 to the evaporator
 - brine outlet 31 from the evaporator to connection 3
-- the air unit outlet temperature on the air unit's exit and, in a hybrid, on the link and the ground loop's down
-  leg; the ground loop's down leg (ground source) takes the brine outlet; its up leg and the return to connection
-  4 take the brine inlet
+- the air unit outlet temperature on the air unit's exit and, in a hybrid, on the link and the first half of the
+  ground collector; with a ground source the collector's first half takes the brine outlet; the collector's second
+  half and the return to connection 4 take the brine inlet
 
 Some segments take another role depending on the mode:
 - In `passive_cooling` and `defrost`, while valves 27/28 route through exchanger 10, the production legs from
@@ -54,7 +55,14 @@ Some segments take another role depending on the mode:
 
 #### Scenario: Heating segments
 - **WHEN** the mode is `heating`, the production outlet reads 25.2 °C and the return reads 22.0 °C
-- **THEN** the supply to connection 1 has the 25.2 °C colour and the return from connection 2 the 22.0 °C colour
+- **THEN** the supply to connection 1 and on to the emitter has the 25.2 °C colour, and the return from the emitter
+  to connection 2 and on to the condenser the 22.0 °C colour
+
+#### Scenario: Ground collector halves
+- **WHEN** the source is `ground`, the brine circuit is active, the brine outlet reads 2.0 °C and the brine inlet
+  5.0 °C
+- **THEN** the collector's half entered from connection 3 has the 2.0 °C colour and the half towards connection 4
+  the 5.0 °C colour
 
 ### Requirement: Exchanger 10 and HTR segment temperatures
 The production and brine segments through exchanger 10 SHALL take their own side's outlet and inlet probes, in

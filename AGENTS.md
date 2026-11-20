@@ -43,7 +43,10 @@ footer's power items by mode and the system COP, and the heat power labels and s
 archived in `openspec/changes/archive/2026-11-18-add-htr-state/`. The eighth, `add-hacs-release` (the HACS manifest,
 one version in the package, the bundle and its load message, the release and dist checks, the Home Assistant quality
 checks, the GitHub workflows and the published 1.0.0), is archived in
-`openspec/changes/archive/2026-11-19-add-hacs-release/`.
+`openspec/changes/archive/2026-11-19-add-hacs-release/`. The ninth, `rework-layouts` (horizontal and vertical layouts
+from one cabinet layout with value lanes, the band with the `emitter` option, the source and the tank, 18 values with
+rotated values in the vertical layout, one footer, the browser preflight and the visual references on CI Linux, and
+1.0.0 released again), is archived in `openspec/changes/archive/2026-11-20-rework-layouts/`.
 
 ## Rules in short
 

@@ -1,111 +1,34 @@
 # responsive-layout Specification
 
 ## Purpose
-How the card adapts to the width it is given: a full layout for wide cards and a compact layout with fewer, larger
-labels for phones and narrow sections, with lines and text that never render too thin or too small.
+How the card adapts to the width it is given: a horizontal layout for wide cards and a vertical layout for phones and
+narrow sections, chosen by width with hysteresis, with the same values (some turned along their pipes in the vertical
+layout) and the same footer, and with lines and text that never render too thin or too small.
 
 ## Requirements
 
-### Requirement: Layout option
-The card SHALL accept a `layout` option: `auto` (the default), `full` or `compact`. With `full` or `compact` the
-card SHALL use that layout at any width. With `auto` it SHALL use compact while the card is narrower than the
-compact threshold and full otherwise; before the card's width is known it SHALL use full.
-
-#### Scenario: Auto on a phone
-- **WHEN** the config sets no `layout` and the card is 360 px wide
-- **THEN** the card shows the compact layout
-
-#### Scenario: Auto on a wide card
-- **WHEN** the config sets no `layout` and the card is 1000 px wide
-- **THEN** the card shows the full layout
-
-#### Scenario: Forced full
-- **WHEN** the config sets `layout: full` and the card is 360 px wide
-- **THEN** the card shows the full layout
-
 ### Requirement: Layout hysteresis
-With `auto`, a card that `auto` put in compact SHALL return to full only once it is at least 24 px wider than the
-compact threshold, so a page scrollbar that appears or disappears with the layout's height cannot make the layout flip
-back and forth. A compact layout forced by `layout: compact` SHALL NOT count: after a switch to `auto` the card
+With `auto`, a card that `auto` put in vertical SHALL return to horizontal only once it is at least 24 px wider than
+the vertical threshold, so a page scrollbar that appears or disappears with the layout's height cannot make the layout
+flip back and forth. A vertical layout forced by `layout: vertical` SHALL NOT count: after a switch to `auto` the card
 shows what a newly loaded card of that width shows.
 
 #### Scenario: No flip at the threshold
-- **WHEN** the config sets no `layout`, the card is compact, and it widens to 10 px above the threshold
-- **THEN** it stays compact, and it shows the full layout once it is 24 px or more above the threshold
-
-### Requirement: Compact threshold
-The compact threshold SHALL be set per detail level. For each level it SHALL be the narrowest card width, on a grid
-of 20 px steps from 320 to 800 px, at which the full layout at that level shows no overlapping labels in any
-emulator scenario, and no wider width on that grid does. Overlapping counts a label with another label, with a
-component, with a pipe at its rendered stroke width, or with the cabinet outline (a label that crosses it), and an
-in-drawing caption with a label or a pipe. The card SHALL use the threshold of its configured `detail` level. Each
-threshold SHALL be recorded in the docs with how it was measured, including the label box and tolerance the result
-depends on.
-
-#### Scenario: No overlaps above the threshold
-- **WHEN** the emulator captures every scenario in the full layout at the threshold width of a detail level, at that
-  level
-- **THEN** no two labels overlap, no label overlaps a component or a pipe or crosses the cabinet outline, and no
-  caption overlaps a label or a pipe
-
-#### Scenario: Simplified threshold
-- **WHEN** the threshold of the simplified level is measured
-- **THEN** it is at most 640 px
-
-#### Scenario: Full detail switches earlier
-- **WHEN** the config sets `detail: full` and no `layout`, and the card is wider than the simplified level's
-  threshold but narrower than the full level's
-- **THEN** the card shows the compact layout, and with no `detail` at the same width it shows the full layout
-
-### Requirement: Compact content
-The compact layout SHALL draw the schematic at the simplified detail level whatever `detail` says, and SHALL show
-only these value labels: production outlet and return, brine outlet and inlet, compressor speed in rpm, the DHW
-temperature, and the source's outlet temperature (the air unit's Out, or the ground loop's Out, which is the heat
-pump's brine inlet). The
-footer SHALL show the mode, the COP and the outside temperature, plus the alarm and offline indications.
-
-#### Scenario: Compact labels
-- **WHEN** the card shows the compact layout in heating mode
-- **THEN** the pressures, the superheat, the expansion valve opening, the pump speeds, the compressor percentage
-  and power, the DG1 setpoint and the tank setpoint and start delta-T are not shown, and the seven key values are
-
-#### Scenario: Compact footer
-- **WHEN** the card shows the compact layout
-- **THEN** the footer shows the mode, the COP and the outside temperature, and not the capacities, on/off or season
-
-#### Scenario: Compact ignores full detail
-- **WHEN** the config sets `detail: full` and `layout: compact`
-- **THEN** no item number and no safety valve is drawn
-
-### Requirement: Compact captions and label sides
-The compact layout SHALL draw no in-drawing captions (such as "DG1", "Outer loop", "Air unit", "Ground loop" or
-"DHW tank"), every value label SHALL stay on the side of the cabinet outline where its component is, and the
-production and brine values SHALL carry short Out and In captions, like the source ports, so each pair can be told
-apart. The DHW tank's value SHALL carry a short "DHW" caption, so it cannot be read as a brine value. The compact
-layout SHALL draw the simplified arrangement. No compact label SHALL overlap another label, a component or the
-drawing's edge, and no compact label SHALL overlap a pipe, except the production and brine values (Out and In) and
-the compressor speed: the cabinet at phone width has no room between its pipes for them, so they may lie on a pipe,
-over their background plate.
-
-#### Scenario: Compact without captions
-- **WHEN** the card shows the compact layout
-- **THEN** no in-drawing caption is drawn, the production and brine values sit inside the cabinet outline with Out
-  and In captions, the DHW tank's value carries a DHW caption, and the source's Out value sits outside it
-
-#### Scenario: Compact labels clear of pipes
-- **WHEN** the card shows the compact layout at 320, 360, 480 px or just under either detail level's threshold, in
-  any emulator scenario
-- **THEN** no label overlaps another label, a component or the drawing's edge, and no label other than the
-  production and brine values and the compressor speed overlaps a pipe
+- **WHEN** the config sets no `layout`, the card is vertical, and it widens to 10 px above the threshold
+- **THEN** it stays vertical, and it shows the horizontal layout once it is 24 px or more above the threshold
 
 ### Requirement: Minimum rendered sizes
-At any card width, pipes SHALL render at least 2 px wide and component outlines at least 1.25 px wide. Value
-labels SHALL render at least 10 px high in the compact layout and at least 8 px in the full layout. The footer
-SHALL wrap onto further lines rather than overflow the card.
+At any card width, pipes SHALL render at least 2 px wide and component outlines at least 1.25 px wide. Value labels
+SHALL render at least 10 px high in both layouts. The footer SHALL wrap onto further lines rather than overflow the
+card.
 
 #### Scenario: Thin card
-- **WHEN** the card is 360 px wide
+- **WHEN** the card is 360 px wide, in either layout
 - **THEN** every pipe's rendered stroke is at least 2 px and every label's font size at least 10 px
+
+#### Scenario: Wide card
+- **WHEN** the card is 1000 px wide in the horizontal layout
+- **THEN** every label's font size is at least 10 px
 
 #### Scenario: Footer wraps
 - **WHEN** the card is 320 px wide
@@ -115,8 +38,8 @@ SHALL wrap onto further lines rather than overflow the card.
 In a panel view the card SHALL keep its drawing and footer within the screen's height below Home Assistant's
 header: when the card's width would make the drawing taller than that, the drawing SHALL be narrower and centred,
 and the layout and line widths SHALL follow the drawing's own width. The drawing SHALL NOT get narrower than 320 px,
-the narrowest verified compact width; in a window too short for that, the view scrolls. Outside a panel view the
-drawing SHALL fill the card's width.
+the narrowest verified width of the vertical layout; in a window too short for that, the view scrolls. Outside a
+panel view the drawing SHALL fill the card's width.
 
 #### Scenario: Desktop panel
 - **WHEN** the card is in a panel view in a 1280 x 800 px window
@@ -125,3 +48,121 @@ drawing SHALL fill the card's width.
 #### Scenario: Not a panel
 - **WHEN** the card is in a sections or masonry view 1000 px wide
 - **THEN** the drawing is 1000 px wide
+
+### Requirement: Layout choice
+The card SHALL accept a `layout` option: `auto` (the default), `horizontal` or `vertical`. With `horizontal` or
+`vertical` the card SHALL use that layout at any width. With `auto` it SHALL use vertical while the card is narrower
+than the vertical threshold and horizontal otherwise; before the card's width is known it SHALL use horizontal.
+
+#### Scenario: Auto on a phone
+- **WHEN** the config sets no `layout` and the card is 360 px wide
+- **THEN** the card shows the vertical layout
+
+#### Scenario: Auto on a wide card
+- **WHEN** the config sets no `layout` and the card is 1000 px wide
+- **THEN** the card shows the horizontal layout
+
+#### Scenario: Forced horizontal
+- **WHEN** the config sets `layout: horizontal` and the card is 360 px wide
+- **THEN** the card shows the horizontal layout
+
+#### Scenario: Forced vertical
+- **WHEN** the config sets `layout: vertical` and the card is 1000 px wide
+- **THEN** the card shows the vertical layout
+
+### Requirement: Vertical threshold
+The vertical threshold SHALL be the narrowest card width, on a grid of 20 px steps from 320 to 800 px, at which the
+horizontal layout shows no overlap (see "Labels clear of everything") in any emulator scenario with every label
+keeping the place search's margin of 2 px, which covers the text width difference between the browser engines, and
+at a place its own requirement allows (a probe pair's values at their pair, a hydraulic value beside its part, a
+body's value inside its body), and no wider width on that grid falls short of it. It SHALL be recorded in the docs
+with how it was measured, including the label box, the margin and the tolerance the result depends on.
+
+#### Scenario: No overlaps above the threshold
+- **WHEN** the emulator captures every scenario in the horizontal layout at the threshold width, at 800 px and at
+  1000 px
+- **THEN** no overlap is found
+
+#### Scenario: Threshold recorded
+- **WHEN** the docs' layout section is read
+- **THEN** it names the threshold in px, the grid it was searched on, and the label box and tolerance used
+
+### Requirement: Same values in both layouts
+Both layouts SHALL draw the same parts and show the same value labels with the same texts (live-values "Values on
+the drawing") and the same footer (live-values "Footer"). They SHALL differ only in the arrangement (the vertical
+drawing is taller relative to its width) and in the orientation of the vertical layout's rotated values ("Rotated
+values in the vertical layout", decided by the user 2026-11-20).
+
+#### Scenario: Same labels
+- **WHEN** the same configuration and states are rendered once with `layout: horizontal` and once with
+  `layout: vertical`
+- **THEN** both show the same set of value labels with the same texts, whatever their orientation, and the same
+  footer items
+
+#### Scenario: Vertical is taller
+- **WHEN** the same configuration is rendered 400 px wide once with `layout: horizontal` and once with
+  `layout: vertical`
+- **THEN** the vertical drawing's height-to-width ratio is larger than the horizontal one's
+
+### Requirement: Rotated values in the vertical layout
+In the vertical layout the card SHALL draw production Out, production In, pressure 38, brine Out, brine In, pressure
+37 and the pump 16 value rotated by -90°, reading from bottom to top, each along its vertical pipe next to its probe
+or part. Every other value SHALL stay horizontal, the pump 15 value above pump 15. The horizontal layout SHALL rotate
+no label. (Decided by the user 2026-11-20.)
+
+#### Scenario: Rotated hydraulic values
+- **WHEN** the card renders model B, `source: air`, `dhw: external`, variant 4 in heating in the vertical layout
+- **THEN** production Out, In and pressure 38, brine Out, In and pressure 37 and the pump 16 value are turned -90°
+  and read from bottom to top, each beside its probe, transducer or pump, with the same texts as in the horizontal
+  layout
+
+#### Scenario: Horizontal values in the vertical layout
+- **WHEN** the card renders the same configuration in the vertical layout
+- **THEN** the discharge and suction blocks, the compressor speed, the expansion valve opening, the pump 15 value and
+  the values inside bodies are not rotated, and the pump 15 value sits above pump 15
+
+#### Scenario: Rotated value beside its part
+- **WHEN** a unit test checks the vertical arrangement's rotated values for every source, DHW storage and emitter
+- **THEN** each rotated value's box touches no part and no pipe and lies within the bound distance of its probe,
+  transducer or pump
+
+#### Scenario: Nothing rotated in the horizontal layout
+- **WHEN** the card renders any configuration in the horizontal layout
+- **THEN** no value label is rotated
+
+### Requirement: Out and In side by side in the vertical layout
+In the vertical layout the rotated Out and In values of each side (production, brine) SHALL sit side by side at the
+same height, with that side's pressure next to them; on the brine side their order from left to right SHALL be Out,
+In, pressure (decided by the user 2026-11-20).
+
+#### Scenario: Out and In side by side
+- **WHEN** the card renders the vertical layout
+- **THEN** the vertical extent of the shorter of brine Out and brine In lies within that of the longer one, brine Out,
+  brine In and pressure 37 follow each other in that order from left to right, production Out and In likewise share
+  their vertical extent, and pressure 38 sits next to them
+
+### Requirement: Labels clear of everything
+In a layout's verified range no value label SHALL overlap another label, a component, a pipe at its rendered stroke
+width or the drawing's edge, and no label SHALL cross the cabinet outline or the outline of the body it sits in (the
+emitter, the air unit, the ground collector or the external tank). The verified range of the vertical layout SHALL be
+every width from 320 px to the vertical threshold, and that of the horizontal layout every width from the threshold up.
+
+#### Scenario: Vertical on phones
+- **WHEN** the card shows the vertical layout at 320, 360, 412 px or 1 px under the threshold, in any emulator
+  scenario
+- **THEN** no label overlaps another label, a component, a pipe or the drawing's edge, and none crosses an outline
+
+#### Scenario: Forced horizontal on a phone
+- **WHEN** the config sets `layout: horizontal` and the card is 320 px wide
+- **THEN** the card renders without an error; overlaps are allowed, as the width is outside the horizontal layout's
+  verified range
+
+### Requirement: No in-drawing captions
+Neither layout SHALL draw in-drawing captions that name a group or part, such as "DG1", "Outer loop", "DHW", "Air
+unit", "Ground loop" or "DHW tank". The tooltips (component-info) name the parts. The Out and In captions of the
+cabinet's probes 31-34 stay; a value inside a body (the air unit, the ground collector, a tank or the emitter) has no
+caption.
+
+#### Scenario: No captions
+- **WHEN** the card renders in either layout
+- **THEN** no "DG1", "Outer loop", "DHW", "Air unit", "Ground loop" or "DHW tank" caption is drawn

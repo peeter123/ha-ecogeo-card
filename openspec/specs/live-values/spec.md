@@ -7,97 +7,22 @@ how missing values look, and what happens on a tap.
 
 ## Requirements
 
-### Requirement: Refrigerant values beside their components
-The card SHALL show the refrigerant values next to their components:
-- temperatures 29/30 and pressures 35/36
-- compressor 11 speed in rpm and %, and its power in W
-- expansion valve 12 opening in %, and the superheat in K, at the full detail level only (schematic-drawing)
-- condensation (8) and evaporation (7) temperatures
-
-In the compact layout (responsive-layout) the card SHALL show only the compressor speed in rpm of these values.
-
-#### Scenario: Compressor label
-- **WHEN** the compressor runs at 2803 rpm and 38.9 % and draws 786 W, in the full layout
-- **THEN** the labels near item 11 read "2803 rpm", "38.9 %" and "786 W"
-
-#### Scenario: Superheat
-- **WHEN** the superheat entity reports 6.2 °C, in the full layout with `detail: full`
-- **THEN** the label near item 12 reads "6.2 K"
-
-#### Scenario: Simplified leaves out item 12's values
-- **WHEN** the superheat entity reports 6.2 °C and the expansion valve opening 58 %, in the full layout with no
-  `detail`
-- **THEN** neither "6.2 K" nor "58 %" is shown, and tapping valve 12 still opens the more-info dialog of the
-  expansion valve opening's entity
-
-#### Scenario: Compact refrigerant values
-- **WHEN** the card shows the compact layout and the compressor runs at 2803 rpm
-- **THEN** "2803 rpm" is shown, and no other refrigerant value is
-
-### Requirement: Hydraulic values beside their components
-The card SHALL show the hydraulic values next to their components: temperatures 31-34, pressures 37/38, the
-speeds of pumps 15 and 16 in %, and the DG1 setpoint at connections 1/2. Values of parts that are not drawn, and
-the values of an unused tank (`dhw: unused`), SHALL NOT be shown. In the compact layout (responsive-layout) the card
-SHALL show only the temperatures 31-34, in their compact places with Out and In captions. In the full layout at
-`detail: full` the production outlet and return temperatures (33, 34) SHALL be shown as a column outside the
-cabinet's left wall, level with their probes, with the same Out and In captions, since the cabinet has no room beside
-probe 34 at that level.
-
-#### Scenario: Production labels
-- **WHEN** the production outlet reads 25.2 °C and pump 15 runs at 99.9 %, in the full layout
-- **THEN** "25.2 °C" is shown beside probe 33 and "99.9 %" at pump 15
-
-#### Scenario: Full-level production column
-- **WHEN** the config sets `detail: full`, the card shows the full layout, and the production outlet reads 25.2 °C
-  and the return 22.0 °C
-- **THEN** both values are shown left of the cabinet's left wall, one above the other, captioned Out and In, and
-  neither crosses the cabinet outline
-
-#### Scenario: Part not drawn
-- **WHEN** the config sets `dhw: none`, or `source: ground`
-- **THEN** no tank labels are shown, or no fan speed label is shown
-
-#### Scenario: Unused tank labels
-- **WHEN** the config sets `dhw: unused`
-- **THEN** the tank is drawn muted and no tank labels are shown
-
-#### Scenario: Compact hydraulic values
-- **WHEN** the card shows the compact layout
-- **THEN** the temperatures 31-34 are shown, and no pressure, pump speed or DG1 setpoint is
-
-### Requirement: Heating demand
-The card SHALL show the DG1 demand beside connections 1/2, as the tank shows its own demand: the caption "Demand"
-when the demand entity is on, and nothing when it is off or unavailable. In the compact layout (responsive-layout)
-the DG1 demand SHALL NOT be shown.
-
-#### Scenario: DG1 demand
-- **WHEN** the DG1 demand entity is on, in the full layout
-- **THEN** "Demand" is shown at connections 1/2, and it is gone when the entity turns off
-
-#### Scenario: Compact without demand
-- **WHEN** the card shows the compact layout and the DG1 demand entity is on
-- **THEN** no "Demand" caption is shown
-
 ### Requirement: Footer
 The card SHALL show a footer with:
 - the derived mode
-- the on/off state
-- the season (summer or winter)
 - the outside temperature
 - the efficiency, COP or EER (see "Footer efficiency")
-- the mode's power items in W (see "Footer power items by mode")
+- the mode's power items in W (see "Power items in the footer")
 - the alarm and offline indications when they apply
 
-The footer SHALL NOT show the condensation or the evaporation capacity under those names.
-
-In the compact layout (responsive-layout) the footer SHALL show only the derived mode, the outside temperature,
-the efficiency (COP or EER), and the alarm and offline indications when they apply.
+The footer SHALL NOT show the on/off state, the season, or the condensation or evaporation capacity under those names.
+It SHALL be the same in both layouts.
 
 #### Scenario: Footer while heating
 - **WHEN** the mode is `heating`, winter is on, the system COP is 4.6, the DG1 power is 5211 W, HTR is `true` with an
-  external tank and the HTR power is 1835 W, in the full layout
-- **THEN** the footer shows "Heating", the winter season, "COP 4.6", "DG1 5211 W" and "HTR 1835 W", and no
-  condensation or evaporation item
+  external tank and the HTR power is 1835 W
+- **THEN** the footer shows "Heating", the outside temperature, "COP 4.6", "DG1 5211 W" and "HTR 1835 W", and no
+  on/off state, season, condensation or evaporation item
 
 ### Requirement: The card's own units
 The card SHALL format every number itself, not through Home Assistant's state formatting. Every value SHALL be
@@ -107,8 +32,8 @@ the card cannot convert to the role's unit SHALL instead be shown as the entity'
 joined by a no-break space.
 
 #### Scenario: Percent keeps its space
-- **WHEN** Home Assistant's language is English and pump 16 runs at 100 %
-- **THEN** the label reads "100.0 %" with a no-break space, not "100%"
+- **WHEN** Home Assistant's language is English and pump 16 runs at 99.9 %
+- **THEN** the label reads "100 %" with a no-break space, not "100%" or "99.9 %"
 
 #### Scenario: Compressor speed in Hz
 - **WHEN** the compressor speed entity reports 45 with the unit Hz
@@ -124,7 +49,8 @@ display precision when Home Assistant has one and the entity's unit is the card'
 card's default for the role otherwise (a converted value, such as kW shown in W, uses the role default). A
 temperature difference reported in °C counts as the card's unit K, since the number is unchanged. A value shown with
 the entity's own unit (see "The card's own units") SHALL take its decimals from the entity's display precision, or
-else keep the decimals of its state.
+else keep the decimals of its state. The speeds of pumps 15 and 16 in % SHALL show whole percentages (0 decimals),
+whatever the entity's display precision (decided by the user 2026-11-20).
 
 #### Scenario: Locale
 - **WHEN** Home Assistant's number format uses a decimal comma
@@ -138,6 +64,10 @@ else keep the decimals of its state.
 - **WHEN** the compressor speed entity reports 45.6 Hz without a display precision
 - **THEN** the label reads "45.6 Hz"
 
+#### Scenario: Pump precision ignored
+- **WHEN** the pump 15 entity has a display precision of 1 and reads 99.9 %
+- **THEN** the label at pump 15 reads "100 %"
+
 ### Requirement: Unit conversion
 Units SHALL be converted where needed: °F to °C, kW to W, and kPa, MPa, Pa, mbar and psi to bar. A temperature
 difference reported in °F SHALL be converted back with the same absolute formula, because Home Assistant converted
@@ -148,11 +78,12 @@ it as an absolute temperature.
 - **THEN** it is shown and coloured as 25 °C
 
 #### Scenario: Fahrenheit superheat
-- **WHEN** the superheat entity reports 43.2 °F
-- **THEN** the label reads "6.2 K"
+- **WHEN** the superheat entity, a temperature difference, reports 43.2 °F
+- **THEN** the card reads it as 6.2 K (a unit test of the readings), and no label shows it, as the superheat is no
+  longer drawn (decided by the user 2026-11-20)
 
 #### Scenario: Pressure in kPa
-- **WHEN** the production pressure entity reports 150 kPa, in the full layout
+- **WHEN** the production pressure entity reports 150 kPa
 - **THEN** the label at item 38 reads "1.5 bar"
 
 ### Requirement: Missing and sentinel values
@@ -194,7 +125,7 @@ an on/off entity too: its label SHALL read "On" or "Off" instead of a number.
 - **THEN** summer counts as on
 
 #### Scenario: Pump as on/off
-- **WHEN** the pump 15 role is bound to a binary sensor that reads `on`, in the full layout
+- **WHEN** the pump 15 role is bound to a binary sensor that reads `on`
 - **THEN** the label at pump 15 reads "On"
 
 ### Requirement: Roles not present are hidden
@@ -204,8 +135,8 @@ optional role whose prefix default does not exist (card-config "Optional roles")
 optional role set to `none` likewise hands its footer item to its fallback role.
 
 #### Scenario: No pressure sensors
-- **WHEN** the config sets both pressure roles of the production and brine groups to `none`, in the full layout
-- **THEN** no label is shown at items 37 and 38, and both pressure probes are still drawn
+- **WHEN** the config sets both pressure roles of the production and brine groups to `none`
+- **THEN** no label is shown at items 37 and 38, and both transducers are still drawn
 
 #### Scenario: No COP
 - **WHEN** the config sets `entities: { unit: { cop: none, system_cop: none } }`
@@ -214,42 +145,6 @@ optional role set to `none` likewise hands its footer item to its fallback role.
 #### Scenario: Unknown entity keeps its dash
 - **WHEN** the production outlet role is bound to an entity Home Assistant does not know
 - **THEN** the label at probe 33 shows a muted dash
-
-### Requirement: Footer power items by mode
-In the full layout the footer SHALL show, in W (0 decimals by default; an entity's display precision applies, see
-"Locale and precision"): in `heating` "DG1" (the DG1 power) and "HTR" (the
-HTR power); in `dhw` "DHW" (the DHW power); in `active_cooling` "Cooling" (the evaporation capacity) and "HTR"; in
-every other mode no power item. "DG1" and "DHW" SHALL show the condensation capacity when their role has no entity
-(card-config "Optional roles"). The HTR item follows "Footer HTR item".
-
-#### Scenario: DHW power
-- **WHEN** the mode is `dhw` and the DHW power is 5043 W, in the full layout
-- **THEN** the footer shows "DHW 5043 W" and no DG1, HTR or Cooling item
-
-#### Scenario: Active cooling with HTR
-- **WHEN** the mode is `active_cooling`, the evaporation capacity is 4000 W, HTR is `true` with an internal tank and
-  the HTR power is 3200 W, in the full layout
-- **THEN** the footer shows "Cooling 4000 W" and "HTR 3200 W"
-
-#### Scenario: HTR idle while heating
-- **WHEN** the mode is `heating`, HTR is `true` with an external tank, the HTR state is off and the HTR power is 0 W
-- **THEN** the footer shows "HTR 0 W"
-
-#### Scenario: No power item in passive cooling
-- **WHEN** the mode is `passive_cooling`, in the full layout
-- **THEN** the footer shows no DG1, DHW, Cooling or HTR item
-
-#### Scenario: DG1 without the firmware's split
-- **WHEN** the mode is `heating`, the DG1 power role has no entity and the condensation capacity is 4712 W
-- **THEN** the footer shows "DG1 4712 W"
-
-#### Scenario: Power unavailable
-- **WHEN** the mode is `heating` and the DG1 power entity exists and is `unavailable`
-- **THEN** the DG1 item shows a muted dash, not the condensation capacity
-
-#### Scenario: Compact footer without power items
-- **WHEN** the mode is `heating` with HTR running, in the compact layout
-- **THEN** the footer shows no DG1 or HTR item
 
 ### Requirement: Footer HTR item
 In `heating` and `active_cooling` the footer's "HTR" item SHALL show only when HTR is `true`, `dhw` is `external` or
@@ -287,3 +182,101 @@ entity (card-config "Optional roles"). A value of 0 SHALL show as a muted dash. 
 #### Scenario: System COP unavailable
 - **WHEN** the system COP entity exists and is `unavailable`, and the register COP is 5.1
 - **THEN** the footer's COP item shows a muted dash, not 5.1
+
+### Requirement: Values on the drawing
+The drawing SHALL show these values, and no others: production out and in (33, 34), brine out and in (31, 32), the
+production and brine pressures (38, 37), the speeds of pumps 15 and 16, the discharge and suction temperatures and
+pressures (30, 36, 29, 35), the compressor speed (11), the expansion valve opening (12), the source's Out, the DHW
+temperature, and the DG1 and DHW demand. A value whose part is not drawn SHALL NOT be shown.
+
+#### Scenario: Heating with every part
+- **WHEN** the card renders model B, `source: air`, `dhw: external`, variant 4 in heating with both demands on
+- **THEN** exactly those 18 values are shown, and no superheat (decided by the user 2026-11-20), compressor percentage
+  or power, condensation or evaporation temperature, fan speed, outside temperature, air unit In, DG1 setpoint, DHW
+  setpoint or start delta-T
+
+#### Scenario: Ground source
+- **WHEN** the card renders `source: ground`
+- **THEN** the source's Out is the ground collector's Out, and no ground collector In is shown
+
+### Requirement: Refrigerant values
+The card SHALL show the discharge temperature 30 and pressure 36 together beside their pair, the suction temperature
+29 and pressure 35 together beside theirs (schematic-drawing "Refrigerant probe pairs"), the compressor 11 speed in
+rpm, and the expansion valve 12 opening in %, centred under valve 12. The superheat SHALL NOT be shown (decided by the
+user 2026-11-20).
+
+#### Scenario: Compressor label
+- **WHEN** the compressor runs at 2803 rpm and 38.9 % and draws 786 W
+- **THEN** the label near item 11 reads "2803 rpm", and neither "38.9 %" nor "786 W" is shown
+
+#### Scenario: Valve opening without superheat
+- **WHEN** the superheat entity reports 6.2 °C and the expansion valve opening 58 %, in either layout
+- **THEN** one label near item 12 reads "58 %", centred under valve 12, and no "6.2 K" is shown
+
+#### Scenario: Probe pair values
+- **WHEN** the discharge reads 47.6 °C and 16.2 bar and the suction 4.3 °C and 6.9 bar
+- **THEN** "47.6 °C" and "16.2 bar" are shown together beside probes 30 and 36, and "4.3 °C" and "6.9 bar" beside
+  probes 29 and 35
+
+### Requirement: Hydraulic values
+The card SHALL show temperatures 31-34 with Out and In captions beside their probes, pressures 37/38 beside their
+transducers, and the speeds of pumps 15 and 16 in whole percentages at the pumps (decided by the user 2026-11-20; see
+"Locale and precision"). In the vertical layout some of them are drawn rotated (responsive-layout "Rotated values in
+the vertical layout"), with the same texts. Values of parts that are not drawn, and the values of an unused tank
+(`dhw: unused`), SHALL NOT be shown.
+
+#### Scenario: Production labels
+- **WHEN** the production outlet reads 25.2 °C, the production pressure 1.7 bar and pump 15 runs at 99.9 %
+- **THEN** "25.2 °C" with an Out caption is shown beside probe 33, "1.7 bar" beside transducer 38 and "100 %" at
+  pump 15
+
+#### Scenario: Whole-percent pump 16
+- **WHEN** pump 16 runs at 42.4 %
+- **THEN** the label at pump 16 reads "42 %", with a no-break space before the %
+
+#### Scenario: Brine captions
+- **WHEN** the brine outlet reads 2.3 °C and the brine inlet 5.7 °C
+- **THEN** "2.3 °C" is shown with an Out caption beside probe 31 and "5.7 °C" with an In caption beside probe 32
+
+#### Scenario: Part not drawn
+- **WHEN** the config sets `dhw: none`
+- **THEN** no tank labels are shown
+
+#### Scenario: Unused tank labels
+- **WHEN** the config sets `dhw: unused`
+- **THEN** the tank is drawn muted and no tank labels are shown
+
+### Requirement: Power items in the footer
+The footer SHALL show, in W (0 decimals by default; an entity's display precision applies, see "Locale and
+precision"): in `heating` "DG1" (the DG1 power) and "HTR" (the HTR power); in `dhw` "DHW" (the DHW power); in
+`active_cooling` "Cooling" (the evaporation capacity) and "HTR"; in every other mode none. "DG1" and "DHW" SHALL
+show the condensation capacity when their role has no entity (card-config "Optional roles"). HTR: "Footer HTR item".
+
+#### Scenario: DHW power
+- **WHEN** the mode is `dhw` and the DHW power is 5043 W
+- **THEN** the footer shows "DHW 5043 W" and no DG1, HTR or Cooling item
+
+#### Scenario: Active cooling with HTR
+- **WHEN** the mode is `active_cooling`, the evaporation capacity is 4000 W, HTR is `true` with an internal tank and
+  the HTR power is 3200 W
+- **THEN** the footer shows "Cooling 4000 W" and "HTR 3200 W"
+
+#### Scenario: HTR idle while heating
+- **WHEN** the mode is `heating`, HTR is `true` with an external tank, the HTR state is off and the HTR power is 0 W
+- **THEN** the footer shows "HTR 0 W"
+
+#### Scenario: No power item in passive cooling
+- **WHEN** the mode is `passive_cooling`
+- **THEN** the footer shows no DG1, DHW, Cooling or HTR item
+
+#### Scenario: DG1 without the firmware's split
+- **WHEN** the mode is `heating`, the DG1 power role has no entity and the condensation capacity is 4712 W
+- **THEN** the footer shows "DG1 4712 W"
+
+#### Scenario: Power unavailable
+- **WHEN** the mode is `heating` and the DG1 power entity exists and is `unavailable`
+- **THEN** the DG1 item shows a muted dash, not the condensation capacity
+
+#### Scenario: Power items in the vertical layout
+- **WHEN** the mode is `heating` with HTR running, in the vertical layout
+- **THEN** the footer shows the DG1 and HTR items, wrapped within the card
