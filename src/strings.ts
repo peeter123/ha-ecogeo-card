@@ -89,8 +89,11 @@ export const DHW_LABELS = {
   demand: 'Demand',
 } as const;
 
-/** Shown at connections 1/2 only while the DG1 demand is on. */
+/** Shown inside the emitter (beside the stubs of connections 1/2 without one) only while the DG1 demand is on. */
 export const HEATING_LABELS = { demand: 'Demand' } as const;
+
+/** The tooltip and accessible name of the emitter (not a manual item: it is outside the unit, on connections 1/2). */
+export const EMITTER_NAMES = { underfloor: 'Underfloor heating', radiator: 'Radiator' } as const;
 
 /** The small captions in front of a value label where its position alone would not say what it is. */
 export const VALUE_CAPTIONS = {
@@ -195,6 +198,7 @@ export const EDITOR = {
     variant: 'Variant',
     source: 'Outer-loop source',
     dhw: 'DHW storage',
+    emitter: 'Heat emitter',
     prefix: 'Entity prefix',
     passive_cooling: 'Passive cooling',
     active_cooling: 'Active cooling',
@@ -283,6 +287,7 @@ export const EDITOR = {
     variant: { '1': 'Variant 1', '2': 'Variant 2', '3': 'Variant 3', '4': 'Variant 4' },
     source: { air: 'Air unit', ground: 'Ground loop', hybrid: 'Air unit and ground loop' },
     dhw: { external: 'External tank', internal: 'Internal tank', unused: 'Tank not in use', none: 'None' },
+    emitter: { underfloor: 'Underfloor heating', radiator: 'Radiator', none: 'None' },
     exchanger_fill: { gradient: 'Gradient', none: 'None' },
     layout: { auto: 'Auto (by width)', horizontal: 'Horizontal', vertical: 'Vertical' },
   },

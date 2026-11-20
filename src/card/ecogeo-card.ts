@@ -14,6 +14,7 @@ import { SAMPLE_STATES } from '../config/sample';
 import { cabinetStyles, renderCabinet } from '../diagram/cabinet';
 import type { Taps } from '../diagram/component-info';
 import { dhwStyles, renderDhw } from '../diagram/dhw';
+import { emitterStyles, renderEmitter } from '../diagram/emitter';
 import { arrangementFor, bandKeyOf, type DrawContext, type ShownLayout } from '../diagram/geometry';
 import { footerItems, labelsFor, labelStyles, renderFooterItems, renderLabels } from '../diagram/labels';
 import { coilMutedColor, MUTED_COLOR } from '../diagram/colors';
@@ -50,6 +51,7 @@ export class EcogeoCard extends LitElement {
   static override styles = [
     cabinetStyles,
     sourceStyles,
+    emitterStyles,
     dhwStyles,
     labelStyles,
     css`
@@ -309,7 +311,7 @@ export class EcogeoCard extends LitElement {
           aria-label=${SCHEMATIC_LABEL}
           style="--dhw-tank-color: ${resolved.dhw === 'unused' ? MUTED_COLOR : tankColor(view)}; --ecogeo-coil-muted: ${coilMutedColor(this.hass?.themes?.darkMode === true)}; --pipe-width: ${String(stroke.pipe)}; --outline-width: ${String(stroke.outline)}"
         >
-          ${svg`${renderSource(resolved, moving, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix }, stroke.pipe)}`}
+          ${svg`${renderEmitter(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix })}${renderSource(resolved, moving, circuits.active.has('brine'), taps)}${renderDhw(resolved, taps)}${renderCabinet(resolved, view, taps, { mode: resolved.exchangerFill, idPrefix: this.idPrefix }, stroke.pipe)}`}
         </svg>
         ${renderLabels(labelsFor(resolved, readings, resolved.entities, display, resolved.notPresent), onTap, viewBox)}
       </div>

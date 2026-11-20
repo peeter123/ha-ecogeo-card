@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { circuitsFor } from '../../src/calc/circuits';
 import type { Mode } from '../../src/calc/mode';
 import { animationReadings, readRoles, type AnimationReadings } from '../../src/calc/readings';
-import type { DhwStorage, Source } from '../../src/config/options';
+import type { DhwStorage, Emitter, Source } from '../../src/config/options';
 import { ROLE_BY_PATH, ROLE_PATHS, type RolePath } from '../../src/config/roles';
 import { mergeFeatures, type FeatureKey, type FeatureState } from '../../src/config/variants';
 import { DEFAULT_STOPS, MUTED_COLOR, temperatureColor } from '../../src/diagram/colors';
@@ -33,6 +33,7 @@ interface Options {
   features?: Partial<Record<FeatureKey, FeatureState>>;
   dhw?: DhwStorage;
   source?: Source;
+  emitter?: Emitter;
 }
 
 /** The pipe states of every drawn segment for a mode and readings. */
@@ -44,7 +45,13 @@ function scenario(
   const features = mergeFeatures(4, options.features ?? {});
   const dhw = options.dhw ?? 'external';
   const model = dhw === 'internal' ? 'C' : 'B';
-  const context = { model, dhw, source: options.source ?? 'air', features } as const;
+  const context = {
+    model,
+    dhw,
+    source: options.source ?? 'air',
+    emitter: options.emitter ?? 'underfloor',
+    features,
+  } as const;
   const rd = base ?? readings(values);
   const view: PipeView = {
     mode: options.mode,
@@ -272,9 +279,11 @@ describe('flow animation', () => {
   });
 
   test('stubs are coloured but never animated', () => {
-    const { get } = scenario({ mode: 'heating' }, HEATING);
+    const { get } = scenario({ mode: 'heating', emitter: 'none' }, HEATING);
     for (const id of ['p1_stub', 'p2_stub', 'htr_drain']) {
-      const state = SEGMENTS.find((segment) => segment.id === id);
+      const state = arrangementFor('horizontal', { source: 'air', tank: true, emitter: 'none' }).segments.find(
+        (segment) => segment.id === id,
+      );
       expect(state?.stub, id).toBe(true);
       expect(get(id).animated, id).toBe(false);
     }

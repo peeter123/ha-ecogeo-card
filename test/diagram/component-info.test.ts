@@ -4,11 +4,11 @@ import { describe, expect, test, vi } from 'vitest';
 import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
 import { ROLE_BY_PATH, ROLES } from '../../src/config/roles';
-import { COMPONENT_ROLES, EXTERNAL_TANK_ROLE, FAN_ROLE } from '../../src/diagram/component-info';
+import { COMPONENT_ROLES, EMITTER_ROLE, EXTERNAL_TANK_ROLE, FAN_ROLE } from '../../src/diagram/component-info';
 import { arrangementFor } from '../../src/diagram/geometry';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
-import { AIR_UNIT_FAN_NAME, COMPONENT_NAMES, DHW_LABELS, componentLabel } from '../../src/strings';
+import { AIR_UNIT_FAN_NAME, COMPONENT_NAMES, DHW_LABELS, EMITTER_NAMES, componentLabel } from '../../src/strings';
 import { states } from '../helpers';
 
 // the default config draws the simplified level
@@ -87,6 +87,19 @@ describe('component names', () => {
     expect(componentLabel(42)).toBe('');
   });
 
+  test.each([
+    ['underfloor', 'Underfloor heating'],
+    ['radiator', 'Radiator'],
+  ] as const)('component-info "Emitter tooltip": the %s is named "%s" with no item number', async (emitter, name) => {
+    const card = await mount({ ...live, emitter }, hass);
+    const body = root(card).querySelector('g.emitter');
+    expect(EMITTER_NAMES[emitter]).toBe(name);
+    expect(body?.querySelector('title')?.textContent).toBe(name);
+    expect(body?.getAttribute('aria-label')).toBe(name);
+    expect(body?.hasAttribute('data-item')).toBe(false);
+    card.remove();
+  });
+
   test('the air unit fan and the external tank are named', async () => {
     const card = await mount({ source: 'air', dhw: 'external' });
     expect(root(card).querySelector('.fan-part title')?.textContent).toBe(AIR_UNIT_FAN_NAME);
@@ -97,7 +110,7 @@ describe('component names', () => {
 
 describe('component-to-role table', () => {
   test('every entry names a role of the role table', () => {
-    for (const role of [...Object.values(COMPONENT_ROLES), FAN_ROLE, EXTERNAL_TANK_ROLE]) {
+    for (const role of [...Object.values(COMPONENT_ROLES), FAN_ROLE, EXTERNAL_TANK_ROLE, EMITTER_ROLE]) {
       expect(ROLE_BY_PATH.has(role), role).toBe(true);
     }
   });
@@ -210,6 +223,33 @@ describe('tap a component', () => {
       .querySelector('.dhw-storage')
       ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(seen).toEqual([`sensor.${P}_aerothermal_fan_speed`, `sensor.${P}_dhw_temperature`]);
+    card.remove();
+  });
+
+  test('component-info "Tap the underfloor loop": the more-info dialog of the DG1 demand entity opens, by click and by keyboard', async () => {
+    for (const emitter of ['underfloor', 'radiator'] as const) {
+      const card = await mount({ ...live, emitter }, hass);
+      const seen = listen(card);
+      const body = root(card).querySelector('g.emitter');
+      expect(body?.getAttribute('role'), emitter).toBe('button');
+      expect(body?.getAttribute('tabindex'), emitter).toBe('0');
+      body?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      body?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(seen, emitter).toEqual([`binary_sensor.${P}_dg1_demand`, `binary_sensor.${P}_dg1_demand`]);
+      card.remove();
+    }
+  });
+
+  test('component-info "No demand entity": the emitter opens nothing and has no button role and no tab stop', async () => {
+    const card = await mount({ ...live, entities: { heating: { demand: 'none' } } }, hass);
+    const seen = listen(card);
+    const body = root(card).querySelector('g.emitter');
+    expect(body).not.toBeNull();
+    body?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    body?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(seen).toEqual([]);
+    expect(body?.hasAttribute('role')).toBe(false);
+    expect(body?.hasAttribute('tabindex')).toBe(false);
     card.remove();
   });
 

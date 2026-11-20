@@ -4,8 +4,8 @@
 // left edge at x, `end` its right edge, `middle` centres it; y is the vertical centre. They sit where the drawing leaves
 // room, and on no pipe (found with `npm run search-places`, checked by the overlap browser tests): the probes' values in the
 // lanes beside them, the compressor's speed inside the refrigerant loop, the expansion valve's pair left of the evaporator,
-// the values of the band's bodies (the source's Out, the DHW values) inside their bodies, and, for model C, inside tank 50
-// above its coil. The bodies' labels are functions of the zones: they follow their body.
+// the values of the band's bodies (the DG1 demand inside the emitter, the source's Out, the DHW values) inside their bodies, and, for
+// model C, inside tank 50 above its coil. The bodies' labels are functions of the zones: they follow their body.
 import type { RolePath } from '../config/roles';
 import { VALUE_CAPTIONS } from '../strings';
 import type { BandZones, CabinetZones, Visibility, Zones } from './geometry';
@@ -82,7 +82,7 @@ export const HORIZONTAL_PLACES: Readonly<Record<string, PlaceOverride>> = {
   dg1_demand: {
     at: () => ({ x: 336, y: 220, align: 'end' }),
     reason:
-      "at its default place, right of connection 2's stub, the box crosses the cabinet's top edge in 60 cases (search at 560 px, Chromium); the nearest free place is the same height 5 units up, right-aligned at x 336",
+      "only without an emitter (with one the demand is a body label, `emitter_demand`): at its default place, right of connection 2's stub, the box crosses the cabinet's top edge (12 cases, search at 560 px in Chromium and WebKit); the nearest free place is the same height 5 units up, right-aligned at x 336",
   },
 };
 
@@ -107,21 +107,27 @@ const centre = (rect: { x: number; y: number; width: number; height: number }): 
 ];
 
 /**
- * The rows of the external tank's values: 38 and 56 units under its top edge, centred on it. The rim of the top cap reaches 28
- * units under the top edge, the coil starts 78 under it.
+ * The rows of the external tank's values: 38 and 60 units under its top edge, centred on it, 22 apart so that the rows keep the
+ * search's 2 px margin in WebKit too (its boxes are a unit taller). The rim of the top cap reaches 28 units under the top edge,
+ * the coil starts 78 under it.
  */
 const TANK_TEMPERATURE_DY = 38;
-const TANK_DEMAND_DY = 56;
+const TANK_DEMAND_DY = 60;
 
 /**
- * The labels of the band's bodies, placed from the zones (rework-layouts D4): the source's Out in the free strip of the air
+ * The labels of the band's bodies, placed from the zones (rework-layouts D4): the DG1 demand in the strip at the top of the
+ * emitter, the source's Out in the free strip of the air
  * unit (between the fan and the coil block) or of the collector (between the hatching and the serpentine), and the DHW
  * temperature and demand in the upper part of the external tank, bare on its tinted body. A body that is not in the zones'
  * band key has no label; the hybrid shows only its collector's Out.
  */
 function bodySpecs(z: Partial<BandZones>): LabelSpec[] {
   const specs: LabelSpec[] = [];
-  const { airUnit, collector, externalTank } = z;
+  const { airUnit, collector, externalTank, emitter } = z;
+  if (emitter !== undefined) {
+    const [x, y] = centre(emitter.strip);
+    specs.push(makeSpec('emitter_demand', 'heating.demand', x, y, 'middle', { item: 1, demand: true }));
+  }
   if (airUnit !== undefined && z.key?.source === 'air') {
     const [x, y] = centre(airUnit.strip);
     specs.push(
@@ -195,7 +201,9 @@ export function labelPlacesFor(
     }),
     cab('production_pressure', 'production.pressure', 287, 256, 'end', { item: 38 }),
     cab('production_pump', 'production.pump', 396, 380, 'end', { item: 15 }),
-    cab('dg1_demand', 'heating.demand', 320, 123, 'start', { item: 1, demand: true }),
+    ...(z.key === undefined || z.key.emitter === 'none'
+      ? [cab('dg1_demand', 'heating.demand', 320, 123, 'start', { item: 1, demand: true })]
+      : []),
     // brine: probe 31 (Out) right of its riser, probe 32 (In) right of its riser, pressure 37 left of its body, pump 16
     cab('brine_out', 'brine.outlet_temperature', 632, 228, 'start', { item: 31, caption: VALUE_CAPTIONS.portOut }),
     cab('brine_in', 'brine.inlet_temperature', 691, 228, 'start', { item: 32, caption: VALUE_CAPTIONS.portIn }),

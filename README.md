@@ -14,7 +14,8 @@ for the explanation of what the card shows and where each part comes from.
 
 - The unit's internal schematic drawn as inline SVG after the manual's figures B1 to B4 and C, without the service and
   safety parts that have no live value (components show their name and manual item number on hover), for any model,
-  variant, outer-loop source (air, ground or hybrid) and DHW storage.
+  variant, outer-loop source (air, ground or hybrid), DHW storage and heat emitter (an underfloor loop, a radiator or
+  none).
 - Pipes coloured by temperature on an absolute scale (blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at
   30 °C, orange at 50 °C, red at 70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe
   with no probe value is muted. The plate exchangers are filled on each side with a gradient from the colour of the pipe
@@ -113,6 +114,7 @@ fault.
 | `entities` | group | from the prefix | Entity id per role, nested by role path, or `none` for a role the unit does not have (see Roles). |
 | `states` | group | `off: [OFF]`, `defrost: [Defrost]` | The state texts that mean off (the on/off entity) and defrost (the compressor mode entity); a list replaces its default, case-insensitive. See Using another source in the docs. |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
+| `emitter` | `underfloor`, `radiator`, `none` | `underfloor` | The heat emitter drawn above connections 1 and 2, on the DG1 heating circuit: an underfloor loop (a flat serpentine in a floor strip), a panel radiator, or none (connections 1 and 2 then end in short stubs). It follows the DG1 production circuit: coloured and animated while that circuit is active, muted otherwise, and its "Demand" value sits inside it. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
 | `layout` | `auto`, `horizontal`, `vertical` | `auto` | `auto` shows the vertical layout while the card is narrower than 560 px and the horizontal layout otherwise (and before the width is known), with 24 px of hysteresis once vertical (see Layout in the docs); `horizontal` and `vertical` use that layout at any width. Until the vertical arrangement is built, both draw the horizontal one. The former values `full` and `compact` are errors. |
 
@@ -160,8 +162,20 @@ dhw: internal
 | `ground` | A ground collector: a ground strip hatched along its top with a flat serpentine, its Out value inside, under the hatching. |
 | `hybrid` | Both, side by side in series on one brine loop, air unit first (only the collector shows its Out; the air unit shows no value). |
 
-The source and the tank stand in a band above the heat pump, each over its own
-connections, joined to them by short pipes; nothing is drawn beside the heat pump.
+The emitter, the source and the tank stand in a band above the heat pump, each over its own connections (the emitter
+over 1/2, the source over 3/4, the tank over 5/6), joined to them by short pipes; nothing is drawn beside the heat pump.
+
+| `emitter` | Drawn |
+|---|---|
+| `underfloor` (default) | A floor strip with one flat serpentine of five passes, entered at the top pass by the supply pipe from connection 1 and left at the bottom pass by the return pipe to connection 2; the passes shade from the supply colour at the top to the return colour at the bottom. |
+| `radiator` | A panel with six vertical columns, the supply pipe meeting it at the top left and the return pipe at the bottom right; with `exchanger_fill: gradient` the body is filled from the supply colour at the top to the return colour at the bottom, with `none` it is not filled. |
+| `none` | No emitter: connections 1 and 2 end in short stubs, with the DG1 demand beside them. |
+
+The emitter is on the DG1 production circuit: its pipes and body are coloured by production outlet 33 (supply) and
+return 34 (return) and animated while that circuit is active (heating, passive cooling), and muted and still otherwise
+(DHW). Only the pipes and the underfloor loop carry the flow animation; the radiator body is coloured but shows no
+flow. The DG1 "Demand" value sits inside it, and tapping it opens the demand entity's more-info dialog. It is not a
+part of the unit and has no manual item number.
 
 | `dhw` | Drawn |
 |---|---|
@@ -373,9 +387,10 @@ no installation data. The mock entities use the demo prefix `demo_ecogeo`.
   `hass.entities` and `hass.devices`.
 - **Configuration:** model (B or C), variant (1-4), source (air, ground or hybrid), DHW storage (the model's default; on
   B external, unused or none, on C internal or unused; the other choices are disabled, and a value in the URL that the
-  model rejects falls back to the default), each feature (the variant's preset, `true`, `false` or `unused`), the
-  exchanger fill (gradient or none, the card's `exchanger_fill` option), the layout (auto, horizontal or vertical, the
-  card's `layout` option), the card's width and the light or dark theme.
+  model rejects falls back to the default), each feature (the variant's preset, `true`, `false` or `unused`), the heat
+  emitter (underfloor, radiator or none, the card's `emitter` option), the exchanger fill (gradient or none, the card's
+  `exchanger_fill` option), the layout (auto, horizontal or vertical, the card's `layout` option), the card's width and
+  the light or dark theme.
 - **Live values:** sliders for production out and in, brine out and in, DHW temperature, discharge, suction, both
   pumps, the compressor percentage (it moves the speed too), the fan speed and the condensation capacity. Picking a
   scenario resets them. Slider values are not part of the URL state.
@@ -391,6 +406,7 @@ All state is in the URL query string, so every combination is addressable. Param
 | `variant`                                                      | `1` to `4`                                                                   | `4`        |
 | `source`                                                       | `air`, `ground`, `hybrid`                                                    | `ground`   |
 | `dhw`                                                          | `external`, `internal`, `unused`, `none` (`none` on model B only)            | by model   |
+| `emitter`                                                      | `underfloor`, `radiator`, `none`                                             | `underfloor` |
 | `active_cooling`, `passive_cooling`, `htr`, `backup_heater`    | `true`, `false`, `unused`                                                    | by variant |
 | `layout`                                                       | `auto`, `horizontal`, `vertical`                                             | `auto`     |
 | `width`                                                        | the card's width in px (200 to 2000); the controls offer 320, 360, 412, 600, 800 and 1000 | `1000`     |
@@ -403,11 +419,12 @@ For example `dev/index.html?scenario=passive_cooling&source=ground`.
 
 `npm run capture` starts its own Vite server, opens every URL of the fixed list in `dev/captures.ts` in headless
 Chromium (Playwright, a dev dependency for this script only) and writes one PNG per URL to `build/captures/`. The list
-covers every scenario, each source, each DHW value, model C, each feature `false` and `unused`, the other variants, the
-dark theme, the foreign naming (heating, heating with HTR recovery, DHW, defrost and off), the panel view, and the
-horizontal layout at the vertical threshold (every scenario, light and dark), 800 and 1000 px. An old `detail=` or
-`layout=full`/`layout=compact` in a URL is ignored.
-The first run needs the browser: `npx playwright install chromium`.
+covers every scenario, each source, each DHW value, the band (every source above every DHW storage, light and dark, at
+the vertical threshold and 1000 px), the emitter (every kind above every source in heating, light and dark, at the same
+two widths, and the radiator without its fill), model C, each feature `false` and `unused`, the other variants, the dark
+theme, the foreign naming (heating, heating with HTR recovery, DHW, defrost and off), the panel view, and the horizontal
+layout at the vertical threshold (every scenario, light and dark), 800 and 1000 px. An old `detail=` or
+`layout=full`/`layout=compact` in a URL is ignored. The first run needs the browser: `npx playwright install chromium`.
 
 `dist/ecogeo-card.js` is the committed, deployable bundle. `npm run format` rewrites files with Prettier.
 

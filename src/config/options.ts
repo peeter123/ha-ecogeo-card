@@ -16,11 +16,20 @@ export const SOURCES = ['air', 'ground', 'hybrid'] as const;
 export type Source = (typeof SOURCES)[number];
 export const DHW_STORAGES = ['external', 'internal', 'unused', 'none'] as const;
 export type DhwStorage = (typeof DHW_STORAGES)[number];
+export const EMITTERS = ['underfloor', 'radiator', 'none'] as const;
+export type Emitter = (typeof EMITTERS)[number];
 
 export const MODEL_OPTION: ChoiceOption = { kind: 'choice', path: 'model', default: 'B', choices: MODELS };
 export const SOURCE_OPTION: ChoiceOption = { kind: 'choice', path: 'source', default: 'ground', choices: SOURCES };
 // The default of dhw depends on the model (defaultDhw); this default is not used.
 export const DHW_OPTION: ChoiceOption = { kind: 'choice', path: 'dhw', default: 'external', choices: DHW_STORAGES };
+/** The heat emitter of the DG1 circuit on connections 1/2 (rework-layouts D5): an underfloor loop, a radiator or none (stubs only). */
+export const EMITTER_OPTION: ChoiceOption = {
+  kind: 'choice',
+  path: 'emitter',
+  default: 'underfloor',
+  choices: EMITTERS,
+};
 export const EXCHANGER_FILLS = ['gradient', 'none'] as const;
 export type ExchangerFill = (typeof EXCHANGER_FILLS)[number];
 /** How the plate exchangers 7-10 are filled (refine-schematic-drawing D4): a gradient per side from the pipes' colours, or not at all. */
@@ -39,6 +48,7 @@ export const CHOICE_OPTIONS: readonly OptionSpec[] = [
   MODEL_OPTION,
   SOURCE_OPTION,
   DHW_OPTION,
+  EMITTER_OPTION,
   EXCHANGER_FILL_OPTION,
   LAYOUT_OPTION,
 ];
@@ -52,6 +62,7 @@ export const TOP_LEVEL_OPTIONS: readonly string[] = [
   'variant',
   'source',
   'dhw',
+  'emitter',
   'prefix',
   'features',
   'entities',
@@ -97,14 +108,20 @@ export function variantOf(config: CardConfig): (typeof VARIANTS)[number] {
   return VARIANTS.find((variant) => variant === value) ?? DEFAULT_VARIANT;
 }
 
-/** The model, the source and the dhw storage (its default follows the model). Call after configErrors found no problem. */
-export function installationOf(config: CardConfig): { model: Model; source: Source; dhw: DhwStorage } {
+/** The model, the source, the dhw storage (its default follows the model) and the emitter. Call after configErrors found no problem. */
+export function installationOf(config: CardConfig): {
+  model: Model;
+  source: Source;
+  dhw: DhwStorage;
+  emitter: Emitter;
+} {
   const model = optionValue(config, MODEL_OPTION) as Model;
   const dhwSet = !isLeftOut(valueAt(config, 'dhw'));
   return {
     model,
     source: optionValue(config, SOURCE_OPTION) as Source,
     dhw: dhwSet ? (optionValue(config, DHW_OPTION) as DhwStorage) : defaultDhw(model),
+    emitter: optionValue(config, EMITTER_OPTION) as Emitter,
   };
 }
 

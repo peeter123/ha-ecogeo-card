@@ -2,6 +2,7 @@
 // through. Each entry is a name (the PNG file name) and a query string; parameters left out take the defaults of
 // url-state.ts (scenario heating, model B, variant 4, source ground, dhw and features by preset, layout auto, light theme).
 import { SCENARIO_NAMES } from './scenarios';
+import { EMITTERS } from '../src/config/options';
 import { FEATURE_KEYS } from '../src/config/variants';
 import { VERTICAL_BELOW } from '../src/lib/layout';
 
@@ -112,6 +113,21 @@ export const CAPTURES: readonly CaptureStep[] = [
       ),
     ),
   ),
+  // rework-layouts 6.4: the emitter, every kind above every source in heating (the DG1 circuit active), light and dark, at the
+  // vertical threshold and 1000 px; the radiator without its fill; the muted emitters are in the band captures above (DHW mode)
+  ...EMITTERS.flatMap((emitter) =>
+    (['air', 'ground', 'hybrid'] as const).flatMap((source) =>
+      (['light', 'dark'] as const).flatMap((theme) =>
+        [VERTICAL_BELOW, 1000].map((width) =>
+          step(
+            `emitter-${emitter}-${source}-${theme}-${String(width)}`,
+            `scenario=heating&source=${source}&emitter=${emitter}&layout=horizontal&width=${String(width)}&theme=${theme}`,
+          ),
+        ),
+      ),
+    ),
+  ),
+  step('emitter-radiator-fill-none', 'scenario=heating&emitter=radiator&fill=none&layout=horizontal&width=1000'),
   // refine-simplified-layout 4.4: the values of the horizontal layout at the vertical threshold, 800 and 1000 px, in the
   // scenarios with the most values (heating, DHW, defrost, passive cooling), for an air unit, model C and, where the
   // `threshold-*` and `scenario-*` captures do not already show it, a ground collector

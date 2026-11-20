@@ -27,6 +27,7 @@ describe('emulator URL state', () => {
       variant: 2 as const,
       source: 'hybrid' as const,
       dhw: 'unused' as const,
+      emitter: 'radiator' as const,
       fill: 'none' as const,
       layout: 'vertical' as const,
       width: 360,
@@ -40,7 +41,7 @@ describe('emulator URL state', () => {
   test('invalid values keep their defaults', () => {
     expect(
       parseState(
-        '?scenario=x&naming=klingon&model=Z&variant=9&source=sun&theme=blue&htr=maybe&fill=solid&layout=portrait&width=abc',
+        '?scenario=x&naming=klingon&model=Z&variant=9&source=sun&theme=blue&htr=maybe&fill=solid&emitter=convector&layout=portrait&width=abc',
       ),
     ).toEqual(defaultState());
   });
@@ -89,6 +90,20 @@ describe('emulator URL state', () => {
     expect(configOf(defaultState())['exchanger_fill']).toBe('gradient');
     expect(configErrors(configOf(none))).toEqual([]);
     expect(new URLSearchParams(toSearch(defaultState())).has('fill')).toBe(false);
+  });
+
+  test('the emitter travels in the URL as emitter= and reaches the card config; the default is not in the URL', () => {
+    expect(defaultState().emitter).toBe('underfloor');
+    expect(new URLSearchParams(toSearch(defaultState())).has('emitter')).toBe(false);
+    for (const emitter of ['radiator', 'none'] as const) {
+      const state = { ...defaultState(), emitter };
+      expect(new URLSearchParams(toSearch(state)).get('emitter')).toBe(emitter);
+      expect(parseState(`?emitter=${emitter}`).emitter).toBe(emitter);
+      expect(configOf(state)['emitter']).toBe(emitter);
+      expect(configErrors(configOf(state))).toEqual([]);
+    }
+    expect(configOf(defaultState())['emitter']).toBe('underfloor');
+    expect(parseState('?emitter=convector').emitter).toBe('underfloor');
   });
 
   test('the card width and layout travel in the URL as width= and layout= and reach the card config', () => {

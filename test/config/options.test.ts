@@ -12,6 +12,19 @@ describe('card type and options', () => {
     expect([resolved.model, resolved.variant, resolved.source, resolved.dhw]).toEqual(['B', 4, 'ground', 'external']);
     expect(resolved.layout).toBe('auto');
     expect(resolved.exchangerFill).toBe('gradient');
+    expect(resolved.emitter).toBe('underfloor');
+  });
+
+  test.each(['underfloor', 'radiator', 'none'])('emitter %s is valid and resolves', (emitter) => {
+    expect(errors({ emitter })).toEqual([]);
+    expect(resolveConfig({ emitter }).emitter).toBe(emitter);
+  });
+
+  test.each(['convector', 'floor', ''])('invalid emitter %s names the option and its allowed values', (emitter) => {
+    const [message, ...rest] = errors({ emitter });
+    expect(rest).toEqual([]);
+    expect(message).toContain('emitter');
+    expect(message).toContain('underfloor, radiator, none');
   });
 
   test('the removed detail option is an unknown option, whatever its value', () => {

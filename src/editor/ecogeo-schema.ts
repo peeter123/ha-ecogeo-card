@@ -10,6 +10,7 @@ import {
   defaultDhw,
   DHW_STORAGES,
   DHW_OPTION,
+  EMITTER_OPTION,
   EXCHANGER_FILL_OPTION,
   LAYOUT_OPTION,
   MODEL_OPTION,
@@ -210,6 +211,7 @@ export function editorSchema(
         variantField(),
         choiceField('source', SOURCE_OPTION, EDITOR.choices.source),
         dhwField(config, model),
+        choiceField('emitter', EMITTER_OPTION, EDITOR.choices.emitter),
       ],
     },
     {

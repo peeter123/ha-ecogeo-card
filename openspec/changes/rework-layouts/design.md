@@ -219,6 +219,8 @@ the `v1.0.0` tag is not a task; it happens only on the user's explicit request.
 2. The release group runs `npm run release`, deploys `dist/ecogeo-card.js` explicitly, bumps the dashboard resource's
    `?v=` (id and value in `private/installation.md`) and checks the schematic view at phone width (1170 px at zoom 3)
    and on the desktop (1280 x 800) through a subagent's screenshot verdict, plus the system log for card errors.
+   The live config sets no `emitter`, so the card draws the default underfloor loop, which is what the installation
+   has (confirmed by the user 2026-11-19 after the group 6 review); the config needs no change.
 3. Rollback: deploy the previous `dist/ecogeo-card.js` from commit 85b5fe7 and bump `?v=` again; the live config
    needs no change either way.
 

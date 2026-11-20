@@ -1,14 +1,16 @@
-// The emulator's state and its URL query string (add-schematic-card D9): scenario, naming, model, variant, source, dhw, every feature,
+// The emulator's state and its URL query string (add-schematic-card D9): scenario, naming, model, variant, source, dhw, emitter, every feature,
 // fill, layout, width, panel, theme and cycle. Every combination is addressable by URL. Pure, so it is unit-tested. URL pattern after
 // hrv-ventilation dev/preview.ts (state in the query string); the parameters are this card's own.
 import {
   DEFAULT_VARIANT,
   DHW_STORAGES,
+  EMITTERS,
   EXCHANGER_FILLS,
   LAYOUTS,
   MODELS,
   SOURCES,
   type DhwStorage,
+  type Emitter,
   type ExchangerFill,
   type Layout,
   type Model,
@@ -41,6 +43,8 @@ export interface EmulatorState {
   source: Source;
   /** `default` leaves `dhw` out of the config: external on model B, internal on model C. */
   dhw: 'default' | DhwStorage;
+  /** The card's `emitter` option (URL `emitter=`): `underfloor` (the default), `radiator` or `none`. */
+  emitter: Emitter;
   features: Record<FeatureKey, FeatureChoice>;
   /** The card's `exchanger_fill` option (URL `fill=`): `gradient` (the default) or `none`. */
   fill: ExchangerFill;
@@ -75,6 +79,7 @@ export const defaultState = (): EmulatorState => ({
   variant: DEFAULT_VARIANT,
   source: 'ground',
   dhw: 'default',
+  emitter: 'underfloor',
   features: { active_cooling: 'default', passive_cooling: 'default', htr: 'default', backup_heater: 'default' },
   fill: 'gradient',
   layout: 'auto',
@@ -105,6 +110,7 @@ export function parseState(search: string): EmulatorState {
     variant: VARIANTS.find((v) => v === variant) ?? base.variant,
     source: pick(SOURCES, params.get('source'), base.source),
     dhw: dhwForModel(model, pick(['default', ...DHW_STORAGES] as const, params.get('dhw'), base.dhw)),
+    emitter: pick(EMITTERS, params.get('emitter'), base.emitter),
     features: Object.fromEntries(
       FEATURE_KEYS.map((key) => [key, pick(FEATURE_CHOICES, params.get(key), 'default')]),
     ) as Record<FeatureKey, FeatureChoice>,
@@ -133,6 +139,7 @@ export function toSearch(state: EmulatorState): string {
   });
   if (state.naming !== 'firmware') params.set('naming', state.naming);
   if (state.dhw !== 'default') params.set('dhw', state.dhw);
+  if (state.emitter !== 'underfloor') params.set('emitter', state.emitter);
   if (state.fill !== 'gradient') params.set('fill', state.fill);
   if (state.layout !== 'auto') params.set('layout', state.layout);
   if (state.width !== DEFAULT_WIDTH) params.set('width', String(state.width));
@@ -163,6 +170,7 @@ export function configOf(state: EmulatorState): CardConfig {
     model: state.model,
     variant: state.variant,
     source: state.source,
+    emitter: state.emitter,
     exchanger_fill: state.fill,
     layout: state.layout,
     ...(state.dhw === 'default' ? {} : { dhw: state.dhw }),

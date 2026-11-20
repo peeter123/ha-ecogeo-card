@@ -2,9 +2,9 @@
 // sets the threshold) and test/card/overlaps.browser.test.ts (which guards it), so that the two cannot drift. It
 // reads real layout, so it runs in a browser. Boxes: a label's box is its element's box without the half-leading above
 // and below its text (line-height minus font-size, halved), because rows that stack at a fixed pitch share that
-// leading without their text touching. Components are the symbol groups, the DHW storage, the air unit and the ground
-// collector. A label that sits inside a body (BODY_LABELS: tank 50 on model C, the external tank, the air unit, the
-// ground collector) is not compared with that body's box but must lie inside it (`label <id> x outline:<body>` otherwise),
+// leading without their text touching. Components are the symbol groups, the DHW storage, the air unit, the ground
+// collector and the emitter. A label that sits inside a body (BODY_LABELS: tank 50 on model C, the external tank, the air unit, the
+// ground collector, the emitter) is not compared with that body's box but must lie inside it (`label <id> x outline:<body>` otherwise),
 // and the obstacles a body registers (`data-obstacle`: the air unit's coil block and fan, the collector's hatching and
 // serpentine) count as parts of their own; the pipes of a body (the coil, the serpentine) are sampled like every pipe.
 // Two boxes overlap when they share more
@@ -33,6 +33,10 @@ export const INSTALLATIONS = [
   { name: 'air-B-none', query: 'source=air&dhw=none' },
   { name: 'hybrid-B-none', query: 'source=hybrid&dhw=none' },
   { name: 'hybrid-C-internal', query: 'source=hybrid&model=C&dhw=internal' },
+  // the emitters: the default is the underfloor loop (every installation above); the radiator and none, whose DG1 demand sits beside the stubs
+  { name: 'ground-B-radiator', query: 'source=ground&emitter=radiator' },
+  { name: 'air-B-no-emitter', query: 'source=air&emitter=none' },
+  { name: 'hybrid-C-no-emitter', query: 'source=hybrid&model=C&dhw=internal&emitter=none' },
 ] as const;
 
 export interface Box {
@@ -96,7 +100,7 @@ function samplePipe(path: SVGPathElement): Box[] {
 /** The pipe samples of a card, one entry per `path.pipe`. */
 function measurePipes(root: ParentNode): PipeSamples[] {
   return [...root.querySelectorAll<SVGPathElement>('path.pipe')].map((path) => ({
-    id: `pipe:${path.closest('[data-segment]')?.getAttribute('data-segment') ?? '?'}`,
+    id: `pipe:${path.closest('[data-segment]')?.getAttribute('data-segment') ?? (path.hasAttribute('data-emitter-loop') ? 'dg1_loop' : '?')}`,
     squares: samplePipe(path),
   }));
 }
@@ -116,9 +120,9 @@ export function measureCard(root: ParentNode, options: { pipes?: boolean } = {})
       bottom: bottom - leading,
     };
   });
-  const groups = [...root.querySelectorAll('g.symbol-group, g.dhw-storage, g.air-unit, g.ground-collector')];
+  const groups = [...root.querySelectorAll('g.symbol-group, g.dhw-storage, g.air-unit, g.ground-collector, g.emitter')];
   const parts: PartBox[] = groups.map((element) => ({
-    id: `${element.getAttribute('class')?.split(' ')[0] ?? 'g'}:${element.getAttribute('data-item') ?? element.getAttribute('data-dhw') ?? element.getAttribute('data-source') ?? ''}`,
+    id: `${element.getAttribute('class')?.split(' ')[0] ?? 'g'}:${element.getAttribute('data-item') ?? element.getAttribute('data-dhw') ?? element.getAttribute('data-source') ?? element.getAttribute('data-emitter') ?? ''}`,
     item: element.getAttribute('data-item'),
     ...box(element),
   }));
@@ -223,6 +227,7 @@ export const BODY_LABELS: Readonly<Record<string, string>> = {
   air_unit_out: 'air-unit:air',
   ground_out: 'ground-collector:ground',
   hybrid_ground_out: 'ground-collector:ground',
+  emitter_demand: 'emitter:body',
 };
 
 /** The Out and In values that read as a pair (refine-simplified-layout D7), production and brine; read by scripts/search-places.mjs only. */

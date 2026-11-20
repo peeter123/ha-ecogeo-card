@@ -17,7 +17,7 @@ import {
 import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 
 // the coordinates below come from the arrangement (the manual-figure frame's are in test/diagram/simplified.test.ts)
-const horizontal = arrangementFor('horizontal', { source: 'ground', tank: true, emitter: false });
+const horizontal = arrangementFor('horizontal', { source: 'ground', tank: true, emitter: 'none' });
 const CABINET = horizontal.cabinet;
 const COMPONENTS = horizontal.components;
 const EXTERNAL_TANK = horizontal.externalTank ?? {

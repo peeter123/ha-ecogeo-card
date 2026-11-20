@@ -5,7 +5,7 @@
 import './ha-stubs';
 import '../src/index';
 import type { EcogeoCard } from '../src/card/ecogeo-card';
-import { DHW_STORAGES, EXCHANGER_FILLS, LAYOUTS, MODELS, SOURCES } from '../src/config/options';
+import { DHW_STORAGES, EMITTERS, EXCHANGER_FILLS, LAYOUTS, MODELS, SOURCES } from '../src/config/options';
 import type { RolePath } from '../src/config/roles';
 import { FEATURE_KEYS, VARIANTS } from '../src/config/variants';
 import { NBSP, NO_VALUE, UNITS } from '../src/strings';
@@ -297,6 +297,15 @@ controlsRoot.append(
       },
       undefined,
       () => dhwChoicesFor(state.model),
+    ),
+    select(
+      'emitter',
+      'Heat emitter',
+      EMITTERS,
+      () => state.emitter,
+      (value) => {
+        state = { ...state, emitter: value };
+      },
     ),
     select(
       'fill',

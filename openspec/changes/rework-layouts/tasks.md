@@ -229,23 +229,62 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 
 ## 6. The DG1 emitter
 
-- [ ] 6.1 Add the `emitter` option (`underfloor` default, `radiator`, `none`; card-config "Card type and options") to
+- [x] 6.1 Add the `emitter` option (`underfloor` default, `radiator`, `none`; card-config "Card type and options") to
   options, the editor's unit section (card-editor "Editor sections", default not written) and the emulator controls and
-  URL (dev-emulator "Configuration switches"). Verify: config, editor and URL-state unit tests pass.
-- [ ] 6.2 Draw the emitter in the band's first slot (design D5, heating-emitter "Emitter above connections 1/2",
+  URL (dev-emulator "Configuration switches"). Verify: config, editor and URL-state unit tests pass. Note (2026-11-19,
+  implementer): `EMITTERS` and `EMITTER_OPTION` in `src/config/options.ts`, resolved as `resolved.emitter` (from
+  `installationOf`); the editor's unit section has the field after the DHW storage (choices from
+  `EDITOR.choices.emitter`, the default `underfloor` never written, a test for it); the emulator has an `emitter` select
+  and `emitter=` in the URL, written to the card config explicitly like `fill` and `layout`. An invalid value is a
+  configuration error naming `emitter` and `underfloor, radiator, none`.
+- [x] 6.2 Draw the emitter in the band's first slot (design D5, heating-emitter "Emitter above connections 1/2",
   "Underfloor loop drawing", "Radiator drawing"), with `dg1_sup`/`dg1_ret` in the DG1 production circuit and the
   gradient colouring (heating-emitter "Emitter follows the DG1 production circuit", "Emitter colours from supply to
   return"; temperature-coloring "Water segment temperatures"); `emitter: none` keeps short stubs. Verify:
-  heating-emitter unit tests for each scenario pass (heating, DHW muted, passive cooling active, radiator without
-  fill).
-- [ ] 6.3 Show the DG1 demand inside the emitter (beside the stubs with `none`), add the tooltips and the tap entity
+  heating-emitter unit tests for each scenario pass (heating, DHW muted, passive cooling active, radiator without fill).
+  Note (2026-11-19, implementer): new `src/diagram/emitter.ts` (`renderEmitter`, `emitterStyles`); `BandKey.emitter` is
+  now the kind (`underfloor`, `radiator`, `none`) and `BAND.emitter` is 200 x 124 for both kinds (`BAND.emitterWidth` is
+  gone). Body: both kinds stand on the band's bottom face; pipes rise 34 units inside each side (frame ports 1/2 are 132
+  apart, the body is centred over them: x 101 to 301). Underfloor: a divider 43 under the top, five passes 14 apart from
+  50 under the top, one path with the vertical gradient from the first to the last pass (the loop's own, independent of
+  `exchanger_fill`); the loop is the body's path, not a segment, so the integrity test counts the emitter's inlet and
+  outlet as ports. Radiator: six columns 10 wide, 8 apart, 72 tall, supply meeting the first column 54 under the top,
+  return leaving the last 106 under it, the body filled with the same gradient (opacity 0.5) only with `exchanger_fill:
+  gradient`. `dg1_sup`/`dg1_ret` are in `production_dg1` with the production pump as speed role, so `p1_stub`/`p2_stub`
+  moved from the cabinet's list into `bandSegments` and exist only with `none` (12 units). Tests:
+  `test/diagram/emitter.test.ts` (heating, DHW muted, passive cooling, underfloor and radiator colours, radiator without
+  fill, a missing probe), band and simplified tests over every emitter. The emitter cites no manual item (it is outside
+  the unit), said in the comments of emitter.ts and geometry.ts.
+- [x] 6.3 Show the DG1 demand inside the emitter (beside the stubs with `none`), add the tooltips and the tap entity
   (heating-emitter "DG1 demand on the emitter"; component-info "Component name on hover", "Tap the emitter"). Verify:
-  component-info and label unit tests pass.
-- [ ] 6.4 Re-place the labels, re-measure the threshold, record the snapshots again. Verify: horizontal overlap
-  browser tests pass; a capture subagent checks underfloor, radiator and none with every source at the threshold and
-  1000 px.
-- [ ] 6.5 Update README.md (the `emitter` option) and docs/ecogeo-card.md (the emitter, its colouring and why it is not
-  a manual item). Verify: `npm run check` passes.
+  component-info and label unit tests pass. Note (2026-11-19, implementer): two label ids for one role, like the
+  source's per-kind ids: `emitter_demand` (a body label placed from the zones in the strip 24 high, 14 under the body's
+  top; BODY_LABELS `emitter:body`) and `dg1_demand` (beside the stubs, a recorded place, only with `none`), so the
+  search needs no contradictory feasibility. The 19-label test lists `emitter_demand`. Tooltips "Underfloor heating" and
+  "Radiator" (`EMITTER_NAMES`), no item number; `EMITTER_ROLE` is `heating.demand`, and the body is neither a button nor
+  a tab stop without that entity or in sample mode.
+- [x] 6.4 Re-place the labels, re-measure the threshold, record the snapshots again. Verify: horizontal overlap browser
+  tests pass; a capture subagent checks underfloor, radiator and none with every source at the threshold and 1000 px.
+  Note (2026-11-19, implementer, Chromium with font smoothing on and WebKit): `INSTALLATIONS` got three emitter cases
+  (ground with a radiator, air without an emitter, hybrid on model C without an emitter: 13 installations, 312 search
+  cases). Review fix: WebKit's search at 560 px reported the external tank's temperature meeting its demand within the
+  margin in 10 of 312 cases (its boxes are 15 units tall against 14), so the tank's rows are now 22 apart (the demand 60
+  under the top instead of 56); both engines then report no margin hit for any body label (the emitter's strip and tank
+  50 included). The search at 560 px finds the same six places in Chromium and WebKit (no new entry: `emitter_demand` is
+  placed from the zones and finds 606 places in its strip; `dg1_demand` keeps 336, 220, end, 12 cases meet the cabinet
+  edge); at 540 px both engines move the discharge and suction blocks 50 and 53 units off their pairs, so
+  `VERTICAL_BELOW` stays 560 (layout.ts and the size estimates of simplified.test.ts are unchanged; the widest boxes are
+  still 74, 65, 48 and 74 units). `measure-layout` is clean from 500 px in both engines (6 overlaps at 480, 3353 at
+  320). Capture list: `emitter-<kind>-<source>-<theme>-<width>` for underfloor, radiator and none with air, ground and
+  hybrid, light and dark, at 560 and 1000 px in heating (36), plus the radiator with `fill=none` at 1000 px; the muted
+  emitters are in the band captures (DHW mode). All 37 opened at full size (verdicts in the report). Snapshots
+  re-recorded (196).
+- [x] 6.5 Update README.md (the `emitter` option) and docs/ecogeo-card.md (the emitter, its colouring and why it is not
+  a manual item). Verify: `npm run check` passes. Note (2026-11-19, implementer): README (options table, the emitter
+  table and paragraph, the emulator URL table, the features line), docs (The band, the new section The emitter,
+  component taps, colours and muted pipes, live values, threshold and place numbers: 13 installations, 312 cases, WebKit
+  searched) and `docs/images/heating.png` from `scenario-heating`; `docs/images/phone-heating.png` is unchanged (group
+  7).
 
 ## 7. The vertical arrangement
 
@@ -284,8 +323,10 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 - [ ] 9.1 Rewrite the 1.0.0 section of CHANGELOG.md for the reworked card (layouts, emitter, values, band); keep
   `package.json` at 1.0.0 (design D13); run `npm run release`. Verify: `npm run release` passes and
   `npm run verify-dist` passes.
-- [ ] 9.2 Deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource's `?v=` (id and value in
-  `private/installation.md`) and record the deploy there. Verify: a subagent takes light screenshots of the schematic
+- [ ] 9.2 The live installation's emitter is underfloor (confirmed by the user 2026-11-19, recorded in
+  `private/installation.md`), the default, so the dashboard config needs no `emitter`. Deploy `dist/ecogeo-card.js`
+  explicitly, bump the dashboard resource's `?v=` (id and value in `private/installation.md`) and record the deploy
+  there. Verify: a subagent takes light screenshots of the schematic
   view at 1170 px with zoom 3 (vertical) and at 1280 x 800 (horizontal), returns a verdict against the review criteria,
   and the system log shows no `ecogeo` errors.
 
@@ -295,7 +336,9 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
   search for both layouts and `scripts/measure-layout.mjs` in Chromium; fix any difference from the WebKit results.
   Done for the horizontal layout on 2026-11-19 (group 4 review, smoothing on): the browser project passes in both
   engines, and the Chromium search at 680 and 660 px and `measure-layout` agree with WebKit (places and threshold
-  680). Repeat after groups 5-7 change the drawing, and for the vertical search.
+  680). Repeat after groups 5-7 change the drawing, and for the vertical search. Done after groups 5 and 6
+  (2026-11-19, smoothing on): the horizontal search at 560 px gives the same places in both engines and
+  `measure-layout` is clean from 500 px in both.
 - The first CI run on Linux after a push confirms the browser preflight passes there (design D11).
 - One fresh Opus review of the whole change before archiving.
 - At archive, edit the Purpose sections of the main specs that still describe the old layouts and side zones

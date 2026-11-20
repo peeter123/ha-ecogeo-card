@@ -4,7 +4,6 @@ production_out | label end | left: 10.4%; top: 50.695517774343124%
 production_in | label end | left: 23.599999999999998%; top: 50.695517774343124%
 production_pressure | label end | left: 23.599999999999998%; top: 55.02318392581144%
 production_pump | label end | left: 36.1%; top: 74.49768160741885%
-dg1_demand | label end | left: 33.6%; top: 34.003091190108194%
 brine_out | label start | left: 64.7%; top: 51.00463678516228%
 brine_in | label start | left: 77.60000000000001%; top: 50.695517774343124%
 brine_pressure | label end | left: 74%; top: 55.02318392581144%
@@ -16,12 +15,36 @@ suction_pressure | label end | left: 57.9%; top: 58.42349304482226%
 compressor_speed | label middle | left: 50%; top: 63.214837712519326%
 superheat | label middle | left: 52.400000000000006%; top: 73.57032457496136%
 expansion_valve | label middle | left: 52.400000000000006%; top: 76.04327666151468%
+emitter_demand | label middle | left: 20.1%; top: 12.055641421947449%
 ground_out | label middle | left: 70.6%; top: 14.528593508500773%
 tank_external_temperature | label middle emphasis bare | left: 90%; top: 6.800618238021638%
 footer: outside_temperature, cop, dg1_power, htr_power
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 647" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #d7263d 10.5%, #f2711c); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3; --outline-width: 2">
-          <g class="source" data-source-kind="ground">
+          <g data-emitter="body" class="emitter" data-emitter-kind="underfloor" aria-label="Underfloor heating" role="button" tabindex="0">
+    <title>Underfloor heating</title>
+    <defs>
+      <linearGradient gradientUnits="userSpaceOnUse" x1="0" x2="0" id="ecogeoN-emitter" y1="102" y2="158" data-muted="false">
+        <stop offset="0" style="stop-color: color-mix(in srgb, #e8a317 52%, #8ecae6)">
+</stop>
+        <stop offset="1" style="stop-color: color-mix(in srgb, #e8a317 20%, #8ecae6)">
+</stop>
+      </linearGradient>
+    </defs>
+    <rect class="emitter-hit" fill="transparent" stroke="none" x="101" y="52" width="200" height="124">
+</rect>
+    <rect class="emitter-outline" rx="6" x="101" y="52" width="200" height="124" fill="none" fill-opacity="0.5">
+</rect>
+    <path class="emitter-line" d="M101 95 H301">
+</path>
+<rect class="obstacle" fill="none" stroke="none" data-obstacle="emitter-divider" x="101" y="93.5" width="200" height="3">
+</rect>
+<path data-emitter-loop="" stroke-linecap="round" class="pipe" style="stroke: url(#ecogeoN-emitter)" d="M135 102 L242 102 A7 7 0 0 1 249 109 L249 109 A7 7 0 0 1 242 116 L160 116 A7 7 0 0 0 153 123 L153 123 A7 7 0 0 0 160 130 L242 130 A7 7 0 0 1 249 137 L249 137 A7 7 0 0 1 242 144 L160 144 A7 7 0 0 0 153 151 L153 151 A7 7 0 0 0 160 158 L267 158">
+</path>
+<path class="flow" data-flow="dg1_loop" style="--flow-duration: 1.2012012012012012s" d="M135 102 L242 102 A7 7 0 0 1 249 109 L249 109 A7 7 0 0 1 242 116 L160 116 A7 7 0 0 0 153 123 L153 123 A7 7 0 0 0 160 130 L242 130 A7 7 0 0 1 249 137 L249 137 A7 7 0 0 1 242 144 L160 144 A7 7 0 0 0 153 151 L153 151 A7 7 0 0 0 160 158 L267 158">
+</path>
+  </g>
+<g class="source" data-source-kind="ground">
     
     <g data-source="ground" class="ground-collector" aria-label="Ground collector">
     <title>Ground collector</title>
@@ -121,11 +144,7 @@ svg:
 </defs>
     <rect class="outline" rx="6" x="10" y="232" width="980" height="400">
 </rect>
-    <path class="pipe " data-segment="p1_stub" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M135 232 L135 220">
-</path>
-<path class="pipe " data-segment="p2_stub" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M267 220 L267 232">
-</path>
-<path class="pipe " data-segment="p1_up" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M135 262 L135 232">
+    <path class="pipe " data-segment="p1_up" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M135 262 L135 232">
 </path>
 <path class="flow " data-flow="p1_up" style="--flow-duration: 1.2012012012012012s" d="M135 262 L135 232">
 </path>
@@ -226,6 +245,14 @@ svg:
 <path class="pipe " data-segment="ln3" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M641 518 L641 307 M641 293 L641 281 M641 267 L641 232">
 </path>
 <path class="flow " data-flow="ln3" style="--flow-duration: 1.2s" d="M641 518 L641 307 M641 293 L641 281 M641 267 L641 232">
+</path>
+<path class="pipe " data-segment="dg1_sup" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M135 232 L135 210 L135 176 L135 102">
+</path>
+<path class="flow " data-flow="dg1_sup" style="--flow-duration: 1.2012012012012012s" d="M135 232 L135 210 L135 176 L135 102">
+</path>
+<path class="pipe " data-segment="dg1_ret" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M267 158 L267 176 L267 210 L267 232">
+</path>
+<path class="flow " data-flow="dg1_ret" style="--flow-duration: 1.2012012012012012s" d="M267 158 L267 176 L267 210 L267 232">
 </path>
 <path class="pipe muted" data-segment="dhw_ext_in" d="M880 232 L880 204 L850 204 L850 84 L862 84">
 </path>

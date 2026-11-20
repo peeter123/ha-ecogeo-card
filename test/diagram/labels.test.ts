@@ -26,7 +26,7 @@ import {
 const arrangement = arrangementFor('horizontal');
 /** The arrangement of the card's band key for a source (the external tank drawn). */
 const bandOf = (source: 'air' | 'ground' | 'hybrid') =>
-  arrangementFor('horizontal', { source, tank: true, emitter: false });
+  arrangementFor('horizontal', { source, tank: true, emitter: 'none' });
 const LABEL_SPECS = arrangement.labels.specs;
 
 const P = 'demo_ecogeo';
@@ -700,17 +700,47 @@ describe('DHW tank labels', () => {
     on.remove();
   });
 
-  test('"Demand" at connections 1/2 shows only while the DG1 demand is on', async () => {
-    const on = await mount({}, hassOf({ 'heating.demand': 'on' }));
+  test.each(['underfloor', 'radiator'] as const)(
+    'heating-emitter "Demand on": "Demand" inside the %s shows only while the DG1 demand is on',
+    async (emitter) => {
+      const on = await mount({ emitter }, hassOf({ 'heating.demand': 'on' }));
+      expect(valueOf(on, 'emitter_demand')).toBe(HEATING_LABELS.demand);
+      expect(label(on, 'emitter_demand')?.getAttribute('data-label-item')).toBe('1');
+      expect(label(on, 'dg1_demand')).toBeNull();
+      on.remove();
+      const off = await mount({ emitter }, hassOf({ 'heating.demand': 'off' }));
+      expect(label(off, 'emitter_demand')).toBeNull();
+      off.remove();
+      const unavailable = await mount({ emitter }, hassOf({ 'heating.demand': 'unavailable' }));
+      expect(label(unavailable, 'emitter_demand')).toBeNull();
+      unavailable.remove();
+    },
+  );
+
+  test('heating-emitter "Demand without an emitter": with emitter none "Demand" sits beside the stubs, in the cabinet-side place', async () => {
+    const on = await mount({ emitter: 'none' }, hassOf({ 'heating.demand': 'on' }));
     expect(valueOf(on, 'dg1_demand')).toBe(HEATING_LABELS.demand);
     expect(label(on, 'dg1_demand')?.getAttribute('data-label-item')).toBe('1');
+    expect(label(on, 'emitter_demand')).toBeNull();
     on.remove();
-    const off = await mount({}, hassOf({ 'heating.demand': 'off' }));
+    const off = await mount({ emitter: 'none' }, hassOf({ 'heating.demand': 'off' }));
     expect(label(off, 'dg1_demand')).toBeNull();
     off.remove();
-    const unavailable = await mount({}, hassOf({ 'heating.demand': 'unavailable' }));
-    expect(label(unavailable, 'dg1_demand')).toBeNull();
-    unavailable.remove();
+  });
+
+  test('the demand is a label of the emitter body: its place is the strip at the top of the body, from the zones', () => {
+    for (const emitter of ['underfloor', 'radiator'] as const) {
+      const arrangement = arrangementFor('horizontal', { source: 'ground', tank: true, emitter });
+      const spec = arrangement.labels.specs.find((candidate) => candidate.id === 'emitter_demand');
+      const body = arrangement.emitter;
+      expect(spec, emitter).toBeDefined();
+      expect(body, emitter).toBeDefined();
+      if (spec === undefined || body === undefined) continue;
+      expect(spec.align).toBe('middle');
+      expect(spec.x).toBe(body.strip.x + body.strip.width / 2);
+      expect(spec.y).toBe(body.strip.y + body.strip.height / 2);
+      expect(spec.y, emitter).toBeLessThan(body.y + 40);
+    }
   });
 
   test('DHW temperature unavailable: the tank body is muted and the label shows no number', async () => {
@@ -1120,7 +1150,7 @@ describe('the 19 values (live-values "Values on the drawing")', () => {
         'superheat',
         'air_unit_out',
         'tank_external_temperature',
-        'dg1_demand',
+        'emitter_demand',
         'tank_external_demand',
       ].sort(),
     );

@@ -16,12 +16,13 @@
 // Above the cabinet lies the band (rework-layouts D3): a strip with three slots, left to right the emitter (over ports 1/2),
 // the outer-loop source (over 3/4) and the external DHW tank (over 5/6), and, between the band and the cabinet's top edge,
 // the join lane that holds the short pipes from the ports into the parts. None of the band's parts is a manual item: the
-// manual's figures stop at the connections; the air unit, the ground collector and the external tank are the card's own
-// drawings of what the connections lead to (the tank is the "DHW inter-accumulator" of ports 5/6).
+// manual's figures stop at the connections; the air unit, the ground collector, the external tank and the emitter are the
+// card's own drawings of what the connections lead to (the tank is the "DHW inter-accumulator" of ports 5/6, the emitter
+// is the heating installation on ports 1/2, outside the unit).
 //
 // Pipe points run in the direction of the flow in heating (`direction` 1) so that the renderer can animate them.
 import type { CircuitId, Circuits } from '../calc/circuits';
-import type { DhwStorage, Model, Source } from '../config/options';
+import type { DhwStorage, Emitter, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
 import { HORIZONTAL_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
@@ -88,6 +89,30 @@ export interface CollectorShape extends Rect {
   readonly feedX: number;
 }
 
+/**
+ * The heat emitter on connections 1/2 (rework-layouts D5; not a manual item: it is outside the unit): an underfloor loop (a
+ * serpentine of horizontal passes in a floor strip) or a radiator (a panel with vertical columns). A strip at the top of the
+ * body holds the DG1 demand. The supply pipe runs from connection 1 to `inlet` and the return pipe from `outlet` to
+ * connection 2, rising through the body's bottom face at `feedX` and `exitX`.
+ */
+export interface EmitterShape extends Rect {
+  readonly kind: Exclude<Emitter, 'none'>;
+  /** The free strip at the top of the body, where the demand sits. */
+  readonly strip: Rect;
+  /** The x of the supply and return pipes on the bottom face. */
+  readonly feedX: number;
+  readonly exitX: number;
+  /** Where the supply pipe ends (the first pass, the radiator's top left) and the return pipe starts (the last pass, the bottom right). */
+  readonly inlet: Point;
+  readonly outlet: Point;
+  /** The underfloor serpentine, from the inlet to the outlet (empty for a radiator). */
+  readonly loop: readonly Point[];
+  /** The y of the underfloor passes, in order (empty for a radiator): the first is the inlet's, the last the outlet's. */
+  readonly passes: readonly number[];
+  /** The radiator's columns (empty for an underfloor loop). */
+  readonly columns: readonly Rect[];
+}
+
 /** The external tank's cylinder with its elliptical domed caps. */
 export type TankShape = Rect & { readonly dome: number };
 
@@ -104,11 +129,12 @@ export interface ExternalCoil {
   readonly outX: number;
 }
 
-/** What decides the band's slots: the source, and whether the external tank and the emitter are drawn (an empty slot gives its space away). */
+/** What decides the band's slots: the source, whether the external tank is drawn and the emitter (an empty slot gives its space away). */
 export interface BandKey {
   readonly source: Source;
   readonly tank: boolean;
-  readonly emitter: boolean;
+  /** The emitter: its kind, or `none` for no emitter (an empty slot; the stubs of connections 1/2). */
+  readonly emitter: Emitter;
 }
 
 export type BandSlotName = 'emitter' | 'source' | 'tank';
@@ -139,10 +165,11 @@ export interface BandZones {
   readonly key: BandKey;
   /** The band: its top and its bottom, where every body's bottom edge lies. The join lane runs from the bottom to the cabinet's top edge. */
   readonly band: { readonly top: number; readonly bottom: number };
-  /** The x of connections 3-6 on the cabinet's top edge. */
-  readonly ports: Readonly<Record<3 | 4 | 5 | 6, number>>;
+  /** The x of connections 1-6 on the cabinet's top edge. */
+  readonly ports: Readonly<Record<1 | 2 | 3 | 4 | 5 | 6, number>>;
   /** The slots that are filled (a slot of an absent part is not there). */
   readonly slots: Readonly<Partial<Record<BandSlotName, Slot>>>;
+  readonly emitter?: EmitterShape;
   readonly airUnit?: AirUnitShape;
   readonly collector?: CollectorShape;
   readonly externalTank?: TankShape;
@@ -167,8 +194,8 @@ export const BAND = {
   /** The gap between the air unit and the collector of the hybrid. */
   hybridGap: 12,
   tank: { width: 160, height: 170, dome: 14 },
-  /** The emitter's width; 0 while the emitter is not drawn (its slot is empty and gives its space away). */
-  emitterWidth: 0 as number,
+  /** The emitter's body: both kinds share the slot's width; the bottom pipes rise 34 units inside each side. */
+  emitter: { width: 200, height: 124 },
   /** The jogs' distances above the cabinet's top edge. */
   jog: { out: 22, in: 34, link: 46, tank: 28 },
 } as const;
@@ -280,6 +307,75 @@ export function collectorShape(x0: number, bottom: number): CollectorShape {
     serpentine: { x: x0 + 8, y: y + 48, width: width - 16, height: height - 48 },
     passes: { y0: y + 54, step: 14, count: 4, left: x0 + 34, right: x0 + width - 14 },
     feedX: x0 + 14,
+  };
+}
+
+/** The stub length of connections 1/2 without an emitter. */
+export const STUB_LENGTH = 12;
+
+/** The pass spacing of the underfloor loop, and the columns of the radiator. */
+const UNDERFLOOR = { top: 50, step: 14, count: 5, inset: 52 } as const;
+const RADIATOR = { count: 6, width: 10, gap: 8, top: 44, bottom: 116, inletY: 54, outletY: 106 } as const;
+
+/** The emitter placed with its left edge at `x0` and its bottom edge at `bottom`. */
+export function emitterShape(kind: EmitterShape['kind'], x0: number, bottom: number): EmitterShape {
+  const { width, height } = BAND.emitter;
+  const y = bottom - height;
+  const feedX = x0 + 34;
+  const exitX = x0 + width - 34;
+  const base = {
+    kind,
+    x: x0,
+    y,
+    width,
+    height,
+    strip: { x: x0 + 8, y: y + 14, width: width - 16, height: 24 },
+    feedX,
+    exitX,
+  } as const;
+  if (kind === 'underfloor') {
+    const passes = Array.from({ length: UNDERFLOOR.count }, (_, index) => y + UNDERFLOOR.top + index * UNDERFLOOR.step);
+    const [y1, y2, y3, y4, y5] = passes;
+    if (y1 === undefined || y2 === undefined || y3 === undefined || y4 === undefined || y5 === undefined) {
+      throw new Error('five passes');
+    }
+    const left = x0 + UNDERFLOOR.inset;
+    const right = x0 + width - UNDERFLOOR.inset;
+    return {
+      ...base,
+      inlet: [feedX, y1],
+      outlet: [exitX, y5],
+      loop: [
+        [feedX, y1],
+        [right, y1],
+        [right, y2],
+        [left, y2],
+        [left, y3],
+        [right, y3],
+        [right, y4],
+        [left, y4],
+        [left, y5],
+        [exitX, y5],
+      ],
+      passes,
+      columns: [],
+    };
+  }
+  const span = RADIATOR.count * RADIATOR.width + (RADIATOR.count - 1) * RADIATOR.gap;
+  const first = x0 + (width - span) / 2;
+  const columns = Array.from({ length: RADIATOR.count }, (_, index): Rect => ({
+    x: first + index * (RADIATOR.width + RADIATOR.gap),
+    y: y + RADIATOR.top,
+    width: RADIATOR.width,
+    height: RADIATOR.bottom - RADIATOR.top,
+  }));
+  return {
+    ...base,
+    inlet: [first, y + RADIATOR.inletY],
+    outlet: [first + span, y + RADIATOR.outletY],
+    loop: [],
+    passes: [],
+    columns,
   };
 }
 
@@ -597,9 +693,7 @@ export const HTR_WATER_SEGMENT_IDS: readonly string[] = [
 
 /** The cabinet's pipe segments (the band's are `bandSegments`). The production trunk (return from ports 2/6 through 27, 15, 8, 44, 33 and 26) serves DG1 and DHW. */
 const cabinetSegments = (): readonly Segment[] => [
-  // production: ports 1 and 2 (the DG1 stubs are 12 units long)
-  seg('p1_stub', DG1, '270,130 270,118', OUT, { stub: true }),
-  seg('p2_stub', DG1, '312,118 312,130', RET, { stub: true }),
+  // production: ports 1 and 2 (their emitter or stubs are in the band, `bandSegments`)
   seg('p1_up', DG1, '270,160 270,130', OUT, { dhw: 'any', speedRole: PP }),
   seg('p1_direct', DG1, '270,184 270,130', OUT, { dhw: 'none', speedRole: PP }),
   seg('p2_in', DG1, '312,130 312,198', RET, { speedRole: PP }),
@@ -780,6 +874,52 @@ function bandSegments(z: Zones): readonly Segment[] {
   const tank = z.externalCoil;
   const level = bandJogs(top);
   const segments: Segment[] = [];
+  const { emitter } = z;
+  if (emitter === undefined) {
+    // no emitter: connections 1 and 2 end in short dead-end stubs (coloured, never animated)
+    segments.push(
+      seg('p1_stub', DG1, line([ports[1], top], [ports[1], top - STUB_LENGTH]), OUT, { stub: true }),
+      seg('p2_stub', DG1, line([ports[2], top - STUB_LENGTH], [ports[2], top]), RET, { stub: true }),
+    );
+  } else {
+    // the emitter: the supply from connection 1 to its inlet (production outlet 33), the return from its outlet to connection 2
+    // (production return 34), both rising through the body's bottom face; the underfloor loop between them is the body's own path
+    const face = emitter.y + emitter.height;
+    segments.push(
+      seg(
+        'dg1_sup',
+        DG1,
+        line(
+          ...route(
+            [ports[1], top],
+            [ports[1], level.out],
+            [emitter.feedX, level.out],
+            [emitter.feedX, face],
+            [emitter.feedX, emitter.inlet[1]],
+            emitter.inlet,
+          ),
+        ),
+        OUT,
+        { speedRole: PP },
+      ),
+      seg(
+        'dg1_ret',
+        DG1,
+        line(
+          ...route(
+            emitter.outlet,
+            [emitter.exitX, emitter.outlet[1]],
+            [emitter.exitX, face],
+            [emitter.exitX, level.out],
+            [ports[2], level.out],
+            [ports[2], top],
+          ),
+        ),
+        RET,
+        { speedRole: PP },
+      ),
+    );
+  }
   if (key.tank && tank !== undefined) {
     const start: Point = [tank.cx - tank.rx, tank.top];
     const end: Point = [tank.cx + tank.rx, tank.bottom];
@@ -895,6 +1035,8 @@ export interface DrawContext {
   model: Model;
   dhw: DhwStorage;
   source: Source;
+  /** The heat emitter on connections 1/2; the default (underfloor) when left out. */
+  emitter?: Emitter;
   features: Features;
   /**
    * The arrangement drawn (refine-simplified-layout D1): every consumer reads the coordinates from it. The card sets it
@@ -1009,15 +1151,18 @@ export const bandJogs = (top: number): { out: number; in: number; link: number; 
   tank: top - BAND.jog.tank,
 });
 
-/** The band's key for a draw context: the source, whether the external tank is drawn, and whether the emitter is. */
-export const bandKeyOf = (context: Pick<DrawContext, 'model' | 'dhw' | 'source'>): BandKey => ({
+/** The emitter a context without one draws: the option's default. */
+const DEFAULT_EMITTER: Emitter = 'underfloor';
+
+/** The band's key for a draw context: the source, whether the external tank is drawn, and the emitter. */
+export const bandKeyOf = (context: Pick<DrawContext, 'model' | 'dhw' | 'source' | 'emitter'>): BandKey => ({
   source: context.source,
   tank: drawnStorage(context) === 'external',
-  emitter: BAND.emitterWidth > 0,
+  emitter: context.emitter ?? DEFAULT_EMITTER,
 });
 
 /** The widest band: the hybrid source with the tank and the emitter; `arrangementFor` without a key. */
-const WIDEST_KEY: BandKey = { source: 'hybrid', tank: true, emitter: BAND.emitterWidth > 0 };
+const WIDEST_KEY: BandKey = { source: 'hybrid', tank: true, emitter: DEFAULT_EMITTER };
 
 const CABINET_ZONES: CabinetZones = (() => {
   const cabinet: Rect = {
@@ -1046,10 +1191,10 @@ const CABINET_ZONES: CabinetZones = (() => {
 function bandZonesFor(key: BandKey, cabinet: CabinetZones): BandZones {
   const top = cabinet.cabinet.y;
   const bottom = top - BAND.joinLane;
-  const ports = { 3: mapX(630), 4: mapX(690), 5: mapX(722), 6: mapX(748) } as const;
+  const ports = { 1: mapX(270), 2: mapX(312), 3: mapX(630), 4: mapX(690), 5: mapX(722), 6: mapX(748) } as const;
   const slots = planBand(
     [
-      { name: 'emitter', centre: (mapX(270) + mapX(312)) / 2, width: key.emitter ? BAND.emitterWidth : 0 },
+      { name: 'emitter', centre: (ports[1] + ports[2]) / 2, width: key.emitter === 'none' ? 0 : BAND.emitter.width },
       { name: 'source', centre: (ports[3] + ports[4]) / 2, width: sourceWidth(key.source) },
       { name: 'tank', centre: (ports[5] + ports[6]) / 2, width: key.tank ? BAND.tank.width : 0 },
     ],
@@ -1057,6 +1202,9 @@ function bandZonesFor(key: BandKey, cabinet: CabinetZones): BandZones {
     BAND.gap,
   );
   const source = slots.source;
+  const emitterSlot = slots.emitter;
+  const emitter =
+    key.emitter === 'none' || emitterSlot === undefined ? undefined : emitterShape(key.emitter, emitterSlot.x0, bottom);
   const air = key.source === 'ground' || source === undefined ? undefined : airUnitShape(source.x0, bottom);
   const collectorX =
     source === undefined ? 0 : key.source === 'hybrid' ? source.x0 + BAND.air.width + BAND.hybridGap : source.x0;
@@ -1088,6 +1236,7 @@ function bandZonesFor(key: BandKey, cabinet: CabinetZones): BandZones {
     band: { top: bottom - BAND.height, bottom },
     ports,
     slots,
+    ...(emitter === undefined ? {} : { emitter }),
     ...(air === undefined ? {} : { airUnit: air }),
     ...(collector === undefined ? {} : { collector }),
     ...(tankShape === undefined ? {} : { externalTank: tankShape }),
@@ -1147,7 +1296,7 @@ export const FRAME = {
  */
 export function arrangementFor(layout: ShownLayout, key: BandKey = WIDEST_KEY): Arrangement {
   // until the vertical arrangement is built both layouts share it
-  const id = `${layout === 'vertical' ? 'horizontal' : layout}|${key.source}|${String(key.tank)}|${String(key.emitter)}`;
+  const id = `${layout === 'vertical' ? 'horizontal' : layout}|${key.source}|${String(key.tank)}|${key.emitter}`;
   const known = ARRANGEMENTS.get(id);
   if (known !== undefined) return known;
   const built = buildArrangement(key);
@@ -1160,25 +1309,25 @@ export function arrangementFor(layout: ShownLayout, key: BandKey = WIDEST_KEY): 
  * (scripts/search-places.mjs) measures each label's distance from these, never from a recorded place, so a rerun does not
  * depend on the table it replaces.
  */
-export function defaultLabelPlaces(layout: ShownLayout): LabelPlaces {
+export function defaultLabelPlaces(layout: ShownLayout, key: BandKey = WIDEST_KEY): LabelPlaces {
   switch (layout) {
     case 'horizontal':
     case 'vertical':
-      return labelPlacesFor({ ...CABINET_ZONES, ...bandZonesFor(WIDEST_KEY, CABINET_ZONES) }, (x, y) => [
-        mapX(x),
-        mapY(y),
-      ]);
+      return labelPlacesFor({ ...CABINET_ZONES, ...bandZonesFor(key, CABINET_ZONES) }, (x, y) => [mapX(x), mapY(y)]);
   }
 }
 
 /** The arrangement a draw context carries, or, without one, the horizontal layout's for its band key. */
 export const arrangementOf = (
-  context: Partial<Pick<DrawContext, 'arrangement' | 'model' | 'dhw' | 'source'>>,
+  context: Partial<Pick<DrawContext, 'arrangement' | 'model' | 'dhw' | 'source' | 'emitter'>>,
 ): Arrangement =>
   context.arrangement ??
   (context.model === undefined || context.dhw === undefined || context.source === undefined
     ? arrangementFor('horizontal')
-    : arrangementFor('horizontal', bandKeyOf({ model: context.model, dhw: context.dhw, source: context.source })));
+    : arrangementFor(
+        'horizontal',
+        bandKeyOf({ model: context.model, dhw: context.dhw, source: context.source, emitter: context.emitter }),
+      ));
 
 export type PartState = 'normal' | 'muted' | 'hidden';
 

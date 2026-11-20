@@ -13,6 +13,7 @@ import { css, svg, type SVGTemplateResult } from 'lit';
 import type { AnimationReadings } from '../calc/readings';
 import { AIR_UNIT_FAN_NAME, AIR_UNIT_NAME, GROUND_COLLECTOR_NAME } from '../strings';
 import { FAN_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
+import { obstacle } from './obstacle';
 import { arrangementOf, type AirUnitShape, type CollectorShape, type DrawContext } from './geometry';
 
 export const sourceStyles = css`
@@ -104,10 +105,6 @@ const BLADES = [0, 72, 144, 216, 288].map(
 
 /** The blades are drawn for a ring of this radius; a smaller ring scales them. */
 const BLADE_RING = 34;
-
-/** An invisible box that registers an obstacle inside a body for the overlap check (dev/overlaps.ts). */
-const obstacle = (name: string, rect: { x: number; y: number; width: number; height: number }): SVGTemplateResult =>
-  svg`<rect class="obstacle" data-obstacle=${name} x=${rect.x} y=${rect.y} width=${rect.width} height=${rect.height} fill="none" stroke="none" />`;
 
 function airUnit(
   unit: AirUnitShape,

@@ -109,7 +109,10 @@ describe('exchanger side fills (temperature-coloring spec)', () => {
   test('fill off: no exchanger has a coloured fill and no gradient is defined', async () => {
     const card = await mount({ exchanger_fill: 'none' });
     expect(root(card).querySelectorAll('.exchanger-fill')).toHaveLength(0);
-    expect(root(card).querySelectorAll('linearGradient')).toHaveLength(0);
+    // only the underfloor loop's own gradient (its stroke, whatever the fill says) is defined
+    expect(
+      [...root(card).querySelectorAll('linearGradient')].map((gradient) => gradient.id.replace(/^ecogeo\d+-/, '')),
+    ).toEqual(['emitter']);
     expect(root(card).querySelectorAll('[data-kind="exchanger"]')).toHaveLength(4);
     card.remove();
   });
@@ -186,9 +189,10 @@ describe('exchanger side fills (temperature-coloring spec)', () => {
     const first = await mount();
     const second = await mount();
     const ids = (card: EcogeoCard): string[] => [...root(card).querySelectorAll('linearGradient')].map((g) => g.id);
-    expect(ids(first)).toHaveLength(8);
-    expect(ids(second)).toHaveLength(8);
-    expect(new Set([...ids(first), ...ids(second)]).size).toBe(16);
+    // the exchanger sides' gradients and the emitter's
+    expect(ids(first)).toHaveLength(9);
+    expect(ids(second)).toHaveLength(9);
+    expect(new Set([...ids(first), ...ids(second)]).size).toBe(18);
     expect(side(first, 8, 'left').paint).not.toBe(side(second, 8, 'left').paint);
     first.remove();
     second.remove();

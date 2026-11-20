@@ -2,7 +2,7 @@
 // D7, add-compact-layout D8, rework-layouts D7). For every one of the 19 values it finds, over every emulator scenario,
 // installation and naming at the layout's narrowest verified width, the places where the label overlaps no component, no
 // pipe at its rendered width, no other label and no outline (the cabinet's, a body's), stays inside the drawing, and, for a
-// label inside a body (BODY_LABELS of dev/overlaps.ts: tank 50, the external tank, the air unit, the collector), inside that body, with about 2 px of margin
+// label inside a body (BODY_LABELS of dev/overlaps.ts: tank 50, the external tank, the air unit, the collector, the emitter), inside that body, with about 2 px of margin
 // (Chromium and WebKit differ by 1-2 px in text width). There is no on-pipe set and no pipe-free option: a label without a
 // place is reported and is a decision point (design Risks), not an exception. Of the feasible places it takes the one
 // nearest the label's default place (its probe or component, before the recorded places), most constrained label first.
@@ -321,8 +321,12 @@ try {
   loadedInOrder = overlaps['inOrder'];
   // each label's own place: its default place under the maps, before HORIZONTAL_PLACES (a rerun never measures from a
   // recorded place)
-  for (const spec of geometry['defaultLabelPlaces'](LAYOUT).specs) {
-    homes[spec.id] = { x: spec.x, y: spec.y, align: spec.align };
+  // (with an emitter its demand is a body label, `emitter_demand`; without one, `dg1_demand` has its own default place)
+  for (const emitter of ['underfloor', 'none']) {
+    const key = { source: 'hybrid', tank: true, emitter };
+    for (const spec of geometry['defaultLabelPlaces'](LAYOUT, key).specs) {
+      homes[spec.id] = { x: spec.x, y: spec.y, align: spec.align };
+    }
   }
 
   browser = await (BROWSER === 'webkit' ? webkit : chromium).launch();

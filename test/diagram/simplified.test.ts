@@ -2,7 +2,7 @@
 // (compared with the manual-figure frame, `FRAME`), and every topology rule checked on it for every source, DHW storage and
 // model. The band above the cabinet (slots, bodies, join lane) is checked in band.test.ts.
 import { describe, expect, test } from 'vitest';
-import { DHW_STORAGES, SOURCES } from '../../src/config/options';
+import { DHW_STORAGES, EMITTERS, SOURCES } from '../../src/config/options';
 import { HORIZONTAL_PLACES } from '../../src/diagram/label-places';
 import { VERTICAL_BELOW } from '../../src/lib/layout';
 import type { FeatureState, Features } from '../../src/config/variants';
@@ -43,17 +43,20 @@ const featuresOf = (state: FeatureState): Features => ({
 const CONTEXTS: DrawContext[] = (['B', 'C'] as const).flatMap((model) =>
   DHW_STORAGES.flatMap((dhw) =>
     SOURCES.flatMap((source) =>
-      ([true, false, 'unused'] as const).map((state): DrawContext => ({
-        model,
-        dhw,
-        source,
-        features: featuresOf(state),
-      })),
+      EMITTERS.flatMap((emitter) =>
+        ([true, false, 'unused'] as const).map((state): DrawContext => ({
+          model,
+          dhw,
+          source,
+          emitter,
+          features: featuresOf(state),
+        })),
+      ),
     ),
   ),
 );
 const name = (context: DrawContext): string =>
-  `${context.model} ${context.dhw} ${context.source} features ${String(context.features.htr)}`;
+  `${context.model} ${context.dhw} ${context.source} emitter ${context.emitter ?? ''} features ${String(context.features.htr)}`;
 
 /** The reference context of the "No empty band" scenario: variant 4 with every feature true. */
 const VARIANT_4: DrawContext = {
@@ -198,12 +201,17 @@ describe('arrangementFor: the simplified arrangement', () => {
   test('the labels with a place of their own have a reason, are in the arrangement and sit where the table says', () => {
     const ids = Object.keys(HORIZONTAL_PLACES);
     expect(ids.length).toBeGreaterThan(0);
+    // the DG1 demand beside the stubs exists only without an emitter
+    const bare = arrangementFor('horizontal', { ...simplified.key, emitter: 'none' });
     for (const [id, place] of Object.entries(HORIZONTAL_PLACES)) {
       expect(place.reason.length, id).toBeGreaterThan(20);
-      const spec = simplified.labels.specs.find((label) => label.id === id);
+      const spec = [simplified, bare].flatMap((own) => own.labels.specs).find((label) => label.id === id);
       expect(spec, id).toBeDefined();
       expect({ x: spec?.x, y: spec?.y, align: spec?.align }, id).toEqual(
-        place.at(simplified, (x, y) => [mapAxis(HORIZONTAL_MAP_X, x), mapAxis(HORIZONTAL_MAP_Y, y)]),
+        place.at(spec?.id === 'dg1_demand' ? bare : simplified, (x, y) => [
+          mapAxis(HORIZONTAL_MAP_X, x),
+          mapAxis(HORIZONTAL_MAP_Y, y),
+        ]),
       );
     }
   });
@@ -219,7 +227,7 @@ describe('arrangementFor: the simplified arrangement', () => {
     }
     for (const segment of simplified.segments) {
       // the band's pipes are authored in the arrangement's units (band.test.ts), not mapped from the frame
-      if (segment.id.startsWith('src_') || segment.id.startsWith('dhw_ext_')) continue;
+      if (segment.id.startsWith('src_') || segment.id.startsWith('dhw_ext_') || segment.id.startsWith('dg1_')) continue;
       const twin = frame.segments.find((candidate) => candidate.id === segment.id);
       expect(twin, segment.id).toBeDefined();
       expect(segment.points, segment.id).toEqual((twin?.points ?? []).map(([x, y]) => [fx(x), fy(y)]));
@@ -234,7 +242,6 @@ describe('arrangementFor: the simplified arrangement', () => {
       'production_out',
       'production_in',
       'production_pump',
-      'dg1_demand',
       'brine_out',
       'brine_in',
       'brine_pressure',
@@ -287,6 +294,7 @@ describe('the invariants of the full level on the simplified arrangement', () =>
     }
     // the band's bodies lie inside the band (above the cabinet's top edge) and above the cabinet's columns: nothing is drawn beside the cabinet
     const bodies = [
+      ...(context.emitter === 'none' ? [] : [['emitter', arrangement.emitter] as const]),
       ...(context.source === 'ground' ? [] : [['air unit', arrangement.airUnit] as const]),
       ...(context.source === 'air' ? [] : [['collector', arrangement.collector] as const]),
       ...(drawnStorage(context) === 'external' ? [['tank', arrangement.externalTank] as const] : []),

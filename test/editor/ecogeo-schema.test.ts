@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
   CHOICE_OPTIONS,
   DHW_OPTION,
+  EMITTER_OPTION,
   EXCHANGER_FILL_OPTION,
   LAYOUT_OPTION,
   MODEL_OPTION,
@@ -51,6 +52,7 @@ describe('editorSchema', () => {
       'variant',
       'source',
       'dhw',
+      'emitter',
       '_device',
       'prefix',
       'features.passive_cooling',
@@ -80,6 +82,7 @@ describe('editorSchema', () => {
     const options = [
       ['model', MODEL_OPTION],
       ['source', SOURCE_OPTION],
+      ['emitter', EMITTER_OPTION],
       ['exchanger_fill', EXCHANGER_FILL_OPTION],
       ['layout', LAYOUT_OPTION],
     ] as const;

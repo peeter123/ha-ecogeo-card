@@ -74,6 +74,7 @@ const ALL_OPTIONS: CardConfig = {
   variant: 2,
   source: 'hybrid',
   dhw: 'internal',
+  emitter: 'radiator',
   prefix: 'demo_ecogeo',
   features: { active_cooling: true, passive_cooling: false, htr: false, backup_heater: 'unused' },
   exchanger_fill: 'none',
@@ -96,6 +97,7 @@ describe('ecogeo-card-editor existing config', () => {
       variant: 4,
       source: 'air',
       dhw: 'external',
+      emitter: 'radiator',
       prefix: 'demo_ecogeo',
       features: { passive_cooling: 'unused' },
     };
@@ -107,6 +109,7 @@ describe('ecogeo-card-editor existing config', () => {
       variant: '4',
       source: 'air',
       dhw: 'external',
+      emitter: 'radiator',
       prefix: 'demo_ecogeo',
       features: { passive_cooling: 'unused', active_cooling: 'default', htr: 'default', backup_heater: 'default' },
       exchanger_fill: 'gradient',
@@ -120,6 +123,7 @@ describe('ecogeo-card-editor existing config', () => {
       'variant',
       'source',
       'dhw',
+      'emitter',
       '_device',
       'prefix',
       'features.passive_cooling',
@@ -211,6 +215,16 @@ describe('ecogeo-card-editor writes', () => {
     expect(saved.at(-1)).toStrictEqual({ type: 'custom:ecogeo-card', prefix: 'my_unit' });
     form.change({ ...form.data, source: 'air' });
     expect(saved.at(-1)).toStrictEqual({ type: 'custom:ecogeo-card', prefix: 'my_unit', source: 'air' });
+  });
+
+  test('card-editor "Default emitter not written": setting the emitter to underfloor leaves no emitter key; radiator is written', async () => {
+    const { editor, form } = await openEditor({ type: 'custom:ecogeo-card' });
+    const saved = collectSaved(editor);
+    expect(form.data).toMatchObject({ emitter: 'underfloor' });
+    form.change({ ...form.data, emitter: 'underfloor' });
+    expect(saved.at(-1)).toStrictEqual({ type: 'custom:ecogeo-card' });
+    form.change({ ...form.data, emitter: 'radiator' });
+    expect(saved.at(-1)).toStrictEqual({ type: 'custom:ecogeo-card', emitter: 'radiator' });
   });
 
   test('a cleared prefix (an empty text or undefined) removes the key', async () => {

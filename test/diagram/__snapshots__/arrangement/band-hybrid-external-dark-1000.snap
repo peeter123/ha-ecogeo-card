@@ -17,11 +17,32 @@ superheat | label middle | left: 52.400000000000006%; top: 73.57032457496136%
 expansion_valve | label middle | left: 52.400000000000006%; top: 76.04327666151468%
 hybrid_ground_out | label middle | left: 72.1%; top: 14.528593508500773%
 tank_external_temperature | label middle emphasis bare | left: 91%; top: 6.800618238021638%
-tank_external_demand | label middle bare | left: 91%; top: 9.582689335394127%
+tank_external_demand | label middle bare | left: 91%; top: 10.200927357032457%
 footer: outside_temperature, cop, dhw_power
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 647" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #f2711c 91%, #e8a317); --ecogeo-coil-muted: var(--disabled-text-color); --pipe-width: 3; --outline-width: 2">
-          <g class="source" data-source-kind="hybrid">
+          <g data-emitter="body" class="emitter muted" data-emitter-kind="underfloor" aria-label="Underfloor heating" role="button" tabindex="0">
+    <title>Underfloor heating</title>
+    <defs>
+      <linearGradient gradientUnits="userSpaceOnUse" x1="0" x2="0" id="ecogeoN-emitter" y1="102" y2="158" data-muted="true">
+        <stop offset="0" style="stop-color: var(--disabled-text-color)">
+</stop>
+        <stop offset="1" style="stop-color: var(--disabled-text-color)">
+</stop>
+      </linearGradient>
+    </defs>
+    <rect class="emitter-hit" fill="transparent" stroke="none" x="101" y="52" width="200" height="124">
+</rect>
+    <rect class="emitter-outline" rx="6" x="101" y="52" width="200" height="124" fill="none" fill-opacity="0.5">
+</rect>
+    <path class="emitter-line" d="M101 95 H301">
+</path>
+<rect class="obstacle" fill="none" stroke="none" data-obstacle="emitter-divider" x="101" y="93.5" width="200" height="3">
+</rect>
+<path data-emitter-loop="" stroke-linecap="round" class="pipe muted" d="M135 102 L242 102 A7 7 0 0 1 249 109 L249 109 A7 7 0 0 1 242 116 L160 116 A7 7 0 0 0 153 123 L153 123 A7 7 0 0 0 160 130 L242 130 A7 7 0 0 1 249 137 L249 137 A7 7 0 0 1 242 144 L160 144 A7 7 0 0 0 153 151 L153 151 A7 7 0 0 0 160 158 L267 158">
+</path>
+  </g>
+<g class="source" data-source-kind="hybrid">
     <g data-source="air" class="air-unit" aria-label="Air unit">
     <title>Air unit</title>
     <rect class="source-outline" rx="6" x="494" y="8" width="130" height="168">
@@ -178,11 +199,7 @@ svg:
 </defs>
     <rect class="outline" rx="6" x="10" y="232" width="980" height="400">
 </rect>
-    <path class="pipe muted" data-segment="p1_stub" d="M135 232 L135 220">
-</path>
-<path class="pipe muted" data-segment="p2_stub" d="M267 220 L267 232">
-</path>
-<path class="pipe muted" data-segment="p1_up" d="M135 262 L135 232">
+    <path class="pipe muted" data-segment="p1_up" d="M135 262 L135 232">
 </path>
 <path class="pipe muted" data-segment="p2_in" d="M267 232 L267 267 M267 281 L267 300">
 </path>
@@ -307,6 +324,10 @@ svg:
 <path class="pipe muted" data-segment="br_10_in" d="M771 450 L771 550 L529 550">
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M529 594 L621 594 L621 557 M621 543 L621 530">
+</path>
+<path class="pipe muted" data-segment="dg1_sup" d="M135 232 L135 210 L135 176 L135 102">
+</path>
+<path class="pipe muted" data-segment="dg1_ret" d="M267 158 L267 176 L267 210 L267 232">
 </path>
 <path class="pipe " data-segment="dhw_ext_in" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" d="M880 232 L880 204 L860 204 L860 84 L872 84">
 </path>

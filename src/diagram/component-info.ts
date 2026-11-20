@@ -44,6 +44,8 @@ export function componentRole(item: number, taps: Taps | undefined): RolePath | 
 
 /** The role of the air unit's fan. */
 export const FAN_ROLE: RolePath = 'source.fan_speed';
+/** The role of the emitter: the DG1 demand. */
+export const EMITTER_ROLE: RolePath = 'heating.demand';
 /** The role of the external DHW tank. */
 export const EXTERNAL_TANK_ROLE: RolePath = 'dhw.temperature';
 

@@ -1,0 +1,294 @@
+// The heat emitter (rework-layouts D5; heating-emitter spec): where it is drawn, the underfloor passes and the radiator's
+// columns, that it follows the DG1 production circuit (heating, DHW, passive cooling), its colours from supply to return, the
+// radiator without a fill, and the DG1 demand on it.
+import { describe, expect, test } from 'vitest';
+import '../../src/index';
+import { EcogeoCard } from '../../src/card/ecogeo-card';
+import type { RolePath } from '../../src/config/roles';
+import { temperatureColor } from '../../src/diagram/colors';
+import { BAND, arrangementFor, crossingPoints, type EmitterShape } from '../../src/diagram/geometry';
+import { MUTED_COLOR } from '../../src/diagram/colors';
+import type { CardConfig } from '../../src/lib/config';
+import type { HassLike } from '../../src/lib/hass';
+import { DEMO_PREFIX, SCENARIOS, scenarioStates, type ScenarioName } from '../../dev/scenarios';
+
+/** A card on the states of an emulator scenario with some roles overridden. */
+async function mount(
+  config: CardConfig = {},
+  scenario: ScenarioName = 'heating',
+  override: Partial<Record<RolePath, string>> = {},
+): Promise<EcogeoCard> {
+  const card = document.createElement('ecogeo-card') as EcogeoCard;
+  card.setConfig({ type: 'custom:ecogeo-card', prefix: DEMO_PREFIX, ...config });
+  const states = scenarioStates({ ...SCENARIOS[scenario].states, ...override });
+  const hass: HassLike = {
+    states: Object.fromEntries(Object.entries(states).map(([id, state]) => [id, { entity_id: id, ...state }])),
+  };
+  card.hass = hass;
+  document.body.append(card);
+  await card.updateComplete;
+  return card;
+}
+
+const root = (card: EcogeoCard): ShadowRoot => {
+  if (card.shadowRoot === null) throw new Error('no shadow root');
+  return card.shadowRoot;
+};
+const emitterOf = (card: EcogeoCard): Element => {
+  const element = root(card).querySelector('g.emitter');
+  if (element === null) throw new Error('no emitter drawn');
+  return element;
+};
+const pipe = (card: EcogeoCard, id: string): Element => {
+  const element = root(card).querySelector(`path.pipe[data-segment="${id}"]`);
+  if (element === null) throw new Error(`no pipe ${id}`);
+  return element;
+};
+const flow = (card: EcogeoCard, id: string): Element | null => root(card).querySelector(`path.flow[data-flow="${id}"]`);
+const strokeOf = (element: Element): string => /stroke:\s*([^;]+)/.exec(element.getAttribute('style') ?? '')?.[1] ?? '';
+
+/** The two stops of the emitter's gradient: supply colour, return colour. */
+function stops(card: EcogeoCard): { start: string; end: string; y1: number; y2: number; muted: string | null } {
+  const gradient = root(card).querySelector('g.emitter linearGradient');
+  if (gradient === null) throw new Error('no emitter gradient');
+  const [start, end] = [...gradient.querySelectorAll('stop')].map(
+    (stop) => /stop-color:\s*(.+?);?$/.exec(stop.getAttribute('style') ?? '')?.[1] ?? '',
+  );
+  return {
+    start: start ?? '',
+    end: end ?? '',
+    y1: Number(gradient.getAttribute('y1')),
+    y2: Number(gradient.getAttribute('y2')),
+    muted: gradient.getAttribute('data-muted'),
+  };
+}
+
+/** The emitter of the arrangement under a ground source with the external tank. */
+function shapeOf(kind: 'underfloor' | 'radiator'): EmitterShape {
+  const shape = arrangementFor('horizontal', { source: 'ground', tank: true, emitter: kind }).emitter;
+  if (shape === undefined) throw new Error('no emitter');
+  return shape;
+}
+
+const BOTH = { 'production.outlet_temperature': '35', 'production.return_temperature': '30' } as const;
+const HOT = temperatureColor(35);
+const COLD = temperatureColor(30);
+
+describe('heating-emitter "Emitter above connections 1/2"', () => {
+  test('default emitter: an underfloor loop above connections 1 and 2, joined to both, no pipe crossing outside the cabinet', () => {
+    const arrangement = arrangementFor('horizontal', { source: 'ground', tank: true, emitter: 'underfloor' });
+    const { emitter, cabinet, ports } = arrangement;
+    expect(emitter?.kind).toBe('underfloor');
+    if (emitter === undefined) return;
+    // above the cabinet, in the first slot of the band, over ports 1 and 2
+    expect(emitter.y + emitter.height).toBe(arrangement.band.bottom);
+    expect(emitter.x).toBeLessThan(ports[1]);
+    expect(emitter.x + emitter.width).toBeGreaterThan(ports[2]);
+    expect(emitter.x + emitter.width + BAND.gap).toBeLessThanOrEqual(
+      arrangement.airUnit?.x ?? arrangement.collector?.x ?? Infinity,
+    );
+    // joined to both ports
+    const sup = arrangement.segments.find((segment) => segment.id === 'dg1_sup');
+    const ret = arrangement.segments.find((segment) => segment.id === 'dg1_ret');
+    expect(sup?.points[0]).toEqual([ports[1], cabinet.y]);
+    expect(sup?.points.at(-1)).toEqual(emitter.inlet);
+    expect(ret?.points[0]).toEqual(emitter.outlet);
+    expect(ret?.points.at(-1)).toEqual([ports[2], cabinet.y]);
+    // no pipe crosses another outside the cabinet
+    const pipes = arrangement.segments.filter((segment) => segment.shape === undefined && segment.stub !== true);
+    pipes.forEach((one, index) => {
+      for (const two of pipes.slice(index + 1)) {
+        const found = crossingPoints(one.points, two.points).filter(([, y]) => y < cabinet.y);
+        expect(found, `${one.id} x ${two.id}`).toEqual([]);
+      }
+    });
+    // the loop's own path (the body's) crosses neither pipe
+    for (const segment of pipes) {
+      expect(crossingPoints(emitter.loop, segment.points), segment.id).toEqual([]);
+    }
+  });
+
+  test('no emitter: nothing drawn, connections 1 and 2 end in short stubs above the cabinet', async () => {
+    const card = await mount({ emitter: 'none' });
+    expect(root(card).querySelector('g.emitter')).toBeNull();
+    expect(pipe(card, 'p1_stub')).toBeDefined();
+    expect(pipe(card, 'p2_stub')).toBeDefined();
+    expect(root(card).querySelector('[data-segment="dg1_sup"]')).toBeNull();
+    expect(root(card).querySelector('[data-segment="dg1_ret"]')).toBeNull();
+    card.remove();
+  });
+
+  test('the emitter drawn: no stubs, the supply and return pipes in their place', async () => {
+    for (const emitter of ['underfloor', 'radiator'] as const) {
+      const card = await mount({ emitter });
+      expect(root(card).querySelector('[data-segment="p1_stub"]')).toBeNull();
+      expect(root(card).querySelector('[data-segment="p2_stub"]')).toBeNull();
+      pipe(card, 'dg1_sup');
+      pipe(card, 'dg1_ret');
+      card.remove();
+    }
+  });
+
+  test('the emitter is outside the unit and cites no manual item', async () => {
+    const card = await mount({ emitter: 'underfloor' });
+    const element = emitterOf(card);
+    expect(element.hasAttribute('data-item')).toBe(false);
+    expect(element.querySelector('title')?.textContent).toBe('Underfloor heating');
+    card.remove();
+  });
+});
+
+describe('heating-emitter "Underfloor loop drawing"', () => {
+  test('at least four horizontal passes joined by bends, inside a rectangle, the ends on the supply and return pipes', async () => {
+    const card = await mount({ emitter: 'underfloor' });
+    const shape = shapeOf('underfloor');
+    const horizontal = shape.loop.slice(1).filter((point, index) => point[1] === shape.loop[index]?.[1]);
+    expect(horizontal.length).toBeGreaterThanOrEqual(4);
+    // the passes lie inside the body's rectangle
+    for (const [x, y] of shape.loop) {
+      expect(x).toBeGreaterThan(shape.x);
+      expect(x).toBeLessThan(shape.x + shape.width);
+      expect(y).toBeGreaterThan(shape.y);
+      expect(y).toBeLessThan(shape.y + shape.height);
+    }
+    expect(shape.loop[0]).toEqual(shape.inlet);
+    expect(shape.loop.at(-1)).toEqual(shape.outlet);
+    // drawn: one loop path with rounded bends (arcs), and the rectangle
+    const loop = root(card).querySelector('path[data-emitter-loop]');
+    expect(loop).not.toBeNull();
+    expect((loop?.getAttribute('d') ?? '').match(/A/g)?.length).toBeGreaterThanOrEqual(2 * 4 - 2);
+    expect(root(card).querySelector('g.emitter rect.emitter-outline')).not.toBeNull();
+    // the supply pipe ends where the loop starts and the return pipe starts where it ends
+    const sup = arrangementFor('horizontal', { source: 'ground', tank: true, emitter: 'underfloor' }).segments.find(
+      (segment) => segment.id === 'dg1_sup',
+    );
+    expect(sup?.points.at(-1)).toEqual(shape.loop[0]);
+    card.remove();
+  });
+});
+
+describe('heating-emitter "Radiator drawing"', () => {
+  test('a body with at least four vertical columns, the supply at the top on one side and the return at the bottom on the other', async () => {
+    const card = await mount({ emitter: 'radiator' });
+    const shape = shapeOf('radiator');
+    expect(root(card).querySelectorAll('g.emitter rect.emitter-column').length).toBeGreaterThanOrEqual(4);
+    expect(shape.columns.length).toBeGreaterThanOrEqual(4);
+    for (const column of shape.columns) expect(column.height).toBeGreaterThan(column.width);
+    const middle = shape.x + shape.width / 2;
+    const middleY = shape.y + shape.height / 2;
+    expect(shape.inlet[0]).toBeLessThan(middle);
+    expect(shape.inlet[1]).toBeLessThan(middleY);
+    expect(shape.outlet[0]).toBeGreaterThan(middle);
+    expect(shape.outlet[1]).toBeGreaterThan(middleY);
+    expect(emitterOf(card).querySelector('title')?.textContent).toBe('Radiator');
+    expect(root(card).querySelector('path[data-emitter-loop]')).toBeNull();
+    card.remove();
+  });
+});
+
+describe('heating-emitter "Emitter follows the DG1 production circuit"', () => {
+  test('heating: the supply has the 35.0 degrees colour, the return the 30.0 degrees colour, and the flow is animated', async () => {
+    for (const emitter of ['underfloor', 'radiator'] as const) {
+      const card = await mount({ emitter }, 'heating', BOTH);
+      expect(strokeOf(pipe(card, 'dg1_sup')), emitter).toBe(HOT);
+      expect(strokeOf(pipe(card, 'dg1_ret')), emitter).toBe(COLD);
+      expect(flow(card, 'dg1_sup'), emitter).not.toBeNull();
+      expect(flow(card, 'dg1_ret'), emitter).not.toBeNull();
+      expect(emitterOf(card).classList.contains('muted'), emitter).toBe(false);
+      if (emitter === 'underfloor') expect(flow(card, 'dg1_loop')).not.toBeNull();
+      card.remove();
+    }
+  });
+
+  test('DHW mode: the emitter and its pipes are muted and not animated', async () => {
+    for (const emitter of ['underfloor', 'radiator'] as const) {
+      const card = await mount({ emitter }, 'dhw', BOTH);
+      expect(pipe(card, 'dg1_sup').classList.contains('muted'), emitter).toBe(true);
+      expect(pipe(card, 'dg1_ret').classList.contains('muted'), emitter).toBe(true);
+      expect(emitterOf(card).classList.contains('muted'), emitter).toBe(true);
+      expect(flow(card, 'dg1_sup'), emitter).toBeNull();
+      expect(flow(card, 'dg1_ret'), emitter).toBeNull();
+      expect(flow(card, 'dg1_loop'), emitter).toBeNull();
+      expect(stops(card), emitter).toMatchObject({ start: MUTED_COLOR, end: MUTED_COLOR, muted: 'true' });
+      card.remove();
+    }
+  });
+
+  test('passive cooling: the emitter and its pipes are coloured by the production temperatures and animated', async () => {
+    for (const emitter of ['underfloor', 'radiator'] as const) {
+      const card = await mount({ emitter }, 'passive_cooling', BOTH);
+      expect(strokeOf(pipe(card, 'dg1_sup')), emitter).toBe(HOT);
+      expect(strokeOf(pipe(card, 'dg1_ret')), emitter).toBe(COLD);
+      expect(flow(card, 'dg1_sup'), emitter).not.toBeNull();
+      expect(flow(card, 'dg1_ret'), emitter).not.toBeNull();
+      expect(emitterOf(card).classList.contains('muted'), emitter).toBe(false);
+      card.remove();
+    }
+  });
+});
+
+describe('heating-emitter "Emitter colours from supply to return"', () => {
+  test('underfloor: the pass nearest the inlet has the 35.0 degrees colour and the pass nearest the outlet the 30.0 degrees colour', async () => {
+    const card = await mount({ emitter: 'underfloor' }, 'heating', BOTH);
+    const shape = shapeOf('underfloor');
+    const gradient = stops(card);
+    expect(gradient).toMatchObject({ start: HOT, end: COLD });
+    // the gradient runs vertically from the first (inlet) pass to the last (outlet) pass
+    expect(gradient.y1).toBe(shape.passes[0]);
+    expect(gradient.y2).toBe(shape.passes.at(-1));
+    expect(gradient.y1).toBeLessThan(gradient.y2);
+    expect(shape.inlet[1]).toBe(gradient.y1);
+    expect(shape.outlet[1]).toBe(gradient.y2);
+    const loop = root(card).querySelector('path[data-emitter-loop]');
+    expect(loop?.getAttribute('style')).toMatch(/stroke:\s*url\(#[^)]+\)/);
+    // the gradient the loop refers to is the one in the emitter
+    const id = /url\(#([^)]+)\)/.exec(loop?.getAttribute('style') ?? '')?.[1] ?? '';
+    expect(root(card).querySelector(`linearGradient[id="${id}"]`)).not.toBeNull();
+    card.remove();
+  });
+
+  test('underfloor: the loop keeps its gradient with exchanger_fill none', async () => {
+    const card = await mount({ emitter: 'underfloor', exchanger_fill: 'none' }, 'heating', BOTH);
+    expect(stops(card)).toMatchObject({ start: HOT, end: COLD });
+    card.remove();
+  });
+
+  test('radiator: the body is filled from the supply colour at the top to the return colour at the bottom', async () => {
+    const card = await mount({ emitter: 'radiator' }, 'heating', BOTH);
+    const shape = shapeOf('radiator');
+    const gradient = stops(card);
+    expect(gradient).toMatchObject({ start: HOT, end: COLD, y1: shape.y, y2: shape.y + shape.height });
+    const fill = root(card).querySelector('g.emitter rect.emitter-outline')?.getAttribute('fill') ?? '';
+    const id = /^url\(#(.+)\)$/.exec(fill)?.[1] ?? '';
+    expect(root(card).querySelector(`g.emitter linearGradient[id="${id}"]`)).not.toBeNull();
+    card.remove();
+  });
+
+  test('radiator without fill: no fill on the body, its outline and pipes drawn as with a fill', async () => {
+    const withFill = await mount({ emitter: 'radiator' }, 'heating', BOTH);
+    const bare = await mount({ emitter: 'radiator', exchanger_fill: 'none' }, 'heating', BOTH);
+    const body = (card: EcogeoCard): Element | null => root(card).querySelector('g.emitter rect.emitter-outline');
+    expect(body(bare)?.getAttribute('fill')).toBe('none');
+    expect(body(withFill)?.getAttribute('fill')).toMatch(/^url\(#/);
+    // the outline, the columns and the pipes are the same
+    expect(body(bare)?.getAttribute('class')).toBe(body(withFill)?.getAttribute('class'));
+    expect(root(bare).querySelectorAll('g.emitter rect.emitter-column')).toHaveLength(
+      root(withFill).querySelectorAll('g.emitter rect.emitter-column').length,
+    );
+    expect(strokeOf(pipe(bare, 'dg1_sup'))).toBe(HOT);
+    expect(strokeOf(pipe(bare, 'dg1_ret'))).toBe(COLD);
+    expect(flow(bare, 'dg1_sup')).not.toBeNull();
+    withFill.remove();
+    bare.remove();
+  });
+
+  test('a missing production probe mutes its pipe and the gradient takes the muted colour at that end', async () => {
+    const card = await mount({ emitter: 'underfloor' }, 'heating', { 'production.return_temperature': 'unavailable' });
+    expect(pipe(card, 'dg1_ret').classList.contains('muted')).toBe(true);
+    expect(stops(card)).toMatchObject({
+      start: expect.not.stringMatching(/^var\(--disabled/) as string,
+      end: MUTED_COLOR,
+    });
+    card.remove();
+  });
+});

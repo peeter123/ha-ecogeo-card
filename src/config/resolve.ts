@@ -15,6 +15,7 @@ import {
   type ExchangerFill,
   type Layout,
   type DhwStorage,
+  type Emitter,
   type Model,
   type Source,
 } from './options';
@@ -28,6 +29,8 @@ export interface ResolvedConfig {
   variant: Variant;
   source: Source;
   dhw: DhwStorage;
+  /** The heat emitter on connections 1/2: `underfloor` (the default), `radiator` or `none` (short stubs only). */
+  emitter: Emitter;
   /** How the plate exchangers are filled: a `gradient` per side from the pipes' colours, or `none`. */
   exchangerFill: ExchangerFill;
   /** The `layout` option: `auto` follows the card's width, `horizontal` and `vertical` force one. */

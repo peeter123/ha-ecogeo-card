@@ -12,7 +12,7 @@ import { AIR_UNIT_NAME, GROUND_COLLECTOR_NAME } from '../../src/strings';
 
 // the coordinates below come from the arrangement of the card's band key (the manual-figure frame's are in test/diagram/simplified.test.ts)
 const arrangementOfSource = (source: 'air' | 'ground' | 'hybrid') =>
-  arrangementFor('horizontal', { source, tank: true, emitter: false });
+  arrangementFor('horizontal', { source, tank: true, emitter: 'none' });
 const need = <T>(value: T | undefined): T => {
   if (value === undefined) throw new Error('not drawn');
   return value;

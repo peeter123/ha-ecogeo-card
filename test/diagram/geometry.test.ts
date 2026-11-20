@@ -132,12 +132,18 @@ describe('geometry data', () => {
     expect(new Set(SEGMENTS.map((segment) => segment.id)).size).toBe(SEGMENTS.length);
   });
 
-  test('the DG1 stubs of ports 1 and 2 end below the pipe run', () => {
+  test('without an emitter the DG1 stubs of ports 1 and 2 stand on the top edge; with one there are none', () => {
+    const bare = arrangementFor('horizontal', { source: 'ground', tank: true, emitter: 'none' });
     for (const id of ['p1_stub', 'p2_stub']) {
-      const ys = segmentPoints(id).map((point) => point[1]);
-      expect(ys.length).toBeGreaterThan(0);
-      expect(Math.min(...ys)).toBeGreaterThan(110);
-      expect(Math.max(...ys)).toBeLessThanOrEqual(CABINET.y);
+      const stub = bare.segments.find((segment) => segment.id === id);
+      expect(stub?.stub, id).toBe(true);
+      const ys = (stub?.points ?? []).map((point) => point[1]);
+      expect(Math.max(...ys), id).toBe(CABINET.y);
+      expect(CABINET.y - Math.min(...ys), id).toBe(12);
+      expect(
+        SEGMENTS.some((segment) => segment.id === id),
+        id,
+      ).toBe(false);
     }
   });
 
@@ -217,7 +223,12 @@ describe('integrity in every configuration', () => {
   test.each(ALL.map((context) => [label(context), context] as const))('%s', (_name, context) => {
     const components = drawnComponents(context).map((entry) => entry.part);
     const segments = drawnSegments(context).map((entry) => entry.part);
-    const ports = components.flatMap((component) => portsOf(component));
+    const emitter = arrangementOf(context).emitter;
+    // the emitter's inlet and outlet are its ports: the supply and return pipes end on them
+    const ports = [
+      ...components.flatMap((component) => portsOf(component)),
+      ...(emitter === undefined ? [] : [emitter.inlet, emitter.outlet]),
+    ];
 
     // every segment endpoint touches a component port or another segment (or leaves through the top edge)
     for (const segment of segments) {
@@ -710,7 +721,7 @@ describe('arrangementFor (rework-layouts D2)', () => {
   });
 
   test('a band key builds its own arrangement, once', () => {
-    const key = { source: 'air', tank: false, emitter: false } as const;
+    const key = { source: 'air', tank: false, emitter: 'none' } as const;
     expect(arrangementFor('horizontal', key)).toBe(arrangementFor('horizontal', { ...key }));
     expect(arrangementFor('horizontal', key)).not.toBe(arrangementFor('horizontal'));
     expect(arrangementFor('horizontal', key).cabinet).toEqual(arrangementFor('horizontal').cabinet);
@@ -726,7 +737,10 @@ describe('arrangementFor (rework-layouts D2)', () => {
     expect(arrangementOf({})).toBe(arrangementFor('horizontal'));
     const context = { model: 'B', dhw: 'none', source: 'ground' } as const;
     expect(arrangementOf(context)).toBe(
-      arrangementFor('horizontal', { source: 'ground', tank: false, emitter: false }),
+      arrangementFor('horizontal', { source: 'ground', tank: false, emitter: 'underfloor' }),
+    );
+    expect(arrangementOf({ ...context, emitter: 'none' })).toBe(
+      arrangementFor('horizontal', { source: 'ground', tank: false, emitter: 'none' }),
     );
   });
 

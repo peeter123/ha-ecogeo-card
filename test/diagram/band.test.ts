@@ -3,7 +3,7 @@
 // the order of the parts, the short joins with at most one jog, and the bodies in their slots for every source and DHW
 // storage. The cabinet's own rules are in simplified.test.ts.
 import { describe, expect, test } from 'vitest';
-import { SOURCES } from '../../src/config/options';
+import { EMITTERS, SOURCES } from '../../src/config/options';
 import {
   BAND,
   arrangementFor,
@@ -18,13 +18,15 @@ import {
 } from '../../src/diagram/geometry';
 
 const KEYS: BandKey[] = SOURCES.flatMap((source) =>
-  [true, false].map((tank): BandKey => ({ source, tank, emitter: false })),
+  [true, false].flatMap((tank) => EMITTERS.map((emitter): BandKey => ({ source, tank, emitter }))),
 );
-const name = (key: BandKey): string => `${key.source} ${key.tank ? 'with' : 'without'} tank`;
+const name = (key: BandKey): string => `${key.source} ${key.tank ? 'with' : 'without'} tank, emitter ${key.emitter}`;
 
-/** The segments of the band's pipes: the source's and the external tank's. */
+/** The segments of the band's pipes: the emitter's, the source's and the external tank's. */
 const bandPipes = (segments: readonly Segment[]): Segment[] =>
-  segments.filter((segment) => segment.id.startsWith('src_') || segment.id.startsWith('dhw_ext_'));
+  segments.filter(
+    (segment) => segment.id.startsWith('src_') || segment.id.startsWith('dhw_ext_') || segment.id.startsWith('dg1_'),
+  );
 
 describe('planBand', () => {
   const bounds = { min: 10, max: 990 };
@@ -98,7 +100,7 @@ describe.each(KEYS.map((key) => [name(key), key] as const))('the band: %s', (_na
   test('the band lies above the cabinet with the join lane between: bodies stand on the band bottom', () => {
     expect(band.bottom).toBe(top - BAND.joinLane);
     expect(band.top).toBe(BAND.top);
-    for (const shape of [arrangement.airUnit, arrangement.collector, arrangement.externalTank]) {
+    for (const shape of [arrangement.emitter, arrangement.airUnit, arrangement.collector, arrangement.externalTank]) {
       if (shape === undefined) continue;
       expect(shape.y + shape.height).toBe(band.bottom);
       expect(shape.y).toBeGreaterThanOrEqual(band.top);
@@ -110,9 +112,19 @@ describe.each(KEYS.map((key) => [name(key), key] as const))('the band: %s', (_na
     }
   });
 
-  test('band order: the source lies left of the tank, each in its slot, and nothing lies beside the cabinet', () => {
+  test('band order: the emitter, the source and the tank, each in its slot, and nothing lies beside the cabinet', () => {
     const sourceSlot = slots.source;
     expect(sourceSlot).toBeDefined();
+    if (key.emitter === 'none') {
+      expect(slots.emitter).toBeUndefined();
+      expect(arrangement.emitter).toBeUndefined();
+    } else {
+      expect(slots.emitter).toBeDefined();
+      expect((slots.emitter?.x1 ?? 0) - (slots.emitter?.x0 ?? 0)).toBe(BAND.emitter.width);
+      expect((slots.emitter?.x1 ?? 0) + BAND.gap).toBeLessThanOrEqual((sourceSlot?.x0 ?? 0) + 1e-9);
+      expect(arrangement.emitter?.kind).toBe(key.emitter);
+      expect(arrangement.emitter?.x).toBe(slots.emitter?.x0);
+    }
     expect((sourceSlot?.x1 ?? 0) - (sourceSlot?.x0 ?? 0)).toBe(sourceWidth(key.source));
     if (key.tank) {
       expect(slots.tank).toBeDefined();
@@ -140,7 +152,7 @@ describe.each(KEYS.map((key) => [name(key), key] as const))('the band: %s', (_na
   });
 
   test('ports 1 to 6 keep their order on the top edge and the ports of the band lie in the cabinet columns', () => {
-    const xs = [ports[3], ports[4], ports[5], ports[6]];
+    const xs = [ports[1], ports[2], ports[3], ports[4], ports[5], ports[6]];
     expect(xs).toEqual([...xs].sort((a, b) => a - b));
     for (const x of xs) {
       expect(x).toBeGreaterThan(cabinet.x);
@@ -156,13 +168,14 @@ describe.each(KEYS.map((key) => [name(key), key] as const))('the band: %s', (_na
     const feed = { air: 'src_air_feed', ground: 'src_gnd_feed', hybrid: 'src_hyb_feed' }[key.source];
     const exit = { air: 'src_air_exit', ground: 'src_gnd_exit', hybrid: 'src_hyb_exit' }[key.source];
     chains.push(['port 3', join('src_out', feed)], ['port 4', join(exit, 'src_in')]);
+    if (key.emitter !== 'none') chains.push(['port 1', get('dg1_sup')], ['port 2', get('dg1_ret')]);
     if (key.source === 'hybrid') chains.push(['link', get('src_hyb_link')]);
     if (key.tank) chains.push(['port 5', get('dhw_ext_in')], ['port 6', get('dhw_ext_out')]);
     for (const [what, points] of chains) {
       const pieces = points.slice(1).map((end, index) => [points[index] ?? end, end] as const);
       // the pipes of ports 3-6 start (or end) on the top edge with a vertical piece
       if (what !== 'link') {
-        const port = what === 'port 4' || what === 'port 6' ? pieces.at(-1) : pieces[0];
+        const port = what === 'port 2' || what === 'port 4' || what === 'port 6' ? pieces.at(-1) : pieces[0];
         expect(port?.[0][0], what).toBe(port?.[1][0]);
         expect(Math.max(port?.[0][1] ?? 0, port?.[1][1] ?? 0), what).toBe(top);
       }
@@ -211,12 +224,14 @@ describe.each(KEYS.map((key) => [name(key), key] as const))('the band: %s', (_na
 });
 
 describe('the band key of a draw context', () => {
-  test('the source, whether the external tank is drawn, and no emitter yet', () => {
+  test('the source, whether the external tank is drawn, and the emitter (underfloor unless set)', () => {
     expect(bandKeyOf({ model: 'B', dhw: 'external', source: 'air' })).toEqual({
       source: 'air',
       tank: true,
-      emitter: false,
+      emitter: 'underfloor',
     });
+    expect(bandKeyOf({ model: 'B', dhw: 'external', source: 'air', emitter: 'radiator' }).emitter).toBe('radiator');
+    expect(bandKeyOf({ model: 'B', dhw: 'external', source: 'air', emitter: 'none' }).emitter).toBe('none');
     // an unused tank of model B is drawn (muted); model C draws its own inside the cabinet
     expect(bandKeyOf({ model: 'B', dhw: 'unused', source: 'ground' }).tank).toBe(true);
     expect(bandKeyOf({ model: 'C', dhw: 'unused', source: 'ground' }).tank).toBe(false);
@@ -226,7 +241,7 @@ describe('the band key of a draw context', () => {
 
   test('an empty tank slot gives its space away: the hybrid without a tank is centred over its ports, with the tank it moves left', () => {
     const [withTank, without] = [true, false].map((tank) =>
-      arrangementFor('horizontal', { source: 'hybrid', tank, emitter: false }),
+      arrangementFor('horizontal', { source: 'hybrid', tank, emitter: 'none' }),
     );
     const centre = (slot: { x0: number; x1: number } | undefined): number => ((slot?.x0 ?? 0) + (slot?.x1 ?? 0)) / 2;
     const ideal = ((without?.ports[3] ?? 0) + (without?.ports[4] ?? 0)) / 2;
