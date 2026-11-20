@@ -79,6 +79,22 @@ value, and the link pipe SHALL carry no label.
 - **THEN** the air unit and the ground collector are both drawn above connections 3 and 4, side by side, joined by a
   link pipe, crossing no pipe, and only the collector's Out value is shown
 
+## MODIFIED Requirements
+
+### Requirement: Outer loop active with the brine circuit
+The outer-loop pipes and the source SHALL be coloured and animated when the brine circuit is active (see
+operating-mode), and muted otherwise. "The source" includes its symbols (the air unit's housing and coil, the ground
+collector's serpentine), which take the muted style with the pipes; the fan keeps following its own speed. This
+includes `defrost`, in which exchanger 10 warms the brine that runs to the air unit.
+
+#### Scenario: Standby
+- **WHEN** the mode is `standby`
+- **THEN** the outer-loop pipes are muted, and the fan rotates only if its own speed is above 0 %
+
+#### Scenario: Defrost
+- **WHEN** the mode is `defrost`, the source is `air` and the brine pump runs
+- **THEN** the outer-loop pipes are coloured by the brine probes and animated towards the air unit
+
 ## REMOVED Requirements
 
 ### Requirement: Source drawn left of the cabinet

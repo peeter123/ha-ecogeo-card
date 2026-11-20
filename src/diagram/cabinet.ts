@@ -1,5 +1,5 @@
 // The cabinet (add-schematic-card D5, D6; schematic-drawing spec): the outline, the connections on the top edge (1-6, and 47-49
-// on model C) with their circuit labels, every internal component as a symbol (its item number is its tooltip and
+// on model C), every internal component as a symbol (its item number is its tooltip and
 // `data-item`, never drawn text; model C's tank 50-54 included), and every pipe segment of the drawing, the source's and the external DHW tank's
 // pipes outside the cabinet too, coloured by temperature and animated by flow
 // (pipes.ts). Valve positions come from circuits.ts; a feature that is `false` removes its parts (geometry.ts), `unused` draws them muted.

@@ -1,4 +1,4 @@
-// The colour stop rows (add-card-editor D4, task 2.2): the rows shown, folded back into `colors`, and the hex conversion.
+// The colour stop rows (add-card-editor D4): the rows shown, folded back into `colors`, and the hex conversion.
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { DEFAULT_STOPS } from '../../src/diagram/colors';
 import { NEW_STOP_COLOR } from '../../src/editor/color-rows';

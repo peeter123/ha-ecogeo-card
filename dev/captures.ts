@@ -14,7 +14,7 @@ export interface CaptureStep {
   viewport?: { width: number; height: number };
 }
 
-/** The installations and widths of the label captures (refine-simplified-layout 4.4). */
+/** The installations and widths of the label captures (the value labels at real widths). */
 const LABEL_VARIANTS = [
   { name: 'ground', query: 'source=ground' },
   { name: 'air', query: 'source=air' },
@@ -23,7 +23,7 @@ const LABEL_VARIANTS = [
 const LABEL_WIDTHS = [VERTICAL_BELOW, 800, 1000] as const;
 const LABEL_SCENARIOS = ['heating', 'dhw', 'defrost', 'passive_cooling'] as const;
 
-/** The DHW storages of the band captures (rework-layouts 5.5): the external tank, model C's tank, the unused tank of model B, none. */
+/** The DHW storages of the band captures (the band above ports 5 and 6): the external tank, model C's tank, the unused tank of model B, none. */
 const BAND_STORAGES = [
   { name: 'external', query: 'dhw=external' },
   { name: 'internal', query: 'model=C&dhw=internal' },
@@ -34,7 +34,7 @@ const BAND_STORAGES = [
 const step = (name: string, query: string, viewport?: CaptureStep['viewport']): CaptureStep =>
   viewport === undefined ? { name, query } : { name, query, viewport };
 
-/** The window of the panel capture (refine-simplified-layout 6.2): a desktop screen. */
+/** The window of the panel capture (the panel fit): a desktop screen. */
 export const PANEL_VIEWPORT = { width: 1280, height: 800 } as const;
 
 export const CAPTURES: readonly CaptureStep[] = [
@@ -134,7 +134,7 @@ export const CAPTURES: readonly CaptureStep[] = [
       ),
     ),
   ),
-  // rework-layouts 5.5: the band with every source above every DHW storage, light and dark, at the vertical threshold and 1000 px
+  // the band with every source above every DHW storage, light and dark, at the vertical threshold and 1000 px
   ...(['air', 'ground', 'hybrid'] as const).flatMap((source) =>
     BAND_STORAGES.flatMap(({ name, query }) =>
       (['light', 'dark'] as const).flatMap((theme) =>
@@ -147,7 +147,7 @@ export const CAPTURES: readonly CaptureStep[] = [
       ),
     ),
   ),
-  // rework-layouts 6.4: the emitter, every kind above every source in heating (the DG1 circuit active), light and dark, at the
+  // the emitter, every kind above every source in heating (the DG1 circuit active), light and dark, at the
   // vertical threshold and 1000 px; the radiator without its fill; the muted emitters are in the band captures above (DHW mode)
   ...EMITTERS.flatMap((emitter) =>
     (['air', 'ground', 'hybrid'] as const).flatMap((source) =>
@@ -162,7 +162,7 @@ export const CAPTURES: readonly CaptureStep[] = [
     ),
   ),
   step('emitter-radiator-fill-none', 'scenario=heating&emitter=radiator&fill=none&layout=horizontal&width=1000'),
-  // refine-simplified-layout 4.4: the values of the horizontal layout at the vertical threshold, 800 and 1000 px, in the
+  // the value labels: the values of the horizontal layout at the vertical threshold, 800 and 1000 px, in the
   // scenarios with the most values (heating, DHW, defrost, passive cooling), for an air unit, model C and, where the
   // `threshold-*` and `scenario-*` captures do not already show it, a ground collector
   ...LABEL_VARIANTS.flatMap(({ name, query }) =>

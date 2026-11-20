@@ -16,8 +16,12 @@ permissions:
 jobs:
   check:
     name: Check and verify dist
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # The visual references in test/visual/references/ were recorded on this image (run 44796692252, image
+    # 20261116.202.1); a newer Ubuntu can shift glyph pixels, so moving up means recording them again through the
+    # update_references input.
+    runs-on: ubuntu-26.04
+    # The job and the Playwright step allow extra time: the system packages come from a mirror that is sometimes slow.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -30,7 +34,7 @@ jobs:
       - run: npm ci
       - name: Install the Playwright browsers
         run: npx playwright install --with-deps chromium webkit
-        timeout-minutes: 10
+        timeout-minutes: 20
       - name: Install the Roboto font
         run: |
           sudo apt-get update

@@ -8,6 +8,7 @@ import '../../src/index';
 import { MockHass } from '../../dev/mock-hass';
 import { DEMO_PREFIX, SCENARIOS, scenarioStates } from '../../dev/scenarios';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
+import { arrangementFor, bandKeyOf } from '../../src/diagram/geometry';
 import { FOOTER_ALLOWANCE } from '../../src/lib/layout';
 
 const HEADER = 56;
@@ -25,6 +26,7 @@ async function showPanel(
   isPanel: boolean,
   width?: number,
   scenario: keyof typeof SCENARIOS = 'passive_cooling',
+  extra: Record<string, unknown> = {},
 ): Promise<{ card: EcogeoCard; root: ShadowRoot }> {
   document.body.style.setProperty('--header-height', `${String(HEADER)}px`);
   const header = document.createElement('div');
@@ -32,7 +34,7 @@ async function showPanel(
   const wrapper = document.createElement('div');
   if (width !== undefined) wrapper.style.width = `${String(width)}px`;
   const card = document.createElement('ecogeo-card') as EcogeoCard;
-  card.setConfig({ type: 'custom:ecogeo-card', prefix: DEMO_PREFIX, source: 'air' });
+  card.setConfig({ type: 'custom:ecogeo-card', prefix: DEMO_PREFIX, source: 'air', ...extra });
   card.hass = new MockHass().build(scenarioStates(SCENARIOS[scenario].states), false);
   card.isPanel = isPanel;
   wrapper.append(card);
@@ -87,6 +89,25 @@ describe('Desktop panel', () => {
     await expect.poll(() => window.innerHeight).toBe(600);
     await card.updateComplete;
     expect(box(root, '.footer').bottom).toBeLessThanOrEqual(window.innerHeight);
+  });
+
+  test('model C with tank 50 in the vertical layout fits a 1280 x 800 window (the fit uses the rendered arrangement)', async () => {
+    await page.viewport(1280, 800);
+    const { card, root } = await showPanel(true, undefined, 'passive_cooling', {
+      model: 'C',
+      dhw: 'internal',
+      layout: 'vertical',
+    });
+    await expect.poll(() => window.innerHeight).toBe(800);
+    await card.updateComplete;
+    expect(root.querySelector('[data-layout="vertical"]')).not.toBeNull();
+    expect(box(root, '.footer').bottom).toBeLessThanOrEqual(window.innerHeight);
+    // The drawing is fitted to the 740 x 825 arrangement of tank 50, not to the 740 x 797 one without it.
+    const arrangement = arrangementFor('vertical', bandKeyOf({ model: 'C', dhw: 'internal', source: 'air' }));
+    const fitted = Math.floor(
+      ((800 - HEADER - FOOTER_ALLOWANCE) * arrangement.viewBox.width) / arrangement.viewBox.height,
+    );
+    expect(box(root, '.diagram').width).toBeLessThanOrEqual(fitted);
   });
 });
 

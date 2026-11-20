@@ -234,12 +234,13 @@ place for every label at 320 px, with no overlap at 320, 360, 412, 480 and 559 p
 
 Labels get one rule per layout: `max(10px, k cqw)`, `k` chosen per layout so the labels' height in viewBox units is
 about the same in both arrangements at the threshold; the 8 px floor goes. `layout.ts` keeps one constant,
-`VERTICAL_BELOW`, measured by `scripts/measure-layout.mjs` on the horizontal layout over the 20 px grid (a target, not
-a promise: about 600 px), plus `nextVertical(layout, width, current)` with the 24 px hysteresis. Before the width is
-known the card renders horizontal, as it rendered full before. The per-layout font comes with the re-authored cabinet
-(D1), so the horizontal places and threshold are measured once, with both. A rotated label (D7, vertical layout only,
-decided by the user 2026-11-20) takes the same font rule as the others: its text height, now across the pipe, is the
-label height the lanes and gaps are sized by, and its length runs along the pipe.
+`VERTICAL_BELOW`, set by the place-search rule of D7 on the horizontal layout over the 20 px grid and cross-checked with
+`scripts/measure-layout.mjs` (planned as about 600 px; measured 560 px), plus `nextVertical(layout, width, current)`
+with the 24 px hysteresis. Before the width is known the card renders horizontal, as it rendered full before. The
+per-layout font comes with the re-authored cabinet (D1), so the horizontal places and threshold are measured once, with
+both. A rotated label (D7, vertical layout only, decided by the user 2026-11-20) takes the same font rule as the others:
+its text height, now across the pipe, is the label height the lanes and gaps are sized by, and its length runs along the
+pipe.
 
 ### D9 Captions and footer
 

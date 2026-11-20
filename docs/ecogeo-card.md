@@ -1273,6 +1273,10 @@ version for fixes. It is bumped with `npm version <major|minor|patch> --no-git-t
   file HACS downloads. Pushing, tagging and creating the release are done only when the maintainer asks for that
   release; a change's release group only bumps the version, adds the changelog entry and runs `npm run release`.
 
+`check.yml` runs on the pinned image `ubuntu-26.04`, not `ubuntu-latest`, because the visual references depend on it
+(see Visual references below); `validate.yml` renders nothing and stays on `ubuntu-latest`. The Playwright browser
+install has a 20 minute limit and the job 30, because the system packages come from a mirror that is sometimes slow.
+
 The checks and the pinned tool versions behind the workflows are in Development below.
 
 ## Development
@@ -1311,6 +1315,7 @@ yamllint on an edited YAML file, so a finding shows at once.
 | actions/checkout      | v7      | as used by hot-water-tank-estimator's workflows (2026-11-18)                    |
 | actions/upload-artifact | v7   | the latest release, v7.0.2 (2026-11-20); uploads the recorded visual references |
 | actions/setup-node    | v7      | the latest release, v7.1.0, on its GitHub releases page (2026-11-18)            |
+| runner image (check.yml) | ubuntu-26.04 | the label pins the Ubuntu release; GitHub updates the image weekly; the references were recorded on image 20261116.202.1 (run 44796692252) |
 | hacs/action           | main    | the HACS docs' example; its last tagged release, 22.5.0, dates from 2022 (hacs.xyz, GitHub, 2026-11-18)    |
 
 The codespell and yamllint versions are core's, as recorded in hot-water-tank-estimator on 2026-10-31. When the pins
@@ -1350,7 +1355,10 @@ references are recorded again:
 2. Download the artifact, replace `test/visual/references/` with its contents, look at the images, and commit them.
    A renamed or removed render leaves its old PNG behind; delete it by hand.
 
-The comparison needs the CI image's Roboto, so never commit references recorded elsewhere.
+The comparison needs the CI image's Roboto, so never commit references recorded elsewhere. The references were
+recorded on the pinned `ubuntu-26.04` runner image (run 44796692252, image 20261116.202.1), which is why `check.yml`
+does not use `ubuntu-latest`: a newer Ubuntu release can shift glyph pixels. A failure right after the image is
+updated or the pin is moved means recording the references again through `update_references`, as above.
 
 ### Screenshot review
 

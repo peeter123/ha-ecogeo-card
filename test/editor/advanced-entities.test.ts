@@ -1,4 +1,4 @@
-// The advanced entity pickers (add-card-editor D2, D5, task 2.1): the switch, one picker per role, the minimal writes.
+// The advanced entity pickers (add-card-editor D2, D5): the switch, one picker per role, the minimal writes.
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { ROLES } from '../../src/config/roles';
 import { fieldsWithPaths, isSection } from '../../src/editor/schema';

@@ -282,7 +282,7 @@ export const EDITOR = {
   choices: {
     model: { B: 'Model B', C: 'Model C' },
     variant: { '1': 'Variant 1', '2': 'Variant 2', '3': 'Variant 3', '4': 'Variant 4' },
-    source: { air: 'Air unit', ground: 'Ground loop', hybrid: 'Air unit and ground loop' },
+    source: { air: 'Air unit', ground: 'Ground collector', hybrid: 'Air unit and ground collector' },
     dhw: { external: 'External tank', internal: 'Internal tank', unused: 'Tank not in use', none: 'None' },
     emitter: { underfloor: 'Underfloor heating', radiator: 'Radiator', none: 'None' },
     exchanger_fill: { gradient: 'Gradient', none: 'None' },

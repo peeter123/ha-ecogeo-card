@@ -1,20 +1,20 @@
-// The DHW storage (add-schematic-card D5, D7; dhw-storage spec): an external tank with a coil right of the cabinet (model B,
-// connections 5 "DHW inter-accumulator outlet" and 6 "inlet"), the integrated tank of model C, or none.
+// The DHW storage (add-schematic-card D5, D7; rework-layouts D2; dhw-storage spec): an external tank with a coil in the band above
+// ports 5 "DHW inter-accumulator outlet" and 6 "inlet" (model B), the integrated tank 50 of model C inside the cabinet, or none.
 //
-// - External: this file draws the tank body (no caption: its tooltip names it). The pipes from ports 5/6 (up into the run and right to
-//   the zone) and the coil inside the tank are segments in geometry.ts (dhw_ext_in, dhw_ext_coil, dhw_ext_out), so
-//   pipes.ts colours and animates them like every other pipe. The tank is not a manual item.
-// - Internal (model C): items 50 (tank), 51 (coil), 52 (manual trap), 53 (drain valve), 54 (DHW probe) and the
-//   connections 47/48/49 are components in geometry.ts, drawn by the cabinet with the symbols of symbols.ts.
+// - External: this file draws the tank body (no caption: its tooltip names it). The pipes from ports 5/6 up into the band and the coil
+//   inside the tank are segments in geometry.ts (dhw_ext_in, dhw_ext_coil, dhw_ext_out), so pipes.ts colours and animates them like
+//   every other pipe. The tank is not a manual item.
+// - Internal (model C): items 50 (tank), 51 (coil) and 54 (DHW probe) and the connections 47/48/49 are components in geometry.ts, drawn
+//   by the cabinet with the symbols of symbols.ts. Items 52 (manual trap) and 53 (drain valve) are service parts and not drawn.
 // - Unused (`dhw: unused`): the model's tank (chosen by geometry.ts `drawnStorage`) is drawn as above but muted through
 //   `partState`: the body, outline and rim take the muted colour and no values are shown.
 // - None: nothing is drawn (no tank, no pipes, no ports 5/6, no valve 26).
 //
 // The tank body hook (add-schematic-card D7: the body takes the DHW temperature on the card's colour scale): both
-// tank bodies are a `.tank-body` shape (a path for the external cylinder, a rect for tank 50) with a `data-dhw-tank` attribute, filled from the custom property
-// `--dhw-tank-color` (no fill while it is not set). A muted body (DHW temperature unavailable) gets the muted colour
-// through the same property. The values (temperature, setpoint, start delta-T, demand) go under the external tank
-// (centred on it, below its bottom edge: the arrangement's `externalTank`) for the external one, and inside tank 50, one row above coil 51 (refine-schematic-drawing D8b), for the internal one (labels.ts).
+// tank bodies are a `.tank-body` shape (a path for the external cylinder, a rect for tank 50) with a `data-dhw-tank` attribute, filled
+// from the custom property `--dhw-tank-color` (no fill while it is not set). A muted body (DHW temperature unavailable) gets the muted
+// colour through the same property. The DHW temperature and demand go inside the tank (labels.ts); in tank 50 they sit above
+// coil 51, in one row in the horizontal layout and stacked in the vertical one.
 import { css, svg, type SVGTemplateResult } from 'lit';
 import { DHW_LABELS } from '../strings';
 import { EXTERNAL_TANK_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';

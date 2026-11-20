@@ -242,7 +242,9 @@ export class EcogeoCard extends LitElement {
   }
 
   private arrangementViewBox(layout: ShownLayout): { width: number; height: number } {
-    return arrangementFor(layout).viewBox;
+    // The same arrangement the render draws, so the panel fit and the drawing agree (model C's tank 50 makes the vertical one taller).
+    const config = this.resolved;
+    return arrangementFor(layout, config === undefined ? undefined : bandKeyOf(config)).viewBox;
   }
 
   /** The `max-width` in px the drawing gets in a panel view (0: none, the drawing fills the card). */

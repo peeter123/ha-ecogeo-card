@@ -11,7 +11,7 @@
 // placements, the pairs, the transducers on their lines, the crossings as hops) and the item numbers, not their coordinates. The
 // two drawn arrangements (`arrangementFor`: the horizontal layout's and the vertical one's) map the
 // frame to their own units (rework-layouts D2). Only the parts the drawing shows are in the lists: the service and safety parts of
-// the figure (items 18-21, 23, 24, 39-41, 52, 53) are not drawn. Ports 1-6 sit on the cabinet's top edge in the manual's order.
+// the figure (items 18-21, 23-25, 39-41, 52, 53) are not drawn. Ports 1-6 sit on the cabinet's top edge in the manual's order.
 // Inside, from the top: the DHW supply and return lines of valve 26, the probe row, the compressor row with the discharge line
 // that runs along it and down through HTR exchanger 9 to inversion valve 14, condenser 8 and evaporator 7, the valve 27 / pump 15 /
 // valve 28 row and exchanger 10 (the rows and their y are on `ROW`).
@@ -639,9 +639,9 @@ export interface Segment extends Visibility {
   reversible?: boolean;
   /** A coil drawn as a helix; `points` then keep only its two end points. */
   shape?: HelixShape;
-  /** The radius of the rounded corners of the pipe (the air coil's U-bends and the ground loop's bottom). */
+  /** The radius of the rounded corners of the pipe (the air coil's U-bends and the ground collector's bottom). */
   bend?: number;
-  /** The base stroke ends in a round cap: it closes the seam where the ground loop's half circle is split in two segments. */
+  /** The base stroke ends in a round cap: it closes the seam where the ground collector's half circle is split in two segments. */
   roundEnd?: true;
   /** A dead end (the DG1 and HTR stubs, the model C tap-water stubs): coloured, never animated. */
   stub?: boolean;

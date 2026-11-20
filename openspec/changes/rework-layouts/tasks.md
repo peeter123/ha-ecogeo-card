@@ -574,12 +574,18 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 - Before archiving, drop the task and group numbers that earlier changes left in test comments
   (test/card/layout.test.ts, test/diagram/pipes.test.ts, test/editor/advanced-entities.test.ts,
   test/editor/color-rows.test.ts, test/editor/entity-discovery.test.ts, test/suggest/suggest.test.ts), found in the
-  group 7 review.
-- The first CI run on Linux after a push confirms the browser preflight passes there (design D11).
+  group 7 review. Done 2026-11-20: reworded to say what each test covers; design references by change and D number
+  stay.
+- The first CI run on Linux after a push confirms the browser preflight passes there (design D11). Done 2026-11-20:
+  `npm run check` passed on Linux in Check runs 44796692252 and 44799380087.
+- Decided by the user 2026-11-20 after task 9.3: check.yml runs on the pinned `ubuntu-26.04` image the visual
+  references were recorded on (a newer image means recording them again), and the Playwright install step and the
+  job get 20 and 30 minutes, since the install timed out at 10 minutes on a slow Ubuntu mirror in two of four runs.
 - One fresh Opus review of the whole change before archiving.
 - At archive, edit the Purpose sections of the main specs that still describe the old layouts and side zones
   (responsive-layout, schematic-drawing, outer-loop-source, dhw-storage), and name the change in AGENTS.md.
 - Replacing the GitHub release and the `v1.0.0` tag (delete and recreate with the new `dist/ecogeo-card.js`) only on
-  the user's explicit request.
+  the user's explicit request. Requested by the user 2026-11-20, done after the archive.
 - The three local commits from 2026-11-19 (`1e14829`, `b55e5bf`, `4f88461`) are pushed only on the user's
-  request; task 9.3 needs a push of this change's branch to run the workflow input.
+  request; task 9.3 needs a push of this change's branch to run the workflow input. Done 2026-11-20: the user
+  allowed the push for task 9.3, and main was pushed.

@@ -386,7 +386,7 @@ describe('suggestions', () => {
   });
 });
 
-describe('group 4 review', () => {
+describe('suggestion matching rules', () => {
   const bound = (items: Parameters<typeof device>[0], config: Record<string, unknown> = {}, name?: string) => {
     const { states, registry } = device(items, name);
     return flat(run(states, registry, 'dev', config).entities);

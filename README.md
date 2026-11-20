@@ -206,7 +206,7 @@ muted; its own function is never derived). A key overrides the variant for that 
 |---|---|---|---|---|---|
 | `active_cooling` | cycle inversion valve 14 | `false` | `false` | `true` | `true` |
 | `passive_cooling` | exchanger 10, valves 27 and 28 | `false` | `true` | `false` | `true` |
-| `htr` | exchanger 9, pump 17, valves 22 and 25 | `true` | `true` | `true` | `true` |
+| `htr` | exchanger 9, pump 17, valve 22 | `true` | `true` | `true` | `true` |
 | `backup_heater` | outlet resistor 44 with thermostat 45 | `true` | `true` | `true` | `true` |
 
 Exchanger 10 with valves 27 and 28 also serves defrost: it is active in a defrost whenever it is drawn (`true` or

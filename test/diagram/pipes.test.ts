@@ -480,7 +480,7 @@ describe('mode-dependent roles (add-schematic-card D7)', () => {
   });
 });
 
-describe('outer-loop source states (deferred from group 5)', () => {
+describe('outer-loop source states (the pipes of each source and storage state)', () => {
   test('standby: the outer-loop pipes are muted and still', () => {
     for (const source of ['air', 'ground', 'hybrid'] as const) {
       const { states } = scenario({ mode: 'standby', source }, HEATING);
@@ -521,7 +521,7 @@ describe('outer-loop source states (deferred from group 5)', () => {
   });
 });
 
-describe('the DHW storage states (deferred from group 5)', () => {
+describe('the DHW storage states (the pipes of each source and storage state)', () => {
   test('the tank body takes the DHW temperature on the scale', () => {
     expect(tankColor(scenario({ mode: 'heating' }, HEATING).view)).toBe(color(52.1));
   });

@@ -1,4 +1,4 @@
-// The editor part of add-entity-discovery (task group 5): the device picker and "Suggest entities", the report, the
+// The editor part of add-entity-discovery: the device picker and "Suggest entities", the report, the
 // "Not present" choice, the state value lists and the binding check. Opened with the stand-in ha-form and the
 // emulator's two mock sources (firmware and foreign naming) as `hass`.
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';

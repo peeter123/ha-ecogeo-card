@@ -235,7 +235,7 @@ describe('card layout from its width', () => {
 });
 
 // Home Assistant's hui-card assigns `layout` ("panel", "grid") to every card element. A card that defines `layout`
-// without a setter throws on that assignment and cannot be built (add-compact-layout D1, task 2.6).
+// without a setter throws on that assignment and cannot be built (add-compact-layout D1).
 describe('the layout property Home Assistant assigns', () => {
   const assign = (card: EcogeoCard, value: unknown): void => {
     (card as unknown as { layout: unknown }).layout = value;
