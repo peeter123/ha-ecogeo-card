@@ -1,7 +1,7 @@
 // Minimum rendered sizes and the layout band at real widths (responsive-layout spec: Layout hysteresis, Minimum rendered
-// sizes), measured in Chromium and WebKit: rendered stroke widths, the label font floor, the wrapping footer and the band at
-// the threshold. Both layouts are checked; the vertical one renders the horizontal arrangement until the vertical arrangement of rework-layouts is built,
-// which also brings back the 10 px label assertion.
+// sizes), measured in Chromium and WebKit: rendered stroke widths, the 10 px label font floor, the wrapping footer and the band
+// at the threshold. Both layouts are checked; the vertical one renders the horizontal arrangement until the vertical arrangement of
+// rework-layouts is built.
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
 import '../../src/index';
@@ -55,7 +55,7 @@ function renderedStroke(element: SVGGraphicsElement): number {
 }
 
 describe.each(LAYOUTS)('Thin card, %s layout', (layout) => {
-  test('at 360 px every pipe renders at least 2 px, every outline at least 1.25 px, every label font at least 8 px', async () => {
+  test('at 360 px every pipe renders at least 2 px, every outline at least 1.25 px, every label font at least 10 px', async () => {
     const { root } = await show(360, { layout });
     expect(layoutOf(root)).toBe(layout);
     const pipes = [...root.querySelectorAll<SVGGraphicsElement>('path.pipe')];
@@ -76,7 +76,7 @@ describe.each(LAYOUTS)('Thin card, %s layout', (layout) => {
     expect(labels.length).toBeGreaterThan(5);
     for (const label of labels) {
       expect(Number.parseFloat(getComputedStyle(label).fontSize), label.dataset['label'] ?? '').toBeGreaterThanOrEqual(
-        8,
+        10,
       );
     }
   });
@@ -94,12 +94,12 @@ describe.each(LAYOUTS)('Thin card, %s layout', (layout) => {
     }
   });
 
-  test('at 1000 px the strokes keep the designed widths and the labels keep their 8 px floor', async () => {
+  test('at 1000 px the strokes keep the designed widths and the labels keep their 10 px floor', async () => {
     const { root } = await show(1000, { layout });
     const pipe = root.querySelector<SVGGraphicsElement>('path.pipe[data-segment]');
     expect(Number.parseFloat(getComputedStyle(pipe as Element).strokeWidth)).toBe(3);
     for (const label of root.querySelectorAll<HTMLElement>('.label')) {
-      expect(Number.parseFloat(getComputedStyle(label).fontSize)).toBeGreaterThanOrEqual(8);
+      expect(Number.parseFloat(getComputedStyle(label).fontSize)).toBeGreaterThanOrEqual(10);
     }
   });
 });

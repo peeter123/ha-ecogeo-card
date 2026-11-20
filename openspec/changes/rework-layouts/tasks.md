@@ -290,29 +290,68 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 
 ## 7. The cabinet layout with value lanes
 
-- [ ] 7.1 Re-author the cabinet's coordinates once in the new cabinet frame (design D1; schematic-drawing "Cabinet
+- [x] 7.1 Re-author the cabinet's coordinates once in the new cabinet frame (design D1; schematic-drawing "Cabinet
   layout with value lanes"): `componentsFor`, `segmentsFor`, the crossings and model C's parts (47-51, 54) laid out in
   rows and columns with row and column lanes between them, 720 units wide, with the lanes recorded (their ranges and
   which values they hold) and every component still citing its item number. Keep the topology of the manual figures:
   port order, the order along every pipe, probe and HTR placements, the pairs, transducers on their lines, hops, no more
   crossings than the manual figure. Verify: the existing topology unit tests pass unchanged in what they assert (only
   coordinates in tests change); new unit tests for "Lanes free of parts" pass for every source, DHW storage and emitter.
-- [ ] 7.2 Derive the horizontal arrangement from the new frame (design D2: an x map that widens the column lanes to a
+  Note (2026-11-20, implementer, rewritten after the round 1 review): the cabinet frame is 720 x 520 (top edge y 0) in
+  `geometry.ts` (`COL`, `ROW`, `ROW_LANES`, `COLUMN_LANES`, each lane with range and contents). Rows: A 8-74 (DHW
+  lines, valve 26, model C tank 50/coil 51/probe 54), B 100-156 (probe row y 112, transducer and compressor row y 142,
+  pairs at y 126), D 228-408 (exchanger 9, valve 14, thermostat 45 over resistor 44, pump 16, exchangers 8 and 7, the
+  line at y 396), F 444-506 (exchanger 10). Row lanes 76-100, 156-228 (blocks in two rows, the compressor speed in a
+  third), 408-444; column lanes 0-40, 77-117, 142-160, 229-269, 318-358, 542-572, 609-667 (ports 5 and 6 at x 667 and
+  707). Thermostat 45 stands directly above resistor 44 on riser 1 (a unit test checks adjacency on the same pipe with
+  no part between, for all 216 contexts). The topology tests pass with only coordinates changed; `lanes.test.ts`
+  checks the lanes for 216 contexts in the frame and mapped, and that every cabinet label lies in a lane (its anchor
+  in the frame, its whole box mapped; body labels and the DG1 demand above the top edge are not cabinet labels). No
+  topology rule had to be dropped; 9 crossings.
+- [x] 7.2 Derive the horizontal arrangement from the new frame (design D2: an x map that widens the column lanes to a
   cabinet of about 980 units, a y map that may narrow the row lanes), keeping the band model, the bodies and the joins.
   Verify: the band, topology and integrity unit tests pass for the horizontal arrangement.
-- [ ] 7.3 Drop the captions of the values inside bodies (outer-loop-source "Air unit with its value inside", "Ground
+  Note (2026-11-20, implementer): `laneMap` builds `HORIZONTAL_MAP_X` from `HORIZONTAL_LANE_EXTRA` (+64, +48, +30,
+  +78, +40 = 260 over the lanes at 0-40, 77-117, 229-269, 542-572, 609-667; knots 0/10, 40/114, 77/151, 117/239,
+  229/351, 269/421, 542/694, 572/802, 609/839, 667/937, 720/990) and `HORIZONTAL_MAP_Y` from `HORIZONTAL_LANE_SHRINK`
+  (the lane 76-100 narrows by 18; knots 0/232, 76/308, 100/314, 520/734; the cabinet is 502 tall, the viewBox 1000 x
+  749). Port 4 lands at x 827, left of the tank slot. A unit test covers the override path of `buildArrangement` with
+  a synthetic place.
+- [x] 7.3 Drop the captions of the values inside bodies (outer-loop-source "Air unit with its value inside", "Ground
   collector"; dhw-storage "DHW values inside the tank", "Model C tank values"; responsive-layout "No in-drawing
   captions"); set the label fonts per layout (design D8: `max(10px, k cqw)`, the 8 px floor goes; responsive-layout
   "Minimum rendered sizes") and the pair blocks' row pitch from the label height (design D7). Verify: label and source
   and tank unit tests pass; the 10 px font assertion is back in `test/card/sizes.browser.test.ts`.
-- [ ] 7.4 Re-place the horizontal labels in the lanes and re-measure the threshold by design D7 in Chromium and WebKit;
+  Note (2026-11-20, implementer): the bodies' values are bare numbers (only "Demand" stays); `LABEL_FONT_K` in
+  `label-places.ts` holds `k` per layout (horizontal 1.3, vertical 1.3 until group 8) and the font is
+  `max(10px, k cqw)` (tank temperature `max(11px, 1.2 k cqw)`); `PAIR_ROW_GAP` = label height at the threshold (12 px
+  / 0.56 + 1) rounded up to the search grid = 24, read by `dev/overlaps.ts` and the search. The superheat and the
+  opening are no block: they stand beside each other under valve 12. The 10 px assertions are back in
+  `sizes.browser.test.ts`.
+- [x] 7.4 Re-place the horizontal labels in the lanes and re-measure the threshold by design D7 in Chromium and WebKit;
   record the snapshots again. Verify: horizontal overlap browser tests pass in both engines; the bound tests (values
   beside their parts, pressures beside their transducers) pass; the search's paste output equals `HORIZONTAL_PLACES`; a
   capture subagent checks the band, emitter and panel captures at the threshold and 1000 px against the review
   criteria.
-- [ ] 7.5 Update README.md and docs/ecogeo-card.md (the cabinet frame and its lanes, why it no longer uses the manual
+  Note (2026-11-20, implementer, after the round 1 review): the rule is read as written (a width counts when the
+  search finds an allowed place for every label). `search-places` now reports a body label whose zone place is blocked
+  as BLOCKED, prints the free place it found and exits non-zero. At 560 px it had found free in-tank places for the
+  tank 50 values in both engines; the zone constants now are those places (temperature end-aligned 70 units from the
+  tank's left wall, demand end-aligned 150 units from it and 4 units higher). Re-measured by D7 in Chromium and
+  WebKit, identical: 560 px holds (all 19 labels free at their default places in all 312 cases, empty paste output, so
+  `HORIZONTAL_PLACES` is empty); at 540 px no place for the two tank 50 values in either engine. `VERTICAL_BELOW` is
+  560 (return at 584). `measure-layout` is clean from 520 px in Chromium and from 540 px in WebKit. Snapshots
+  re-recorded (the 580 ones removed), browser project passes in both engines. Captures of the final build opened by
+  the implementer: `panel-heating`, `band-hybrid-internal-light-560`, `emitter-none-hybrid-light-560`,
+  `labels-modelC-560-heating` and `emitter-underfloor-hybrid-dark-1000`, all clean. The round 0 subagents had opened
+  all 48 `band-*` and 39 `emitter-*`, panel and scenario captures of the earlier 580 px build (all PASS); the final
+  build's `band-*` and `emitter-*` captures were regenerated but not all re-opened.
+- [x] 7.5 Update README.md and docs/ecogeo-card.md (the cabinet frame and its lanes, why it no longer uses the manual
   figure's coordinates, the map breakpoints, the fonts, the body values without captions, the threshold and how it was
   measured), and regenerate docs/images/heating.png. Verify: `npm run check` passes.
+  Note (2026-11-20, implementer): README.md and docs/ecogeo-card.md (The cabinet frame with its rows and lanes, the
+  maps, the fonts, captionless body values, the threshold and its measurement, the default places, the panel numbers)
+  updated and docs/images/heating.png regenerated from `scenario-heating`. `npm run check` passes.
 
 ## 8. The vertical arrangement
 
@@ -366,7 +405,13 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
   engines, and the Chromium search at 680 and 660 px and `measure-layout` agree with WebKit (places and threshold
   680). Repeat after groups 5-8 change the drawing, and for the vertical search. Done after groups 5 and 6
   (2026-11-19, smoothing on): the horizontal search at 560 px gives the same places in both engines and
-  `measure-layout` is clean from 500 px in both.
+  `measure-layout` is clean from 500 px in both. Done after group 7 (2026-11-20, smoothing on): the horizontal search
+  places every label at its default at 560 px and finds no place for the tank 50 values at 540 px in both engines;
+  `measure-layout` is clean from 520 px in Chromium and from 540 px in WebKit.
+- Before archiving, drop the task and group numbers that earlier changes left in test comments
+  (test/card/layout.test.ts, test/diagram/pipes.test.ts, test/editor/advanced-entities.test.ts,
+  test/editor/color-rows.test.ts, test/editor/entity-discovery.test.ts, test/suggest/suggest.test.ts), found in the
+  group 7 review.
 - The first CI run on Linux after a push confirms the browser preflight passes there (design D11).
 - One fresh Opus review of the whole change before archiving.
 - At archive, edit the Purpose sections of the main specs that still describe the old layouts and side zones

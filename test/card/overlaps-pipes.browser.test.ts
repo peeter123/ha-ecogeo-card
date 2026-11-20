@@ -70,9 +70,9 @@ describe('Pipe overlaps', () => {
     const label = root.querySelector<HTMLElement>('.label[data-label="compressor_speed"]');
     if (!label) throw new Error('no label');
     const before = pairs(root);
-    const [x, y] = midpoint(root, 'src_out');
+    const [x, y] = midpoint(root, 'ln3');
     moveOnto(label, x, y);
-    expect(added(root, before)).toEqual(['label compressor_speed x pipe:src_out']);
+    expect(added(root, before)).toEqual(['label compressor_speed x pipe:ln3']);
   });
 
   test('a label moved past the drawing edge is reported as that edge, and only that', async () => {

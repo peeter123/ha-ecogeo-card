@@ -238,15 +238,13 @@ export const OUT_IN_PAIRS: readonly (readonly [string, string])[] = [
 
 /**
  * The refrigerant probe pairs' values (rework-layouts D6, D7): temperature over pressure, one two-row block under the pair
- * (same alignment and x, `PAIR_ROW_GAP` units between the rows); read by scripts/search-places.mjs only.
+ * (same alignment and x, `PAIR_ROW_GAP` units between the rows, which follows the label height at the threshold); read by scripts/search-places.mjs only.
  */
 export const BLOCK_PAIRS: readonly (readonly [string, string])[] = [
   ['discharge_temperature', 'discharge_pressure'],
   ['suction_temperature', 'suction_pressure'],
-  // the expansion valve's pair (superheat over opening) beside valve 12 keeps the same pitch
-  ['superheat', 'expansion_valve'],
 ];
-export const PAIR_ROW_GAP = 16;
+export { PAIR_ROW_GAP } from '../src/diagram/label-places';
 
 /**
  * Whether an Out value and its In value read in order: the Out box lies left of the In box or, where the two overlap

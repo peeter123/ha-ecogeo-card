@@ -60,6 +60,12 @@ so the vertical layout needs no x map. Alternatives considered: keep the manual-
 the vertical layout (rejected: it changes symbol proportions per layout and still leaves the rows short), or two
 hand-made cabinets, one per layout (rejected: twice the geometry to keep in step and to test for topology).
 
+Decided 2026-11-20 in the group 7 review: "every value in the cabinet sits in a lane" is checked by a unit test (each
+cabinet label's box lies in a row lane or a column lane, in the frame and mapped), so a value that lands in a row of
+parts, as the compressor speed first did, fails the build rather than the vertical layout later. A part keeps its
+neighbours as well as its order: safety thermostat 45 stands next to resistor 44 on riser 1, with no other part
+between them (schematic-drawing "outlet resistor 44 with safety thermostat 45"), not only in the right order.
+
 ### D2 Two arrangements by maps: horizontal stretches x, vertical stretches y
 
 `arrangementFor(layout)` returns `HORIZONTAL` or `VERTICAL` (the `Detail` parameter goes). Both are
@@ -154,7 +160,11 @@ px, which gave 680; after the band and the x stretch (group 5) the search places
 treats each refrigerant probe pair's two values as one two-row block (temperature over pressure), as it treats the
 Out/In pairs, so a pasted result keeps the blocks of live-values "Probe pair values" (decided 2026-11-19 in the group 4
 review). A block's row pitch follows the layout's label height (D8), so its rows never overlap at the font floor. After
-the cabinet is re-authored (D1) the horizontal places and the threshold are found again by this rule.
+the cabinet is re-authored (D1) the horizontal places and the threshold are found again by this rule. Decided
+2026-11-20 in the group 7 review: the rule is read as written, so a width counts when the search finds an allowed place
+for every label, not only when every label is free at its default place. A body label gets no recorded place, so when
+the search finds its zone place blocked but a free place inside the body, the zone constants move to that place; the
+search reports a blocked zone place (and exits non-zero) instead of listing it as placed from the zones.
 
 ### D8 Fonts and threshold
 

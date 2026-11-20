@@ -18,7 +18,7 @@
 // drawing's arrangement or of the label texts.
 // Options: `--layout=horizontal|vertical` (default horizontal), `--width=N` (the search width: default the vertical
 // threshold VERTICAL_BELOW for the horizontal layout, 320 for the vertical one), `--step=4` (the grid in viewBox units),
-// `--margin=2` (px, horizontal), `--map` (prints where each label can go), `--browser=chromium|webkit` (default chromium;
+// `--margin=2` (px, horizontal), `--map` (prints where each label can go), `--quick` (the first naming, installation and scenario only), `--scenario=`, `--installation=` and `--naming=` (one of each, to iterate on a place), `--browser=chromium|webkit` (default chromium;
 // use webkit on a host where Chromium measures text with whole-pixel advances, see the font smoothing note in
 // docs/ecogeo-card.md). Starts and stops its own Vite server, like measure-layout.mjs.
 /// <reference lib="dom" />
@@ -27,11 +27,22 @@ import { fileURLToPath } from 'node:url';
 import { chromium, webkit } from 'playwright';
 import { createServer } from 'vite';
 
-const KNOWN = ['--layout=', '--width=', '--step=', '--margin=', '--browser=', '--map'];
+const KNOWN = [
+  '--layout=',
+  '--width=',
+  '--step=',
+  '--margin=',
+  '--browser=',
+  '--map',
+  '--quick',
+  '--scenario=',
+  '--installation=',
+  '--naming=',
+];
 const unknown = process.argv.slice(2).filter((arg) => !KNOWN.some((known) => arg.startsWith(known)));
 if (unknown.length > 0) {
   console.error(
-    `Unknown option: ${unknown.join(' ')}. Options: --layout=horizontal|vertical --width=N --step=N --margin=N (a number above 0, no space) --browser=chromium|webkit --map`,
+    `Unknown option: ${unknown.join(' ')}. Options: --layout=horizontal|vertical --width=N --step=N --margin=N (a number above 0, no space) --browser=chromium|webkit --map --quick --scenario=NAME --installation=NAME --naming=NAME`,
   );
   process.exit(2);
 }
@@ -207,6 +218,21 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
       mine.top >= cab.top - tol &&
       mine.bottom <= cab.bottom + tol;
     if (overlapsCabinet && !withinCabinet) hit.push('cabinet');
+    // a value inside a body stays inside that body's box
+    const bodyOf =
+      bodies[id] === undefined
+        ? undefined
+        : m.parts.find((/** @type {{ id: string }} */ part) => part.id === bodies[id]);
+    if (
+      bodyOf !== undefined &&
+      !(
+        mine.left >= bodyOf.left - drawing.left &&
+        mine.right <= bodyOf.right - drawing.left &&
+        mine.top >= bodyOf.top - drawing.top &&
+        mine.bottom <= bodyOf.bottom - drawing.top
+      )
+    )
+      hit.push(`outside:${bodyOf.id}`);
     return hit;
   };
   for (const label of m.labels) {
@@ -263,7 +289,8 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
     // the default place itself is a candidate too, when it is free: the 4-unit grid cannot hit a place that is only a few
     // units wide (a two-row block between two lines), and a free default place needs no entry (tested exactly, not on the
     // raster: such a block is free by a fraction of a pixel)
-    const homeFree = homes[label.id] !== undefined && bodyId === undefined && homeHits(label.id).length === 0;
+    // (a value inside a body is placed from the body's zone: its home is where it renders, and it is free when nothing meets it there)
+    const homeFree = (homes[label.id] !== undefined || bodyId !== undefined) && homeHits(label.id).length === 0;
     results.push({
       id: label.id,
       w: w / scale,
@@ -284,6 +311,13 @@ const server = await createServer({
 await server.listen();
 // the search width: the horizontal layout's threshold or the vertical layout's narrowest verified width
 const { VERTICAL_BELOW } = /** @type {{ VERTICAL_BELOW: number }} */ (await server.ssrLoadModule('/src/lib/layout.ts'));
+// the label font factor of the layout: a label's font is max(10px, k cqw), so its box grows with the card above the floor
+const { LABEL_FONT_K } = /** @type {{ LABEL_FONT_K: Readonly<Record<string, number>> }} */ (
+  await server.ssrLoadModule('/src/diagram/label-places.ts')
+);
+const FONT_K = LABEL_FONT_K[LAYOUT] ?? 1;
+/** The label font in px at a card width (the 10 px floor, or `k` cqw above it). */
+const fontPx = (/** @type {number} */ width) => Math.max(10, (FONT_K * width) / 100);
 const WIDTH = WIDTH_OPTION > 0 ? WIDTH_OPTION : LAYOUT === 'vertical' ? 320 : VERTICAL_BELOW;
 /** @type {import('playwright').Browser | undefined} */
 let browser;
@@ -334,9 +368,18 @@ try {
   /** @type {string[]} */
   const problems = [];
   page.on('pageerror', (error) => problems.push(error.message));
-  for (const naming of namings) {
-    for (const installation of installations) {
-      for (const name of names) {
+  // `--quick`: the first naming, installation and scenario only, to iterate on a place (the result is not a recorded one)
+  const quick = process.argv.includes('--quick');
+  /** @template T @param {string} flag @param {readonly T[]} all @param {(entry: T) => string} nameOf @returns {readonly T[]} */
+  const pick = (flag, all, nameOf) => {
+    const arg = process.argv.find((a) => a.startsWith(`--${flag}=`))?.slice(flag.length + 3);
+    const chosen = arg === undefined ? (quick ? all.slice(0, 1) : all) : all.filter((entry) => nameOf(entry) === arg);
+    if (chosen.length === 0) throw new Error(`--${flag}=${String(arg)}: no such case`);
+    return chosen;
+  };
+  for (const naming of pick('naming', namings, (n) => n)) {
+    for (const installation of pick('installation', installations, (i) => i.name)) {
+      for (const name of pick('scenario', names, (n) => n)) {
         const query = `scenario=${name}&${installation.query}&naming=${naming}&layout=${LAYOUT}`;
         await page.goto(new URL(`dev/index.html?${query}`, base).href);
         await page.locator('#cards[data-ready]').waitFor();
@@ -454,20 +497,21 @@ const isBlock = (/** @type {string} */ id) => BLOCKS.some((pair) => pair[0] === 
 const inBlock = (
   /** @type {{ x: number; y: number; align: string }} */ top,
   /** @type {{ x: number; y: number; align: string }} */ bottom,
-) => top.align === bottom.align && top.x === bottom.x && bottom.y - top.y === (rowGap ?? 16);
+) => top.align === bottom.align && top.x === bottom.x && bottom.y - top.y === Number(rowGap);
 const inOrder = loadedInOrder ?? (() => false);
 const WIDE = LAYOUT === 'vertical' ? VERTICAL_BELOW - 1 : 1000;
-/** A label's box at a place, in px at a card width (the text's size is the same in px at every width). */
+/** A label's box at a place, in px at a card width (the text's size is the font's: the same in px up to the width where `k` cqw passes 10 px, then growing with the card). */
 const pxBoxAt = (
   /** @type {{ x: number; y: number; align: string }} */ place,
   /** @type {{ w: number; h: number }} */ size,
   /** @type {number} */ width,
 ) => {
-  const w = (size.w * WIDTH) / 1000;
-  const h = (size.h * WIDTH) / 1000;
-  const x = (place.x * width) / 1000;
+  const grow = fontPx(width) / fontPx(WIDTH);
+  const w = ((size.w * WIDTH) / viewBox.width) * grow;
+  const h = ((size.h * WIDTH) / viewBox.width) * grow;
+  const x = (place.x * width) / viewBox.width;
   const left = place.align === 'start' ? x : place.align === 'end' ? x - w : x - w / 2;
-  const y = (place.y * width) / 1000;
+  const y = (place.y * width) / viewBox.width;
   return { left, right: left + w, top: y - h / 2, bottom: y + h / 2 };
 };
 /**
@@ -530,7 +574,9 @@ const distanceOf = (/** @type {string} */ id, /** @type {{ x: number; y: number;
 const freeFor = (/** @type {string} */ id, /** @type {boolean} */ keepAlign) =>
   (candidates.get(id) ?? [])
     .filter((place) => !keepAlign || place.align === homes[id]?.align)
-    .filter((place) => [...chosen].every(([otherId, other]) => apartEverywhere(id, place, otherId, other)))
+    .filter((place) =>
+      [...chosen].every(([otherId, other]) => other.align === 'zone' || apartEverywhere(id, place, otherId, other)),
+    )
     .map((place) => ({ ...place, distance: distanceOf(id, place) }))
     .sort((x, y) => x.distance - y.distance);
 for (const [outId, inId] of [...PAIRS, ...BLOCKS]) {
@@ -544,10 +590,10 @@ for (const [outId, inId] of [...PAIRS, ...BLOCKS]) {
   let bestSum = Infinity;
   if (block) {
     for (const out of outs) {
-      const inn = below.get(`${String(out.x)},${String(out.y + (rowGap ?? 16))},${out.align}`);
+      const inn = below.get(`${String(out.x)},${String(out.y + Number(rowGap))},${out.align}`);
       if (inn === undefined || out.distance + inn.distance >= bestSum) continue;
       if (inBlock(out, inn)) {
-        // the two rows of a block keep their fixed pitch: they need no margin between them, only 16 units apart
+        // the two rows of a block keep their fixed pitch: they need no margin between them, only `PAIR_ROW_GAP` units apart
         best = [out, inn];
         bestSum = out.distance + inn.distance;
       }
@@ -572,11 +618,17 @@ for (const [outId, inId] of [...PAIRS, ...BLOCKS]) {
   }
 }
 const BESIDE_PART = new Set(['production_pressure', 'brine_pressure']);
+/** The labels of the bodies are placed from their zones: they need no place of their own, only a free home in every case. */
+const loadedZoned = new Set(Object.keys(loadedBodies ?? {}));
 const rest = [...found.keys()]
   .filter((id) => !chosen.has(id) && !missing.includes(id))
   .sort((x, y) => (candidates.get(x)?.length ?? 0) - (candidates.get(y)?.length ?? 0));
 const bodies = loadedBodies ?? {};
 for (const id of rest) {
+  if (loadedZoned.has(id) && found.get(id)?.homeFree === true) {
+    chosen.set(id, { x: NaN, y: NaN, align: 'zone', distance: 0 });
+    continue;
+  }
   // the pressure labels sit beside their transducers and keep the alignment of their default place (an end-aligned label
   // stays beside its part when the card is wider; a start-aligned one drifts away from it)
   const free = freeFor(id, BESIDE_PART.has(id));
@@ -591,7 +643,9 @@ for (const id of rest) {
       (candidates.get(other) ?? []).some(
         (candidate) =>
           apartEverywhere(id, place, other, candidate) &&
-          [...chosen].every(([otherId, taken]) => apartEverywhere(other, candidate, otherId, taken)),
+          [...chosen].every(
+            ([otherId, taken]) => taken.align === 'zone' || apartEverywhere(other, candidate, otherId, taken),
+          ),
       ),
     ),
   );
@@ -610,7 +664,7 @@ for (const id of ids) {
   const place = chosen.get(id);
   const count = String(candidates.get(id)?.length ?? 0);
   console.log(
-    `${id.padEnd(28)} ${count.padStart(6)}  ${place === undefined ? 'NO PLACE' : `${String(place.x).padStart(4)} ${String(place.y).padStart(4)} ${place.align.padEnd(7)} ${place.distance.toFixed(0).padStart(7)}`}   ${entry.w.toFixed(0)} x ${entry.h.toFixed(0)}`,
+    `${id.padEnd(28)} ${count.padStart(6)}  ${place === undefined ? 'NO PLACE' : place.align === 'zone' ? 'from its zone (free at its home in every case)' : `${String(place.x).padStart(4)} ${String(place.y).padStart(4)} ${place.align.padEnd(7)} ${place.distance.toFixed(0).padStart(7)}`}   ${entry.w.toFixed(0)} x ${entry.h.toFixed(0)}`,
   );
 }
 // why the default place fails, per label: what its box with the margin meets, over the cases (the number of cases)
@@ -641,17 +695,31 @@ if (process.argv.includes('--map')) {
   }
 }
 // The labels of the bodies are placed from the zones and never get an entry; a label whose default place is free in every
-// case needs none either.
-const zoned = [...chosen.keys()].filter((id) => (loadedBodies ?? {})[id] !== undefined);
+// case needs none either. A body label whose zone place is blocked in some case is not "placed from the zones": the search
+// reports it as blocked, with the free place it found inside the body (the zone constants move there), and the run fails.
+/** @param {string} id */
+const isBody = (id) => (loadedBodies ?? {})[id] !== undefined;
+const zoned = [...chosen].filter(([id, place]) => isBody(id) && place.align === 'zone').map(([id]) => id);
+const blocked = [...chosen].filter(([id, place]) => isBody(id) && place.align !== 'zone');
 console.log(`\nPlaced from the zones (no entry): ${zoned.join(', ')}`);
+for (const [id, place] of blocked)
+  console.log(
+    `BLOCKED at its zone place: ${id}; a free place inside its body: x ${String(place.x)}, y ${String(place.y)}, ${place.align}`,
+  );
 console.log(
   `\nPaste into ${LAYOUT.toUpperCase()}_PLACES (src/diagram/label-places.ts), labels whose default place fails:`,
 );
 for (const [id, place] of chosen) {
-  if (zoned.includes(id) || (found.get(id)?.homeHits.size ?? 0) === 0) continue;
+  if (isBody(id) || (found.get(id)?.homeHits.size ?? 0) === 0) continue;
   console.log(`  ${id}: { x: ${String(place.x)}, y: ${String(place.y)}, align: '${place.align}' },`);
 }
 if (missing.length > 0) {
   console.log(`\nNo place for: ${missing.join(', ')}. Decision point (design Risks): not a pipe exception.`);
+  process.exitCode = 1;
+}
+if (blocked.length > 0) {
+  console.log(
+    `\nBlocked zone places: ${blocked.map(([id]) => id).join(', ')}. Move the zone constants (label-places.ts) to the places above.`,
+  );
   process.exitCode = 1;
 }

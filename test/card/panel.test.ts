@@ -80,7 +80,7 @@ describe('isPanel', () => {
       cardWidth: 1280,
       windowHeight: 800,
       headerHeight: undefined,
-      viewBox: { width: 1000, height: 647 },
+      viewBox: { width: 1000, height: 749 },
     });
     expect(expected).toBeLessThan(1280);
     expect(diagram(card).style.maxWidth).toBe(`${String(expected)}px`);
@@ -88,7 +88,7 @@ describe('isPanel', () => {
   });
 
   test('only layout = panel assigned (no isPanel, as after a rebuild) gives the fit; other layouts none', async () => {
-    const expected = Math.floor(((800 - 56 - 64) * 1000) / 647);
+    const expected = Math.floor(((800 - 56 - 64) * 1000) / 749);
     const card = await show(1280, 800, undefined, 'panel');
     expect(diagram(card).style.maxWidth).toBe(`${String(expected)}px`);
     for (const layout of ['masonry', 'grid', undefined]) {
@@ -129,7 +129,7 @@ describe('isPanel', () => {
   });
 
   test('the layout follows the drawing width: a panel in a short window is vertical with auto although the card is wide', async () => {
-    // (420 - 56 - 64) * 1000 / 647 = 463 px, below the vertical threshold
+    // (420 - 56 - 64) * 1000 / 749 = 400 px, below the vertical threshold
     const card = await show(1280, 420, true);
     expect(card.shownLayout).toBe('vertical');
     expect(card.shadowRoot?.querySelector('ha-card')?.getAttribute('data-layout')).toBe('vertical');

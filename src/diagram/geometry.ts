@@ -5,13 +5,16 @@
 // the external DHW tank, which lie in the band above the cabinet, and the stubs of connections 47-49. No Lit here: this file is
 // data plus small pure helpers that the renderer and the integrity tests share.
 //
-// The cabinet's component and segment lists are authored in the manual-figure frame (cabinet x 240-760, y 130-605); the one
-// drawn arrangement (`arrangementFor`, the horizontal layout's; the vertical layout shares it until its own is built) maps
-// them to its own units (rework-layouts D1, D2). Only the parts the drawing shows are in the lists: the service and safety
-// parts of the figure (items 18-21, 23, 24, 39-41, 52, 53) are not drawn. Ports 1-6 sit on the cabinet's top edge in the
-// manual's order. Inside, from the top: the DHW supply (y 172) and return (y 198) lines of valve 26, the probe row, the
-// discharge line of compressor 11 (y 250) through HTR exchanger 9 to inversion valve 14, condenser 8 and evaporator 7, the
-// valve 27 / pump 15 / valve 28 row (y 416) and exchanger 10.
+// The cabinet's component and segment lists are authored once, in the cabinet frame (rework-layouts D1): 720 units wide and 520
+// tall, its top edge at y 0, the parts in rows and columns with lanes between them (`ROW_LANES`, `COLUMN_LANES`, where the cabinet's
+// values sit). The frame keeps the figures' topology (the port order, the order of the parts along every pipe, the probe and HTR
+// placements, the pairs, the transducers on their lines, the crossings as hops) and the item numbers, not their coordinates. The
+// one drawn arrangement (`arrangementFor`, the horizontal layout's; the vertical layout shares it until its own is built) maps the
+// frame to its own units (rework-layouts D2). Only the parts the drawing shows are in the lists: the service and safety parts of
+// the figure (items 18-21, 23, 24, 39-41, 52, 53) are not drawn. Ports 1-6 sit on the cabinet's top edge in the manual's order.
+// Inside, from the top: the DHW supply and return lines of valve 26, the probe row, the compressor row with the discharge line
+// that runs along it and down through HTR exchanger 9 to inversion valve 14, condenser 8 and evaporator 7, the valve 27 / pump 15 /
+// valve 28 row and exchanger 10 (the rows and their y are on `ROW`).
 //
 // Above the cabinet lies the band (rework-layouts D3): a strip with three slots, left to right the emitter (over ports 1/2),
 // the outer-loop source (over 3/4) and the external DHW tank (over 5/6), and, between the band and the cabinet's top edge,
@@ -25,7 +28,7 @@ import type { CircuitId, Circuits } from '../calc/circuits';
 import type { DhwStorage, Emitter, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { FeatureKey, Features } from '../config/variants';
-import { HORIZONTAL_PLACES, labelPlacesFor, type LabelPlaces } from './label-places';
+import { HORIZONTAL_PLACES, labelPlacesFor, type LabelPlaces, type PlaceOverride } from './label-places';
 
 /** A rectangle in viewBox units. */
 export interface Rect {
@@ -406,19 +409,121 @@ export const COIL_LOCAL_PORTS: readonly [readonly [number, number], readonly [nu
   [-75, 13],
 ];
 
-/** The manual-figure frame's cabinet; the maps of the arrangement start from it. */
-const FRAME_CABINET = { x: 240, y: 130, width: 520, height: 475 } as const;
+/** The cabinet frame (rework-layouts D1): the cabinet is 720 units wide, the width of the widest band, and 520 units tall, its top edge at y 0. */
+const FRAME_CABINET = { x: 0, y: 0, width: 720, height: 520 } as const;
 
 /**
- * The manual-figure frame's zones: the coordinates the cabinet's component and segment lists are authored in (add-schematic-card D5).
- * Not drawn (rework-layouts D1): the arrangement's own zones derive from them, and `FRAME` lets the tests compare the two.
+ * The cabinet frame's zones: the coordinates the cabinet's component and segment lists are authored in (rework-layouts D1). The
+ * topology and the item numbers are the manual's figures (B4 and C); the coordinates are the card's own, because the figures'
+ * parts leave no y range free in every column. The arrangements derive from it by axis maps (D2) and `FRAME` lets the tests
+ * compare the two. Model C's tank 50 spans the one free stretch of columns wide enough for it (x 358-532, between the lanes at
+ * 318-358 and 542-572).
  */
 const FRAME_ZONES: CabinetZones = {
-  viewBox: { width: 1000, height: 620 },
+  viewBox: { width: 720, height: 520 },
   cabinet: FRAME_CABINET,
-  internalTank: { x: 408, y: 138, width: 182, height: 66 },
-  coil51: { x: 495, y: 185 },
+  internalTank: { x: 358, y: 8, width: 174, height: 66 },
+  coil51: { x: 439, y: 55 },
 };
+
+/**
+ * One lane of the cabinet frame (schematic-drawing "Cabinet layout with value lanes"): a strip across the whole cabinet that no
+ * part's box enters. A row lane (`axis: 'row'`, a y range) is crossed only by vertical pipes, a column lane (`axis: 'column'`, an
+ * x range) only by horizontal ones. `holds` says which values sit in it and why it has its width.
+ */
+export interface Lane {
+  readonly id: string;
+  readonly axis: 'row' | 'column';
+  readonly from: number;
+  readonly to: number;
+  readonly holds: string;
+}
+
+/**
+ * The rows of the frame, top to bottom (y from the cabinet's top edge): A the DHW lines with valve 26 and, for model C, tank 50
+ * (8-74); B the probe row with pump 17 (100-124), probes 33, 34, 31, 32 at y 112, the transducers 38 and 37, valve 22 and the
+ * compressor row at y 142 with the probe pairs above their lines (117-156); D the exchangers 9, 8, 7 with valve 14, thermostat
+ * 45 (y 254) above resistor 44, pump 16 and the production and brine row at y 396 (228-408); F exchanger 10 (444-506). Between
+ * the rows lie the row lanes.
+ */
+export const ROW_LANES: readonly Lane[] = [
+  {
+    id: 'above-probes',
+    axis: 'row',
+    from: 76,
+    to: 100,
+    holds:
+      'nothing: the room between the hot-water lines of row A and the probe row; the vertical layout heightens it for the production values under those lines',
+  },
+  {
+    id: 'under-compressor-row',
+    axis: 'row',
+    from: 156,
+    to: 228,
+    holds:
+      'the discharge and suction blocks (temperature over pressure, two rows) under their pairs 30/36 and 29/35, the compressor speed in a third row under 11, and the pressure values under 38 and 37 in the vertical layout',
+  },
+  {
+    id: 'under-valve-row',
+    axis: 'row',
+    from: 408,
+    to: 444,
+    holds:
+      'the superheat and the opening beside each other under valve 12 (one row); the vertical layout may stack them',
+  },
+];
+
+/**
+ * The columns of the frame: the lanes between the columns of parts. Each is free of parts from the top edge to the bottom; the
+ * horizontal arrangement widens them (`HORIZONTAL_MAP_X`).
+ */
+export const COLUMN_LANES: readonly Lane[] = [
+  {
+    id: 'left-edge',
+    axis: 'column',
+    from: 0,
+    to: 40,
+    holds: "the production outlet value, left of probe 33 (thermostat 45 stands in probe 33's column, lower down)",
+  },
+  {
+    id: 'riser-1',
+    axis: 'column',
+    from: 77,
+    to: 117,
+    holds:
+      'the production return value and pressure, between valve 26 / riser 1 and probes 34 and 38 (right-aligned to their bodies)',
+  },
+  {
+    id: 'trunk',
+    axis: 'column',
+    from: 142,
+    to: 160,
+    holds: 'nothing: the gap between the trunk and the heat-recovery column',
+  },
+  {
+    id: 'before-exchanger-8',
+    axis: 'column',
+    from: 229,
+    to: 269,
+    holds: 'the value of pump 15, right of the pump, between the heat-recovery column and exchanger 8 / tank 50',
+  },
+  {
+    id: 'before-compressor',
+    axis: 'column',
+    from: 318,
+    to: 358,
+    holds:
+      'nothing yet: opens the compressor row so that the lane under it has room for the pair blocks and the compressor speed',
+  },
+  {
+    id: 'riser-3',
+    axis: 'column',
+    from: 542,
+    to: 572,
+    holds: 'the brine outlet value right of riser 3, the brine pressure left of transducer 37 and the value of pump 16',
+  },
+  { id: 'riser-4', axis: 'column', from: 609, to: 667, holds: 'the brine inlet value, right of riser 4 and pump 16' },
+];
 
 export type Point = readonly [x: number, y: number];
 export type Rotation = 0 | 90 | 180 | 270;
@@ -544,21 +649,103 @@ const c = (
   extra: Partial<Pick<Component, 'feature' | 'dhw' | 'size' | 'sides' | 'unusedMuted'>> = {},
 ): Component => ({ item, kind, x, y, rotation, ...extra });
 
+/**
+ * The columns of the cabinet frame (x from the cabinet's left edge) that carry parts and risers. Four risers carry the pipes up to
+ * the connections: riser 1 (connection 1, valve 26, resistor 44), riser 2 (connection 2, the production trunk), riser 3
+ * (connection 3, the brine outlet) and riser 4 (connection 4, the brine inlet).
+ */
+const COL = {
+  /** The bodies of probe 33 and thermostat 45 (their stems end on riser 1). */
+  body1: 49,
+  riser1: 65,
+  /** The bodies of probes 34 and 38 (their stems end on riser 2). */
+  body2: 126,
+  riser2: 142,
+  /** The HTR water column: pump 17, valves 22 and 25. */
+  htr: 172,
+  /** Where the HTR water leaves exchanger 9 upwards into the DHW supply line. */
+  htrRiser: 193,
+  valve27: 182,
+  hx9: 205,
+  pump15: 217,
+  hx8: 289,
+  valve14: 287,
+  probe30: 287,
+  transducer36: 309,
+  /** Compressor 11 and filter dryer 13 share a column. */
+  compressor: 372,
+  probe29: 410,
+  transducer35: 432,
+  valve12: 412,
+  hx10: 405,
+  hx7: 457,
+  /** The suction line's riser into the compressor row. */
+  suction: 495,
+  valve28: 522,
+  probe31: 526,
+  riser3: 542,
+  /** The bodies of probe 32 and transducer 37 (their stems end on riser 4). */
+  body4: 581,
+  riser4: 597,
+  port5: 667,
+  port6: 707,
+  /** Model C's stubs 47-49 on the top edge. */
+  tap47: 392,
+  tap48: 445,
+  tap49: 498,
+} as const;
+
+/** The rows of the cabinet frame (y from the cabinet's top edge). */
+const ROW = {
+  /** The DHW supply and return lines of valve 26. */
+  dhwSup: 42,
+  dhwRet: 68,
+  /** The probe row: probes 33, 34, 31, 32 and pump 17. */
+  probe: 112,
+  /** The probe pairs 30/36 and 29/35 (their stems end on the compressor row's line). */
+  pair: 126,
+  /** The transducers 38 and 37, valve 22 and the compressor row: compressor 11, discharge and suction lines. */
+  trans: 142,
+  /** Exchanger 9's top and bottom ports (the discharge enters at the top, leaves into valve 14 at the bottom) and its centre. */
+  hx9Top: 237,
+  hx9: 260,
+  hx9Bottom: 283,
+  /** Valve 14's centre: its left port is on the row of exchanger 9's bottom port. */
+  valve14: 283,
+  /** Pump 16 on riser 4, resistor 44 on riser 1 and drain valve 25 under the HTR column. */
+  pump16: 298,
+  resistor: 300,
+  /** Thermostat 45, resistor 44's safety thermostat: on riser 1 right above the resistor, no part between them. */
+  thermostat: 254,
+  valve25: 305,
+  /** The top ports of exchangers 8 and 7, their centre, and the row of their bottom ports (the production and brine lines). */
+  hxTop: 328,
+  hx: 362,
+  line: 396,
+  /** Exchanger 10: top ports, centre, bottom ports. */
+  hx10Top: 453,
+  hx10: 475,
+  hx10Bottom: 497,
+} as const;
+
+/** Model C's coil ports: the DHW lines of valve 26 end here (coil 51's supply and return ports, symbols.ts). */
+const COIL_PORT_X = FRAME_ZONES.coil51.x - 75;
+
 /** Components. Items 1-6 are the ports on the top edge. */
 const componentsFor = (z: CabinetZones): readonly Component[] => [
   // ports, left to right in the manual's order
-  c(1, 'port', 270, 130, 0),
-  c(2, 'port', 312, 130, 0),
-  c(3, 'port', 630, 130, 0),
-  c(4, 'port', 690, 130, 0),
-  c(5, 'port', 722, 130, 0, { dhw: 'external' }),
-  c(6, 'port', 748, 130, 0, { dhw: 'external' }),
+  c(1, 'port', COL.riser1, 0, 0),
+  c(2, 'port', COL.riser2, 0, 0),
+  c(3, 'port', COL.riser3, 0, 0),
+  c(4, 'port', COL.riser4, 0, 0),
+  c(5, 'port', COL.port5, 0, 0, { dhw: 'external' }),
+  c(6, 'port', COL.port6, 0, 0, { dhw: 'external' }),
   // model C: tap water inlet, DHW outlet and recirculation of the integrated tank, on the top edge
-  c(47, 'port', 440, 130, 0, { dhw: 'internal' }),
-  c(48, 'port', 490, 130, 0, { dhw: 'internal' }),
-  c(49, 'port', 540, 130, 0, { dhw: 'internal' }),
+  c(47, 'port', COL.tap47, 0, 0, { dhw: 'internal' }),
+  c(48, 'port', COL.tap48, 0, 0, { dhw: 'internal' }),
+  c(49, 'port', COL.tap49, 0, 0, { dhw: 'internal' }),
   // refrigerant circuit
-  c(7, 'exchanger', 572, 382, 0, {
+  c(7, 'exchanger', COL.hx7, ROW.hx, 0, {
     size: 34,
     sides: [
       // refrigerant (left): expansion valve in at the bottom, suction line out at the top
@@ -573,7 +760,7 @@ const componentsFor = (z: CabinetZones): readonly Component[] => [
       { half: 'right', entering: ['br_feed7'], leaving: ['brine_7_28', 'brine_bypass28'], enters: 'top' },
     ],
   }),
-  c(8, 'exchanger', 432, 382, 0, {
+  c(8, 'exchanger', COL.hx8, ROW.hx, 0, {
     size: 34,
     sides: [
       // production water (left): from pump 15 in at the bottom, towards resistor 44 out at the top
@@ -588,7 +775,7 @@ const componentsFor = (z: CabinetZones): readonly Component[] => [
       },
     ],
   }),
-  c(9, 'exchanger', 373, 273, 0, {
+  c(9, 'exchanger', COL.hx9, ROW.hx9, 0, {
     size: 23,
     feature: 'htr',
     sides: [
@@ -598,16 +785,16 @@ const componentsFor = (z: CabinetZones): readonly Component[] => [
       { half: 'right', entering: ['ref_discharge'], leaving: ['ref_9_14'], enters: 'top' },
     ],
   }),
-  c(11, 'compressor', 510, 250, 0),
-  c(12, 'expansion_valve', 527, 416, 0),
-  c(13, 'filter_dryer', 487, 416, 0),
-  c(14, 'inversion_valve', 430, 296, 0, { feature: 'active_cooling' }),
-  c(29, 'probe_t', 542, 234, 0),
-  c(30, 'probe_t', 430, 234, 0),
-  c(35, 'transducer_p', 564, 234, 0),
-  c(36, 'transducer_p', 452, 234, 0),
+  c(11, 'compressor', COL.compressor, ROW.trans, 0),
+  c(12, 'expansion_valve', COL.valve12, ROW.line, 0),
+  c(13, 'filter_dryer', COL.compressor, ROW.line, 0),
+  c(14, 'inversion_valve', COL.valve14, ROW.valve14, 0, { feature: 'active_cooling' }),
+  c(29, 'probe_t', COL.probe29, ROW.pair, 0),
+  c(30, 'probe_t', COL.probe30, ROW.pair, 0),
+  c(35, 'transducer_p', COL.transducer35, ROW.pair, 0),
+  c(36, 'transducer_p', COL.transducer36, ROW.pair, 0),
   // hydraulic circuits
-  c(10, 'exchanger', 520, 470, 0, {
+  c(10, 'exchanger', COL.hx10, ROW.hx10, 0, {
     size: 22,
     feature: 'passive_cooling',
     sides: [
@@ -617,29 +804,31 @@ const componentsFor = (z: CabinetZones): readonly Component[] => [
       { half: 'right', entering: ['br_10_in'], leaving: ['br_10_28'], enters: 'top' },
     ],
   }),
-  c(15, 'pump', 385, 416, 0),
-  c(16, 'pump', 690, 300, 90),
-  c(17, 'pump', 340, 226, 90, { feature: 'htr', dhw: 'any' }),
-  c(22, 'valve', 340, 256, 0, { feature: 'htr', dhw: 'any' }),
-  c(25, 'drain_valve', 340, 318, 0, { feature: 'htr', dhw: 'any' }),
-  c(26, 'valve3', 270, 172, 270, { dhw: 'any', unusedMuted: true }),
-  c(27, 'valve3', 350, 416, 0, { feature: 'passive_cooling' }),
-  c(28, 'valve3', 610, 416, 0, { feature: 'passive_cooling' }),
-  c(31, 'probe_t', 614, 228, 270),
-  c(32, 'probe_t', 674, 228, 270),
-  c(33, 'probe_t', 254, 228, 270),
-  c(34, 'probe_t', 296, 228, 270),
-  c(37, 'transducer_p', 674, 256, 270),
-  c(38, 'transducer_p', 296, 256, 270),
-  c(44, 'resistor', 270, 320, 90, { feature: 'backup_heater' }),
-  c(45, 'thermostat', 286, 282, 90, { feature: 'backup_heater' }),
+  c(15, 'pump', COL.pump15, ROW.line, 0),
+  c(16, 'pump', COL.riser4, ROW.pump16, 90),
+  c(17, 'pump', COL.htr, ROW.probe, 90, { feature: 'htr', dhw: 'any' }),
+  c(22, 'valve', COL.htr, ROW.trans, 0, { feature: 'htr', dhw: 'any' }),
+  c(25, 'drain_valve', COL.htr, ROW.valve25, 0, { feature: 'htr', dhw: 'any' }),
+  c(26, 'valve3', COL.riser1, ROW.dhwSup, 270, { dhw: 'any', unusedMuted: true }),
+  c(27, 'valve3', COL.valve27, ROW.line, 0, { feature: 'passive_cooling' }),
+  c(28, 'valve3', COL.valve28, ROW.line, 0, { feature: 'passive_cooling' }),
+  c(31, 'probe_t', COL.probe31, ROW.probe, 270),
+  c(32, 'probe_t', COL.body4, ROW.probe, 270),
+  c(33, 'probe_t', COL.body1, ROW.probe, 270),
+  c(34, 'probe_t', COL.body2, ROW.probe, 270),
+  c(37, 'transducer_p', COL.body4, ROW.trans, 270),
+  c(38, 'transducer_p', COL.body2, ROW.trans, 270),
+  c(44, 'resistor', COL.riser1, ROW.resistor, 90, { feature: 'backup_heater' }),
+  // thermostat 45 sits left of riser 1, in probe 33's column, right above resistor 44 (its stem ends on the riser)
+  c(45, 'thermostat', COL.body1, ROW.thermostat, 270, { feature: 'backup_heater' }),
   // model C's integrated tank (50) with its coil (51, ports where the DHW lines of valve 26 end) and DHW probe (54) on
   // the tank wall
   c(50, 'tank', z.internalTank.x + z.internalTank.width / 2, z.internalTank.y + z.internalTank.height / 2, 0, {
     dhw: 'internal',
   }),
   c(51, 'coil', z.coil51.x, z.coil51.y, 0, { dhw: 'internal' }),
-  c(54, 'probe_t', 574, 171, 270, { dhw: 'internal' }),
+  // (in frame coordinates: the arrangement maps this one, unlike 50 and 51)
+  c(54, 'probe_t', FRAME_ZONES.internalTank.x + FRAME_ZONES.internalTank.width - 16, 41, 270, { dhw: 'internal' }),
 ];
 
 /** Points from text: "x,y x,y ...". */
@@ -692,118 +881,259 @@ export const HTR_WATER_SEGMENT_IDS: readonly string[] = [
 ];
 
 /** The cabinet's pipe segments (the band's are `bandSegments`). The production trunk (return from ports 2/6 through 27, 15, 8, 44, 33 and 26) serves DG1 and DHW. */
-const cabinetSegments = (): readonly Segment[] => [
-  // production: ports 1 and 2 (their emitter or stubs are in the band, `bandSegments`)
-  seg('p1_up', DG1, '270,160 270,130', OUT, { dhw: 'any', speedRole: PP }),
-  seg('p1_direct', DG1, '270,184 270,130', OUT, { dhw: 'none', speedRole: PP }),
-  seg('p2_in', DG1, '312,130 312,198', RET, { speedRole: PP }),
-  seg('prod_44_26', TRUNK, '270,292 270,184', OUT, { speedRole: PP }),
-  seg('prod_bypass44', TRUNK, '270,348 270,292', OUT, { bypass: 'backup_heater', speedRole: PP }),
-  seg('prod_8_44', TRUNK, '420,348 270,348', OUT, { speedRole: PP }),
-  seg('prod_15_8', TRUNK, '397,416 420,416', RET, { speedRole: PP }),
-  seg('trunk', TRUNK, '312,198 312,416', RET, { speedRole: PP }),
-  seg('prod_27_in', TRUNK, '312,416 338,416', RET, {
-    through: 'passive_cooling',
-    speedRole: PP,
-    onlyWhen: { valves2728: 'closed' },
-  }),
-  seg('prod_27_15', TRUNK, '362,416 373,416', RET, { through: 'passive_cooling', speedRole: PP }),
-  seg('prod_bypass27', TRUNK, '312,416 373,416', RET, { bypass: 'passive_cooling', speedRole: PP }),
-  // production through exchanger 10 (passive cooling and defrost)
-  seg('prod_10_in', ['exchanger_10'], '312,416 312,492 508,492', RET, {
-    feature: 'passive_cooling',
-    speedRole: PP,
-  }),
-  seg('prod_10_out', ['exchanger_10'], '508,448 350,448 350,428', OUT, {
-    feature: 'passive_cooling',
-    speedRole: PP,
-  }),
-  // DHW lines of valve 26: supply to port 5, return from port 6 (or to and from the integrated tank of model C)
-  seg('dhw_sup_a', ['production_dhw'], '282,172 361,172', OUT, { dhw: 'any', speedRole: PP }),
-  seg('dhw_sup_b', ['dhw_coil'], '361,172 420,172', OUT, { dhw: 'any', speedRole: PP }),
-  seg('dhw_sup_c', ['dhw_coil'], '420,172 722,172 722,130', OUT, { dhw: 'external', speedRole: PP }),
-  seg('dhw_ret_c', ['dhw_coil'], '748,130 748,198 420,198', RET, { dhw: 'external', speedRole: PP }),
-  seg('dhw_ret_b', ['dhw_coil'], '420,198 340,198', RET, { dhw: 'any', speedRole: PP }),
-  seg('dhw_ret_a', ['production_dhw'], '340,198 312,198', RET, { dhw: 'any', speedRole: PP }),
-  // HTR water: pump 17 takes from the DHW return, through valve 22 and exchanger 9, back into the DHW supply
-  seg('htr_in', ['htr'], '340,198 340,214', DHWT, { feature: 'htr', dhw: 'any' }),
-  seg('htr_pump', ['htr'], '340,238 340,247', DHWT, { feature: 'htr', dhw: 'any' }),
-  seg('htr_to_9', ['htr'], '340,265 340,296 361,296', DHWT, { feature: 'htr', dhw: 'any' }),
-  seg('htr_drain', ['htr'], '340,296 340,309', DHWT, { feature: 'htr', dhw: 'any', stub: true }),
-  seg('htr_riser', ['htr'], '361,250 361,172', DHWT, { feature: 'htr', dhw: 'any' }),
-  // Internal (model C, items 47-49 on the top edge): short stubs into the tank
-  seg('tap_47', ['dhw_coil'], '440,118 440,138', DHWT, { dhw: 'internal', stub: true }),
-  seg('tap_48', ['dhw_coil'], '490,138 490,118', DHWT, { dhw: 'internal', stub: true }),
-  seg('tap_49', ['dhw_coil'], '540,118 540,138', DHWT, { dhw: 'internal', stub: true }),
-  // refrigerant: discharge 11 -> 9 -> 14 -> 8 (heating), expansion 8 -> 13 -> 12 -> 7, suction 7 -> 14 -> 11
-  seg('ref_discharge', ['refrigerant'], '496,250 385,250', DISCH, { through: 'htr', speedRole: CP }),
-  seg('ref_9_14', ['refrigerant'], '385,296 416,296', DISCH, { through: 'htr', speedRole: CP }),
-  seg('ref_discharge_direct', ['refrigerant'], '496,250 416,250 416,296', DISCH, {
-    bypass: 'htr',
-    speedRole: CP,
-  }),
-  seg('ref_14_8', ['refrigerant'], '444,306 444,348', DISCH, {
-    through: 'active_cooling',
-    reversible: true,
-    speedRole: CP,
-  }),
-  seg('ref_7_14', ['refrigerant'], '560,348 560,296 444,296', SUCT, {
-    through: 'active_cooling',
-    reversible: true,
-    speedRole: CP,
-  }),
-  seg('ref_suction', ['refrigerant'], '444,286 610,286 610,250 524,250', SUCT, {
-    through: 'active_cooling',
-    speedRole: CP,
-  }),
-  seg('ref_direct_8', ['refrigerant'], '416,296 444,296 444,348', DISCH, {
-    bypass: 'active_cooling',
-    speedRole: CP,
-  }),
-  seg('ref_direct_suction', ['refrigerant'], '560,348 560,286 610,286 610,250 524,250', SUCT, {
-    bypass: 'active_cooling',
-    speedRole: CP,
-  }),
-  seg('ref_8_13', ['refrigerant'], '444,416 473,416', COND, { reversible: true, speedRole: CP }),
-  seg('ref_13_12', ['refrigerant'], '501,416 515,416', COND, { reversible: true, speedRole: CP }),
-  seg('ref_12_7', ['refrigerant'], '539,416 560,416', EVAP, { reversible: true, speedRole: CP }),
-  // brine: port 4 -> pump 16 -> evaporator 7 -> valve 28 -> port 3
-  seg('ln4_a', ['brine'], '690,130 690,288', BIN, { speedRole: BP }),
-  seg('ln4_b', ['brine'], '690,312 690,348', BIN, { speedRole: BP }),
-  seg('br_feed7', ['brine'], '690,348 584,348', BIN, { speedRole: BP, onlyWhen: { valves2728: 'closed' } }),
-  seg('brine_7_28', ['brine'], '584,416 598,416', BOUT, {
-    through: 'passive_cooling',
-    speedRole: BP,
-    onlyWhen: { valves2728: 'closed' },
-  }),
-  seg('brine_28_ln3', ['brine'], '622,416 630,416', BOUT, { through: 'passive_cooling', speedRole: BP }),
-  seg('brine_bypass28', ['brine'], '584,416 630,416', BOUT, { bypass: 'passive_cooling', speedRole: BP }),
-  seg('ln3', ['brine'], '630,416 630,130', BOUT, { speedRole: BP }),
-  // brine through exchanger 10 (passive cooling and defrost)
-  seg('br_10_in', ['exchanger_10'], '690,348 690,448 532,448', BIN, {
-    feature: 'passive_cooling',
-    speedRole: BP,
-  }),
-  seg('br_10_28', ['exchanger_10'], '532,492 610,492 610,428', BOUT, {
-    feature: 'passive_cooling',
-    speedRole: BP,
-  }),
-];
+const cabinetSegments = (): readonly Segment[] => {
+  const { riser1: r1, riser2: r2, riser3: r3, riser4: r4 } = COL;
+  const { dhwSup, dhwRet, line: rowLine } = ROW;
+  const hx8Left = COL.hx8 - 12;
+  const hx8Right = COL.hx8 + 12;
+  const hx7Left = COL.hx7 - 12;
+  const hx7Right = COL.hx7 + 12;
+  const hx9Left = COL.hx9 - 12;
+  const hx9Right = COL.hx9 + 12;
+  const hx10Left = COL.hx10 - 12;
+  const hx10Right = COL.hx10 + 12;
+  const compLeft = COL.compressor - 14;
+  const compRight = COL.compressor + 14;
+  const valve14Left = COL.valve14 - 14;
+  const valve14Right = COL.valve14 + 14;
+  const p = (...pairs: readonly (readonly [number, number])[]): string => line(...pairs);
+  return [
+    // production: ports 1 and 2 (their emitter or stubs are in the band, `bandSegments`)
+    seg('p1_up', DG1, p([r1, dhwSup - 12], [r1, 0]), OUT, { dhw: 'any', speedRole: PP }),
+    seg('p1_direct', DG1, p([r1, dhwSup + 12], [r1, 0]), OUT, { dhw: 'none', speedRole: PP }),
+    seg('p2_in', DG1, p([r2, 0], [r2, dhwRet]), RET, { speedRole: PP }),
+    seg('prod_44_26', TRUNK, p([r1, ROW.resistor - 28], [r1, dhwSup + 12]), OUT, { speedRole: PP }),
+    seg('prod_bypass44', TRUNK, p([r1, ROW.hxTop], [r1, ROW.resistor - 28]), OUT, {
+      bypass: 'backup_heater',
+      speedRole: PP,
+    }),
+    seg('prod_8_44', TRUNK, p([hx8Left, ROW.hxTop], [r1, ROW.hxTop]), OUT, { speedRole: PP }),
+    seg('prod_15_8', TRUNK, p([COL.pump15 + 12, rowLine], [hx8Left, rowLine]), RET, { speedRole: PP }),
+    seg('trunk', TRUNK, p([r2, dhwRet], [r2, rowLine]), RET, { speedRole: PP }),
+    seg('prod_27_in', TRUNK, p([r2, rowLine], [COL.valve27 - 12, rowLine]), RET, {
+      through: 'passive_cooling',
+      speedRole: PP,
+      onlyWhen: { valves2728: 'closed' },
+    }),
+    seg('prod_27_15', TRUNK, p([COL.valve27 + 12, rowLine], [COL.pump15 - 12, rowLine]), RET, {
+      through: 'passive_cooling',
+      speedRole: PP,
+    }),
+    seg('prod_bypass27', TRUNK, p([r2, rowLine], [COL.pump15 - 12, rowLine]), RET, {
+      bypass: 'passive_cooling',
+      speedRole: PP,
+    }),
+    // production through exchanger 10 (passive cooling and defrost)
+    seg('prod_10_in', ['exchanger_10'], p([r2, rowLine], [r2, ROW.hx10Bottom], [hx10Left, ROW.hx10Bottom]), RET, {
+      feature: 'passive_cooling',
+      speedRole: PP,
+    }),
+    seg(
+      'prod_10_out',
+      ['exchanger_10'],
+      p([hx10Left, ROW.hx10Top], [COL.valve27, ROW.hx10Top], [COL.valve27, rowLine + 12]),
+      OUT,
+      {
+        feature: 'passive_cooling',
+        speedRole: PP,
+      },
+    ),
+    // DHW lines of valve 26: supply to port 5, return from port 6 (or to and from the integrated tank of model C)
+    seg('dhw_sup_a', ['production_dhw'], p([r1 + 12, dhwSup], [COL.htrRiser, dhwSup]), OUT, {
+      dhw: 'any',
+      speedRole: PP,
+    }),
+    seg('dhw_sup_b', ['dhw_coil'], p([COL.htrRiser, dhwSup], [COIL_PORT_X, dhwSup]), OUT, {
+      dhw: 'any',
+      speedRole: PP,
+    }),
+    seg('dhw_sup_c', ['dhw_coil'], p([COIL_PORT_X, dhwSup], [COL.port5, dhwSup], [COL.port5, 0]), OUT, {
+      dhw: 'external',
+      speedRole: PP,
+    }),
+    seg('dhw_ret_c', ['dhw_coil'], p([COL.port6, 0], [COL.port6, dhwRet], [COIL_PORT_X, dhwRet]), RET, {
+      dhw: 'external',
+      speedRole: PP,
+    }),
+    seg('dhw_ret_b', ['dhw_coil'], p([COIL_PORT_X, dhwRet], [COL.htr, dhwRet]), RET, { dhw: 'any', speedRole: PP }),
+    seg('dhw_ret_a', ['production_dhw'], p([COL.htr, dhwRet], [r2, dhwRet]), RET, { dhw: 'any', speedRole: PP }),
+    // HTR water: pump 17 takes from the DHW return, through valve 22 and exchanger 9, back into the DHW supply
+    seg('htr_in', ['htr'], p([COL.htr, dhwRet], [COL.htr, ROW.probe - 12]), DHWT, { feature: 'htr', dhw: 'any' }),
+    seg('htr_pump', ['htr'], p([COL.htr, ROW.probe + 12], [COL.htr, ROW.trans - 9]), DHWT, {
+      feature: 'htr',
+      dhw: 'any',
+    }),
+    seg('htr_to_9', ['htr'], p([COL.htr, ROW.trans + 9], [COL.htr, ROW.hx9Bottom], [hx9Left, ROW.hx9Bottom]), DHWT, {
+      feature: 'htr',
+      dhw: 'any',
+    }),
+    seg('htr_drain', ['htr'], p([COL.htr, ROW.hx9Bottom], [COL.htr, ROW.valve25 - 9]), DHWT, {
+      feature: 'htr',
+      dhw: 'any',
+      stub: true,
+    }),
+    seg('htr_riser', ['htr'], p([hx9Left, ROW.hx9Top], [hx9Left, dhwSup]), DHWT, { feature: 'htr', dhw: 'any' }),
+    // Internal (model C, items 47-49 on the top edge): short stubs into the tank
+    seg('tap_47', ['dhw_coil'], p([COL.tap47, -12], [COL.tap47, FRAME_ZONES.internalTank.y]), DHWT, {
+      dhw: 'internal',
+      stub: true,
+    }),
+    seg('tap_48', ['dhw_coil'], p([COL.tap48, FRAME_ZONES.internalTank.y], [COL.tap48, -12]), DHWT, {
+      dhw: 'internal',
+      stub: true,
+    }),
+    seg('tap_49', ['dhw_coil'], p([COL.tap49, -12], [COL.tap49, FRAME_ZONES.internalTank.y]), DHWT, {
+      dhw: 'internal',
+      stub: true,
+    }),
+    // refrigerant: discharge 11 -> 9 -> 14 -> 8 (heating), expansion 8 -> 13 -> 12 -> 7, suction 7 -> 14 -> 11. The discharge
+    // line runs left along the compressor row and down into exchanger 9's top port.
+    seg(
+      'ref_discharge',
+      ['refrigerant'],
+      p([compLeft, ROW.trans], [hx9Right, ROW.trans], [hx9Right, ROW.hx9Top]),
+      DISCH,
+      {
+        through: 'htr',
+        speedRole: CP,
+      },
+    ),
+    seg('ref_9_14', ['refrigerant'], p([hx9Right, ROW.hx9Bottom], [valve14Left, ROW.valve14]), DISCH, {
+      through: 'htr',
+      speedRole: CP,
+    }),
+    seg(
+      'ref_discharge_direct',
+      ['refrigerant'],
+      p([compLeft, ROW.trans], [valve14Left, ROW.trans], [valve14Left, ROW.valve14]),
+      DISCH,
+      {
+        bypass: 'htr',
+        speedRole: CP,
+      },
+    ),
+    seg('ref_14_8', ['refrigerant'], p([valve14Right, ROW.valve14 + 10], [hx8Right, ROW.hxTop]), DISCH, {
+      through: 'active_cooling',
+      reversible: true,
+      speedRole: CP,
+    }),
+    seg(
+      'ref_7_14',
+      ['refrigerant'],
+      p([hx7Left, ROW.hxTop], [hx7Left, ROW.valve14], [valve14Right, ROW.valve14]),
+      SUCT,
+      {
+        through: 'active_cooling',
+        reversible: true,
+        speedRole: CP,
+      },
+    ),
+    seg(
+      'ref_suction',
+      ['refrigerant'],
+      p(
+        [valve14Right, ROW.valve14 - 10],
+        [COL.suction, ROW.valve14 - 10],
+        [COL.suction, ROW.trans],
+        [compRight, ROW.trans],
+      ),
+      SUCT,
+      {
+        through: 'active_cooling',
+        speedRole: CP,
+      },
+    ),
+    seg(
+      'ref_direct_8',
+      ['refrigerant'],
+      p([valve14Left, ROW.valve14], [valve14Right, ROW.valve14], [hx8Right, ROW.hxTop]),
+      DISCH,
+      {
+        bypass: 'active_cooling',
+        speedRole: CP,
+      },
+    ),
+    seg(
+      'ref_direct_suction',
+      ['refrigerant'],
+      p(
+        [hx7Left, ROW.hxTop],
+        [hx7Left, ROW.valve14 - 10],
+        [COL.suction, ROW.valve14 - 10],
+        [COL.suction, ROW.trans],
+        [compRight, ROW.trans],
+      ),
+      SUCT,
+      {
+        bypass: 'active_cooling',
+        speedRole: CP,
+      },
+    ),
+    seg('ref_8_13', ['refrigerant'], p([hx8Right, rowLine], [COL.compressor - 14, rowLine]), COND, {
+      reversible: true,
+      speedRole: CP,
+    }),
+    seg('ref_13_12', ['refrigerant'], p([COL.compressor + 14, rowLine], [COL.valve12 - 12, rowLine]), COND, {
+      reversible: true,
+      speedRole: CP,
+    }),
+    seg('ref_12_7', ['refrigerant'], p([COL.valve12 + 12, rowLine], [hx7Left, rowLine]), EVAP, {
+      reversible: true,
+      speedRole: CP,
+    }),
+    // brine: port 4 -> pump 16 -> evaporator 7 -> valve 28 -> port 3
+    seg('ln4_a', ['brine'], p([r4, 0], [r4, ROW.pump16 - 12]), BIN, { speedRole: BP }),
+    seg('ln4_b', ['brine'], p([r4, ROW.pump16 + 12], [r4, ROW.hxTop]), BIN, { speedRole: BP }),
+    seg('br_feed7', ['brine'], p([r4, ROW.hxTop], [hx7Right, ROW.hxTop]), BIN, {
+      speedRole: BP,
+      onlyWhen: { valves2728: 'closed' },
+    }),
+    seg('brine_7_28', ['brine'], p([hx7Right, rowLine], [COL.valve28 - 12, rowLine]), BOUT, {
+      through: 'passive_cooling',
+      speedRole: BP,
+      onlyWhen: { valves2728: 'closed' },
+    }),
+    seg('brine_28_ln3', ['brine'], p([COL.valve28 + 12, rowLine], [r3, rowLine]), BOUT, {
+      through: 'passive_cooling',
+      speedRole: BP,
+    }),
+    seg('brine_bypass28', ['brine'], p([hx7Right, rowLine], [r3, rowLine]), BOUT, {
+      bypass: 'passive_cooling',
+      speedRole: BP,
+    }),
+    seg('ln3', ['brine'], p([r3, rowLine], [r3, 0]), BOUT, { speedRole: BP }),
+    // brine through exchanger 10 (passive cooling and defrost)
+    seg('br_10_in', ['exchanger_10'], p([r4, ROW.hxTop], [r4, ROW.hx10Top], [hx10Right, ROW.hx10Top]), BIN, {
+      feature: 'passive_cooling',
+      speedRole: BP,
+    }),
+    seg(
+      'br_10_28',
+      ['exchanger_10'],
+      p([hx10Right, ROW.hx10Bottom], [COL.valve28, ROW.hx10Bottom], [COL.valve28, rowLine + 12]),
+      BOUT,
+      {
+        feature: 'passive_cooling',
+        speedRole: BP,
+      },
+    ),
+  ];
+};
 
 /** The most crossings inside the cabinet (add-schematic-card D5): the manual's figure has 15 (14 hops and the return line behind resistor 44). */
 export const MAX_CROSSINGS = 15;
 
 /** The crossings inside the cabinet (add-schematic-card D5): this layout needs 9. */
 const CROSSINGS: readonly Crossing[] = [
-  { over: 'dhw_sup_a', under: 'p2_in', at: [312, 172] },
-  { over: 'dhw_sup_c', under: 'ln3', at: [630, 172] },
-  { over: 'dhw_sup_c', under: 'ln4_a', at: [690, 172] },
-  { over: 'dhw_ret_c', under: 'ln3', at: [630, 198] },
-  { over: 'dhw_ret_c', under: 'ln4_a', at: [690, 198] },
-  { over: 'dhw_ret_b', under: 'htr_riser', at: [361, 198] },
-  { over: 'trunk', under: 'prod_8_44', at: [312, 348] },
-  { over: 'ln3', under: 'br_feed7', at: [630, 348] },
-  { over: 'br_10_in', under: 'br_10_28', at: [610, 448] },
+  { over: 'dhw_sup_a', under: 'p2_in', at: [COL.riser2, ROW.dhwSup] },
+  { over: 'dhw_sup_c', under: 'ln3', at: [COL.riser3, ROW.dhwSup] },
+  { over: 'dhw_sup_c', under: 'ln4_a', at: [COL.riser4, ROW.dhwSup] },
+  { over: 'dhw_ret_c', under: 'ln3', at: [COL.riser3, ROW.dhwRet] },
+  { over: 'dhw_ret_c', under: 'ln4_a', at: [COL.riser4, ROW.dhwRet] },
+  { over: 'dhw_ret_b', under: 'htr_riser', at: [COL.hx9 - 12, ROW.dhwRet] },
+  { over: 'trunk', under: 'prod_8_44', at: [COL.riser2, ROW.hxTop] },
+  { over: 'ln3', under: 'br_feed7', at: [COL.riser3, ROW.hxTop] },
+  { over: 'br_10_in', under: 'br_10_28', at: [COL.valve28, ROW.hx10Top] },
 ];
 
 /**
@@ -1082,63 +1412,72 @@ export function mapAxis(map: AxisMap, value: number): number {
 }
 
 /**
- * The horizontal layout's x map (rework-layouts D2): the cabinet grows from 520 to 980 units (x 240-760 becomes 10-990), so it
- * fills the drawing's width, and the room goes to the lanes between the slope-1 spans, where the values sit beside their probes
- * and pipes. Slope 1 over every span a symbol's ports cover (a symbol keeps its size, so the pipes that end on its ports keep
- * their distance): the probe 33 body and stem (245-270), thermostat 45 (270-286), probes 34/38 and their stems (287-312), the
- * valves, pumps and exchangers of the HTR column (312-397), the refrigerant row (416-452 and 473-539, around the stretch
- * below), exchanger 7 with probes 35 and 54 (560-590), valve 28 and probe 31 (598-630), probe 32 and pump 16 with their stems
- * (665-690). The 460 extra units go to:
- * - 240-245, +95: production Out beside probe 33, left of its body (probe 33 is left of riser 270).
- * - 286-287, +90: production In and the production pressure left of probes 34 and 38, between riser 270 and their bodies; the
- *   thermostat at 286 keeps its stem on the riser, so the lane starts right of it.
- * - 312-338, +10: the lane before the HTR column.
- * - 397-416, +8: the lane before exchanger 8, as before.
- * - 452-473, +24: the lane between transducer 36 and filter dryer 13 / compressor 11 (only pipes cross it), so that the
- *   discharge value block (temperature over pressure, up to 50 units wide at the threshold) clears the compressor.
- * - 539-560, +10: the core of the refrigerant circuit, as before.
- * - 590-598, +4: as before.
- * - 630-665, +70: brine Out and the brine pressure and pump values, right of riser 630, left of probes 32 and 37.
- * - 690-722, +77 and 722-748, +14 and 748-760, +58: ports 5 and 6 and the right edge: they take the external tank's slot
- *   (width 160) to the right of the source's, so that the hybrid source and the tank fit side by side in the band, and the
- *   lane right of the brine inlet riser holds the brine In value.
- * Left of 240 and right of 760 the map keeps its offset.
+ * A map that stretches (or shrinks) the lanes of the cabinet frame by `change[lane.id]` units and keeps slope 1 everywhere else
+ * (rework-layouts D2): a symbol keeps its size and the parts in a column keep their distances, only the lanes between them grow.
+ * `origin` is where the frame's coordinate 0 lands.
  */
-export const HORIZONTAL_MAP_X: AxisMap = [
-  [240, 10],
-  [245, 110],
-  [286, 151],
-  [287, 242],
-  [312, 267],
-  [338, 303],
-  [397, 362],
-  [416, 389],
-  [452, 425],
-  [473, 470],
-  [496, 493],
-  [539, 536],
-  [560, 567],
-  [590, 597],
-  [598, 609],
-  [630, 641],
-  [665, 746],
-  [690, 771],
-  [722, 880],
-  [748, 920],
-  [760, 990],
-];
+function laneMap(
+  lanes: readonly Lane[],
+  change: Readonly<Record<string, number>>,
+  origin: number,
+  length: number,
+): AxisMap {
+  const knots: [number, number][] = [];
+  const push = (from: number, to: number): void => {
+    if (knots[knots.length - 1]?.[0] === from) knots.pop();
+    knots.push([from, to]);
+  };
+  let added = 0;
+  push(0, origin);
+  for (const lane of lanes) {
+    const delta = change[lane.id] ?? 0;
+    if (delta === 0) continue;
+    push(lane.from, origin + lane.from + added);
+    added += delta;
+    push(lane.to, origin + lane.to + added);
+  }
+  push(length, origin + length + added);
+  return knots;
+}
 
 /**
- * The horizontal layout's y map: a shift that puts the cabinet's top edge under the band (the band's height plus the join lane),
- * with no stretch. Every drawn part of the frame lies above y 505 (exchanger 10's body is the lowest, to y 501); the part of the
- * frame below it held only parts that are no longer drawn (vessels, safety and drain valves), so the cabinet's bottom edge moves
- * from y 605 up to y 530, and the viewBox's height follows. The rows inside need no stretch: the maps' room is in x, where the
- * labels sit beside the pipes.
+ * The extra width the horizontal layout gives each column lane (units added to the lane's frame width; the lanes not listed keep
+ * theirs). The cabinet grows from 720 to 980 units (x 0-720 becomes 10-990), so it fills the drawing's width. The lanes are the ones
+ * that hold values beside their parts (`COLUMN_LANES`): 64 left of probe 33 (production Out), 48 between riser 1 and probes 34/38
+ * (production In and pressure), 30 right of pump 15 (its value), 78 between riser 3 and probes 32/37 (brine Out, pressure and
+ * the pump 16 value) and 40 right of riser 4 (brine In); 260 in all. The widths are what the 89 units of the widest value at the
+ * threshold need (the place search's "widest box"), and the lanes before riser 4 take at most 220 so that port 4 (x 827) stays left of
+ * the tank's slot (x 830-990), as in the band's tests. The compressor row's lane stays as it is. The parts keep their size and every
+ * column of parts keeps its slope 1.
  */
-export const HORIZONTAL_MAP_Y: AxisMap = [
-  [130, BAND.top + BAND.height + BAND.joinLane],
-  [505, BAND.top + BAND.height + BAND.joinLane + 375],
-];
+export const HORIZONTAL_LANE_EXTRA: Readonly<Record<string, number>> = {
+  'left-edge': 64,
+  'riser-1': 48,
+  'before-exchanger-8': 30,
+  'riser-3': 78,
+  'riser-4': 40,
+};
+
+/** The horizontal layout's x map: `HORIZONTAL_LANE_EXTRA` over the column lanes. */
+export const HORIZONTAL_MAP_X: AxisMap = laneMap(COLUMN_LANES, HORIZONTAL_LANE_EXTRA, 10, FRAME_CABINET.width);
+
+/**
+ * The horizontal layout's y changes: the row lanes that hold no value in this layout narrow (the one above the probe row, which
+ * holds none, by 10 units), so the drawing stays wide. The lane under the compressor row keeps its 44 units for the pair
+ * blocks and the compressor speed, the one under the valve row its 36 for the superheat and the opening.
+ */
+export const HORIZONTAL_LANE_SHRINK: Readonly<Record<string, number>> = { 'above-probes': -18 };
+
+/**
+ * The horizontal layout's y map: the lane changes of `HORIZONTAL_LANE_SHRINK`, and a shift that puts the cabinet's top edge
+ * under the band (the band's height plus the join lane).
+ */
+export const HORIZONTAL_MAP_Y: AxisMap = laneMap(
+  ROW_LANES,
+  HORIZONTAL_LANE_SHRINK,
+  BAND.top + BAND.height + BAND.joinLane,
+  FRAME_CABINET.height,
+);
 
 const mapX = (x: number): number => mapAxis(HORIZONTAL_MAP_X, x);
 const mapY = (y: number): number => mapAxis(HORIZONTAL_MAP_Y, y);
@@ -1169,8 +1508,7 @@ const CABINET_ZONES: CabinetZones = (() => {
     x: mapX(FRAME_CABINET.x),
     y: mapY(FRAME_CABINET.y),
     width: mapX(FRAME_CABINET.x + FRAME_CABINET.width) - mapX(FRAME_CABINET.x),
-    // the cabinet's bottom edge: the frame's 605 moves up to 530 (see HORIZONTAL_MAP_Y)
-    height: 400,
+    height: mapY(FRAME_CABINET.y + FRAME_CABINET.height) - mapY(FRAME_CABINET.y),
   };
   const tank = FRAME_ZONES.internalTank;
   return {
@@ -1182,7 +1520,7 @@ const CABINET_ZONES: CabinetZones = (() => {
       width: round2(mapX(tank.x + tank.width) - mapX(tank.x)),
       height: tank.height,
     },
-    // coil 51's supply port is where the mapped DHW line of valve 26 ends (frame x 420), whatever the maps stretch in between
+    // coil 51's supply port is where the mapped DHW line of valve 26 ends, whatever the maps stretch in between
     coil51: { x: mapX(FRAME_ZONES.coil51.x - 75) + 75, y: mapY(FRAME_ZONES.coil51.y) },
   };
 })();
@@ -1191,7 +1529,14 @@ const CABINET_ZONES: CabinetZones = (() => {
 function bandZonesFor(key: BandKey, cabinet: CabinetZones): BandZones {
   const top = cabinet.cabinet.y;
   const bottom = top - BAND.joinLane;
-  const ports = { 1: mapX(270), 2: mapX(312), 3: mapX(630), 4: mapX(690), 5: mapX(722), 6: mapX(748) } as const;
+  const ports = {
+    1: mapX(COL.riser1),
+    2: mapX(COL.riser2),
+    3: mapX(COL.riser3),
+    4: mapX(COL.riser4),
+    5: mapX(COL.port5),
+    6: mapX(COL.port6),
+  } as const;
   const slots = planBand(
     [
       { name: 'emitter', centre: (ports[1] + ports[2]) / 2, width: key.emitter === 'none' ? 0 : BAND.emitter.width },
@@ -1225,8 +1570,8 @@ function bandZonesFor(key: BandKey, cabinet: CabinetZones): BandZones {
       ? undefined
       : {
           cx: tankShape.x + tankShape.width / 2,
-          top: tankShape.y + 78,
-          bottom: tankShape.y + 140,
+          top: tankShape.y + 84,
+          bottom: tankShape.y + 146,
           rx: 38,
           inX: tankShape.x + tankShape.width / 2 - 38 - 12,
           outX: tankShape.x + tankShape.width / 2 + 38 + 12,
@@ -1246,7 +1591,10 @@ function bandZonesFor(key: BandKey, cabinet: CabinetZones): BandZones {
 
 const ARRANGEMENTS = new Map<string, Arrangement>();
 
-function buildArrangement(key: BandKey): Arrangement {
+function buildArrangement(
+  key: BandKey,
+  places: Readonly<Record<string, PlaceOverride>> = HORIZONTAL_PLACES,
+): Arrangement {
   const zones: Zones = { ...CABINET_ZONES, ...bandZonesFor(key, CABINET_ZONES) };
   const place = (x: number, y: number): readonly [number, number] => [mapX(x), mapY(y)];
   const components = componentsFor(zones).map((part): Component => {
@@ -1271,7 +1619,7 @@ function buildArrangement(key: BandKey): Arrangement {
     crossings,
     labels: {
       specs: labels.specs.map((spec) => {
-        const own = HORIZONTAL_PLACES[spec.id]?.at(zones, place);
+        const own = places[spec.id]?.at(zones, place);
         return own === undefined ? spec : { ...spec, ...own };
       }),
     },
@@ -1279,7 +1627,7 @@ function buildArrangement(key: BandKey): Arrangement {
 }
 
 /**
- * The manual-figure frame the arrangement is mapped from (rework-layouts D1): its zones, the cabinet's lists, crossings and
+ * The cabinet frame the arrangement is mapped from (rework-layouts D1): its zones, the cabinet's lists, crossings and
  * default label places. Not drawn by any layout; the tests of the maps (test/diagram/simplified.test.ts) compare the arrangement with it.
  */
 export const FRAME = {
@@ -1289,6 +1637,12 @@ export const FRAME = {
   crossings: CROSSINGS,
   labels: labelPlacesFor(FRAME_ZONES),
 };
+
+/** The horizontal arrangement of a band key with another place table than `HORIZONTAL_PLACES` (not cached): for the tests of the override path. */
+export const arrangementWithPlaces = (
+  places: Readonly<Record<string, PlaceOverride>>,
+  key: BandKey = WIDEST_KEY,
+): Arrangement => buildArrangement(key, places);
 
 /**
  * The arrangement of a shown layout and band key: a pure function of them (rework-layouts D2, D3), built once per key. Until the

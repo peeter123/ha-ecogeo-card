@@ -104,7 +104,7 @@ const enters = (points: readonly Point[], rect: { x: number; y: number; width: n
 
 describe('geometry data', () => {
   test('the viewBox and the cabinet fit the zones of the arrangement (refine-simplified-layout D2)', () => {
-    expect(viewBox).toEqual({ width: 1000, height: 647 });
+    expect(viewBox).toEqual({ width: 1000, height: 749 });
     expect(CABINET.x).toBe(10);
     expect(CABINET.x + CABINET.width).toBe(990);
     expect(CABINET.y).toBe(232);
@@ -211,7 +211,7 @@ describe('geometry data', () => {
   test('gapsIn: no gap when the pipe on top is not drawn', () => {
     const idsOf = (context: DrawContext): Set<string> => new Set(ids(context));
     const [x, y0, y1] = [portX(2), CABINET.y, segmentPoints('p2_in').at(-1)?.[1] ?? 0];
-    expect(gapsIn(arrangement, 'p2_in', idsOf(full('external')))).toContainEqual([x, mapAxis(HORIZONTAL_MAP_Y, 172)]);
+    expect(gapsIn(arrangement, 'p2_in', idsOf(full('external')))).toContainEqual([x, mapAxis(HORIZONTAL_MAP_Y, 42)]);
     expect(gapsIn(arrangement, 'p2_in', idsOf(full('none')))).toEqual([]);
     expect(pathData(segmentPoints('p2_in'), gapsIn(arrangement, 'p2_in', idsOf(full('none'))))).toBe(
       `M${String(x)} ${String(y0)} L${String(x)} ${String(y1)}`,

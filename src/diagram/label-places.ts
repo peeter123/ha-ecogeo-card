@@ -2,13 +2,36 @@
 // arrangement, as a function of the arrangement's zone constants. Labels.ts reads them from the arrangement; the
 // texts, captions and visibility rules stay there. Positions are viewBox points with an alignment: `start` puts the label's
 // left edge at x, `end` its right edge, `middle` centres it; y is the vertical centre. They sit where the drawing leaves
-// room, and on no pipe (found with `npm run search-places`, checked by the overlap browser tests): the probes' values in the
-// lanes beside them, the compressor's speed inside the refrigerant loop, the expansion valve's pair left of the evaporator,
-// the values of the band's bodies (the DG1 demand inside the emitter, the source's Out, the DHW values) inside their bodies, and, for
+// room, and on no pipe (found with `npm run search-places`, checked by the overlap browser tests), every cabinet value in a lane
+// of the cabinet frame beside its part: the probes' and pumps' values in the column lanes, the pair blocks, the compressor's speed
+// and the superheat and opening in the row lanes under their rows. The values of the band's bodies (the DG1 demand inside the emitter, the source's Out, the DHW values) inside their bodies, and, for
 // model C, inside tank 50 above its coil. The bodies' labels are functions of the zones: they follow their body.
 import type { RolePath } from '../config/roles';
+import { VERTICAL_BELOW } from '../lib/layout';
 import { VALUE_CAPTIONS } from '../strings';
-import type { BandZones, CabinetZones, Visibility, Zones } from './geometry';
+import type { BandZones, CabinetZones, ShownLayout, Visibility, Zones } from './geometry';
+
+/**
+ * The label font factor of each layout (rework-layouts D8): a label's font is `max(10px, k cqw)`, where 1 cqw is 10 viewBox units
+ * on the drawing. In the horizontal layout the factor is 1.3: the font is the 10 px floor up to a 770 px card and grows with the
+ * drawing above it (13 px at 1000 px), so above the threshold a label is never taller in viewBox units than at the 10 px floor
+ * there. The vertical layout's factor is set with its arrangement (until then it draws the horizontal one and uses the same).
+ */
+export const LABEL_FONT_K: Readonly<Record<ShownLayout, number>> = { horizontal: 1.3, vertical: 1.3 };
+
+/** The label font size of a layout, as the CSS value. */
+export const labelFontSize = (layout: ShownLayout): string => `max(10px, ${String(LABEL_FONT_K[layout])}cqw)`;
+
+/** The height of a label's box at the 10 px font floor (line height 1.2), in px. */
+export const LABEL_LINE_PX = 12;
+
+/**
+ * The row pitch of a two-row block (a probe pair's temperature over its pressure), in viewBox units: the label height at the
+ * threshold, where the 10 px floor makes a label tallest in units, plus a unit (WebKit's boxes are a unit taller), rounded up
+ * to the place search's 4-unit grid, so the two rows never overlap at any width (rework-layouts D7). The search script
+ * reads it too (dev/overlaps.ts `PAIR_ROW_GAP`).
+ */
+export const PAIR_ROW_GAP = Math.ceil(((LABEL_LINE_PX * 1000) / VERTICAL_BELOW + 1) / 4) * 4;
 
 export type Align = 'start' | 'middle' | 'end';
 
@@ -41,7 +64,7 @@ export interface Placement {
 /** Maps a point of the frame's cabinet to the arrangement's own. */
 type PointMap = (x: number, y: number) => readonly [number, number];
 
-interface PlaceOverride {
+export interface PlaceOverride {
   /** The place, from the zones and the point map of the cabinet. */
   at: (z: Zones, map: PointMap) => Placement;
   reason: string;
@@ -53,38 +76,7 @@ interface PlaceOverride {
  * the 2 px margin, meets (the search prints it under "Default place meets"). Every entry is a constant place; the labels
  * of the band's bodies are placed from the zones. No label sits on a pipe.
  */
-export const HORIZONTAL_PLACES: Readonly<Record<string, PlaceOverride>> = {
-  production_out: {
-    at: () => ({ x: 104, y: 328, align: 'end' }),
-    reason:
-      "at its default place the box, with its 2 px margin, meets probe 33's symbol (240 cases; the default ends exactly at the body's left edge); the nearest free place ends 6 units left of the body, in the lane the x map opens between the cabinet's edge and the probe (search at 560 px, Chromium)",
-  },
-  production_in: {
-    at: () => ({ x: 236, y: 328, align: 'end' }),
-    reason:
-      "at its default place the box meets probe 34's symbol (240 cases); the nearest free place ends 6 units left of the body, in the lane between riser 270 and probes 34 and 38, right of the outlet value in reading order (search at 560 px, Chromium)",
-  },
-  production_pressure: {
-    at: () => ({ x: 236, y: 356, align: 'end' }),
-    reason:
-      "at its default place the box meets transducer 38's symbol (240 cases); the nearest free place ends 6 units left of the body at 560 px; end-aligned at x 236, under the return value, so that it stays beside the transducer on wider cards (search at 560 px, Chromium, which keeps the default place's alignment for the pressure labels)",
-  },
-  brine_in: {
-    at: () => ({ x: 776, y: 328, align: 'start' }),
-    reason:
-      'at its default place the box meets pipe ln4_a (240 cases: the default starts 3 units right of the riser); the nearest free place starts 5 units right of the riser, beside probe 32 (search at 560 px, Chromium)',
-  },
-  brine_pressure: {
-    at: () => ({ x: 740, y: 356, align: 'end' }),
-    reason:
-      "at its default place the box meets transducer 37's symbol (240 cases); the nearest free place ends 6 units left of the body at 560 px; end-aligned at x 740 so that it stays beside the transducer on wider cards (search at 560 px, Chromium, which keeps the default place's alignment for the pressure labels)",
-  },
-  dg1_demand: {
-    at: () => ({ x: 336, y: 220, align: 'end' }),
-    reason:
-      "only without an emitter (with one the demand is a body label, `emitter_demand`): at its default place, right of connection 2's stub, the box crosses the cabinet's top edge (12 cases, search at 560 px in Chromium and WebKit); the nearest free place is the same height 5 units up, right-aligned at x 336",
-  },
-};
+export const HORIZONTAL_PLACES: Readonly<Record<string, PlaceOverride>> = {};
 
 const makeSpec = (
   id: string,
@@ -107,12 +99,12 @@ const centre = (rect: { x: number; y: number; width: number; height: number }): 
 ];
 
 /**
- * The rows of the external tank's values: 38 and 60 units under its top edge, centred on it, 22 apart so that the rows keep the
- * search's 2 px margin in WebKit too (its boxes are a unit taller). The rim of the top cap reaches 28 units under the top edge,
- * the coil starts 78 under it.
+ * The rows of the external tank's values: 42 and 68 units under its top edge, centred on it, 26 apart so that the rows keep the
+ * search's 2 px margin at the threshold, where the 10 px floor makes a label tallest in units, and in WebKit too (its boxes are a
+ * unit taller). The rim of the top cap reaches 28 units under the top edge, the coil starts 84 under it.
  */
-const TANK_TEMPERATURE_DY = 38;
-const TANK_DEMAND_DY = 60;
+const TANK_TEMPERATURE_DY = 42;
+const TANK_DEMAND_DY = 68;
 
 /**
  * The labels of the band's bodies, placed from the zones (rework-layouts D4): the DG1 demand in the strip at the top of the
@@ -133,7 +125,6 @@ function bodySpecs(z: Partial<BandZones>): LabelSpec[] {
     specs.push(
       makeSpec('air_unit_out', 'source.air_unit_outlet_temperature', x, y, 'middle', {
         source: ['air'],
-        caption: VALUE_CAPTIONS.portOut,
       }),
     );
   }
@@ -143,7 +134,6 @@ function bodySpecs(z: Partial<BandZones>): LabelSpec[] {
     specs.push(
       makeSpec(hybrid ? 'hybrid_ground_out' : 'ground_out', 'brine.inlet_temperature', x, y, 'middle', {
         source: [hybrid ? 'hybrid' : 'ground'],
-        caption: VALUE_CAPTIONS.portOut,
       }),
     );
   }
@@ -153,7 +143,6 @@ function bodySpecs(z: Partial<BandZones>): LabelSpec[] {
       makeSpec('tank_external_temperature', 'dhw.temperature', x, externalTank.y + TANK_TEMPERATURE_DY, 'middle', {
         dhw: 'external',
         emphasis: true,
-        caption: VALUE_CAPTIONS.dhw,
         bare: true,
       }),
       makeSpec('tank_external_demand', 'dhw.demand', x, externalTank.y + TANK_DEMAND_DY, 'middle', {
@@ -180,8 +169,9 @@ export function labelPlacesFor(
 ): LabelPlaces {
   const { internalTank } = z;
   /**
-   * Model C's tank values: one row in the strip above coil 51 (about 30 units tall), 16 units under the tank's top, the temperature
-   * at the left wall (10 units in) and the demand right of it, ending 40 units short of the right wall (probe 54 sits on it).
+   * Model C's tank values: one row in the strip above coil 51 (about 30 units tall), 16 units under the tank's top: the temperature
+   * ends 70 units from the left wall (so its left edge is about 7 units in) and the demand, 4 units higher, ends 150 units from it,
+   * 24 units short of the right wall, where probe 54 sits. Both are end-aligned, the places the search finds free at 560 px.
    */
   const INTERNAL_ROW_Y = internalTank.y + 16;
   const spec = makeSpec;
@@ -190,44 +180,44 @@ export function labelPlacesFor(
     return spec(id, role, px, py, align, extra);
   };
   const specs: readonly LabelSpec[] = [
-    // production: probes 33 and 34 (Out, In) in the lanes beside them, pressure 38 left of its body under 34, pump 15, and the DG1 demand above connections 1/2
-    cab('production_out', 'production.outlet_temperature', 245, 228, 'end', {
+    // production: probes 33 and 34 (Out, In) in the lanes beside them (left of probe 33, between riser 1 and probe 34), pressure 38 under the
+    // return value, pump 15's value right of the pump (above its pipe), and the DG1 demand beside connection 2's stub
+    cab('production_out', 'production.outlet_temperature', 38, 112, 'end', {
       item: 33,
       caption: VALUE_CAPTIONS.portOut,
     }),
-    cab('production_in', 'production.return_temperature', 287, 228, 'end', {
+    cab('production_in', 'production.return_temperature', 115, 112, 'end', {
       item: 34,
       caption: VALUE_CAPTIONS.portIn,
     }),
-    cab('production_pressure', 'production.pressure', 287, 256, 'end', { item: 38 }),
-    cab('production_pump', 'production.pump', 396, 380, 'end', { item: 15 }),
+    cab('production_pressure', 'production.pressure', 115, 142, 'end', { item: 38 }),
+    cab('production_pump', 'production.pump', 229, 370, 'start', { item: 15 }),
     ...(z.key === undefined || z.key.emitter === 'none'
-      ? [cab('dg1_demand', 'heating.demand', 320, 123, 'start', { item: 1, demand: true })]
+      ? [cab('dg1_demand', 'heating.demand', 150, -14, 'start', { item: 1, demand: true })]
       : []),
-    // brine: probe 31 (Out) right of its riser, probe 32 (In) right of its riser, pressure 37 left of its body, pump 16
-    cab('brine_out', 'brine.outlet_temperature', 632, 228, 'start', { item: 31, caption: VALUE_CAPTIONS.portOut }),
-    cab('brine_in', 'brine.inlet_temperature', 691, 228, 'start', { item: 32, caption: VALUE_CAPTIONS.portIn }),
-    cab('brine_pressure', 'brine.pressure', 665, 256, 'end', { item: 37 }),
-    cab('brine_pump', 'brine.pump', 675, 300, 'end', { item: 16 }),
-    // refrigerant: each pair's temperature (30, 29) over its pressure (36, 35) as one two-row block under the pair (16 units between the rows), the compressor's
-    // speed inside the loop, and the expansion valve's opening and superheat beside valve 12
-    cab('discharge_temperature', 'compressor.discharge_temperature', 450, 260, 'start', { item: 30 }),
-    cab('discharge_pressure', 'compressor.discharge_pressure', 450, 276, 'start', { item: 36 }),
-    cab('suction_temperature', 'compressor.suction_temperature', 572, 260, 'end', { item: 29 }),
-    cab('suction_pressure', 'compressor.suction_pressure', 572, 276, 'end', { item: 35 }),
-    cab('compressor_speed', 'compressor.speed', 503, 307, 'middle', { item: 11 }),
-    cab('superheat', 'refrigerant.superheat', 527, 374, 'middle', { item: 12 }),
-    cab('expansion_valve', 'refrigerant.expansion_valve', 527, 390, 'middle', { item: 12 }),
+    // brine: probe 31 (Out) right of riser 3, probe 32 (In) right of riser 4, pressure 37 left of its body, pump 16's value left of the pump
+    cab('brine_out', 'brine.outlet_temperature', 544, 112, 'start', { item: 31, caption: VALUE_CAPTIONS.portOut }),
+    cab('brine_in', 'brine.inlet_temperature', 609, 112, 'start', { item: 32, caption: VALUE_CAPTIONS.portIn }),
+    cab('brine_pressure', 'brine.pressure', 570, 142, 'end', { item: 37 }),
+    cab('brine_pump', 'brine.pump', 570, 298, 'end', { item: 16 }),
+    // refrigerant: each pair's temperature (30, 29) over its pressure (36, 35) as one two-row block in the row lane under the pair, the
+    // compressor's speed in a third row under it, and the expansion valve's superheat and opening beside each other under valve 12
+    cab('discharge_temperature', 'compressor.discharge_temperature', 283, 167, 'start', { item: 30 }),
+    cab('discharge_pressure', 'compressor.discharge_pressure', 283, 167 + PAIR_ROW_GAP, 'start', { item: 36 }),
+    cab('suction_temperature', 'compressor.suction_temperature', 401, 167, 'start', { item: 29 }),
+    cab('suction_pressure', 'compressor.suction_pressure', 401, 167 + PAIR_ROW_GAP, 'start', { item: 35 }),
+    cab('compressor_speed', 'compressor.speed', 372, 167 + 2 * PAIR_ROW_GAP, 'middle', { item: 11 }),
+    cab('superheat', 'refrigerant.superheat', 408, 426, 'end', { item: 12 }),
+    cab('expansion_valve', 'refrigerant.expansion_valve', 416, 426, 'start', { item: 12 }),
     // the band's bodies: the source's Out and the external tank's values (bodySpecs)
     ...bodySpecs(z),
     // model C: the DHW temperature and, right of it in the same row, the demand, inside tank 50 in the strip above coil 51,
     // with no background plate
-    spec('tank_internal_temperature', 'dhw.temperature', internalTank.x + 10, INTERNAL_ROW_Y, 'start', {
+    spec('tank_internal_temperature', 'dhw.temperature', internalTank.x + 70, INTERNAL_ROW_Y, 'end', {
       dhw: 'internal',
-      caption: VALUE_CAPTIONS.dhw,
       bare: true,
     }),
-    spec('tank_internal_demand', 'dhw.demand', internalTank.x + internalTank.width - 40, INTERNAL_ROW_Y, 'end', {
+    spec('tank_internal_demand', 'dhw.demand', internalTank.x + 150, INTERNAL_ROW_Y - 4, 'end', {
       dhw: 'internal',
       demand: true,
       bare: true,

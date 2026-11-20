@@ -15,21 +15,25 @@ for the explanation of what the card shows and where each part comes from.
 - The unit's internal schematic drawn as inline SVG after the manual's figures B1 to B4 and C, without the service and
   safety parts that have no live value (components show their name and manual item number on hover), for any model,
   variant, outer-loop source (air, ground or hybrid), DHW storage and heat emitter (an underfloor loop, a radiator or
-  none).
+  none). The parts keep the figures' topology but not their coordinates: the cabinet is laid out in rows and columns
+  with lanes between them, where the values sit, 720 units wide, and the horizontal layout widens the column lanes to a
+  cabinet 980 units wide.
 - Pipes coloured by temperature on an absolute scale (blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at
   30 °C, orange at 50 °C, red at 70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe
   with no probe value is muted. The plate exchangers are filled on each side with a gradient from the colour of the pipe
   that enters it to the colour of the pipe that leaves it (`exchanger_fill: none` turns that off).
-- The active circuits move: dashes run in the direction of the flow at a speed that follows the pump or the
-  compressor, the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode
-  are muted. `prefers-reduced-motion` stops all animation.
+- The active circuits move: dashes run in the direction of the flow at a speed that follows the pump or the compressor,
+  the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode are muted.
+  `prefers-reduced-motion` stops all animation.
 - Live values beside their components, 19 in all: the production and brine temperatures with Out and In captions, both
   pressures and pump speeds, the discharge and suction temperatures and pressures, the compressor speed, the expansion
   valve's opening and the superheat, the source's Out, the DHW temperature, and the DG1 and DHW demand. The drawing
-  carries no captions naming its parts; hover a part for its name. Below it a footer shows the mode, the outside
-  temperature, COP (EER while cooling) and the power items of the mode (DG1 and HTR while heating, DHW while producing
-  DHW, Cooling and HTR in active cooling), and the alarm and offline indications. The card formats the numbers itself
-  with Home Assistant's locale and keeps every number joined to its unit by a no-break space.
+  carries no captions naming its parts; hover a part for its name. The source's Out and the DHW temperature are bare
+  numbers inside the air unit, the ground collector and the tank, which have no Out or DHW caption. Labels are at least
+  10 px, and grow with the drawing from a 770 px card. Below it a footer shows the mode, the outside temperature, COP
+  (EER while cooling) and the power items of the mode (DG1 and HTR while heating, DHW while producing DHW, Cooling and
+  HTR in active cooling), and the alarm and offline indications. The card formats the numbers itself with Home
+  Assistant's locale and keeps every number joined to its unit by a no-break space.
 - A visual editor (add the card from the picker, or edit it) for the unit, the entity prefix, the features and the
   appearance; it writes only what you set and keeps every other key.
 - Read-only: tapping a value, or a component with an entity of its own, opens the entity's more-info dialog; the card

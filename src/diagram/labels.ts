@@ -6,11 +6,11 @@
 //
 // Positions are viewBox points with an alignment: `start` puts the label's left edge at x, `end` its right edge,
 // `middle` centres it; y is the vertical centre. They sit where the drawing leaves room (checked on the emulator
-// captures): the probe row's values below the discharge line, the compressor's stack inside the refrigerant loop,
+// captures): the cabinet's values in the lanes of its frame beside their parts (label-places.ts),
 // the source's Out inside the air unit or the ground collector, the tank's values inside the external tank or,
 // for model C, inside tank 50 above its coil (refine-schematic-drawing D8b). A label of a part that is not drawn is not shown (same rules as
 // geometry.ts `partState`); a drawn label with no value shows a muted dash and keeps its place.
-import { css, html, nothing, type TemplateResult } from 'lit';
+import { css, html, nothing, unsafeCSS, type TemplateResult } from 'lit';
 import { formatReading, type DisplayContext } from '../calc/display';
 import type { Mode } from '../calc/mode';
 import type { Readings } from '../calc/readings';
@@ -19,7 +19,7 @@ import type { RolePath } from '../config/roles';
 import type { Features } from '../config/variants';
 import { DHW_LABELS, FOOTER_LABELS, HEATING_LABELS, NO_VALUE } from '../strings';
 import { arrangementOf, partState, type DrawContext } from './geometry';
-import type { Align, LabelSpec, Placement } from './label-places';
+import { LABEL_FONT_K, labelFontSize, type Align, type LabelSpec, type Placement } from './label-places';
 
 export type { LabelSpec, Placement };
 
@@ -33,7 +33,7 @@ export const labelStyles = css`
     width: 100%;
     height: auto;
   }
-  /* One drawing unit is 1 cqw / 10: the labels grow and shrink with the drawing, never below 8 px. */
+  /* One drawing unit is 1 cqw / 10: above the threshold the labels grow with the drawing, never below 10 px (LABEL_FONT_K). */
   .label {
     position: absolute;
     display: inline-flex;
@@ -41,7 +41,7 @@ export const labelStyles = css`
     gap: 0.3em;
     padding: 0 0.15em;
     border-radius: 2px;
-    font-size: max(8px, 0.95cqw);
+    font-size: ${unsafeCSS(labelFontSize('horizontal'))};
     line-height: 1.2;
     white-space: nowrap;
     color: var(--primary-text-color);
@@ -57,9 +57,15 @@ export const labelStyles = css`
   .label.bare {
     background: none;
   }
+  [data-layout='vertical'] .label {
+    font-size: ${unsafeCSS(labelFontSize('vertical'))};
+  }
   .label.emphasis {
-    font-size: max(9px, 1.2cqw);
+    font-size: max(11px, ${unsafeCSS(String(1.2 * LABEL_FONT_K.horizontal))}cqw);
     font-weight: 600;
+  }
+  [data-layout='vertical'] .label.emphasis {
+    font-size: max(11px, ${unsafeCSS(String(1.2 * LABEL_FONT_K.vertical))}cqw);
   }
   .caption {
     color: var(--secondary-text-color);

@@ -507,10 +507,11 @@ describe('efficient updates', () => {
 });
 
 describe('source labels', () => {
-  test('air: only the Out of the air unit, with its caption, and no fan speed, outside temperature or In', async () => {
+  test('air: only the Out of the air unit, as a bare number inside the unit (no caption), and no fan speed, outside temperature or In', async () => {
     const card = await mount({ source: 'air' }, hassOf());
     expect(valueOf(card, 'air_unit_out')).toBe(nb('0.5 °C'));
-    expect(label(card, 'air_unit_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
+    expect(label(card, 'air_unit_out')?.querySelector('.caption')).toBeNull();
+    expect(label(card, 'air_unit_out')?.textContent.trim()).toBe(nb('0.5 °C'));
     expect(label(card, 'air_unit_out')?.getAttribute('data-role')).toBe('source.air_unit_outlet_temperature');
     for (const id of ['fan_speed', 'outside_temperature', 'air_unit_in', 'hybrid_air_unit_in']) {
       expect(labelIds(card), id).not.toContain(id);
@@ -529,7 +530,8 @@ describe('source labels', () => {
   test('Ground collector: only Out, the brine inlet, in the strip between the hatching and the serpentine, and no In', async () => {
     const card = await mount({ source: 'ground' }, hassOf());
     expect(valueOf(card, 'ground_out')).toBe(nb('0.5 °C'));
-    expect(label(card, 'ground_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
+    expect(label(card, 'ground_out')?.querySelector('.caption')).toBeNull();
+    expect(label(card, 'ground_out')?.textContent.trim()).toBe(nb('0.5 °C'));
     expect(label(card, 'ground_out')?.getAttribute('data-role')).toBe('brine.inlet_temperature');
     expect(labelIds(card)).not.toContain('ground_in');
     expect(labelIds(card)).not.toContain('fan_speed');
@@ -565,7 +567,8 @@ describe('source labels', () => {
     ).toBe(false);
     expect(valueOf(card, 'hybrid_ground_out')).toBe(nb('0.5 °C'));
     expect(label(card, 'hybrid_ground_out')?.getAttribute('data-role')).toBe('brine.inlet_temperature');
-    expect(label(card, 'hybrid_ground_out')?.querySelector('.caption')?.textContent.trim()).toBe('Out');
+    expect(label(card, 'hybrid_ground_out')?.querySelector('.caption')).toBeNull();
+    expect(label(card, 'hybrid_ground_out')?.textContent.trim()).toBe(nb('0.5 °C'));
     card.remove();
   });
 
@@ -599,8 +602,8 @@ describe('source labels', () => {
       top: number;
       bottom: number;
     }
-    // a value label with its caption: at most about 82 units wide and 14 tall at 560 px (the narrowest width of the horizontal layout)
-    const [WIDTH, HEIGHT] = [84, 14];
+    // a bare value label (no caption): at most about 74 units wide and 18 tall at 560 px (the narrowest width of the horizontal layout)
+    const [WIDTH, HEIGHT] = [74, 18];
     const boxOf = (spec: LabelSpec): Box => {
       const left = spec.align === 'start' ? spec.x : spec.align === 'end' ? spec.x - WIDTH : spec.x - WIDTH / 2;
       return { left, right: left + WIDTH, top: spec.y - HEIGHT / 2, bottom: spec.y + HEIGHT / 2 };
@@ -679,12 +682,11 @@ describe('source labels', () => {
 });
 
 describe('DHW tank labels', () => {
-  test('external tank: 52.1 °C with its DHW caption, and neither the setpoint nor the start delta-T', async () => {
+  test('external tank: 52.1 °C as a bare number inside the tank (no caption), and neither the setpoint nor the start delta-T', async () => {
     const card = await mount({ model: 'B', dhw: 'external' }, hassOf({ 'dhw.start_delta': ['8', '°C'] }));
     expect(valueOf(card, 'tank_external_temperature')).toBe(nb('52.1 °C'));
-    expect(label(card, 'tank_external_temperature')?.querySelector('.caption')?.textContent.trim()).toBe(
-      VALUE_CAPTIONS.dhw,
-    );
+    expect(label(card, 'tank_external_temperature')?.querySelector('.caption')).toBeNull();
+    expect(label(card, 'tank_external_temperature')?.textContent.trim()).toBe(nb('52.1 °C'));
     expect(label(card, 'tank_external_setpoint')).toBeNull();
     expect(label(card, 'tank_external_start_delta')).toBeNull();
     expect(root(card).querySelector('.tank-caption')).toBeNull();
@@ -759,12 +761,13 @@ describe('DHW tank labels', () => {
     card.remove();
   });
 
-  test('model C: the DHW temperature with its caption and the demand inside tank 50 above coil 51, and nothing under an external tank', async () => {
+  test('model C: the DHW temperature (no caption) and the demand inside tank 50 above coil 51, and nothing under an external tank', async () => {
     const card = await mount({ model: 'C' }, hassOf({ 'dhw.demand': 'on' }));
     const ids = labelIds(card).filter((id) => id.startsWith('tank_'));
     expect(ids).toEqual(['tank_internal_temperature', 'tank_internal_demand']);
     expect(valueOf(card, 'tank_internal_temperature')).toBe(nb('52.1 °C'));
-    expect(label(card, 'tank_internal_temperature')?.textContent).toContain(VALUE_CAPTIONS.dhw);
+    expect(label(card, 'tank_internal_temperature')?.querySelector('.caption')).toBeNull();
+    expect(label(card, 'tank_internal_temperature')?.textContent.trim()).toBe(nb('52.1 °C'));
     // no background plate and no emphasised size: the values sit on the tank's tint at the normal label size
     for (const id of ids) {
       expect(label(card, id)?.classList.contains('bare'), id).toBe(true);
@@ -816,11 +819,11 @@ describe('DHW tank labels', () => {
         // (the row estimate is a unit or two taller than the drawn text; the browser overlap tests are exact)
         expect(box.bottom, id).toBeLessThan(coilTop + 2);
       }
-      // the demand sits right of the temperature, in the same row
+      // the demand sits right of the temperature, in the same row (it is 4 units higher, clear of probe 54's circle)
       const [temperature, demand] = ['tank_internal_temperature', 'tank_internal_demand'].map((id) =>
         arr.labels.specs.find((item) => item.id === id),
       );
-      expect(demand?.y).toBe(temperature?.y);
+      expect(Math.abs((demand?.y ?? 0) - (temperature?.y ?? 0))).toBeLessThanOrEqual(4);
       expect(demand?.x ?? 0).toBeGreaterThan((temperature?.x ?? 0) + (SIZE['tank_internal_temperature']?.[0] ?? 0));
     });
 

@@ -7,12 +7,12 @@ import type { Layout } from '../config/options';
 
 /**
  * With `layout: auto`, cards narrower than this (px) get the vertical layout. Until the vertical arrangement is built
- * (the vertical arrangement of rework-layouts) both layouts draw the same arrangement. Decided on 2026-11-19 (rework-layouts D7, D8): the
- * narrowest width on the 20 px grid from 320 to 800 px at which `npm run search-places -- --layout=horizontal` places every
- * label with its 2 px margin and at a place its own spec allows (the value blocks at their pairs, the hydraulic values beside
- * their parts, the body values inside their bodies), measured in Chromium. The search places every label down to 500 px,
- * but from 540 px it moves the discharge and suction blocks off their pairs (by about 50 units), so the threshold is 560 px
- * (docs/ecogeo-card.md).
+ * (the vertical arrangement of rework-layouts) both layouts draw the same arrangement. Decided on 2026-11-20 (rework-layouts D7, D8):
+ * the narrowest width on the 20 px grid at which `npm run search-places -- --layout=horizontal` finds every one of the 19 labels
+ * free at its own place, with its 2 px margin (the value blocks under their pairs, the hydraulic values beside their parts, the
+ * body values inside their bodies), in Chromium and in WebKit. Both engines find every label free at its default place at
+ * 560 px, so `HORIZONTAL_PLACES` has no entry; at 540 px the search finds no place at all for the two values inside tank 50
+ * (model C) in either engine (docs/ecogeo-card.md).
  */
 export const VERTICAL_BELOW = 560;
 
