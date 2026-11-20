@@ -11,9 +11,10 @@ its rules are binding. Read it, and the active change in `openspec/changes/`, be
 - `src/`: the card (TypeScript, Lit 3), bundled by Vite into one `ecogeo-card.js`. `npm run build` writes to `build/`
   (git-ignored); `npm run release` checks, builds and copies the bundle to the committed `dist/ecogeo-card.js`,
   which is the file that gets deployed.
-- `test/`: Vitest, two projects: `unit` (happy-dom, `*.test.ts`) and `browser` (Chromium and WebKit through
-  Playwright, `*.browser.test.ts`) for anything that depends on real layout (widths, rendered sizes, overlaps).
-  `npm test` runs both. `dev/`: the emulator (`npm run dev`) with a mock `hass`.
+- `test/`: Vitest, three projects: `unit` (happy-dom, `*.test.ts`), `browser` (Chromium and WebKit through
+  Playwright, `*.browser.test.ts`) for anything that depends on real layout (widths, rendered sizes, overlaps), and
+  `visual` (Chromium, `*.visual.test.ts`, pixel references compared on CI Linux only). `npm test` runs the first two;
+  `npm run test:visual` the third. `dev/`: the emulator (`npm run dev`) with a mock `hass`.
 - `hacs.json` (HACS manifest), `CHANGELOG.md` (one section per version), `.github/workflows/` (`check.yml`: project
   check and `npm run verify-dist`; `validate.yml`: HACS validation), `.codespellrc` and `.yamllint` (configs of the
   quality checks), `scripts/lint-ha.mjs` (`npm run lint:ha`: codespell, yamllint, the workflow schema and the

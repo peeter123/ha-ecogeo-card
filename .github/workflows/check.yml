@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      update_references:
+        description: Record the visual references again and upload them as an artifact
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -31,4 +36,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends fonts-roboto
       - run: npm run check
+      # Skipped while no references are committed: on CI Vitest fails a comparison that has no reference and writes
+      # the image only to the attachments folder.
+      - name: Compare the visual references
+        if: ${{ !inputs.update_references && hashFiles('test/visual/references/*.png') != '' }}
+        run: npm run test:visual
+      - name: Upload the visual diffs
+        if: ${{ failure() && !inputs.update_references }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-diffs
+          path: .vitest/attachments/
+          if-no-files-found: ignore
+      - name: Record the visual references
+        if: ${{ inputs.update_references }}
+        run: npm run test:visual -- --update
+      - name: Upload the visual references
+        if: ${{ inputs.update_references }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-references
+          path: test/visual/references/
+          if-no-files-found: error
       - run: npm run verify-dist

@@ -509,17 +509,27 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 
 ## 9. Visual references on Linux
 
-- [ ] 9.1 Add the `visual` Vitest project (design D12; dev-emulator "Visual references on Linux"): Chromium only,
+- [x] 9.1 Add the `visual` Vitest project (design D12; dev-emulator "Visual references on Linux"): Chromium only,
   reduced motion, `test.skipIf(process.platform !== 'linux')`, renders of both layouts in light and dark covering
   every source, DHW storage and emitter. Verify: on Windows the run reports these tests as skipped.
-- [ ] 9.2 Extend `.github/workflows/check.yml`: run the visual project after `npm run check`, and a `workflow_dispatch`
+  Done (2026-11-20): `test/visual/renders.visual.test.ts` renders 16 references (two layouts, light and dark, four
+  installations); `npm run test:visual` reports 16 skipped on Windows. `npm test` runs only unit and browser, as the
+  visual project would fail on missing references on Linux. The skip reads `server.platform` of
+  `vitest/browser`, the Node platform that also names the reference files; the comparison allows 20 pixels.
+- [x] 9.2 Extend `.github/workflows/check.yml`: run the visual project after `npm run check`, and a `workflow_dispatch`
   input that runs it with `--update` and uploads the reference folder as an artifact. Verify: `npm run lint:ha`
   (workflow schema, yamllint) passes.
-- [ ] 9.3 Record the references through that workflow input once the user allows a push of the branch, and commit
-  them. Verify: the next CI run passes the visual project, and a deliberately moved part in a scratch branch fails it
-  naming the render (checked by the review, then discarded).
-- [ ] 9.4 Document the visual references in docs/ecogeo-card.md (what they cover, how to record them again). Verify:
+  Done (2026-11-20): the step is skipped until a PNG exists: on CI (`CI=true`) Vitest fails a missing reference and
+  writes the image only to the attachments folder. The input `update_references` runs `--update` and uploads
+  `visual-references`. After any failed step another step uploads `.vitest/attachments/` as `visual-diffs`, which
+  holds files only when a comparison failed or a reference was missing. Both use `actions/upload-artifact@v7`.
+- [ ] 9.3 Record the references through that workflow input once the user allows a push of the branch, commit them, and
+  remove the compare step's guard that skips it while no reference exists (design D12). Verify: the next CI run passes
+  the visual project, and a deliberately moved part in a scratch branch fails it naming the render (checked by the
+  review, then discarded).
+- [x] 9.4 Document the visual references in docs/ecogeo-card.md (what they cover, how to record them again). Verify:
   `npm run check` passes.
+  Done (2026-11-20): section Visual references of docs/ecogeo-card.md, and the script in README.md.
 
 ## 10. Release 1.0.0 again
 
@@ -543,7 +553,10 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
   (2026-11-19, smoothing on): the horizontal search at 560 px gives the same places in both engines and
   `measure-layout` is clean from 500 px in both. Done after group 7 (2026-11-20, smoothing on): the horizontal search
   places every label at its default at 560 px and finds no place for the tank 50 values at 540 px in both engines;
-  `measure-layout` is clean from 520 px in Chromium and from 540 px in WebKit.
+  `measure-layout` is clean from 520 px in Chromium and from 540 px in WebKit. Done after group 8 (2026-11-20,
+  smoothing on): the horizontal search places every label at its default at 560 px in both engines, the vertical
+  search at 320 px gives the same nine places in both, `measure-layout` is clean from 540 px horizontally and from 320
+  to 559 px vertically in both.
 - Before archiving, drop the task and group numbers that earlier changes left in test comments
   (test/card/layout.test.ts, test/diagram/pipes.test.ts, test/editor/advanced-entities.test.ts,
   test/editor/color-rows.test.ts, test/editor/entity-discovery.test.ts, test/suggest/suggest.test.ts), found in the

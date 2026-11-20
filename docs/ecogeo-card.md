@@ -1309,6 +1309,7 @@ yamllint on an edited YAML file, so a finding shows at once.
 | Markdown format check | none    | `scripts/md-format.mjs`, a Node port of the checker of hot-water-tank-estimator |
 | uv                    | 0.13.1  | the version used locally and in CI (`astral-sh/setup-uv` v10.3.3, pinned by SHA) |
 | actions/checkout      | v7      | as used by hot-water-tank-estimator's workflows (2026-11-18)                    |
+| actions/upload-artifact | v7   | the latest release, v7.0.2 (2026-11-20); uploads the recorded visual references |
 | actions/setup-node    | v7      | the latest release, v7.1.0, on its GitHub releases page (2026-11-18)            |
 | hacs/action           | main    | the HACS docs' example; its last tagged release, 22.5.0, dates from 2022 (hacs.xyz, GitHub, 2026-11-18)    |
 
@@ -1318,6 +1319,38 @@ together.
 
 The browser tests measure label and footer boxes in Roboto (`EMULATOR_FONT` in `dev/overlaps.ts`), so Roboto must be
 installed for them to pass. CI installs it (`fonts-roboto`, a step of `check.yml`); install it locally too.
+
+### Visual references
+
+The `visual` Vitest project (`test/visual/renders.visual.test.ts`, `npm run test:visual`) compares fixed emulator
+renders with recorded PNGs through `expect.element(...).toMatchScreenshot`. It runs in Chromium only, with reduced
+motion (no flow or fan animation), and each test skips unless the platform is Linux: text rasterises differently per
+platform, so a reference holds only where it was recorded. On Windows the run reports the tests as skipped. `npm test`
+leaves the project out, because on a Linux machine it would fail on missing references.
+
+The renders are the horizontal layout at 1000 px and the vertical layout at 320 px, each in light and dark, over four
+installations that together cover every source, DHW storage and emitter: ground with the external tank and the
+underfloor loop, air with no DHW and a radiator, hybrid on model C with the internal tank and no emitter, and air with
+an unused tank. A failure names the render (layout, theme and installation) and writes the actual and the diff image
+under a `.vitest/attachments` folder. On CI the Check workflow has a step that runs after any failed step and
+uploads that folder as the `visual-diffs` artifact; the folder holds files only when a visual comparison failed or a
+reference was missing, so otherwise nothing is uploaded. A comparison allows 20 differing pixels at a colour threshold
+of 0.1: three runs on one host were pixel-identical, and moving one part by 4 to 30 px changes 61 to 362 pixels
+(61 to 116 in the vertical layout), so a larger allowance, such as a ratio of the render, would let a moved part
+pass.
+
+The references are `test/visual/references/<layout>-<theme>-<installation>-chromium-linux.png`, committed. CI compares
+them after `npm run check`; the step is skipped while the folder holds no PNG, because on CI (`CI=true`, which
+turns off writing) Vitest fails a comparison that has no reference with "No existing reference screenshot found" and
+writes the image only to the attachments folder, not to the reference path. A drawing change that moves pixels fails
+there until the references are recorded again:
+
+1. In GitHub, run the Check workflow by hand (Actions, Check, Run workflow) with `update_references` ticked on the
+   branch. It runs the project with `--update` and uploads the folder as the `visual-references` artifact.
+2. Download the artifact, replace `test/visual/references/` with its contents, look at the images, and commit them.
+   A renamed or removed render leaves its old PNG behind; delete it by hand.
+
+The comparison needs the CI image's Roboto, so never commit references recorded elsewhere.
 
 ### Screenshot review
 

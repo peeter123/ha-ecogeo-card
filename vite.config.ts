@@ -28,7 +28,7 @@ export default defineConfig({
           name: 'unit',
           environment: 'happy-dom',
           include: ['test/**/*.test.ts'],
-          exclude: ['test/**/*.browser.test.ts'],
+          exclude: ['test/**/*.browser.test.ts', 'test/**/*.visual.test.ts'],
         },
       },
       {
@@ -45,6 +45,32 @@ export default defineConfig({
             headless: true,
             provider: playwright(),
             instances: [{ browser: 'chromium' }, { browser: 'webkit' }],
+          },
+        },
+      },
+      {
+        // Pixel references of fixed renders, compared in Chromium on Linux only (the tests skip elsewhere).
+        extends: true,
+        test: {
+          name: 'visual',
+          include: ['test/**/*.visual.test.ts'],
+          expect: { poll: { timeout: 5000 } },
+          browser: {
+            enabled: true,
+            headless: true,
+            // Reduced motion: no flow or fan animation in the references (the card's media queries).
+            provider: playwright({ contextOptions: { reducedMotion: 'reduce' } }),
+            instances: [{ browser: 'chromium', viewport: { width: 1100, height: 900 } }],
+            expect: {
+              toMatchScreenshot: {
+                // One folder of references, named <render>-<browser>-<platform>.png (not the git-ignored __screenshots__).
+                resolveScreenshotPath: ({ arg, browserName, ext, root, platform }) =>
+                  `${root}/test/visual/references/${arg}-${browserName}-${platform}${ext}`,
+                // A few pixels of anti-aliasing noise at most: moving one part by 4 to 30 px changes only 61 to 362
+                // pixels (vertical layout 61 to 116), so a ratio of a whole render would hide it.
+                comparatorOptions: { threshold: 0.1, allowedMismatchedPixels: 20 },
+              },
+            },
           },
         },
       },

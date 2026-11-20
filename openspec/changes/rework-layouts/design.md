@@ -274,11 +274,14 @@ not change system settings), and on CI Linux by the next workflow run.
   the capture, inspects the relevant PNGs against the criteria and returns a text verdict.
 - References: a third Vitest project `visual` (Chromium only, `test/**/*.visual.test.ts`) uses `toMatchScreenshot`,
   whose reference names carry browser and platform (`<name>-chromium-linux.png`, Vitest 5 docs). Its tests use
-  `test.skipIf(process.platform !== 'linux')`, so they report as skipped on Windows. The renders run with reduced
-  motion (no flow or fan animation). CI runs them after `npm run check`. References are recorded by a
-  `workflow_dispatch` input of check.yml that runs the project with `--update` and uploads the reference folder as an
-  artifact; the developer commits it. Alternative considered: Playwright's Docker image locally. Rejected: Docker is
-  not part of the toolchain here, and CI's Linux with Roboto is the environment the references must match.
+  `test.skipIf(server.platform !== 'linux')` (Node's platform, read through `vitest/browser`), so they report as skipped
+  on Windows. The renders run with reduced motion (no flow or fan animation). CI runs them after `npm run check`.
+  References are recorded by a `workflow_dispatch` input of check.yml that runs the project with `--update` and uploads
+  the reference folder as an artifact; the developer commits it. Until the first references are committed the compare
+  step is skipped when the folder has no PNG; once they exist that guard goes, so a missing reference fails CI rather
+  than skipping the comparison (decided 2026-11-20 in the group 9 review). Alternative considered: Playwright's Docker
+  image locally. Rejected: Docker is not part of the toolchain here, and CI's Linux with Roboto is the environment the
+  references must match.
 
 ### D13 Release as 1.0.0 again
 
@@ -326,7 +329,9 @@ reads "On" or "Off", and one in another unit (such as rpm) keeps that unit's dec
 - [Text widths differ between hosts] -> The 2 px margin rule stays, the preflight (D11) stops runs on a host that
   breaks it, and pixel references live on CI Linux only.
 - [Visual references flake on anti-aliasing] -> Reduced motion, Roboto installed in CI, and a small comparator
-  tolerance; references recorded by the same CI image.
+  tolerance; references recorded by the same CI image. The tolerance is an absolute count of about 20 differing
+  pixels, not a ratio (decided 2026-11-20 in the group 9 review: a 0.2 % ratio allowed 257-1586 pixels, while moving
+  one probe, pump, compressor or label by a few px changed 61-362; three renders on one host were identical).
 - [Users relied on item numbers or the full drawing] -> Accepted by the user: 1.0.0 has no users yet.
 
 ## Migration Plan
