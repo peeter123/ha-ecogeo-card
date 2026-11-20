@@ -26,8 +26,8 @@ See proposal.md for the motivation. The current state that shapes the approach:
 
 **Goals:**
 
-- One component and pipe list, two arrangements (horizontal, vertical) derived from it by maps, and one band model for
-  the parts outside the cabinet.
+- One component and pipe list in one cabinet layout with value lanes, two arrangements (horizontal, vertical) derived
+  from it by maps, and one band model for the parts outside the cabinet.
 - Label places per arrangement that keep every label off pipes, found by the existing search, not by exceptions.
 - A feedback loop that a subagent can run on every visible step, and visual references that CI can hold.
 
@@ -39,31 +39,42 @@ See proposal.md for the motivation. The current state that shapes the approach:
 
 ## Decisions
 
-### D1 The manual-figure frame stays the authoring frame
+### D1 One cabinet layout with value lanes
 
-`componentsFor` and `segmentsFor` keep their coordinates in the manual-figure frame, so every component keeps citing
-its item and its place in the B4 and C figures. The parts that only the full level drew (items 18-21, 23, 24, 39, 40,
-41, 52, 53, their stub segments `prod_tap_b`, `brine_tap_b`, `brine_drain` and the like, and their crossings) are
-deleted from the lists rather than filtered, and the `detail` field of `Component` and `Segment` goes. The full
-arrangement is no longer built. Alternative considered: re-author everything in a new frame. Rejected: it would
-re-open every topology decision of three changes for no gain; the maps already encode the slope-1 spans.
+Groups 2-6 kept `componentsFor` and `segmentsFor` in the manual-figure frame. The parts that only the full level drew
+(items 18-21, 23, 24, 39, 40, 41, 52, 53, their stub segments `prod_tap_b`, `brine_tap_b`, `brine_drain` and the
+like, and their crossings) are deleted from the lists rather than filtered, the `detail` field of `Component` and
+`Segment` goes and the full arrangement is no longer built.
+
+The cabinet's coordinates are then re-authored once in a new cabinet frame (decided by the user 2026-11-20, after the
+group 7 experiment showed that the manual-figure frame leaves no y range free in every column: every symbol keeps its
+size, the union of their port spans covers y 214-428 without a gap, and at 320 px the cabinet values landed 100-166
+units from their parts). The new frame keeps the topology of the B4 and C figures (port order, the order of the parts
+along every pipe, the probe and HTR placements, the pairs, the transducers on their lines, the crossings as hops, no
+more crossings than the manual figure) and every component still cites its item number in the code; only the
+coordinates change. The parts sit in rows and columns with lanes between them (schematic-drawing "Cabinet layout with
+value lanes"): a row lane is a horizontal strip across the whole cabinet that no symbol enters and only vertical pipes
+cross, a column lane the same vertically. The lanes are where the cabinet's values sit, and where the maps (D2) add
+room. The frame is 720 units wide, the width of the widest band (emitter 200, hybrid 312, tank 160, two gaps of 24),
+so the vertical layout needs no x map. Alternatives considered: keep the manual-figure frame and stretch symbols in
+the vertical layout (rejected: it changes symbol proportions per layout and still leaves the rows short), or two
+hand-made cabinets, one per layout (rejected: twice the geometry to keep in step and to test for topology).
 
 ### D2 Two arrangements by maps: horizontal stretches x, vertical stretches y
 
 `arrangementFor(layout)` returns `HORIZONTAL` or `VERTICAL` (the `Detail` parameter goes). Both are
 `buildArrangement(maps, zones, places)` with their own axis maps:
 
-- Horizontal: an x map that widens the cabinet beyond today's 620 units (into the lanes between the slope-1 spans, as
-  `SIMPLIFIED_MAP_X` does) so the values sit beside the pipes, and the identity-with-cut y map of today's simplified
-  arrangement. Without that widening the band arrangement would make the horizontal drawing almost square (the cabinet
-  is 620 x 400 units and the band adds about 200 in height).
-- Vertical: today's simplified x map (cabinet 620 units) and a y map that adds height between the rows of parts (the
-  probe row at y 228-234, the compressor and exchanger 9 rows at y 250-300, the exchanger and pump row at y 382-416,
-  exchanger 10 at y 448-492), so the values get rows of their own between the pipes at phone width.
+- Horizontal: an x map that widens the column lanes (slope 1 over every column of parts) so the cabinet is about
+  980 units wide and the values sit beside their parts, and a y map that may narrow the row lanes so the drawing stays
+  wide. Without the widening the band arrangement would make the horizontal drawing almost square.
+- Vertical: the identity x map (the frame is already the band's width, D1) and a y map that heightens the row lanes,
+  so the values get rows of their own between the parts at phone width.
 
-The exact breakpoints are found in groups 4 and 6 with the screenshot loop and the place search, and recorded in
-`geometry.ts` with their reasons, like `SIMPLIFIED_MAP_X` today. Alternative considered: one arrangement scaled
-differently per layout. Rejected: a uniform scale cannot make room in only one direction.
+Groups 4-6 found the horizontal breakpoints on the manual-figure frame (the x stretch of group 5, `HORIZONTAL_MAP_X`).
+After the cabinet is re-authored (D1), both maps are found again with the screenshot loop and the place search, and
+recorded in `geometry.ts` with their reasons. Alternative considered: one arrangement scaled differently per layout.
+Rejected: a uniform scale cannot make room in only one direction.
 
 ### D3 The band model
 
@@ -82,8 +93,8 @@ top edge stay below the join lane.
 ### D4 Bodies hold their values
 
 - External tank (not a manual item; the "DHW inter-accumulator" of ports 5/6): the coil already sits in the tank's
-  lower part; the DHW temperature (with its DHW caption) and "Demand" go in the upper part, as bare labels on the
-  tinted body, the style of tank 50's values today (`bare`).
+  lower part; the DHW temperature and "Demand" go in the upper part, as bare labels on the tinted body, the style of
+  tank 50's values today (`bare`).
 - Air unit (not a manual item): drawn with its coil block at the bottom, facing the cabinet, so the brine enters and
   leaves the coil on its bottom face, and the fan above it. The Out value sits inside the housing in a free strip
   between the coil block and the fan, or above the fan, whichever the screenshot loop shows clearer; the fan keeps
@@ -93,8 +104,11 @@ top edge stay below the join lane.
 - Emitter (not a manual item; the heating installation on ports 1/2): the underfloor strip or the radiator, "Demand"
   inside.
 
-A label inside a body counts the body's outline, coil, fins and fan as obstacles, so the existing overlap measure
-covers it once the bodies are registered as components (dev/overlaps.ts).
+A value inside a body has no caption (no Out, no DHW; decided by the user 2026-11-20, after the group 7 experiment
+found "Out -12.3 °C" wider than the air unit and "DHW 48.2 °C" about as wide as the tank at 320 px): the body and its
+tooltip name it. "Demand" stays, as it is the value itself. A label inside a body counts the body's outline, coil, fins
+and fan as obstacles, so the existing overlap measure covers it once the bodies are registered as components
+(dev/overlaps.ts).
 
 ### D5 The emitter
 
@@ -123,23 +137,24 @@ go in `src/strings.ts`; the emitter's tap entity is `heating.demand` (component-
 
 ### D7 One label set, places per arrangement
 
-`Tier` and `KEY_LABELS` go: every label in `labelPlacesFor` is one of the 19 (live-values "Values on the drawing");
-the rest are deleted, and their roles stay in the config (proposal, Out of scope). `FULL_PLACES`, `SIMPLIFIED_PLACES`,
-`COMPACT_PLACES`, `COMPACT_CAPTIONS`, `STACKED_CAPTIONS` and `ON_PIPE_COMPACT` are replaced by `HORIZONTAL_PLACES`
-and `VERTICAL_PLACES`, each place with its reason, and the captions (Out, In, DHW) belong to the label spec in both
-layouts. Body labels are placed by functions of the zones (they follow the body). `scripts/search-places.mjs` loses
-`--no-pipes` and the on-pipe set, gains `--layout=horizontal|vertical` and the rule that a body label stays inside
-its body, and searches at the layout's narrowest verified width (vertical: 320 px; horizontal: its threshold).
-The search measures distance from each label's default place (its probe or component), never from a recorded
-place. The horizontal threshold is the narrowest width on the 20 px grid at which the search finds a place for every
-label with its 2 px margin and at a place its own spec allows (the probe pair blocks at their pairs, the hydraulic
-values beside their parts, the body values inside their bodies), not only the narrowest width without overlap. Decided
-2026-11-19: in the group 3 review production Out cleared its neighbours by less than the margin at 640 and 660 px,
-which gave 680; after the band and the x stretch (group 5) the search places every label down to 500 px, but from
-540 px it moves the discharge and suction blocks about 50 units off their pairs, so the threshold is 560.
-The search treats each refrigerant probe pair's two values as one two-row block (temperature over pressure), as it
-treats the Out/In pairs, so a pasted result keeps the blocks of live-values "Probe pair values" (decided 2026-11-19
-in the group 4 review).
+`Tier` and `KEY_LABELS` go: every label in `labelPlacesFor` is one of the 19 (live-values "Values on the drawing"); the
+rest are deleted, and their roles stay in the config (proposal, Out of scope). `FULL_PLACES`, `SIMPLIFIED_PLACES`,
+`COMPACT_PLACES`, `COMPACT_CAPTIONS`, `STACKED_CAPTIONS` and `ON_PIPE_COMPACT` are replaced by `HORIZONTAL_PLACES` and
+`VERTICAL_PLACES`, each place with its reason, and the Out and In captions of probes 31-34 belong to the label spec in
+both layouts (values inside bodies have none, D4). Body labels are placed by functions of the zones (they follow the
+body). `scripts/search-places.mjs` loses `--no-pipes` and the on-pipe set, gains `--layout=horizontal|vertical` and the
+rule that a body label stays inside its body, and searches at the layout's narrowest verified width (vertical: 320 px;
+horizontal: its threshold). The search measures distance from each label's default place (its probe or component), never
+from a recorded place. The horizontal threshold is the narrowest width on the 20 px grid at which the search finds a
+place for every label with its 2 px margin and at a place its own spec allows (the probe pair blocks at their pairs, the
+hydraulic values beside their parts, the body values inside their bodies), not only the narrowest width without overlap.
+Decided 2026-11-19: in the group 3 review production Out cleared its neighbours by less than the margin at 640 and 660
+px, which gave 680; after the band and the x stretch (group 5) the search places every label down to 500 px, but from
+540 px it moves the discharge and suction blocks about 50 units off their pairs, so the threshold is 560. The search
+treats each refrigerant probe pair's two values as one two-row block (temperature over pressure), as it treats the
+Out/In pairs, so a pasted result keeps the blocks of live-values "Probe pair values" (decided 2026-11-19 in the group 4
+review). A block's row pitch follows the layout's label height (D8), so its rows never overlap at the font floor. After
+the cabinet is re-authored (D1) the horizontal places and the threshold are found again by this rule.
 
 ### D8 Fonts and threshold
 
@@ -147,7 +162,8 @@ Labels get one rule per layout: `max(10px, k cqw)`, `k` chosen per layout so the
 about the same in both arrangements at the threshold; the 8 px floor goes. `layout.ts` keeps one constant,
 `VERTICAL_BELOW`, measured by `scripts/measure-layout.mjs` on the horizontal layout over the 20 px grid (a target, not
 a promise: about 600 px), plus `nextVertical(layout, width, current)` with the 24 px hysteresis. Before the width is
-known the card renders horizontal, as it rendered full before.
+known the card renders horizontal, as it rendered full before. The per-layout font comes with the re-authored cabinet
+(D1), so the horizontal places and threshold are measured once, with both.
 
 ### D9 Captions and footer
 
@@ -197,9 +213,13 @@ the `v1.0.0` tag is not a task; it happens only on the user's explicit request.
 
 ## Risks / Trade-offs
 
-- [19 values do not fit the vertical layout at 320 px] -> The y map is a free parameter (D2): add height first. If the
-  search still reports a label without a place, that is a decision point for the user (shorter captions, a smaller
-  minimum width, or a value fewer), not a reason to put a label on a pipe.
+- [19 values do not fit the vertical layout at 320 px] -> The cabinet's row lanes (D1) and the vertical y map (D2)
+  give the values their rows, and body values have no captions (D4). If the search still reports a label without a
+  place, that is a decision point for the user (a larger minimum width, or a value fewer), not a reason to put a label
+  on a pipe.
+- [The re-authored cabinet loses a topology rule of the manual figure] -> The topology unit tests (port order, the
+  order along every pipe, probe and HTR placements, pairs, transducers, crossings and hops) stay and must pass
+  unchanged in what they assert; only coordinates in tests change.
 - [The horizontal drawing becomes too tall for a desktop panel view] -> The x stretch (D2) keeps it wide; the panel
   fit (responsive-layout) still narrows the drawing to the window's height. The panel capture at 1280 x 800 checks it.
 - [The band gets crowded with hybrid, radiator and tank together] -> The hybrid is the widest case and is captured in
@@ -215,7 +235,7 @@ the `v1.0.0` tag is not a task; it happens only on the user's explicit request.
 
 ## Migration Plan
 
-1. Groups 1-7 change the repository only; nothing is deployed in between.
+1. Groups 1-9 change the repository only; nothing is deployed in between.
 2. The release group runs `npm run release`, deploys `dist/ecogeo-card.js` explicitly, bumps the dashboard resource's
    `?v=` (id and value in `private/installation.md`) and checks the schematic view at phone width (1170 px at zoom 3)
    and on the desktop (1280 x 800) through a subagent's screenshot verdict, plus the system log for card errors.
@@ -226,7 +246,8 @@ the `v1.0.0` tag is not a task; it happens only on the user's explicit request.
 
 ## Open Questions
 
-- The exact map breakpoints, band height, slot widths, font factors `k` and the threshold value: measured in groups 4
-  and 6, recorded with reasons; they do not change the specs or the task breakdown.
-- Whether the air unit's Out value sits between coil block and fan or above the fan (D4): decided by the screenshot
-  loop in group 4.
+- The cabinet frame's rows, columns and lane widths, the map breakpoints, the font factors `k` and the threshold
+  value: measured with the place search and the screenshot loop when the cabinet is re-authored and when the vertical
+  arrangement is built, recorded with reasons; they do not change the specs or the task breakdown.
+- Whether the air unit's Out value sits between coil block and fan or above the fan (D4): decided in group 5, between
+  the coil block and the fan.

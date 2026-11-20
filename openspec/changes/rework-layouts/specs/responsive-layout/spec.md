@@ -117,8 +117,9 @@ every width from 320 px to the vertical threshold, and that of the horizontal la
 
 ### Requirement: No in-drawing captions
 Neither layout SHALL draw in-drawing captions that name a group or part, such as "DG1", "Outer loop", "DHW", "Air
-unit", "Ground loop" or "DHW tank". The tooltips (component-info) name the parts; value captions such as Out, In and
-DHW stay.
+unit", "Ground loop" or "DHW tank". The tooltips (component-info) name the parts. The Out and In captions of the
+cabinet's probes 31-34 stay; a value inside a body (the air unit, the ground collector, a tank or the emitter) has no
+caption.
 
 #### Scenario: No captions
 - **WHEN** the card renders in either layout

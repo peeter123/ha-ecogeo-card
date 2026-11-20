@@ -31,14 +31,15 @@ grey than the other muted pipes in the light theme, so that it stays visible on 
   darker grey inside the tank, and the grey changes only where the pipes cross the tank wall
 
 ### Requirement: DHW values inside the tank
-The tank SHALL show the DHW temperature with a short "DHW" caption, and the DHW demand as the text "Demand" only while
-it is on, both inside the tank body (the external tank's cylinder, or tank 50). The tank body SHALL be coloured by the
-DHW temperature on the card's temperature scale. The DHW setpoint and start delta-T SHALL NOT be shown. With
-`dhw: unused` the tank SHALL show no values and its body SHALL take the muted colour (see Unused DHW storage).
+The tank SHALL show the DHW temperature as the bare value, without a caption, and the DHW demand as the text
+"Demand" only while it is on, both inside the tank body (the external tank's cylinder, or tank 50). The tank body
+SHALL be coloured by the DHW temperature on the card's temperature scale. The DHW setpoint and start delta-T SHALL
+NOT be shown. With `dhw: unused` the tank SHALL show no values and its body SHALL take the muted colour (see Unused
+DHW storage).
 
 #### Scenario: Values shown
 - **WHEN** the DHW temperature is 52.1 °C, the setpoint is 58 °C and the start delta-T is 8 °C
-- **THEN** the tank shows "52.1 °C" with a "DHW" caption inside its body, and neither "58 °C" nor "8 K"
+- **THEN** the tank shows "52.1 °C" without a caption inside its body, and neither "58 °C" nor "8 K"
 
 #### Scenario: Demand on
 - **WHEN** the DHW demand is on
@@ -63,7 +64,7 @@ Manual trap 52 and drain valve 53 SHALL NOT be drawn: they have no live value.
 
 #### Scenario: Model C tank values
 - **WHEN** the config sets `model: C`, the DHW temperature is 52.1 °C and the DHW demand is on
-- **THEN** the DHW temperature with its "DHW" caption and "Demand" are shown inside tank 50, above coil 51, touching no
+- **THEN** the DHW temperature without a caption and "Demand" are shown inside tank 50, above coil 51, touching no
   drawn part, the tank wall or another label
 
 #### Scenario: Simplified model C

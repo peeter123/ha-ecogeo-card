@@ -28,7 +28,12 @@ the live card does not use. The DG1 connections end in stubs that go nowhere. Th
   band above the cabinet, each above its own top connections (1/2, 3/4, 5/6), joined by short pipes. The pipe run
   above the cabinet to a source on the left and the tank on the right goes away. Vertical differs from horizontal in
   its cabinet, which is stretched in height to give the values rows between the pipes.
-- The air unit and the external tank are redrawn so that their values sit inside their bodies. The ground loop
+- The cabinet's parts are laid out once more, keeping the manual figure's topology but not its coordinates: in rows
+  and columns with free lanes between them for the values, which the horizontal layout widens and the vertical layout
+  heightens (added 2026-11-20, after the first attempt at the vertical layout found no room in the manual figure's
+  coordinates).
+- The air unit and the external tank are redrawn so that their values sit inside their bodies, without an Out or DHW
+  caption (added 2026-11-20: the body names its value). The ground loop
   becomes a flat collector in a hatched ground strip; the hybrid places the air unit and the collector side by side.
 - New `emitter` option (`underfloor`, default, `radiator` or `none`): a small underfloor loop or radiator on the DG1
   connections, coloured and animated with the DG1 production circuit, carrying the DG1 demand.
@@ -57,8 +62,9 @@ the live card does not use. The DG1 connections end in stubs that go nowhere. Th
 - `responsive-layout`: the layouts become horizontal and vertical, one width threshold, one label set, no value on a
   pipe, a 10 px label floor everywhere; the compact layout's requirements are replaced.
 - `card-config`: `layout` takes `auto`, `horizontal` or `vertical`; `detail` is removed; `emitter` is added.
-- `schematic-drawing`: the band arrangement, one drawing level without item numbers, transducers 37/38 on their lines,
-  the refrigerant probe pairs; the detail level and both full and simplified arrangement requirements are replaced.
+- `schematic-drawing`: the band arrangement, the cabinet layout with value lanes, one drawing level without item
+  numbers, transducers 37/38 on their lines, the refrigerant probe pairs; the detail level and both full and
+  simplified arrangement requirements are replaced.
 - `live-values`: the 19 values in both layouts, the DG1 demand on the emitter, one footer.
 - `outer-loop-source`: the source above connections 3/4 in the band, values inside the air unit, the flat ground
   collector, the hybrid side by side.

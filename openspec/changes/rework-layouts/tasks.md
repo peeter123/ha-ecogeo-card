@@ -1,8 +1,10 @@
 # Tasks
 
-Groups 2-6 work on the horizontal layout. Until group 7 builds the vertical arrangement, `layout: vertical` (and
-`auto` below the threshold) renders the horizontal arrangement, and the phone-width overlap tests are absent; group 7
-brings them back. Nothing is deployed before group 9. Every visible group ends with a subagent that runs
+Groups 2-7 work on the horizontal layout; group 7 re-authors the cabinet with value lanes (design D1, decided by
+the user 2026-11-20 after the first group 7 attempt at the vertical arrangement stopped at a decision point). Until
+group 8 builds the vertical arrangement, `layout: vertical` (and `auto` below the threshold) renders the horizontal
+arrangement, and the phone-width overlap tests are absent; group 8 brings them back. Nothing is deployed before group
+10. Every visible group ends with a subagent that runs
 `npm run capture`, inspects the captures the group names against the review criteria (docs/ecogeo-card.md, from
 group 1) and returns a text verdict.
 
@@ -286,57 +288,83 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
   searched) and `docs/images/heating.png` from `scenario-heating`; `docs/images/phone-heating.png` is unchanged (group
   7).
 
-## 7. The vertical arrangement
+## 7. The cabinet layout with value lanes
 
-- [ ] 7.1 Build the vertical arrangement (design D2): today's simplified x map and a y map that adds rows between the
-  parts; `arrangementFor('vertical')` returns it; the band spans its width. Verify: unit tests for schematic-drawing
-  "Vertical arrangement" (taller ratio, same parts and pipes) and responsive-layout "Same values in both layouts" pass.
-- [ ] 7.2 Set the label fonts per layout (design D8, responsive-layout "Minimum rendered sizes") and place the vertical
-  labels with `npm run search-places -- --layout=vertical --width=320`, recording `VERTICAL_PLACES` with reasons. A
-  label without a place is a decision point for the user (design Risks), not a pipe exception. Verify: the search
-  reports a place for all 19 labels.
-- [ ] 7.3 Restore the phone-width browser tests for the vertical layout (responsive-layout "Labels clear of
+- [ ] 7.1 Re-author the cabinet's coordinates once in the new cabinet frame (design D1; schematic-drawing "Cabinet
+  layout with value lanes"): `componentsFor`, `segmentsFor`, the crossings and model C's parts (47-51, 54) laid out in
+  rows and columns with row and column lanes between them, 720 units wide, with the lanes recorded (their ranges and
+  which values they hold) and every component still citing its item number. Keep the topology of the manual figures:
+  port order, the order along every pipe, probe and HTR placements, the pairs, transducers on their lines, hops, no more
+  crossings than the manual figure. Verify: the existing topology unit tests pass unchanged in what they assert (only
+  coordinates in tests change); new unit tests for "Lanes free of parts" pass for every source, DHW storage and emitter.
+- [ ] 7.2 Derive the horizontal arrangement from the new frame (design D2: an x map that widens the column lanes to a
+  cabinet of about 980 units, a y map that may narrow the row lanes), keeping the band model, the bodies and the joins.
+  Verify: the band, topology and integrity unit tests pass for the horizontal arrangement.
+- [ ] 7.3 Drop the captions of the values inside bodies (outer-loop-source "Air unit with its value inside", "Ground
+  collector"; dhw-storage "DHW values inside the tank", "Model C tank values"; responsive-layout "No in-drawing
+  captions"); set the label fonts per layout (design D8: `max(10px, k cqw)`, the 8 px floor goes; responsive-layout
+  "Minimum rendered sizes") and the pair blocks' row pitch from the label height (design D7). Verify: label and source
+  and tank unit tests pass; the 10 px font assertion is back in `test/card/sizes.browser.test.ts`.
+- [ ] 7.4 Re-place the horizontal labels in the lanes and re-measure the threshold by design D7 in Chromium and WebKit;
+  record the snapshots again. Verify: horizontal overlap browser tests pass in both engines; the bound tests (values
+  beside their parts, pressures beside their transducers) pass; the search's paste output equals `HORIZONTAL_PLACES`; a
+  capture subagent checks the band, emitter and panel captures at the threshold and 1000 px against the review
+  criteria.
+- [ ] 7.5 Update README.md and docs/ecogeo-card.md (the cabinet frame and its lanes, why it no longer uses the manual
+  figure's coordinates, the map breakpoints, the fonts, the body values without captions, the threshold and how it was
+  measured), and regenerate docs/images/heating.png. Verify: `npm run check` passes.
+
+## 8. The vertical arrangement
+
+- [ ] 8.1 Build the vertical arrangement from the cabinet frame (design D2): the identity x map and a y map that
+  heightens the row lanes; `arrangementFor('vertical', key)` returns it; the band spans its width. Verify: unit tests
+  for schematic-drawing "Vertical arrangement" (taller ratio, same parts and pipes), "Same order in both layouts" and
+  responsive-layout "Same values in both layouts" pass, and the band, topology and integrity tests cover both layouts.
+- [ ] 8.2 Place the vertical labels with `npm run search-places -- --layout=vertical --width=320` in Chromium and
+  WebKit, recording `VERTICAL_PLACES` with reasons. A label without a place is a decision point for the user (design
+  Risks), not a pipe exception. Verify: the search reports a place for all 19 labels in both engines, and the vertical
+  layout is clean up to 1 px under the threshold.
+- [ ] 8.3 Restore the phone-width browser tests for the vertical layout (responsive-layout "Labels clear of
   everything": 320, 360, 412 px and 1 px under the threshold, every scenario; stroke and font minimums; footer wrap) and
   the auto switch at the threshold with hysteresis. Verify: they pass in Chromium and WebKit.
-- [ ] 7.4 Extend the capture list (dev-emulator "Card width and layout controls": every scenario at 360 px auto, every
+- [ ] 8.4 Extend the capture list (dev-emulator "Card width and layout controls": every scenario at 360 px auto, every
   scenario vertical at 320 px) and record the snapshots. Verify: a capture subagent checks the vertical captures at 320
   and 360 px, light and dark, every source, DHW storage and emitter, against the review criteria.
-- [ ] 7.5 Update README.md (the two layouts, a phone screenshot) and docs/ecogeo-card.md (vertical arrangement,
-  fonts, threshold and how it was measured). Verify: `npm run check` passes.
+- [ ] 8.5 Update README.md (the two layouts, a phone screenshot: regenerate docs/images/phone-heating.png) and
+  docs/ecogeo-card.md (vertical arrangement, its y map, fonts). Verify: `npm run check` passes.
 
-## 8. Visual references on Linux
+## 9. Visual references on Linux
 
-- [ ] 8.1 Add the `visual` Vitest project (design D12; dev-emulator "Visual references on Linux"): Chromium only,
+- [ ] 9.1 Add the `visual` Vitest project (design D12; dev-emulator "Visual references on Linux"): Chromium only,
   reduced motion, `test.skipIf(process.platform !== 'linux')`, renders of both layouts in light and dark covering
   every source, DHW storage and emitter. Verify: on Windows the run reports these tests as skipped.
-- [ ] 8.2 Extend `.github/workflows/check.yml`: run the visual project after `npm run check`, and a `workflow_dispatch`
+- [ ] 9.2 Extend `.github/workflows/check.yml`: run the visual project after `npm run check`, and a `workflow_dispatch`
   input that runs it with `--update` and uploads the reference folder as an artifact. Verify: `npm run lint:ha`
   (workflow schema, yamllint) passes.
-- [ ] 8.3 Record the references through that workflow input once the user allows a push of the branch, and commit
+- [ ] 9.3 Record the references through that workflow input once the user allows a push of the branch, and commit
   them. Verify: the next CI run passes the visual project, and a deliberately moved part in a scratch branch fails it
   naming the render (checked by the review, then discarded).
-- [ ] 8.4 Document the visual references in docs/ecogeo-card.md (what they cover, how to record them again). Verify:
+- [ ] 9.4 Document the visual references in docs/ecogeo-card.md (what they cover, how to record them again). Verify:
   `npm run check` passes.
 
-## 9. Release 1.0.0 again
+## 10. Release 1.0.0 again
 
-- [ ] 9.1 Rewrite the 1.0.0 section of CHANGELOG.md for the reworked card (layouts, emitter, values, band); keep
-  `package.json` at 1.0.0 (design D13); run `npm run release`. Verify: `npm run release` passes and
+- [ ] 10.1 Rewrite the 1.0.0 section of CHANGELOG.md for the reworked card (layouts, emitter, values, band, cabinet
+  layout); keep `package.json` at 1.0.0 (design D13); run `npm run release`. Verify: `npm run release` passes and
   `npm run verify-dist` passes.
-- [ ] 9.2 The live installation's emitter is underfloor (confirmed by the user 2026-11-19, recorded in
+- [ ] 10.2 The live installation's emitter is underfloor (confirmed by the user 2026-11-19, recorded in
   `private/installation.md`), the default, so the dashboard config needs no `emitter`. Deploy `dist/ecogeo-card.js`
   explicitly, bump the dashboard resource's `?v=` (id and value in `private/installation.md`) and record the deploy
-  there. Verify: a subagent takes light screenshots of the schematic
-  view at 1170 px with zoom 3 (vertical) and at 1280 x 800 (horizontal), returns a verdict against the review criteria,
-  and the system log shows no `ecogeo` errors.
+  there. Verify: a subagent takes light screenshots of the schematic view at 1170 px with zoom 3 (vertical) and at
+  1280 x 800 (horizontal), returns a verdict against the review criteria, and the system log shows no `ecogeo` errors.
 
 ## Workflow follow-up
 
-- Before group 9: with font smoothing on (the user switches it), run the browser project in Chromium, the place
+- Before group 10: with font smoothing on (the user switches it), run the browser project in Chromium, the place
   search for both layouts and `scripts/measure-layout.mjs` in Chromium; fix any difference from the WebKit results.
   Done for the horizontal layout on 2026-11-19 (group 4 review, smoothing on): the browser project passes in both
   engines, and the Chromium search at 680 and 660 px and `measure-layout` agree with WebKit (places and threshold
-  680). Repeat after groups 5-7 change the drawing, and for the vertical search. Done after groups 5 and 6
+  680). Repeat after groups 5-8 change the drawing, and for the vertical search. Done after groups 5 and 6
   (2026-11-19, smoothing on): the horizontal search at 560 px gives the same places in both engines and
   `measure-layout` is clean from 500 px in both.
 - The first CI run on Linux after a push confirms the browser preflight passes there (design D11).
@@ -346,4 +374,4 @@ fixed there. Places and thresholds measured in the meantime use WebKit and the s
 - Replacing the GitHub release and the `v1.0.0` tag (delete and recreate with the new `dist/ecogeo-card.js`) only on
   the user's explicit request.
 - The three local commits from 2026-11-19 (`1e14829`, `b55e5bf`, `4f88461`) are pushed only on the user's
-  request; task 8.3 needs a push of this change's branch to run the workflow input.
+  request; task 9.3 needs a push of this change's branch to run the workflow input.

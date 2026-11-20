@@ -141,6 +141,24 @@ SHALL span the drawing's width.
 - **THEN** the vertical cabinet's height-to-width ratio is larger than the horizontal one's, and both draw the same
   set of parts and pipes
 
+### Requirement: Cabinet layout with value lanes
+The cabinet's parts SHALL follow the topology of the manual figures (the port order, the order of the parts along
+every pipe, the probe and HTR placements and the crossings) but not their coordinates. They SHALL be laid out once, in
+rows and columns with lanes between them, where a row lane is a horizontal strip across the whole cabinet that no
+part enters and only vertical pipes cross, and a column lane is the same in the vertical direction. Both layouts SHALL
+be derived from this one layout: the horizontal layout widens column lanes and the vertical layout heightens row
+lanes, and every value in the cabinet sits in a lane beside its part.
+
+#### Scenario: Lanes free of parts
+- **WHEN** the card renders any configuration, in either layout
+- **THEN** no part lies in a row lane or a column lane, a row lane is crossed only by vertical pipes and a column lane
+  only by horizontal ones
+
+#### Scenario: Same order in both layouts
+- **WHEN** the same configuration is rendered once in each layout
+- **THEN** the parts have the same left-to-right order within each row and the same top-to-bottom order within each
+  column
+
 ### Requirement: Refrigerant probe pairs
 Each temperature probe of the compressor SHALL be drawn next to its pressure transducer as a pair on the same line:
 discharge temperature 30 with discharge pressure 36, and suction temperature 29 with suction pressure 35. No other

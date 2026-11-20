@@ -20,8 +20,8 @@ emitter or the tank.
 ### Requirement: Air unit with its value inside
 With `source: air`, the card SHALL draw an air unit: a housing with a finned coil block, through which the brine tube
 winds as a serpentine across the fins, and a fan drawn as blades inside a ring. The brine SHALL enter and leave the
-coil on the side facing the cabinet. The brine temperature leaving the air unit SHALL be shown inside the housing with
-an Out caption; no other value SHALL be shown at the air unit.
+coil on the side facing the cabinet. The brine temperature leaving the air unit SHALL be shown inside the housing as
+the bare value, without a caption (the housing and its tooltip name it); no other value SHALL be shown at the air unit.
 
 #### Scenario: Air unit drawing
 - **WHEN** the source is `air` or `hybrid`
@@ -30,7 +30,7 @@ an Out caption; no other value SHALL be shown at the air unit.
 
 #### Scenario: Air unit Out inside
 - **WHEN** the source is `air` and the air unit's outlet reads 5.7 °C
-- **THEN** "5.7 °C" with an Out caption is shown inside the housing, crossing no outline, fin, tube or fan, and no
+- **THEN** "5.7 °C" without a caption is shown inside the housing, crossing no outline, fin, tube or fan, and no
   In, fan speed or outside temperature label is shown at the air unit
 
 ### Requirement: Fan follows its speed
@@ -53,7 +53,7 @@ as rpm) above 0 SHALL rotate it at a fixed medium speed. The fan speed SHALL NOT
 With `source: ground`, the card SHALL draw a ground collector: a strip of ground (a rectangle hatched along its top
 edge, the surface) holding a flat serpentine pipe of at least four horizontal passes, its two ends joined to the pipes
 of connections 3 and 4. It SHALL show the brine temperature leaving the collector (the heat pump's brine inlet) inside
-the strip with an Out caption, and no In value.
+the strip as the bare value, without a caption, and no In value.
 
 #### Scenario: Ground source
 - **WHEN** the config sets `source: ground`
@@ -66,7 +66,7 @@ the strip with an Out caption, and no In value.
 
 #### Scenario: Collector Out
 - **WHEN** the config sets `source: ground` and the brine inlet reads 7.1 °C
-- **THEN** "7.1 °C" with an Out caption is shown inside the strip, crossing no pipe or outline
+- **THEN** "7.1 °C" without a caption is shown inside the strip, crossing no pipe or outline
 
 ### Requirement: Hybrid side by side
 With `source: hybrid`, the card SHALL draw the air unit and the ground collector side by side in one brine loop, air
