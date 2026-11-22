@@ -2,6 +2,7 @@
 # Copied from the hot-water-tank-estimator repository and adapted: more ignored folders.
 extends: default
 ignore: |
+  .agents/
   .claude/
   node_modules/
   build/

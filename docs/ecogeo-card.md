@@ -1296,7 +1296,7 @@ with a message that names it.
   `.yamllint`: the default rules with a line limit of 120 characters.
 - **check-jsonschema** with the built-in schema `vendor.github-workflows` over `.github/workflows/*.yml`, when that
   folder exists: it catches an invalid workflow, such as a job without `runs-on`.
-- **Markdown format** (`scripts/md-format.mjs`) over every tracked Markdown file outside `.claude/` and
+- **Markdown format** (`scripts/md-format.mjs`) over every tracked Markdown file outside `.agents/`, `.claude/` and
   `openspec/changes/archive/`: LF line endings only, exactly one final newline, and at most 120 characters per line.
   Table rows, fenced code blocks and lines with no space to break at (a long URL alone on a line) are exempt.
   `node scripts/md-format.mjs --fix` repairs only line endings and the final newline; prose is never rewrapped

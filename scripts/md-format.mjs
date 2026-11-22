@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 export class ToolError extends Error {}
 
 export const MAX_LINE = 120;
-export const MARKDOWN_EXCLUDE = ['.claude/', 'openspec/changes/archive/'];
+export const MARKDOWN_EXCLUDE = ['.agents/', '.claude/', 'openspec/changes/archive/'];
 
 // Indentation, blockquote markers, then one list marker (-, *, + or 1. / 1)) and its spaces.
 const PREFIX = /^(?:\s*>)*\s*(?:(?:[-*+]|\d{1,9}[.)])\s+)?/u;

@@ -1,5 +1,5 @@
 [codespell]
-skip = ./.git,./private,./.claude,./node_modules,./build,./dist,./.env*,./.vitest,*.json,*.png,*.jpg,*.svg
+skip = ./.git,./private,./.agents,./.claude,./node_modules,./build,./dist,./.env*,./.vitest,*.json,*.png,*.jpg,*.svg
 # hass: Home Assistant's name for the hass object.
 # compresor, produktion: foreign-language keywords the card matches on (src/config/keywords.ts).
 # ue, te: foreign keywords in src/config/keywords.ts (ue) and the foreign mock naming in dev/foreign.ts (te).

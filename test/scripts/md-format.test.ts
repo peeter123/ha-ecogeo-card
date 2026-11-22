@@ -67,8 +67,9 @@ describe('md-format: line endings and final newline', () => {
 });
 
 describe('md-format: scope', () => {
-  test('.claude and the archive are outside, other Markdown is inside', () => {
-    expect(inScope('.claude/commands/opsx/apply.md')).toBe(false);
+  test('.agents, .claude and the archive are outside, other Markdown is inside', () => {
+    expect(inScope('.agents/skills/openspec-apply-change/SKILL.md')).toBe(false);
+    expect(inScope('.claude/skills/openspec-apply-change/SKILL.md')).toBe(false);
     expect(inScope('openspec/changes/archive/2026-11-18-x/design.md')).toBe(false);
     expect(inScope('openspec/changes/add-hacs-release/design.md')).toBe(true);
     expect(inScope('README.md')).toBe(true);
