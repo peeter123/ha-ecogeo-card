@@ -80,7 +80,7 @@ describe('DHW storage', () => {
     card.remove();
   });
 
-  test('external tank: a rounded cylinder (straight walls, domed caps) whose body keeps the DHW colour hook', async () => {
+  test('external tank: a cylinder (domed top, straight walls, flat bottom) whose body keeps the DHW colour hook', async () => {
     const card = await mount({ model: 'B', dhw: 'external' });
     const body = root(card).querySelector('path.tank-body[data-dhw-tank="external"]');
     expect(body?.getAttribute('fill')).toContain('--dhw-tank-color');
@@ -155,7 +155,7 @@ describe('DHW storage', () => {
     expect(extent.left).toBeGreaterThan(EXTERNAL_TANK.x);
     expect(extent.right).toBeLessThan(EXTERNAL_TANK.x + EXTERNAL_TANK.width);
     expect(extent.top).toBeGreaterThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height / 3);
-    expect(extent.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height - EXTERNAL_TANK.dome);
+    expect(extent.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height);
     const coil = horizontal.externalCoil;
     expect(coil?.inX).toBeLessThan(extent.left);
     expect(coil?.outX).toBeGreaterThan(extent.right);

@@ -52,8 +52,6 @@ export interface Rect {
  */
 export interface AirUnitShape extends Rect {
   readonly fan: { readonly cx: number; readonly cy: number; readonly radius: number };
-  /** The divider between the fan section and the value strip. */
-  readonly dividerY: number;
   /** The free strip between the fan and the coil block, where the Out value sits. */
   readonly strip: Rect;
   /** The coil block's frame; its bottom edge is the face the brine pipes use. */
@@ -119,7 +117,7 @@ export interface EmitterShape extends Rect {
   readonly columns: readonly Rect[];
 }
 
-/** The external tank's cylinder with its elliptical domed caps. */
+/** The external tank's cylinder: a domed top, straight walls and a flat bottom. */
 export type TankShape = Rect & { readonly dome: number };
 
 /**
@@ -203,13 +201,16 @@ export const BAND = {
   joinLane: 56,
   /** The smallest gap between two slots. */
   gap: 24,
-  air: { width: 130, height: 176 },
-  collector: { width: 170, height: 176 },
+  /** The style every body shares (harmonize-band D1): the corner radius of its outline, and the inset of its inner parts. */
+  radius: 6,
+  margin: 8,
+  air: { width: 190, height: 176 },
+  collector: { width: 120, height: 176 },
   /** The gap between the air unit and the collector of the hybrid. */
   hybridGap: 12,
   tank: { width: 160, height: 176, dome: 14 },
   /** The emitter's body: both kinds share the slot's width; the bottom pipes rise 34 units inside each side. */
-  emitter: { width: 200, height: 176 },
+  emitter: { width: 180, height: 176 },
 } as const;
 
 /**
@@ -303,18 +304,17 @@ const round2 = (value: number): number => Math.round(value * 100) / 100;
 export function airUnitShape(x0: number, bottom: number): AirUnitShape {
   const { width, height } = BAND.air;
   const y = bottom - height;
-  const coil: Rect = { x: x0 + 10, y: y + 110, width: 110, height: 58 };
+  const coil: Rect = { x: x0 + 10, y: y + 110, width: width - 20, height: 58 };
   return {
     x: x0,
     y,
     width,
     height,
     fan: { cx: x0 + width / 2, cy: y + 40, radius: 28 },
-    dividerY: y + 78,
-    strip: { x: x0 + 8, y: y + 82, width: width - 16, height: 24 },
+    strip: { x: x0 + BAND.margin, y: y + 82, width: width - 2 * BAND.margin, height: 24 },
     coil,
     fins: { x0: coil.x + 4, x1: coil.x + coil.width - 4, y0: coil.y + 8, step: 8, count: 6 },
-    passes: { x0: x0 + 32, step: 22, count: 4, top: coil.y + 12, bottom: coil.y + 46 },
+    passes: { x0: x0 + 50, step: 30, count: 4, top: coil.y + 12, bottom: coil.y + 46 },
   };
 }
 
@@ -328,8 +328,8 @@ export function collectorShape(x0: number, bottom: number): CollectorShape {
     width,
     height,
     hatch: { x: x0, y, width, height: 14 },
-    strip: { x: x0 + 8, y: y + 18, width: width - 16, height: 24 },
-    serpentine: { x: x0 + 8, y: y + 48, width: width - 16, height: height - 48 },
+    strip: { x: x0 + BAND.margin, y: y + 18, width: width - 2 * BAND.margin, height: 24 },
+    serpentine: { x: x0 + BAND.margin, y: y + 48, width: width - 2 * BAND.margin, height: height - 48 },
     passes: { y0: y + 54, step: 30, count: 4, left: x0 + 34, right: x0 + width - 14 },
     feedX: x0 + 14,
   };
@@ -416,12 +416,15 @@ export const airFaceY = (unit: AirUnitShape): number => unit.coil.y + unit.coil.
 export const collectorPassYs = (collector: CollectorShape): number[] =>
   Array.from({ length: collector.passes.count }, (_, index) => collector.passes.y0 + index * collector.passes.step);
 
-/** The outline of the external tank's body (straight walls, elliptical domed caps), as path data. */
+/** The outline of the external tank's body (domed top, straight walls, flat bottom), as path data. */
 export function externalTankBody({ externalTank }: Pick<BandZones, 'externalTank'>): string {
   if (externalTank === undefined) return '';
   const { x, y, width, height, dome } = externalTank;
   const rx = width / 2;
-  return `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x + width)} ${String(y + dome)} V${String(y + height - dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x)} ${String(y + height - dome)} Z`;
+  const r = BAND.radius;
+  const bottom = y + height;
+  // the domed top, straight walls, and a flat bottom on the band's bottom edge with corners of the band radius
+  return `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 1 ${String(x + width)} ${String(y + dome)} V${String(bottom - r)} A${String(r)} ${String(r)} 0 0 1 ${String(x + width - r)} ${String(bottom)} H${String(x + r)} A${String(r)} ${String(r)} 0 0 1 ${String(x)} ${String(bottom - r)} Z`;
 }
 
 /** Coil 51's ports in its local frame: supply first, return second. The symbol's port stubs end on their y values; the symbol keeps this size in every arrangement. */
@@ -1493,7 +1496,7 @@ export const HORIZONTAL_MAP_Y: AxisMap = laneMap(
 
 /**
  * The vertical layout's x map: the identity, the cabinet at x 10-730 (rework-layouts D2). The frame is 720 units wide, the width
- * of the widest band (the emitter 200, the hybrid source 312, the tank 160 and two gaps of 24), so the vertical layout needs no
+ * of the widest band (the emitter 180, the hybrid source 322, the tank 160 and two gaps of 24), so the vertical layout needs no
  * x stretch. Its viewBox is 740 wide (the cabinet and a margin of 10 at each side), not the horizontal layout's 1000: every
  * unit renders `width / 740` px, which `strokeWidths` and the label fonts (`LABEL_FONT_K`) take into account.
  */

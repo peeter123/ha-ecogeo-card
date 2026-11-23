@@ -14,7 +14,7 @@ suction_temperature | label start | left: 54.1%; top: 51.25827814569537%
 suction_pressure | label start | left: 54.1%; top: 54.437086092715234%
 compressor_speed | label middle | left: 50%; top: 57.615894039735096%
 expansion_valve | label middle | left: 55.2%; top: 85.56291390728477%
-ground_out | label middle | left: 72.1%; top: 4.768211920529802%
+ground_out | label middle | left: 74.6%; top: 4.768211920529802%
 tank_external_temperature | label middle bare | left: 91%; top: 6.622516556291391%
 footer: outside_temperature, cop, dg1_power, htr_power
 svg:
@@ -29,9 +29,9 @@ svg:
 </stop>
       </linearGradient>
     </defs>
-    <rect class="emitter-hit" fill="transparent" stroke="none" x="98.5" y="6" width="200" height="176">
+    <rect class="emitter-hit" fill="transparent" stroke="none" x="108.5" y="6" width="180" height="176">
 </rect>
-    <rect class="emitter-outline" rx="6" x="98.5" y="6" width="200" height="176" fill="url(#ecogeoN-emitter)" fill-opacity="0.5">
+    <rect class="emitter-outline band-outline" x="108.5" y="6" width="180" height="176" rx="6" fill="url(#ecogeoN-emitter)" fill-opacity="0.5">
 </rect>
     <rect class="emitter-column" rx="4" x="148.5" y="58" width="10" height="116">
 </rect>
@@ -52,21 +52,11 @@ svg:
     
     <g data-source="ground" class="ground-collector" aria-label="Ground collector">
     <title>Ground collector</title>
-    <rect class="source-outline" rx="4" x="636" y="6" width="170" height="176">
+    <rect class="source-outline band-outline" x="686" y="6" width="120" height="176" rx="6">
 </rect>
-    <path class="source-ground" d="M636 20 H806">
+    <path class="source-ground" d="M686 20 H806">
 </path>
-    <path class="source-ground" d="M650 6 l-8 14">
-</path>
-<path class="source-ground" d="M660 6 l-8 14">
-</path>
-<path class="source-ground" d="M670 6 l-8 14">
-</path>
-<path class="source-ground" d="M680 6 l-8 14">
-</path>
-<path class="source-ground" d="M690 6 l-8 14">
-</path>
-<path class="source-ground" d="M700 6 l-8 14">
+    <path class="source-ground" d="M700 6 l-8 14">
 </path>
 <path class="source-ground" d="M710 6 l-8 14">
 </path>
@@ -88,15 +78,15 @@ svg:
 </path>
 <path class="source-ground" d="M800 6 l-8 14">
 </path>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="636" y="6" width="170" height="14">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="686" y="6" width="120" height="14">
 </rect>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-serpentine" x="644" y="54" width="154" height="128">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-serpentine" x="694" y="54" width="104" height="128">
 </rect>
   </g>
   </g>
 <g data-dhw="external" class="dhw-storage" aria-label="DHW tank" role="button" tabindex="0">
     <title>DHW tank</title>
-    <path class="tank-body" data-dhw-tank="external" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" d="M830 20 A80 14 0 0 1 990 20 V168 A80 14 0 0 1 830 168 Z">
+    <path class="tank-body band-outline" data-dhw-tank="external" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" d="M830 20 A80 14 0 0 1 990 20 V176 A6 6 0 0 1 984 182 H836 A6 6 0 0 1 830 176 Z">
 </path>
     <path class="tank-rim" d="M830 20 A80 14 0 0 0 990 20">
 </path>
@@ -154,7 +144,7 @@ svg:
 </stop>
     </linearGradient>
 <clipPath data-tank-clip="" id="ecogeoN-tank-clip">
-<path d="M830 20 A80 14 0 0 1 990 20 V168 A80 14 0 0 1 830 168 Z">
+<path d="M830 20 A80 14 0 0 1 990 20 V176 A6 6 0 0 1 984 182 H836 A6 6 0 0 1 830 176 Z">
 </path>
 </clipPath>
 </defs>
@@ -276,13 +266,13 @@ svg:
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M512 717 L662 717 L662 681.4 M662 664.6 L662 628">
 </path>
-<path class="pipe " data-segment="dg1_sup" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M137 238 L137 216 L132.5 216 L132.5 182 L132.5 68 L148.5 68">
+<path class="pipe " data-segment="dg1_sup" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M137 238 L137 216 L142.5 216 L142.5 182 L142.5 68 L148.5 68">
 </path>
-<path class="flow " data-flow="dg1_sup" style="--flow-duration: 1.2012012012012012s" d="M137 238 L137 216 L132.5 216 L132.5 182 L132.5 68 L148.5 68">
+<path class="flow " data-flow="dg1_sup" style="--flow-duration: 1.2012012012012012s" d="M137 238 L137 216 L142.5 216 L142.5 182 L142.5 68 L148.5 68">
 </path>
-<path class="pipe " data-segment="dg1_ret" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M248.5 164 L264.5 164 L264.5 182 L264.5 216 L260 216 L260 238">
+<path class="pipe " data-segment="dg1_ret" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M248.5 164 L254.5 164 L254.5 182 L254.5 216 L260 216 L260 238">
 </path>
-<path class="flow " data-flow="dg1_ret" style="--flow-duration: 1.2012012012012012s" d="M248.5 164 L264.5 164 L264.5 182 L264.5 216 L260 216 L260 238">
+<path class="flow " data-flow="dg1_ret" style="--flow-duration: 1.2012012012012012s" d="M248.5 164 L254.5 164 L254.5 182 L254.5 216 L260 216 L260 238">
 </path>
 <path class="pipe muted" data-segment="dhw_ext_in" d="M937 238 L937 210 L860 210 L860 96 L872 96">
 </path>
@@ -321,21 +311,21 @@ svg:
 </path>
 <path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M821 204 L821 238">
 </path>
-<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 216 L650 216 L650 182">
+<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 216 L700 216 L700 182">
 </path>
-<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M682 216 L650 216 L650 182">
+<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M682 216 L700 216 L700 182">
 </path>
-<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M650 182 L650 75 A15 15 0 0 1 665 60 L777 60 A15 15 0 0 1 792 75 L792 75 A15 15 0 0 1 777 90 L685 90 A15 15 0 0 0 670 105 L670 105">
+<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M700 182 L700 75 A15 15 0 0 1 715 60 L777 60 A15 15 0 0 1 792 75 L792 75 A15 15 0 0 1 777 90 L735 90 A15 15 0 0 0 720 105 L720 105">
 </path>
-<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.2s" d="M650 182 L650 75 A15 15 0 0 1 665 60 L777 60 A15 15 0 0 1 792 75 L792 75 A15 15 0 0 1 777 90 L685 90 A15 15 0 0 0 670 105 L670 105">
+<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.2s" d="M700 182 L700 75 A15 15 0 0 1 715 60 L777 60 A15 15 0 0 1 792 75 L792 75 A15 15 0 0 1 777 90 L735 90 A15 15 0 0 0 720 105 L720 105">
 </path>
-<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M670 105 L670 105 A15 15 0 0 0 685 120 L777 120 A15 15 0 0 1 792 135 L792 135 A15 15 0 0 1 777 150 L670 150">
+<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M720 105 L720 105 A15 15 0 0 0 735 120 L777 120 A15 15 0 0 1 792 135 L792 135 A15 15 0 0 1 777 150 L720 150">
 </path>
-<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M670 105 L670 105 A15 15 0 0 0 685 120 L777 120 A15 15 0 0 1 792 135 L792 135 A15 15 0 0 1 777 150 L670 150">
+<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M720 105 L720 105 A15 15 0 0 0 735 120 L777 120 A15 15 0 0 1 792 135 L792 135 A15 15 0 0 1 777 150 L720 150">
 </path>
-<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M670 150 L670 204 L821 204">
+<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M720 150 L720 204 L821 204">
 </path>
-<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M670 150 L670 204 L821 204">
+<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M720 150 L720 204 L821 204">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

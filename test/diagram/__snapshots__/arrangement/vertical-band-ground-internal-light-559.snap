@@ -29,60 +29,46 @@ svg:
 </stop>
       </linearGradient>
     </defs>
-    <rect class="emitter-hit" fill="transparent" stroke="none" x="13.5" y="6" width="200" height="176">
+    <rect class="emitter-hit" fill="transparent" stroke="none" x="23.5" y="6" width="180" height="176">
 </rect>
-    <rect class="emitter-outline" rx="6" x="13.5" y="6" width="200" height="176" fill="none" fill-opacity="0.5">
+    <rect class="emitter-outline band-outline" x="23.5" y="6" width="180" height="176" rx="6" fill="none" fill-opacity="0.5">
 </rect>
-    <path class="emitter-line" d="M13.5 49 H213.5">
-</path>
-<rect class="obstacle" fill="none" stroke="none" data-obstacle="emitter-divider" x="13.5" y="47.5" width="200" height="3">
-</rect>
-<path data-emitter-loop="" stroke-linecap="round" class="pipe muted" d="M47.5 56 L148.5 56 A13 13 0 0 1 161.5 69 L161.5 69 A13 13 0 0 1 148.5 82 L78.5 82 A13 13 0 0 0 65.5 95 L65.5 95 A13 13 0 0 0 78.5 108 L148.5 108 A13 13 0 0 1 161.5 121 L161.5 121 A13 13 0 0 1 148.5 134 L78.5 134 A13 13 0 0 0 65.5 147 L65.5 147 A13 13 0 0 0 78.5 160 L179.5 160">
+    <path data-emitter-loop="" stroke-linecap="round" class="pipe muted" d="M57.5 56 L138.5 56 A13 13 0 0 1 151.5 69 L151.5 69 A13 13 0 0 1 138.5 82 L88.5 82 A13 13 0 0 0 75.5 95 L75.5 95 A13 13 0 0 0 88.5 108 L138.5 108 A13 13 0 0 1 151.5 121 L151.5 121 A13 13 0 0 1 138.5 134 L88.5 134 A13 13 0 0 0 75.5 147 L75.5 147 A13 13 0 0 0 88.5 160 L169.5 160">
 </path>
   </g>
 <g class="source" data-source-kind="ground">
     
     <g data-source="ground" class="ground-collector" aria-label="Ground collector">
     <title>Ground collector</title>
-    <rect class="source-outline" rx="4" x="494.5" y="6" width="170" height="176">
+    <rect class="source-outline band-outline" x="519.5" y="6" width="120" height="176" rx="6">
 </rect>
-    <path class="source-ground" d="M494.5 20 H664.5">
+    <path class="source-ground" d="M519.5 20 H639.5">
 </path>
-    <path class="source-ground" d="M508.5 6 l-8 14">
+    <path class="source-ground" d="M533.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M518.5 6 l-8 14">
+<path class="source-ground" d="M543.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M528.5 6 l-8 14">
+<path class="source-ground" d="M553.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M538.5 6 l-8 14">
+<path class="source-ground" d="M563.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M548.5 6 l-8 14">
+<path class="source-ground" d="M573.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M558.5 6 l-8 14">
+<path class="source-ground" d="M583.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M568.5 6 l-8 14">
+<path class="source-ground" d="M593.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M578.5 6 l-8 14">
+<path class="source-ground" d="M603.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M588.5 6 l-8 14">
+<path class="source-ground" d="M613.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M598.5 6 l-8 14">
+<path class="source-ground" d="M623.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M608.5 6 l-8 14">
+<path class="source-ground" d="M633.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M618.5 6 l-8 14">
-</path>
-<path class="source-ground" d="M628.5 6 l-8 14">
-</path>
-<path class="source-ground" d="M638.5 6 l-8 14">
-</path>
-<path class="source-ground" d="M648.5 6 l-8 14">
-</path>
-<path class="source-ground" d="M658.5 6 l-8 14">
-</path>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="494.5" y="6" width="170" height="14">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="519.5" y="6" width="120" height="14">
 </rect>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-serpentine" x="502.5" y="54" width="154" height="128">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-serpentine" x="527.5" y="54" width="104" height="128">
 </rect>
   </g>
   </g>
@@ -261,9 +247,9 @@ svg:
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M382 787 L532 787 L532 750 M532 736 L532 698">
 </path>
-<path class="pipe muted" data-segment="dg1_sup" d="M75 238 L75 216 L47.5 216 L47.5 182 L47.5 56">
+<path class="pipe muted" data-segment="dg1_sup" d="M75 238 L75 216 L57.5 216 L57.5 182 L57.5 56">
 </path>
-<path class="pipe muted" data-segment="dg1_ret" d="M179.5 160 L179.5 182 L179.5 216 L152 216 L152 238">
+<path class="pipe muted" data-segment="dg1_ret" d="M169.5 160 L169.5 182 L169.5 216 L152 216 L152 238">
 </path>
 <path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 238 L552 216">
 </path>
@@ -273,21 +259,21 @@ svg:
 </path>
 <path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 204 L607 238">
 </path>
-<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 216 L508.5 216 L508.5 182">
+<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 216 L533.5 216 L533.5 182">
 </path>
-<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M552 216 L508.5 216 L508.5 182">
+<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M552 216 L533.5 216 L533.5 182">
 </path>
-<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M508.5 182 L508.5 75 A15 15 0 0 1 523.5 60 L635.5 60 A15 15 0 0 1 650.5 75 L650.5 75 A15 15 0 0 1 635.5 90 L543.5 90 A15 15 0 0 0 528.5 105 L528.5 105">
+<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M533.5 182 L533.5 75 A15 15 0 0 1 548.5 60 L610.5 60 A15 15 0 0 1 625.5 75 L625.5 75 A15 15 0 0 1 610.5 90 L568.5 90 A15 15 0 0 0 553.5 105 L553.5 105">
 </path>
-<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.2s" d="M508.5 182 L508.5 75 A15 15 0 0 1 523.5 60 L635.5 60 A15 15 0 0 1 650.5 75 L650.5 75 A15 15 0 0 1 635.5 90 L543.5 90 A15 15 0 0 0 528.5 105 L528.5 105">
+<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.2s" d="M533.5 182 L533.5 75 A15 15 0 0 1 548.5 60 L610.5 60 A15 15 0 0 1 625.5 75 L625.5 75 A15 15 0 0 1 610.5 90 L568.5 90 A15 15 0 0 0 553.5 105 L553.5 105">
 </path>
-<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M528.5 105 L528.5 105 A15 15 0 0 0 543.5 120 L635.5 120 A15 15 0 0 1 650.5 135 L650.5 135 A15 15 0 0 1 635.5 150 L528.5 150">
+<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M553.5 105 L553.5 105 A15 15 0 0 0 568.5 120 L610.5 120 A15 15 0 0 1 625.5 135 L625.5 135 A15 15 0 0 1 610.5 150 L553.5 150">
 </path>
-<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M528.5 105 L528.5 105 A15 15 0 0 0 543.5 120 L635.5 120 A15 15 0 0 1 650.5 135 L650.5 135 A15 15 0 0 1 635.5 150 L528.5 150">
+<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M553.5 105 L553.5 105 A15 15 0 0 0 568.5 120 L610.5 120 A15 15 0 0 1 625.5 135 L625.5 135 A15 15 0 0 1 610.5 150 L553.5 150">
 </path>
-<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M528.5 150 L528.5 204 L607 204">
+<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M553.5 150 L553.5 204 L607 204">
 </path>
-<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M528.5 150 L528.5 204 L607 204">
+<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M553.5 150 L553.5 204 L607 204">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

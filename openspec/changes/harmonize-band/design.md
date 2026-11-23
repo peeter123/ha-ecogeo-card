@@ -58,7 +58,10 @@ See proposal.md for the motivation. The current state that shapes the approach:
 - one outline class for every body, at the weight the bodies already share (`max(2.5, --outline-width)`).
 
 There are no divider lines: the air unit's divider and the emitter's floor line are deleted, with their obstacles.
-The collector's hatching stays: it is the surface, and it is what tells a ground collector apart.
+The collector's hatching stays: it is the surface, and it is what tells a ground collector apart. The surface line and
+the external tank's rim (D8) run from wall to wall but are not dividers (settled 2026-11-23 during apply: the
+"Shared style" scenario exempts them, and the one outline class is a shared class on all four bodies, next to any
+class a body keeps for muting).
 
 Alternative considered: keeping the dividers as faint lines. Rejected, because the dividers only existed to frame the
 value strips, and the values move next to what they measure (D5, D6).

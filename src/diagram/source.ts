@@ -14,13 +14,12 @@ import type { AnimationReadings } from '../calc/readings';
 import { AIR_UNIT_FAN_NAME, AIR_UNIT_NAME, GROUND_COLLECTOR_NAME } from '../strings';
 import { FAN_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
 import { obstacle } from './obstacle';
-import { arrangementOf, type AirUnitShape, type CollectorShape, type DrawContext } from './geometry';
+import { BAND, arrangementOf, type AirUnitShape, type CollectorShape, type DrawContext } from './geometry';
 
 export const sourceStyles = css`
   .source-outline {
     fill: none;
     stroke: var(--primary-text-color);
-    stroke-width: max(2.5, var(--outline-width, 2));
   }
   .source-frame {
     fill: none;
@@ -32,10 +31,6 @@ export const sourceStyles = css`
     stroke-opacity: 0.55;
     stroke-width: calc(var(--outline-width, 2) * 0.5);
   }
-  .source-divider {
-    stroke: var(--primary-text-color);
-    stroke-width: calc(var(--outline-width, 2) * 0.75);
-  }
   .source-ground {
     stroke: var(--secondary-text-color);
     stroke-width: calc(var(--outline-width, 2) * 0.75);
@@ -44,7 +39,6 @@ export const sourceStyles = css`
   .muted .source-outline,
   .muted .source-frame,
   .muted .source-fin,
-  .muted .source-divider,
   .muted .source-ground {
     stroke: var(--disabled-text-color);
   }
@@ -112,16 +106,14 @@ function airUnit(
   muted: boolean,
   taps: Taps | undefined,
 ): SVGTemplateResult {
-  const { x, y, width, height, fan, coil, fins: fin, dividerY } = unit;
+  const { x, y, width, height, fan, coil, fins: fin } = unit;
   const duration = fanDuration(speed);
   const finYs = Array.from({ length: fin.count }, (_, index) => round2(fin.y0 + index * fin.step));
   const fanScale = round2(fan.radius / BLADE_RING);
   const tap = tapBindings(tapTarget(FAN_ROLE, taps), taps?.onTap);
   return svg`<g class="air-unit${muted ? ' muted' : ''}" data-source="air" aria-label=${AIR_UNIT_NAME}>
     <title>${AIR_UNIT_NAME}</title>
-    <rect class="source-outline" x=${x} y=${y} width=${width} height=${height} rx="6" />
-    <path class="source-divider" d="M${x} ${dividerY} H${round2(x + width)}" />
-    ${obstacle('air-divider', { x, y: dividerY - 1.5, width, height: 3 })}
+    <rect class="source-outline band-outline" x=${x} y=${y} width=${width} height=${height} rx=${BAND.radius} />
     <rect class="source-frame" data-coil-block data-obstacle="air-coil" x=${coil.x} y=${coil.y} width=${coil.width} height=${coil.height} rx="3" />
     ${finYs.map((finY) => svg`<path class="source-fin" d="M${fin.x0} ${finY} H${fin.x1}" />`)}
     <g class="fan-part" aria-label=${AIR_UNIT_FAN_NAME} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>
@@ -141,7 +133,7 @@ function collectorBody(collector: CollectorShape, muted: boolean): SVGTemplateRe
   const ticks = Array.from({ length: Math.floor((width - 20) / 10) + 1 }, (_, index) => round2(x + 14 + index * 10));
   return svg`<g class="ground-collector${muted ? ' muted' : ''}" data-source="ground" aria-label=${GROUND_COLLECTOR_NAME}>
     <title>${GROUND_COLLECTOR_NAME}</title>
-    <rect class="source-outline" x=${x} y=${y} width=${width} height=${height} rx="4" />
+    <rect class="source-outline band-outline" x=${x} y=${y} width=${width} height=${height} rx=${BAND.radius} />
     <path class="source-ground" d="M${x} ${hatch.y + hatch.height} H${round2(x + width)}" />
     ${ticks.map((tick) => svg`<path class="source-ground" d="M${tick} ${y} l-8 ${hatch.height}" />`)}
     ${obstacle('ground-hatch', hatch)}

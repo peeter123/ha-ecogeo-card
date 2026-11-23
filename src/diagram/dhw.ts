@@ -23,7 +23,6 @@ import { arrangementOf, drawnStorage, externalTankBody, type DrawContext } from 
 export const dhwStyles = css`
   .tank-body {
     stroke: var(--primary-text-color);
-    stroke-width: max(2.5, var(--outline-width, 2));
   }
   /* An unused tank (dhw: unused): outline and rim muted as well as the fill (tank 50 is a muted symbol group). */
   .symbol-group.muted .tank-body,
@@ -55,13 +54,13 @@ export function renderDhw(context: DrawContext, taps?: Taps): SVGTemplateResult 
   if (arrangement.externalTank === undefined) return svg``;
   const { x, y, width, dome } = arrangement.externalTank;
   const rx = width / 2;
-  // straight walls with elliptical domed caps: the top cap's lower arc is drawn as a rim
+  // domed top, straight walls and a flat bottom: the top cap's lower arc is drawn as a rim
   const body = externalTankBody(arrangement);
   const rim = `M${String(x)} ${String(y + dome)} A${String(rx)} ${String(dome)} 0 0 0 ${String(x + width)} ${String(y + dome)}`;
   const tap = tapBindings(tapTarget(EXTERNAL_TANK_ROLE, taps), taps?.onTap);
   return svg`<g class=${context.dhw === 'unused' ? 'dhw-storage muted' : 'dhw-storage'} data-dhw="external" aria-label=${DHW_LABELS.externalTank} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>
     <title>${DHW_LABELS.externalTank}</title>
-    <path class="tank-body" data-dhw-tank="external" d=${body} fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />
+    <path class="tank-body band-outline" data-dhw-tank="external" d=${body} fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />
     <path class="tank-rim" d=${rim} />
     <rect class="obstacle" data-obstacle="tank-rim" x=${x} y=${y + dome} width=${width} height=${dome} fill="none" stroke="none" />
   </g>`;

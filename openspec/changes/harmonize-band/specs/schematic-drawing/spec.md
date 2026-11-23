@@ -37,9 +37,10 @@ the band's bottom edge (decided by the user 2026-11-23).
 
 #### Scenario: Shared style
 - **WHEN** the card renders model B with `dhw: external`, `source: hybrid` and `emitter: underfloor`, in either layout
-- **THEN** the emitter, the air unit, the collector and the tank have the same corner radius and outline width, no
-  line crosses any of them from wall to wall except a pipe, and the lowest edge of each body's outline lies on the
-  band's bottom edge along the body's width
+- **THEN** the emitter, the air unit, the collector and the tank have the same corner radius and share one outline
+  class (so one outline width), no divider line crosses any of them from wall to wall (a pipe, the collector's
+  surface line and the tank's rim are not dividers), and the lowest edge of each body's outline lies on the band's
+  bottom edge along the body's width
 
 ### Requirement: One jog level
 The horizontal sections of the pipes between the cabinet's top edge and the band's bodies SHALL lie at one height above

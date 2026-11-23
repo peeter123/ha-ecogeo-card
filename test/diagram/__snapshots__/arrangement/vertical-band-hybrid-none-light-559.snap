@@ -14,7 +14,7 @@ suction_temperature | label start | left: 55.54054054054054%; top: 51.2760351317
 suction_pressure | label start | left: 55.54054054054054%; top: 55.29109159347554%
 compressor_speed | label middle | left: 50%; top: 59.30614805520703%
 expansion_valve | label middle | left: 57.027027027027025%; top: 86.3237139272271%
-hybrid_ground_out | label middle | left: 87.16216216216216%; top: 4.51693851944793%
+hybrid_ground_out | label middle | left: 90.54054054054053%; top: 4.51693851944793%
 footer: outside_temperature, cop, dhw_power
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 740 797" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #f2711c 91%, #e8a317); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3; --outline-width: 2">
@@ -28,47 +28,39 @@ svg:
 </stop>
       </linearGradient>
     </defs>
-    <rect class="emitter-hit" fill="transparent" stroke="none" x="13.5" y="6" width="200" height="176">
+    <rect class="emitter-hit" fill="transparent" stroke="none" x="23.5" y="6" width="180" height="176">
 </rect>
-    <rect class="emitter-outline" rx="6" x="13.5" y="6" width="200" height="176" fill="none" fill-opacity="0.5">
+    <rect class="emitter-outline band-outline" x="23.5" y="6" width="180" height="176" rx="6" fill="none" fill-opacity="0.5">
 </rect>
-    <path class="emitter-line" d="M13.5 49 H213.5">
-</path>
-<rect class="obstacle" fill="none" stroke="none" data-obstacle="emitter-divider" x="13.5" y="47.5" width="200" height="3">
-</rect>
-<path data-emitter-loop="" stroke-linecap="round" class="pipe muted" d="M47.5 56 L148.5 56 A13 13 0 0 1 161.5 69 L161.5 69 A13 13 0 0 1 148.5 82 L78.5 82 A13 13 0 0 0 65.5 95 L65.5 95 A13 13 0 0 0 78.5 108 L148.5 108 A13 13 0 0 1 161.5 121 L161.5 121 A13 13 0 0 1 148.5 134 L78.5 134 A13 13 0 0 0 65.5 147 L65.5 147 A13 13 0 0 0 78.5 160 L179.5 160">
+    <path data-emitter-loop="" stroke-linecap="round" class="pipe muted" d="M57.5 56 L138.5 56 A13 13 0 0 1 151.5 69 L151.5 69 A13 13 0 0 1 138.5 82 L88.5 82 A13 13 0 0 0 75.5 95 L75.5 95 A13 13 0 0 0 88.5 108 L138.5 108 A13 13 0 0 1 151.5 121 L151.5 121 A13 13 0 0 1 138.5 134 L88.5 134 A13 13 0 0 0 75.5 147 L75.5 147 A13 13 0 0 0 88.5 160 L169.5 160">
 </path>
   </g>
 <g class="source" data-source-kind="hybrid">
     <g data-source="air" class="air-unit" aria-label="Air unit">
     <title>Air unit</title>
-    <rect class="source-outline" rx="6" x="418" y="6" width="130" height="176">
+    <rect class="source-outline band-outline" x="408" y="6" width="190" height="176" rx="6">
 </rect>
-    <path class="source-divider" d="M418 84 H548">
-</path>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="air-divider" x="418" y="82.5" width="130" height="3">
+    <rect class="source-frame" data-coil-block="" data-obstacle="air-coil" rx="3" x="418" y="116" width="170" height="58">
 </rect>
-    <rect class="source-frame" data-coil-block="" data-obstacle="air-coil" rx="3" x="428" y="116" width="110" height="58">
-</rect>
-    <path class="source-fin" d="M432 124 H534">
+    <path class="source-fin" d="M422 124 H584">
 </path>
-<path class="source-fin" d="M432 132 H534">
+<path class="source-fin" d="M422 132 H584">
 </path>
-<path class="source-fin" d="M432 140 H534">
+<path class="source-fin" d="M422 140 H584">
 </path>
-<path class="source-fin" d="M432 148 H534">
+<path class="source-fin" d="M422 148 H584">
 </path>
-<path class="source-fin" d="M432 156 H534">
+<path class="source-fin" d="M422 156 H584">
 </path>
-<path class="source-fin" d="M432 164 H534">
+<path class="source-fin" d="M422 164 H584">
 </path>
     <g class="fan-part" aria-label="Air unit fan" role="button" tabindex="0">
       <title>Air unit fan</title>
-      <circle class="fan-ring" data-obstacle="air-fan" cx="483" cy="46" r="28">
+      <circle class="fan-ring" data-obstacle="air-fan" cx="503" cy="46" r="28">
 </circle>
-      <circle class="fan-hit" fill="transparent" stroke="none" cx="483" cy="46" r="28">
+      <circle class="fan-hit" fill="transparent" stroke="none" cx="503" cy="46" r="28">
 </circle>
-      <g class="fan" data-fan="" transform="translate(483 46) scale(0.82)">
+      <g class="fan" data-fan="" transform="translate(503 46) scale(0.82)">
         <g class="fan-rotor" style="--fan-duration: 3.4782608695652173s">
 <path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(0)">
 </path>
@@ -88,21 +80,11 @@ svg:
   </g>
     <g data-source="ground" class="ground-collector" aria-label="Ground collector">
     <title>Ground collector</title>
-    <rect class="source-outline" rx="4" x="560" y="6" width="170" height="176">
+    <rect class="source-outline band-outline" x="610" y="6" width="120" height="176" rx="6">
 </rect>
-    <path class="source-ground" d="M560 20 H730">
+    <path class="source-ground" d="M610 20 H730">
 </path>
-    <path class="source-ground" d="M574 6 l-8 14">
-</path>
-<path class="source-ground" d="M584 6 l-8 14">
-</path>
-<path class="source-ground" d="M594 6 l-8 14">
-</path>
-<path class="source-ground" d="M604 6 l-8 14">
-</path>
-<path class="source-ground" d="M614 6 l-8 14">
-</path>
-<path class="source-ground" d="M624 6 l-8 14">
+    <path class="source-ground" d="M624 6 l-8 14">
 </path>
 <path class="source-ground" d="M634 6 l-8 14">
 </path>
@@ -124,9 +106,9 @@ svg:
 </path>
 <path class="source-ground" d="M724 6 l-8 14">
 </path>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="560" y="6" width="170" height="14">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="610" y="6" width="120" height="14">
 </rect>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-serpentine" x="568" y="54" width="154" height="128">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-serpentine" x="618" y="54" width="104" height="128">
 </rect>
   </g>
   </g>
@@ -247,9 +229,9 @@ svg:
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M382 759 L532 759 L532 722 M532 708 L532 670">
 </path>
-<path class="pipe muted" data-segment="dg1_sup" d="M75 238 L75 216 L47.5 216 L47.5 182 L47.5 56">
+<path class="pipe muted" data-segment="dg1_sup" d="M75 238 L75 216 L57.5 216 L57.5 182 L57.5 56">
 </path>
-<path class="pipe muted" data-segment="dg1_ret" d="M179.5 160 L179.5 182 L179.5 216 L152 216 L152 238">
+<path class="pipe muted" data-segment="dg1_ret" d="M169.5 160 L169.5 182 L169.5 216 L152 216 L152 238">
 </path>
 <path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 238 L552 216">
 </path>
@@ -259,29 +241,29 @@ svg:
 </path>
 <path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 204 L607 238">
 </path>
-<path class="pipe " data-segment="src_hyb_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 216 L450 216 L450 174">
+<path class="pipe " data-segment="src_hyb_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 216 L458 216 L458 174">
 </path>
-<path class="flow " data-flow="src_hyb_feed" style="--flow-duration: 1.2s" d="M552 216 L450 216 L450 174">
+<path class="flow " data-flow="src_hyb_feed" style="--flow-duration: 1.2s" d="M552 216 L458 216 L458 174">
 </path>
-<path class="pipe " data-segment="src_hyb_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M450 174 L450 139 A11 11 0 0 1 461 128 L461 128 A11 11 0 0 1 472 139 L472 151 A11 11 0 0 0 483 162 L483 162 A11 11 0 0 0 494 151 L494 139 A11 11 0 0 1 505 128 L505 128 A11 11 0 0 1 516 139 L516 174">
+<path class="pipe " data-segment="src_hyb_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M458 174 L458 143 A15 15 0 0 1 473 128 L473 128 A15 15 0 0 1 488 143 L488 147 A15 15 0 0 0 503 162 L503 162 A15 15 0 0 0 518 147 L518 143 A15 15 0 0 1 533 128 L533 128 A15 15 0 0 1 548 143 L548 174">
 </path>
-<path class="flow " data-flow="src_hyb_coil" style="--flow-duration: 1.2s" d="M450 174 L450 139 A11 11 0 0 1 461 128 L461 128 A11 11 0 0 1 472 139 L472 151 A11 11 0 0 0 483 162 L483 162 A11 11 0 0 0 494 151 L494 139 A11 11 0 0 1 505 128 L505 128 A11 11 0 0 1 516 139 L516 174">
+<path class="flow " data-flow="src_hyb_coil" style="--flow-duration: 1.2s" d="M458 174 L458 143 A15 15 0 0 1 473 128 L473 128 A15 15 0 0 1 488 143 L488 147 A15 15 0 0 0 503 162 L503 162 A15 15 0 0 0 518 147 L518 143 A15 15 0 0 1 533 128 L533 128 A15 15 0 0 1 548 143 L548 174">
 </path>
-<path class="pipe " data-segment="src_hyb_link" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M516 174 L516 192 L574 192 L574 182">
+<path class="pipe " data-segment="src_hyb_link" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M548 174 L548 192 L624 192 L624 182">
 </path>
-<path class="flow " data-flow="src_hyb_link" style="--flow-duration: 1.2s" d="M516 174 L516 192 L574 192 L574 182">
+<path class="flow " data-flow="src_hyb_link" style="--flow-duration: 1.2s" d="M548 174 L548 192 L624 192 L624 182">
 </path>
-<path class="pipe " data-segment="src_hyb_down" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" stroke-linecap="round" d="M574 182 L574 75 A15 15 0 0 1 589 60 L701 60 A15 15 0 0 1 716 75 L716 75 A15 15 0 0 1 701 90 L609 90 A15 15 0 0 0 594 105 L594 105">
+<path class="pipe " data-segment="src_hyb_down" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" stroke-linecap="round" d="M624 182 L624 75 A15 15 0 0 1 639 60 L701 60 A15 15 0 0 1 716 75 L716 75 A15 15 0 0 1 701 90 L659 90 A15 15 0 0 0 644 105 L644 105">
 </path>
-<path class="flow " data-flow="src_hyb_down" style="--flow-duration: 1.2s" d="M574 182 L574 75 A15 15 0 0 1 589 60 L701 60 A15 15 0 0 1 716 75 L716 75 A15 15 0 0 1 701 90 L609 90 A15 15 0 0 0 594 105 L594 105">
+<path class="flow " data-flow="src_hyb_down" style="--flow-duration: 1.2s" d="M624 182 L624 75 A15 15 0 0 1 639 60 L701 60 A15 15 0 0 1 716 75 L716 75 A15 15 0 0 1 701 90 L659 90 A15 15 0 0 0 644 105 L644 105">
 </path>
-<path class="pipe " data-segment="src_hyb_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M594 105 L594 105 A15 15 0 0 0 609 120 L701 120 A15 15 0 0 1 716 135 L716 135 A15 15 0 0 1 701 150 L594 150">
+<path class="pipe " data-segment="src_hyb_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M644 105 L644 105 A15 15 0 0 0 659 120 L701 120 A15 15 0 0 1 716 135 L716 135 A15 15 0 0 1 701 150 L644 150">
 </path>
-<path class="flow " data-flow="src_hyb_up" style="--flow-duration: 1.2s" d="M594 105 L594 105 A15 15 0 0 0 609 120 L701 120 A15 15 0 0 1 716 135 L716 135 A15 15 0 0 1 701 150 L594 150">
+<path class="flow " data-flow="src_hyb_up" style="--flow-duration: 1.2s" d="M644 105 L644 105 A15 15 0 0 0 659 120 L701 120 A15 15 0 0 1 716 135 L716 135 A15 15 0 0 1 701 150 L644 150">
 </path>
-<path class="pipe " data-segment="src_hyb_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M594 150 L594 204 L607 204">
+<path class="pipe " data-segment="src_hyb_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M644 150 L644 204 L607 204">
 </path>
-<path class="flow " data-flow="src_hyb_exit" style="--flow-duration: 1.2s" d="M594 150 L594 204 L607 204">
+<path class="flow " data-flow="src_hyb_exit" style="--flow-duration: 1.2s" d="M644 150 L644 204 L607 204">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

@@ -13,6 +13,7 @@ import type { RolePath } from '../config/roles';
 import { SAMPLE_STATES } from '../config/sample';
 import { cabinetStyles, renderCabinet } from '../diagram/cabinet';
 import type { Taps } from '../diagram/component-info';
+import { bandStyles } from '../diagram/band-style';
 import { dhwStyles, renderDhw } from '../diagram/dhw';
 import { emitterStyles, renderEmitter } from '../diagram/emitter';
 import { arrangementFor, bandKeyOf, type DrawContext, type ShownLayout } from '../diagram/geometry';
@@ -50,6 +51,7 @@ export class EcogeoCard extends LitElement {
 
   static override styles = [
     cabinetStyles,
+    bandStyles,
     sourceStyles,
     emitterStyles,
     dhwStyles,

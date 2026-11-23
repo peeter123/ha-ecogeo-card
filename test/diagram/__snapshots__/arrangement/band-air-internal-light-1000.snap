@@ -29,39 +29,31 @@ svg:
 </stop>
       </linearGradient>
     </defs>
-    <rect class="emitter-hit" fill="transparent" stroke="none" x="98.5" y="6" width="200" height="176">
+    <rect class="emitter-hit" fill="transparent" stroke="none" x="108.5" y="6" width="180" height="176">
 </rect>
-    <rect class="emitter-outline" rx="6" x="98.5" y="6" width="200" height="176" fill="none" fill-opacity="0.5">
+    <rect class="emitter-outline band-outline" x="108.5" y="6" width="180" height="176" rx="6" fill="none" fill-opacity="0.5">
 </rect>
-    <path class="emitter-line" d="M98.5 49 H298.5">
-</path>
-<rect class="obstacle" fill="none" stroke="none" data-obstacle="emitter-divider" x="98.5" y="47.5" width="200" height="3">
-</rect>
-<path data-emitter-loop="" stroke-linecap="round" class="pipe muted" d="M132.5 56 L233.5 56 A13 13 0 0 1 246.5 69 L246.5 69 A13 13 0 0 1 233.5 82 L163.5 82 A13 13 0 0 0 150.5 95 L150.5 95 A13 13 0 0 0 163.5 108 L233.5 108 A13 13 0 0 1 246.5 121 L246.5 121 A13 13 0 0 1 233.5 134 L163.5 134 A13 13 0 0 0 150.5 147 L150.5 147 A13 13 0 0 0 163.5 160 L264.5 160">
+    <path data-emitter-loop="" stroke-linecap="round" class="pipe muted" d="M142.5 56 L223.5 56 A13 13 0 0 1 236.5 69 L236.5 69 A13 13 0 0 1 223.5 82 L173.5 82 A13 13 0 0 0 160.5 95 L160.5 95 A13 13 0 0 0 173.5 108 L223.5 108 A13 13 0 0 1 236.5 121 L236.5 121 A13 13 0 0 1 223.5 134 L173.5 134 A13 13 0 0 0 160.5 147 L160.5 147 A13 13 0 0 0 173.5 160 L254.5 160">
 </path>
   </g>
 <g class="source" data-source-kind="air">
     <g data-source="air" class="air-unit" aria-label="Air unit">
     <title>Air unit</title>
-    <rect class="source-outline" rx="6" x="686.5" y="6" width="130" height="176">
+    <rect class="source-outline band-outline" x="656.5" y="6" width="190" height="176" rx="6">
 </rect>
-    <path class="source-divider" d="M686.5 84 H816.5">
-</path>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="air-divider" x="686.5" y="82.5" width="130" height="3">
+    <rect class="source-frame" data-coil-block="" data-obstacle="air-coil" rx="3" x="666.5" y="116" width="170" height="58">
 </rect>
-    <rect class="source-frame" data-coil-block="" data-obstacle="air-coil" rx="3" x="696.5" y="116" width="110" height="58">
-</rect>
-    <path class="source-fin" d="M700.5 124 H802.5">
+    <path class="source-fin" d="M670.5 124 H832.5">
 </path>
-<path class="source-fin" d="M700.5 132 H802.5">
+<path class="source-fin" d="M670.5 132 H832.5">
 </path>
-<path class="source-fin" d="M700.5 140 H802.5">
+<path class="source-fin" d="M670.5 140 H832.5">
 </path>
-<path class="source-fin" d="M700.5 148 H802.5">
+<path class="source-fin" d="M670.5 148 H832.5">
 </path>
-<path class="source-fin" d="M700.5 156 H802.5">
+<path class="source-fin" d="M670.5 156 H832.5">
 </path>
-<path class="source-fin" d="M700.5 164 H802.5">
+<path class="source-fin" d="M670.5 164 H832.5">
 </path>
     <g class="fan-part" aria-label="Air unit fan" role="button" tabindex="0">
       <title>Air unit fan</title>
@@ -264,9 +256,9 @@ svg:
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M512 717 L662 717 L662 680 M662 666 L662 628">
 </path>
-<path class="pipe muted" data-segment="dg1_sup" d="M137 238 L137 216 L132.5 216 L132.5 182 L132.5 56">
+<path class="pipe muted" data-segment="dg1_sup" d="M137 238 L137 216 L142.5 216 L142.5 182 L142.5 56">
 </path>
-<path class="pipe muted" data-segment="dg1_ret" d="M264.5 160 L264.5 182 L264.5 216 L260 216 L260 238">
+<path class="pipe muted" data-segment="dg1_ret" d="M254.5 160 L254.5 182 L254.5 216 L260 216 L260 238">
 </path>
 <path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 238 L682 216">
 </path>
@@ -276,17 +268,17 @@ svg:
 </path>
 <path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M821 204 L821 238">
 </path>
-<path class="pipe " data-segment="src_air_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 216 L718.5 216 L718.5 174">
+<path class="pipe " data-segment="src_air_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 216 L706.5 216 L706.5 174">
 </path>
-<path class="flow " data-flow="src_air_feed" style="--flow-duration: 1.2s" d="M682 216 L718.5 216 L718.5 174">
+<path class="flow " data-flow="src_air_feed" style="--flow-duration: 1.2s" d="M682 216 L706.5 216 L706.5 174">
 </path>
-<path class="pipe " data-segment="src_air_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M718.5 174 L718.5 139 A11 11 0 0 1 729.5 128 L729.5 128 A11 11 0 0 1 740.5 139 L740.5 151 A11 11 0 0 0 751.5 162 L751.5 162 A11 11 0 0 0 762.5 151 L762.5 139 A11 11 0 0 1 773.5 128 L773.5 128 A11 11 0 0 1 784.5 139 L784.5 174">
+<path class="pipe " data-segment="src_air_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M706.5 174 L706.5 143 A15 15 0 0 1 721.5 128 L721.5 128 A15 15 0 0 1 736.5 143 L736.5 147 A15 15 0 0 0 751.5 162 L751.5 162 A15 15 0 0 0 766.5 147 L766.5 143 A15 15 0 0 1 781.5 128 L781.5 128 A15 15 0 0 1 796.5 143 L796.5 174">
 </path>
-<path class="flow " data-flow="src_air_coil" style="--flow-duration: 1.2s" d="M718.5 174 L718.5 139 A11 11 0 0 1 729.5 128 L729.5 128 A11 11 0 0 1 740.5 139 L740.5 151 A11 11 0 0 0 751.5 162 L751.5 162 A11 11 0 0 0 762.5 151 L762.5 139 A11 11 0 0 1 773.5 128 L773.5 128 A11 11 0 0 1 784.5 139 L784.5 174">
+<path class="flow " data-flow="src_air_coil" style="--flow-duration: 1.2s" d="M706.5 174 L706.5 143 A15 15 0 0 1 721.5 128 L721.5 128 A15 15 0 0 1 736.5 143 L736.5 147 A15 15 0 0 0 751.5 162 L751.5 162 A15 15 0 0 0 766.5 147 L766.5 143 A15 15 0 0 1 781.5 128 L781.5 128 A15 15 0 0 1 796.5 143 L796.5 174">
 </path>
-<path class="pipe " data-segment="src_air_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M784.5 174 L784.5 204 L821 204">
+<path class="pipe " data-segment="src_air_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M796.5 174 L796.5 204 L821 204">
 </path>
-<path class="flow " data-flow="src_air_exit" style="--flow-duration: 1.2s" d="M784.5 174 L784.5 204 L821 204">
+<path class="flow " data-flow="src_air_exit" style="--flow-duration: 1.2s" d="M796.5 174 L796.5 204 L821 204">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

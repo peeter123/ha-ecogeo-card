@@ -3,6 +3,8 @@
 // the order of the parts, the short joins with at most one jog, and the bodies in their slots for every source and DHW
 // storage, in both layouts. The cabinet's own rules are in simplified.test.ts.
 import { describe, expect, test } from 'vitest';
+import '../../src/index';
+import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import { EMITTERS, SOURCES } from '../../src/config/options';
 import {
   BAND,
@@ -279,4 +281,70 @@ describe('the band key of a draw context', () => {
     expect(centre(without?.slots.source)).toBeCloseTo(ideal);
     expect(centre(withTank?.slots.source)).toBeLessThan(ideal);
   });
+
+  // schematic-drawing "One band style" (harmonize-band D1, D2)
+  test('the widest band (hybrid, tank, emitter) fits the vertical layout with gaps of at least 24', () => {
+    const own = arrangementFor('vertical', { source: 'hybrid', tank: true, emitter: 'underfloor' });
+    const slots = [own.slots.emitter, own.slots.source, own.slots.tank];
+    expect(BAND.emitter.width + sourceWidth('hybrid') + BAND.tank.width + 2 * BAND.gap).toBeLessThanOrEqual(720);
+    for (const slot of slots) {
+      expect(slot).toBeDefined();
+      expect(slot?.x0 ?? -1).toBeGreaterThanOrEqual(own.cabinet.x);
+      expect(slot?.x1 ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(own.cabinet.x + own.cabinet.width);
+    }
+    for (let index = 1; index < slots.length; index += 1) {
+      expect((slots[index]?.x0 ?? 0) - (slots[index - 1]?.x1 ?? 0)).toBeGreaterThanOrEqual(BAND.gap - 1e-9);
+    }
+  });
+
+  const STYLE_CASES = LAYOUTS.flatMap((layout) =>
+    (
+      [
+        ['hybrid', 'underfloor', 3],
+        ['hybrid', 'radiator', 3],
+        ['air', 'radiator', 2],
+        ['ground', 'underfloor', 2],
+      ] as const
+    ).map(
+      ([source, emitter, bodies]) => [`${layout}: ${source} with ${emitter}`, layout, source, emitter, bodies] as const,
+    ),
+  );
+
+  test.each(STYLE_CASES)(
+    'every band body shares the class, the radius, has no divider and stands on the band bottom: %s',
+    async (_name, layout, source, emitter, bodies) => {
+      const card = document.createElement('ecogeo-card') as EcogeoCard;
+      card.setConfig({ type: 'custom:ecogeo-card', model: 'B', dhw: 'external', source, emitter, layout });
+      document.body.append(card);
+      await card.updateComplete;
+      const shadow = card.shadowRoot;
+      if (shadow === null) throw new Error('no shadow root');
+      const own = arrangementFor(layout, { source, tank: true, emitter });
+      const rects = [
+        ...shadow.querySelectorAll(
+          'rect.emitter-outline, g[data-source="air"] > rect.source-outline, g[data-source="ground"] > rect.source-outline',
+        ),
+      ];
+      expect(rects).toHaveLength(bodies);
+      for (const rect of rects) {
+        expect(rect.classList.contains('band-outline')).toBe(true);
+        expect(Number(rect.getAttribute('rx'))).toBe(BAND.radius);
+        expect(Number(rect.getAttribute('y')) + Number(rect.getAttribute('height'))).toBe(own.band.bottom);
+      }
+      // the tank: the shared class, the same radius at its bottom corners, the outline reaching the band's bottom at both walls
+      const tank = own.externalTank;
+      if (tank === undefined) throw new Error('no tank');
+      const body = shadow.querySelector('path.tank-body[data-dhw-tank="external"]');
+      expect(body?.classList.contains('band-outline')).toBe(true);
+      const d = body?.getAttribute('d') ?? '';
+      const r = BAND.radius;
+      const bottom = own.band.bottom;
+      expect(d).toContain(
+        `V${String(bottom - r)} A${String(r)} ${String(r)} 0 0 1 ${String(tank.x + tank.width - r)} ${String(bottom)} H${String(tank.x + r)} A${String(r)} ${String(r)} 0 0 1 ${String(tank.x)} ${String(bottom - r)}`,
+      );
+      expect(shadow.querySelector('[data-obstacle="air-divider"], [data-obstacle="emitter-divider"]')).toBeNull();
+      expect(shadow.querySelector('.source-divider, .emitter-line')).toBeNull();
+      card.remove();
+    },
+  );
 });

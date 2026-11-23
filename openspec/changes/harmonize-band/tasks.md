@@ -45,22 +45,29 @@ the user allows it.
 
 ## 2. One band style and the new widths
 
-- [ ] 2.1 Add the shared style to `BAND` (radius 6, margin 8) and use it for every band body's outline (design D1).
+- [x] 2.1 Add the shared style to `BAND` (radius 6, margin 8) and use it for every band body's outline (design D1).
   Remove the air unit's divider and the emitter's floor line, with their obstacles. Verify: a unit test asserts that
   every band body's outline uses the band radius, and that the arrangement has no `air-divider` or `emitter-divider`
   obstacle.
-- [ ] 2.2 Set the widths: emitter 180, air unit 190, collector 120, tank 160 (design D2). Keep the current inner
+- [x] 2.2 Set the widths: emitter 180, air unit 190, collector 120, tank 160 (design D2). Keep the current inner
   parts, scaled into the new widths, until groups 3-5 redraw them. Verify: the band test asserts that the widest key
   (hybrid, tank, emitter) fits the vertical layout's 720 units with gaps of at least 24, and the arrangement snapshots
   are recorded again.
-- [ ] 2.3 Give the external tank a flat bottom on the band's bottom edge, with the band radius at its corners. Keep the
+- [x] 2.3 Give the external tank a flat bottom on the band's bottom edge, with the band radius at its corners. Keep the
   domed top and the rim (design D8; dhw-storage "External tank above connections 5/6"). Verify: a unit test asserts
   that the tank's outline reaches the band's bottom at both walls; the schematic-drawing "One band style" scenario is
   a unit test over every band body.
-- [ ] 2.4 Update docs/ecogeo-card.md (the band's style and widths). Verify: `npm run check` passes.
-- [ ] 2.5 Emulator check: a subagent inspects the captures of every source with the external tank, in both layouts.
+- [x] 2.4 Update docs/ecogeo-card.md (the band's style and widths). Verify: `npm run check` passes.
+- [x] 2.5 Emulator check: a subagent inspects the captures of every source with the external tank, in both layouts.
   Pass when the bodies share their corners and outline, have no divider, and every body's bottom lies on one line.
   Record the verdict here.
+
+  Verdict (2026-11-23): `npm run capture` for the band captures. Inspected band-{air,ground,hybrid}-external-light-1000
+  (horizontal) and vertical-band-{air,ground,hybrid}-external-light-559, plus ground at 320 px. Pass: the emitter, air
+  unit, collector and tank share the corner radius and the outline weight; no divider crosses the air unit or the
+  emitter; the tank has a flat bottom with rounded corners and every body's bottom edge lies on one line. The pipes
+  still enter the bodies' bottom faces and do not cross. The air unit and collector keep their old inner drawings in
+  the new widths, to be redrawn in groups 4 and 5.
 
 ## 3. The spiral emitter
 

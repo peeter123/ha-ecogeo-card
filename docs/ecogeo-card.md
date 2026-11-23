@@ -357,16 +357,16 @@ width (`strokeWidths(width, viewBoxWidth)`) and the label font factor is per lay
 
 ### The cabinet frame
 
-The cabinet's parts are laid out once, in the cabinet frame: 720 units wide, the width of the widest band (the emitter
-200, the hybrid source 312 and the external tank 160, with two gaps of 24), and 520 tall, with its top edge at y 0. The
-frame keeps the topology of the manual's figures B4 and C: the port order on the top edge, the order of the parts along
-every pipe, the probe and HTR placements, the probe pairs, the transducers on their lines, the crossings as hops (9, at
-most 15 as in the figure), and model C's tank 50 with coil 51, probe 54 and stubs 47 to 49. Every component still cites
-its item number in the code. It does not keep the figure's coordinates. In the figure's frame (cabinet x 240 to 760, y
-130 to 605) every symbol keeps its size and the union of the symbols' port spans covers y 214 to 428 without a gap, so
-no map of it could open a row for a value, and in a first attempt at the phone-width layout the cabinet's values landed
-100 to 166 units from their parts. The frame is therefore re-authored with lanes (schematic-drawing "Cabinet layout with
-value lanes"): the parts sit in rows and columns, and between them lie lanes, where the values sit.
+The cabinet's parts are laid out once, in the cabinet frame: 720 units wide, the room of the widest band (the emitter
+180, the hybrid source 322 and the external tank 160, with two gaps of 24: 710 units), and 520 tall, with its top edge
+at y 0. The frame keeps the topology of the manual's figures B4 and C: the port order on the top edge, the order of the
+parts along every pipe, the probe and HTR placements, the probe pairs, the transducers on their lines, the crossings as
+hops (9, at most 15 as in the figure), and model C's tank 50 with coil 51, probe 54 and stubs 47 to 49. Every component
+still cites its item number in the code. It does not keep the figure's coordinates. In the figure's frame (cabinet x 240
+to 760, y 130 to 605) every symbol keeps its size and the union of the symbols' port spans covers y 214 to 428 without a
+gap, so no map of it could open a row for a value, and in a first attempt at the phone-width layout the cabinet's values
+landed 100 to 166 units from their parts. The frame is therefore re-authored with lanes (schematic-drawing "Cabinet
+layout with value lanes"): the parts sit in rows and columns, and between them lie lanes, where the values sit.
 
 A **row lane** is a horizontal strip across the whole cabinet that no part's box enters and only vertical pipes cross; a
 **column lane** is the same in the vertical direction, crossed only by horizontal pipes. `ROW_LANES` and `COLUMN_LANES`
@@ -462,7 +462,7 @@ the lanes theirs (`test/diagram/lanes.test.ts`).
 
 The vertical layout (what a phone gets, verified from 320 px up to 1 px under the threshold) draws the same cabinet and
 band as the horizontal one with a different pair of maps (rework-layouts D2): the identity on x, because the frame is
-already 720 units wide, the width of the widest band, and a y map that heightens the row lanes.
+already 720 units wide, the room of the widest band, and a y map that heightens the row lanes.
 
 - **viewBox.** 740 units wide (the cabinet at x 10 to 730 and 10 units of margin at each side), 797 tall with the band
   (cabinet 544 tall, top edge at y 238), 825 tall where tank 50 is drawn. It is not 1000 wide, so a unit renders
@@ -482,9 +482,9 @@ already 720 units wide, the width of the widest band, and a y map that heightens
   with the place search at 320 px: 24 left no place for tank 50's values in either engine. It is not a value lane: it is
   the one y-map breakpoint inside a body, and it applies only where tank 50 is drawn, because elsewhere the range holds
   only vertical pipes and growing it would leave an empty strip. The horizontal layout does not change.
-- **Band.** The slots fill the 720 units exactly in the widest case, so the tank's slot (x 570 to 730) lies over port 4
-  (x 607): the tank's pipe from port 5 runs left over port 4's riser, and the tank's jog (40 units over the top edge,
-  `BAND_JOGS.vertical`) lies above port 4's (34), so the two never cross.
+- **Band.** The slots fill 710 of the 720 units in the widest case (the emitter at x 20 to 200), so the tank's slot (x
+  570 to 730) lies over port 4 (x 607): the tank's pipe from port 5 runs left over port 4's riser, and the tank's jog
+  (40 units over the top edge, `BAND_JOGS.vertical`) lies above port 4's (34), so the two never cross.
 - **Fonts.** `LABEL_FONT_K.vertical` is 2.4: a label is 12 px tall at the 10 px floor, 12 * 1000 / 560 = 21.4 units at
   the horizontal threshold, and 1.2 * 2.4 * 7.4 = 21.3 units in this viewBox (1 cqw is 7.4 units), so labels are about
   as tall in units in both layouts at the threshold. The floor holds up to 417 px; at 320 px a 10 px label box is 23
@@ -546,7 +546,7 @@ cabinet's top edge. Every body stands on the band's bottom edge, so the bodies' 
 height. Nothing is drawn beside the cabinet and no pipe runs over it: each pipe rises straight from its port into the
 join lane, takes at most one horizontal jog there and rises into its part.
 
-The emitter is the `emitter` option's body (see The emitter): 200 units wide, in the first slot. With `emitter: none`
+The emitter is the `emitter` option's body (see The emitter): 180 units wide, in the first slot. With `emitter: none`
 its slot is empty (width 0) and gives its space to the others, and ports 1/2 keep short stubs.
 
 **Slots.** `planBand` places the parts. Each is centred over the middle of its port pair (the emitter over ports 1/2 at
@@ -555,9 +555,9 @@ two parts would come closer than 24 units (`BAND.gap`) or leave the cabinet's co
 restores the order, the gaps and the bounds; neighbours that meet share the move (the cluster of the two centres on the
 mean of their ideal places). A part of width 0 is empty: it has no slot and gives its space to the others, so the
 arrangement is built per band key (the source, whether the external tank is drawn, the emitter): without a tank (`dhw:
-none`, or model C, whose tank 50 is inside the cabinet) the hybrid is centred over its ports (x 604.5 to 916.5), with
-the tank it moves left (x 494 to 806) and the tank ends at the cabinet's right edge (x 830 to 990). The source's width
-is that of its body: 130 for the air unit, 170 for the collector, 312 for the hybrid (the air unit, 12 units of gap, the
+none`, or model C, whose tank 50 is inside the cabinet) the hybrid is centred over its ports (x 590.5 to 912.5), with
+the tank it moves left (x 484 to 806) and the tank ends at the cabinet's right edge (x 830 to 990). The source's width
+is that of its body: 190 for the air unit, 120 for the collector, 322 for the hybrid (the air unit, 12 units of gap, the
 collector). Ports 3/4 lie close together, so the source usually shifts left or right of its ports and the join pipes
 jog.
 
@@ -581,21 +581,28 @@ bodies) and the external tank are all 176 units tall, in both layouts, each stan
 was 170, the tank's height, with lower emitter, air unit and collector; the horizontal drawing grew 6 units (aspect
 0.755, so the horizontal aspect test's bound is 0.76). How each body uses the extra height:
 
-- **Emitter**, 200 x 176: an underfloor loop or a radiator, (see The emitter).
-- **Air unit**, 130 x 176: the fan (a ring of radius 28) at the top, a divider, a strip 24 high for the Out value, and
-  the coil block (110 x 58) at the bottom, facing the cabinet. The brine tube winds through the block in four vertical
-  passes, 22 apart, joined by U-bends at the top and bottom of the block; it enters at the first pass and leaves at the
-  last one, both on the block's bottom face (32 and 98 units from the housing's left edge), where the pipes from the
+- **Emitter**, 180 x 176: an underfloor loop or a radiator, (see The emitter).
+- **Air unit**, 190 x 176: the fan (a ring of radius 28) at the top, a strip 24 high for the Out value, and
+  the coil block (170 x 58) at the bottom, facing the cabinet. The brine tube winds through the block in four vertical
+  passes, 30 apart, joined by U-bends at the top and bottom of the block; it enters at the first pass and leaves at the
+  last one, both on the block's bottom face (50 and 140 units from the housing's left edge), where the pipes from the
   join lane arrive. Six horizontal fins cross the passes. The Out value sits in the strip **between the coil block and
   the fan**, not above the fan: it is next to the coil's outlet, and the fan keeps the top of the housing to itself,
   which also keeps the value away from the housing's top outline in a small drawing (decided with the captures,
   2026-11-19).
-- **Ground collector**, 170 x 176: a strip of ground, hatched along its top (14 units of diagonal ticks under the
+- **Ground collector**, 120 x 176: a strip of ground, hatched along its top (14 units of diagonal ticks under the
   surface line), the Out value in a strip 24 high under the hatching, and the serpentine in its lower part: four
   horizontal passes 30 apart joined by half-circle bends. The brine enters on the bottom face at the feed riser (14
   units from the left edge), rises to the top pass, runs through the passes and leaves down the left end of the bottom
   pass (34 units from the left edge). The collector's halves take their temperatures (see Colours).
-- **External tank**, 160 x 176 with domes of 14: see DHW storage.
+- **External tank**, 160 x 176 with a dome of 14 on top and a flat bottom: see DHW storage.
+
+**One band style** (decided by the user 2026-11-23). The four bodies share one corner radius (`BAND.radius`, 6 units,
+also the tank's bottom corners), one outline weight (`max(2.5, --outline-width)`) and one inner margin (`BAND.margin`, 8
+units), and draw no divider line from wall to wall: the air unit's value strip and the emitter's loop need none. The
+bodies' lowest edges lie on the band's bottom edge along their whole width, and the ground collector's hatching stays,
+because it is the surface and tells a collector apart. Widths: emitter 180, air unit 190, ground collector 120,
+hybrid 322 (air unit, 12 units of gap, collector), tank 160.
 
 ### The emitter
 
@@ -612,15 +619,14 @@ item number (the comments in `src/diagram/emitter.ts` and `src/diagram/geometry.
   circuit without logic of their own: they are coloured and animated while it is active (heating, passive cooling) and
   muted and still otherwise (DHW). The supply takes production outlet 33 and the return production return 34, and the
   DG1 pipes inside the cabinet continue them (see Colours).
-- **Underfloor** (`underfloor`), 200 x 176: a floor strip (a rounded rectangle in the outline style) with a divider, the
-  floor surface, 43 units under its top. Under the divider one serpentine runs in five horizontal passes 26 apart,
-  joined by half-circle bends: the supply pipe enters at the top pass at the left, the passes run right, left, right,
-  left and right, and the return pipe leaves the bottom pass at the right. The serpentine is one path stroked with a
-  vertical gradient (user space, from the first pass to the last) from the supply colour at the first, top pass (the
-  inlet) to the return colour at the last, bottom pass (the outlet); the gradient is the loop's own and does not follow
-  `exchanger_fill`. Idle, the loop takes the muted colour; while the circuit flows, the dash overlay runs along it like
-  on the pipes.
-- **Radiator** (`radiator`), 200 x 176: a panel with six vertical columns (10 wide, 8 apart, 116 tall) in outline style.
+- **Underfloor** (`underfloor`), 180 x 176: a floor strip (a rounded rectangle in the outline style). One serpentine
+  runs in five horizontal passes 26 apart, joined by half-circle bends: the supply pipe enters at the top pass at the
+  left, the passes run right, left, right, left and right, and the return pipe leaves the bottom pass at the right. The
+  serpentine is one path stroked with a vertical gradient (user space, from the first pass to the last) from the supply
+  colour at the first, top pass (the inlet) to the return colour at the last, bottom pass (the outlet); the gradient is
+  the loop's own and does not follow `exchanger_fill`. Idle, the loop takes the muted colour; while the circuit flows,
+  the dash overlay runs along it like on the pipes.
+- **Radiator** (`radiator`), 180 x 176: a panel with six vertical columns (10 wide, 8 apart, 116 tall) in outline style.
   The supply pipe meets the first column at the top left (62 units under the body's top) and the return pipe leaves the
   last column at the bottom right (158 under it): inlet at the top on one side, outlet at the bottom on the other. With
   `exchanger_fill: gradient` (the default) the whole body is filled with the same vertical gradient, supply colour at
@@ -633,7 +639,7 @@ item number (the comments in `src/diagram/emitter.ts` and `src/diagram/geometry.
 - **Tap.** The emitter is a button for the DG1 demand's more-info dialog (the role `heating.demand`); with that role set
   to `none` (or without an entity) it is neither a button nor focusable. Nothing is tappable while the sample values
   show.
-- **Checks.** The body registers its divider (underfloor) or its columns (radiator) with `data-obstacle`; the loop, like
+- **Checks.** The body registers its columns (radiator) with `data-obstacle`; the loop, like
   every pipe, is sampled by the overlap check. `test/diagram/emitter.test.ts` holds the heating-emitter scenarios.
 
 ### How the B4 figure is laid out
@@ -725,21 +731,21 @@ ordinary value label (see Live values).
 ### DHW storage (`dhw`)
 
 - **External (model B):** ports 5 (outlet) and 6 (inlet), the manual's "DHW inter-accumulator", rise into the join lane
-  and jog outward into the columns left and right of the coil, to a tank drawn as a rounded cylinder (straight walls,
-  elliptical domed caps) above them. The tank is centred on the coil and stands on the band's bottom edge. Its values,
-  the DHW temperature (a bare number, no caption, at the regular weight and size of every value), sits in its upper part
-  as a bare label on the tinted body, under the top cap's rim and over the coil: 44 units under the tank's top. The coil
-  starts 84 units under the tank's top, so the label clears it. The coil is a helix in the lower part of the tank, seen
-  from the side: four and a half turns, the front half of each turn solid and the back half faint (35 % opacity). It is
-  mirrored, so that port 5's pipe (the left one) reaches its upper left end and port 6's pipe (the right one) its lower
-  right end, and the two pipes do not cross. The colour, the muting and the flow animation are those of the coil pipe;
-  the dash overlay runs along the front halves only. An idle coil (no flow) is drawn in a neutral grey, darker than the
-  other muted pipes in the light theme so that it stays visible on the tank's tinted body; the dark theme keeps the
-  normal muted grey. While the coil is idle, the two pipes that feed it are drawn in that same grey where they run
-  inside the tank (clipped to the tank body), so the grey changes at the tank wall and not at the joint with the coil.
-  The back halves are drawn first, under the front halves, with butt caps, so the joints at the coil's sides are covered
-  by a solid front half. Model C's coil 51 is drawn the same way, lying on its side, with closer (pitch 8) and rounder
-  turns (seven and a half) than the external coil.
+  and jog outward into the columns left and right of the coil, to a tank drawn as a rounded cylinder (straight walls, a
+  domed top cap, a flat bottom with corners of the band radius) above them. The tank is centred on the coil and stands
+  on the band's bottom edge. Its values, the DHW temperature (a bare number, no caption, at the regular weight and size
+  of every value), sits in its upper part as a bare label on the tinted body, under the top cap's rim and over the coil:
+  44 units under the tank's top. The coil starts 84 units under the tank's top, so the label clears it. The coil is a
+  helix in the lower part of the tank, seen from the side: four and a half turns, the front half of each turn solid and
+  the back half faint (35 % opacity). It is mirrored, so that port 5's pipe (the left one) reaches its upper left end
+  and port 6's pipe (the right one) its lower right end, and the two pipes do not cross. The colour, the muting and the
+  flow animation are those of the coil pipe; the dash overlay runs along the front halves only. An idle coil (no flow)
+  is drawn in a neutral grey, darker than the other muted pipes in the light theme so that it stays visible on the
+  tank's tinted body; the dark theme keeps the normal muted grey. While the coil is idle, the two pipes that feed it are
+  drawn in that same grey where they run inside the tank (clipped to the tank body), so the grey changes at the tank
+  wall and not at the joint with the coil. The back halves are drawn first, under the front halves, with butt caps, so
+  the joints at the coil's sides are covered by a solid front half. Model C's coil 51 is drawn the same way, lying on
+  its side, with closer (pitch 8) and rounder turns (seven and a half) than the external coil.
 - **Internal (model C):** the integrated tank is drawn inside the cabinet, under the top edge, after figure C: tank 50
   with coil 51 (a helix, see above), probe 54 and the connections 47 (tap water inlet), 48 (DHW outlet) and 49
   (recirculation) on the top edge, their stubs below the join lane's jogs. Its DHW temperature sits inside
@@ -840,7 +846,7 @@ A pipe is drawn in the theme's disabled colour (`--disabled-text-color`), withou
 
 The source's symbols (air unit housing and coil, ground collector) are muted the same way while the brine circuit is
 inactive; the fan keeps following its own speed. The emitter is muted with its pipes while the DG1 production circuit is
-inactive (in DHW mode, for one): its outline, divider or columns, the loop and the radiator's fill take the muted
+inactive (in DHW mode, for one): its outline or columns, the loop and the radiator's fill take the muted
 colour, and nothing flows.
 
 The tap-water stubs of model C (47, 48, 49) are the exception: they are coloured by the DHW temperature in every
@@ -1049,7 +1055,7 @@ and the footer wraps onto further lines instead of overflowing.
   outlines, the flow overlay) read them, with 3 and 2 as the fallbacks, so a card of unknown width draws as before.
   The overlay's dash pattern and the gaps of the hops scale with `--pipe-width`. From 667 px up `scale` is 0.667 or
   more and the widths stay 3 and 2; at the threshold (560 px) the horizontal layout draws pipes 3.6 and outlines 2.3
-  units wide. Decorative thin lines (fins, the air unit's divider, the ground hatching, the tank rim) are fractions of
+  units wide. Decorative thin lines (fins, the ground hatching, the tank rim) are fractions of
   `--outline-width`.
 - Fonts: the labels are `max(10px, k cqw)`, the external tank's temperature `max(11px, 1.2 k cqw)`, with `k` per
   layout (`LABEL_FONT_K` in `src/diagram/label-places.ts`; the 8 px floor is gone). The horizontal layout's `k` is

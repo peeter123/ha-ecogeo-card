@@ -2,8 +2,7 @@ import { describe, expect, test } from 'vitest';
 import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
 import { cabinetStyles } from '../../src/diagram/cabinet';
-import { dhwStyles } from '../../src/diagram/dhw';
-import { sourceStyles } from '../../src/diagram/source';
+import { bandStyles } from '../../src/diagram/band-style';
 
 /**
  * The stroke-width a selector renders with while the card's width is unknown: the declared value with the custom
@@ -47,8 +46,8 @@ describe('line weights (schematic-drawing spec)', () => {
 
     // the cabinet, the source and the tank outlines
     expect(widthOf(cabinetStyles.cssText, '.outline')).toBe(3);
-    expect(widthOf(sourceStyles.cssText, '.source-outline')).toBe(2.5);
-    expect(widthOf(dhwStyles.cssText, '.tank-body')).toBe(2.5);
+    // the band bodies' one shared rule (`.band-outline, .tank-body`; the selector list's last entry names it)
+    expect(widthOf(bandStyles.cssText, '.tank-body')).toBe(2.5);
     expect(root.querySelector('.outline')).not.toBeNull();
     card.remove();
   });

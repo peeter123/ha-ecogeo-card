@@ -12,12 +12,12 @@
 // and fill are muted like the pipes. The dash overlay on the loop follows the supply pipe's flow.
 //
 // The body shows no demand caption. The body registers
-// its divider and columns with `data-obstacle` so that the overlap check sees them. The body is a button for the demand's more-info.
+// its columns with `data-obstacle` so that the overlap check sees them. The body is a button for the demand's more-info.
 import { css, nothing, svg, type SVGTemplateResult } from 'lit';
 import { EMITTER_NAMES } from '../strings';
 import { MUTED_COLOR } from './colors';
 import { EMITTER_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';
-import { arrangementOf, isSegmentActive, roundedPathData, type DrawContext, type EmitterShape } from './geometry';
+import { BAND, arrangementOf, isSegmentActive, roundedPathData, type DrawContext, type EmitterShape } from './geometry';
 import type { FillOptions } from './cabinet';
 import { pipeState, type PipeView } from './pipes';
 import { obstacle } from './obstacle';
@@ -25,9 +25,7 @@ import { obstacle } from './obstacle';
 export const emitterStyles = css`
   .emitter-outline {
     stroke: var(--primary-text-color);
-    stroke-width: max(2.5, var(--outline-width, 2));
   }
-  .emitter-line,
   .emitter-column {
     fill: none;
     stroke: var(--primary-text-color);
@@ -36,7 +34,6 @@ export const emitterStyles = css`
   }
   /* The circuit is inactive: the body, its lines and its columns are muted like the pipes. */
   .emitter.muted .emitter-outline,
-  .emitter.muted .emitter-line,
   .emitter.muted .emitter-column {
     stroke: var(--disabled-text-color);
   }
@@ -51,10 +48,7 @@ export const emitterStyles = css`
 /** The opacity of the radiator's fill: low enough that the columns stay readable (as the exchangers' fills). */
 const RADIATOR_FILL_OPACITY = 0.5;
 
-/** Where the underfloor loop's divider (the floor surface) lies, below the body's top. */
-const DIVIDER_DY = 43;
-
-/** The body of the emitter: outline (with the gradient fill of a radiator), the underfloor divider or the radiator's columns, and the loop. */
+/** The body of the emitter: outline (with the gradient fill of a radiator), the radiator's columns, and the loop. */
 function body(
   shape: EmitterShape,
   paints: { gradient: string; muted: boolean },
@@ -65,7 +59,7 @@ function body(
   const { x, y, width, height } = shape;
   const radiator = shape.kind === 'radiator';
   const loopStyle = paints.muted ? nothing : `stroke: url(#${paints.gradient})`;
-  return svg`<rect class="emitter-outline" x=${x} y=${y} width=${width} height=${height} rx="6" fill=${radiator && fillRadiator ? `url(#${paints.gradient})` : 'none'} fill-opacity=${RADIATOR_FILL_OPACITY} />
+  return svg`<rect class="emitter-outline band-outline" x=${x} y=${y} width=${width} height=${height} rx=${BAND.radius} fill=${radiator && fillRadiator ? `url(#${paints.gradient})` : 'none'} fill-opacity=${RADIATOR_FILL_OPACITY} />
     ${
       radiator
         ? svg`${shape.columns.map((column) => svg`<rect class="emitter-column" x=${column.x} y=${column.y} width=${column.width} height=${column.height} rx="4" />`)}${obstacle(
@@ -77,7 +71,7 @@ function body(
               height: shape.columns[0]?.height ?? 0,
             },
           )}`
-        : svg`<path class="emitter-line" d="M${x} ${y + DIVIDER_DY} H${x + width}" />${obstacle('emitter-divider', { x, y: y + DIVIDER_DY - 1.5, width, height: 3 })}<path class="pipe${paints.muted ? ' muted' : ''}" data-emitter-loop style=${loopStyle} stroke-linecap="round" d=${loopPath} />${
+        : svg`<path class="pipe${paints.muted ? ' muted' : ''}" data-emitter-loop style=${loopStyle} stroke-linecap="round" d=${loopPath} />${
             animated === undefined
               ? nothing
               : svg`<path class="flow" data-flow="dg1_loop" style="--flow-duration: ${String(animated.duration)}s" d=${loopPath} />`

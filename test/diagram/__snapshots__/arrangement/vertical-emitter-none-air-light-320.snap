@@ -14,7 +14,7 @@ suction_temperature | label start | left: 55.54054054054054%; top: 51.2760351317
 suction_pressure | label start | left: 55.54054054054054%; top: 55.29109159347554%
 compressor_speed | label middle | left: 50%; top: 59.30614805520703%
 expansion_valve | label middle | left: 57.027027027027025%; top: 86.3237139272271%
-air_unit_out | label middle | left: 65%; top: 12.547051442910917%
+air_unit_out | label middle | left: 60.945945945945944%; top: 12.547051442910917%
 tank_external_temperature | label middle bare | left: 87.83783783783784%; top: 6.273525721455458%
 footer: outside_temperature, cop, dg1_power, htr_power
 svg:
@@ -22,33 +22,29 @@ svg:
           <g class="source" data-source-kind="air">
     <g data-source="air" class="air-unit" aria-label="Air unit">
     <title>Air unit</title>
-    <rect class="source-outline" rx="6" x="416" y="6" width="130" height="176">
+    <rect class="source-outline band-outline" x="356" y="6" width="190" height="176" rx="6">
 </rect>
-    <path class="source-divider" d="M416 84 H546">
-</path>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="air-divider" x="416" y="82.5" width="130" height="3">
+    <rect class="source-frame" data-coil-block="" data-obstacle="air-coil" rx="3" x="366" y="116" width="170" height="58">
 </rect>
-    <rect class="source-frame" data-coil-block="" data-obstacle="air-coil" rx="3" x="426" y="116" width="110" height="58">
-</rect>
-    <path class="source-fin" d="M430 124 H532">
+    <path class="source-fin" d="M370 124 H532">
 </path>
-<path class="source-fin" d="M430 132 H532">
+<path class="source-fin" d="M370 132 H532">
 </path>
-<path class="source-fin" d="M430 140 H532">
+<path class="source-fin" d="M370 140 H532">
 </path>
-<path class="source-fin" d="M430 148 H532">
+<path class="source-fin" d="M370 148 H532">
 </path>
-<path class="source-fin" d="M430 156 H532">
+<path class="source-fin" d="M370 156 H532">
 </path>
-<path class="source-fin" d="M430 164 H532">
+<path class="source-fin" d="M370 164 H532">
 </path>
     <g class="fan-part" aria-label="Air unit fan" role="button" tabindex="0">
       <title>Air unit fan</title>
-      <circle class="fan-ring" data-obstacle="air-fan" cx="481" cy="46" r="28">
+      <circle class="fan-ring" data-obstacle="air-fan" cx="451" cy="46" r="28">
 </circle>
-      <circle class="fan-hit" fill="transparent" stroke="none" cx="481" cy="46" r="28">
+      <circle class="fan-hit" fill="transparent" stroke="none" cx="451" cy="46" r="28">
 </circle>
-      <g class="fan" data-fan="" transform="translate(481 46) scale(0.82)">
+      <g class="fan" data-fan="" transform="translate(451 46) scale(0.82)">
         <g class="fan-rotor" style="--fan-duration: 3.4782608695652173s">
 <path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(0)">
 </path>
@@ -70,7 +66,7 @@ svg:
   </g>
 <g data-dhw="external" class="dhw-storage" aria-label="DHW tank" role="button" tabindex="0">
     <title>DHW tank</title>
-    <path class="tank-body" data-dhw-tank="external" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" d="M570 20 A80 14 0 0 1 730 20 V168 A80 14 0 0 1 570 168 Z">
+    <path class="tank-body band-outline" data-dhw-tank="external" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" d="M570 20 A80 14 0 0 1 730 20 V176 A6 6 0 0 1 724 182 H576 A6 6 0 0 1 570 176 Z">
 </path>
     <path class="tank-rim" d="M570 20 A80 14 0 0 0 730 20">
 </path>
@@ -128,7 +124,7 @@ svg:
 </stop>
     </linearGradient>
 <clipPath data-tank-clip="" id="ecogeoN-tank-clip">
-<path d="M570 20 A80 14 0 0 1 730 20 V168 A80 14 0 0 1 570 168 Z">
+<path d="M570 20 A80 14 0 0 1 730 20 V176 A6 6 0 0 1 724 182 H576 A6 6 0 0 1 570 176 Z">
 </path>
 </clipPath>
 </defs>
@@ -291,17 +287,17 @@ svg:
 </path>
 <path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 204 L607 238">
 </path>
-<path class="pipe " data-segment="src_air_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 216 L448 216 L448 174">
+<path class="pipe " data-segment="src_air_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 216 L406 216 L406 174">
 </path>
-<path class="flow " data-flow="src_air_feed" style="--flow-duration: 1.2s" d="M552 216 L448 216 L448 174">
+<path class="flow " data-flow="src_air_feed" style="--flow-duration: 1.2s" d="M552 216 L406 216 L406 174">
 </path>
-<path class="pipe " data-segment="src_air_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M448 174 L448 139 A11 11 0 0 1 459 128 L459 128 A11 11 0 0 1 470 139 L470 151 A11 11 0 0 0 481 162 L481 162 A11 11 0 0 0 492 151 L492 139 A11 11 0 0 1 503 128 L503 128 A11 11 0 0 1 514 139 L514 174">
+<path class="pipe " data-segment="src_air_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M406 174 L406 143 A15 15 0 0 1 421 128 L421 128 A15 15 0 0 1 436 143 L436 147 A15 15 0 0 0 451 162 L451 162 A15 15 0 0 0 466 147 L466 143 A15 15 0 0 1 481 128 L481 128 A15 15 0 0 1 496 143 L496 174">
 </path>
-<path class="flow " data-flow="src_air_coil" style="--flow-duration: 1.2s" d="M448 174 L448 139 A11 11 0 0 1 459 128 L459 128 A11 11 0 0 1 470 139 L470 151 A11 11 0 0 0 481 162 L481 162 A11 11 0 0 0 492 151 L492 139 A11 11 0 0 1 503 128 L503 128 A11 11 0 0 1 514 139 L514 174">
+<path class="flow " data-flow="src_air_coil" style="--flow-duration: 1.2s" d="M406 174 L406 143 A15 15 0 0 1 421 128 L421 128 A15 15 0 0 1 436 143 L436 147 A15 15 0 0 0 451 162 L451 162 A15 15 0 0 0 466 147 L466 143 A15 15 0 0 1 481 128 L481 128 A15 15 0 0 1 496 143 L496 174">
 </path>
-<path class="pipe " data-segment="src_air_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M514 174 L514 204 L607 204">
+<path class="pipe " data-segment="src_air_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M496 174 L496 204 L607 204">
 </path>
-<path class="flow " data-flow="src_air_exit" style="--flow-duration: 1.2s" d="M514 174 L514 204 L607 204">
+<path class="flow " data-flow="src_air_exit" style="--flow-duration: 1.2s" d="M496 174 L496 204 L607 204">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>
