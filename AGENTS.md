@@ -59,7 +59,8 @@ rotated values in the vertical layout, one footer, the browser preflight and the
 - Nothing installation-specific in tracked files; it goes in `private/installation.md`.
 - No emoji. A no-break space between every number and its unit (NBSP in `src/strings.ts`).
 - Helpers from the hrv-ventilation repo (local path in `private/installation.md`) are copied, never imported.
-- One commit per task group, after its validation and review; never push (details in `openspec/config.yaml`).
+- Uncommitted planning artifacts of a change get their own commit before each task group; then one commit per
+  task group, after its validation and review; never push (details in `openspec/config.yaml`).
 
 ## Releases
 

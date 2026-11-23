@@ -1,4 +1,4 @@
-# constitution: 2026-11-22
+# constitution: 2026-11-23
 schema: spec-driven
 
 context: |
@@ -15,10 +15,10 @@ context: |
   uploaded only by an explicit deploy, and the dashboard resource's ?v= query is bumped after every upload.
 
   Safety: never deploy, change a Lovelace resource or dashboard of the live installation, restart Home Assistant,
-  commit, push, tag or release without explicit user authorization. The one standing exception is the per-group
-  commit below; it never extends to pushing. The live installation must keep working throughout every change;
-  plan the migration of its dashboards. The card is read-only towards the heat pump: it calls no services and
-  writes no entities; the only interaction is opening more-info.
+  commit, push, tag or release without explicit user authorization. The standing exceptions are the
+  planning-artifact commit and the per-group commit below; they never extend to pushing. The live installation
+  must keep working throughout every change; plan the migration of its dashboards. The card is read-only towards
+  the heat pump: it calls no services and writes no entities; the only interaction is opening more-info.
 
   Never read or print .env files or Home Assistant tokens; scripts read them themselves. Tests and the dev
   emulator use synthetic data only; fixtures built from real history replace every identifier with a made-up one.
@@ -58,6 +58,12 @@ context: |
   for fixes), adds the version's CHANGELOG.md entry and runs npm run release. Pushing, tagging and creating the
   GitHub release happen only when the user explicitly asks for that release. The CI workflows in .github/workflows/
   repeat the checks.
+
+  Before a task group starts, uncommitted changes in openspec/changes/<change-id>/ get a commit of their own,
+  staged by explicit path: subject "Add planning artifacts for <change-id>" the first time, "Update planning
+  artifacts for <change-id>" after that, and a body that says what changed. This covers the start of apply and
+  changes made between groups; artifact edits made during a group go into that group's commit and are named in its
+  body.
 
   Every task group gets its own commit, after its validation passes and its review is clean: its implementation
   files and its tasks.md check-offs, staged by explicit path (never git add -A or git add .), leaving unrelated
@@ -115,6 +121,9 @@ operations:
       - >-
         Work one task group at a time, starting at the first group in tasks.md with unchecked tasks. tasks.md is the
         only progress state carried between sessions.
+      - >-
+        Before each group, commit uncommitted changes to the change's planning artifacts first, as described in
+        context.
       - Keep the quality hook green; fix what it reports before moving on.
       - Check off completed tasks in tasks.md only after npm run check passes.
       - Commit each group as described in context; never push.
