@@ -1,14 +1,14 @@
 // The outer-loop source (add-schematic-card D5, D6; refine-schematic-drawing D11-D14; rework-layouts D3, D4; outer-loop-source spec): the
 // air unit, the ground collector or both side by side on one brine loop, drawn in the band above the cabinet, over connections
-// 3/4. This file draws what is not a pipe: the air unit's case on two feet, finned coil panel and guarded fan, and the collector's ground strip
+// 3/4. This file draws what is not a pipe: the air unit's case on two feet, finned coil panel and guarded fan, and the collector's borehole
 // with its hatching (no captions: the tooltips name the parts, rework-layouts "No in-drawing captions"). The pipes (ports 3/4
-// up through the join lane into the bottom faces, the serpentines and the link) are segments in geometry.ts, so pipes.ts
+// up through the join lane into the bottom faces, the coil, the probe and the link) are segments in geometry.ts, so pipes.ts
 // colours and animates them like every other pipe. None of these parts is a manual item: the manual's figures stop at
 // connections 3 (brine outlet) and 4 (brine inlet).
 //
 // The live values (labels.ts): the air unit's outside temperature above the fan, its fan speed below it and (air only) its Out
-// beside the exit pass; the collector's Out in its strip (between the hatching and the serpentine). The bodies register their
-// obstacles with `data-obstacle` so that the overlap check sees the coil, the fan, the hatching and the serpentine inside them.
+// beside the exit pass; the collector's Out at its bottom beside the return riser. The bodies register their
+// obstacles with `data-obstacle` so that the overlap check sees the coil, the fan, the hatching and the probe inside them.
 import { css, svg, type SVGTemplateResult } from 'lit';
 import type { AnimationReadings } from '../calc/readings';
 import { AIR_UNIT_FAN_NAME, AIR_UNIT_NAME, GROUND_COLLECTOR_NAME } from '../strings';
@@ -157,9 +157,9 @@ function airUnit(
   </g>`;
 }
 
-/** The ground collector: the strip, hatched along its top (the surface); its serpentine is a segment of the brine circuit. */
+/** The ground collector: a borehole, hatched along its top (the surface); its probe is a segment of the brine circuit. */
 function collectorBody(collector: CollectorShape, muted: boolean): SVGTemplateResult {
-  const { x, y, width, height, hatch, serpentine } = collector;
+  const { x, y, width, height, hatch, probe } = collector;
   const ticks = Array.from({ length: Math.floor((width - 20) / 10) + 1 }, (_, index) => round2(x + 14 + index * 10));
   return svg`<g class="ground-collector${muted ? ' muted' : ''}" data-source="ground" aria-label=${GROUND_COLLECTOR_NAME}>
     <title>${GROUND_COLLECTOR_NAME}</title>
@@ -167,7 +167,7 @@ function collectorBody(collector: CollectorShape, muted: boolean): SVGTemplateRe
     <path class="source-ground" d="M${x} ${hatch.y + hatch.height} H${round2(x + width)}" />
     ${ticks.map((tick) => svg`<path class="source-ground" d="M${tick} ${y} l-8 ${hatch.height}" />`)}
     ${obstacle('ground-hatch', hatch)}
-    ${obstacle('ground-serpentine', serpentine)}
+    ${obstacle('ground-probe', probe)}
   </g>`;
 }
 

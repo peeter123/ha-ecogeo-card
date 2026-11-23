@@ -24,6 +24,7 @@
 // is the heating installation on ports 1/2, outside the unit).
 //
 // Pipe points run in the direction of the flow in heating (`direction` 1) so that the renderer can animate them.
+import { DEFAULT_STROKES } from '../lib/layout';
 import type { CircuitId, Circuits } from '../calc/circuits';
 import type { DhwStorage, Emitter, Model, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
@@ -79,26 +80,28 @@ export interface AirUnitShape extends Rect {
 }
 
 /**
- * The ground collector (not a manual item): a strip of ground, hatched along its top edge (the surface), with a flat
- * serpentine of horizontal passes in its lower part and the Out value in the strip between the hatching and the serpentine.
- * The brine enters on the left at `feedX`, runs through the passes and leaves at `passes.left`; both ends are on the bottom face.
+ * The ground collector (not a manual item): a borehole, hatched along its top edge (the surface), with the brine's double-U probe
+ * hanging from it and the Out value at its bottom. The brine rises up the left side (`feedX`) to a header just under the
+ * hatching, runs through two U-loops whose legs hang down to `bendY`, and drops down the right side (`returnX`); both ends are on
+ * the bottom face.
+ *
+ * A real double-U probe runs its two loops in parallel from a split at the top. They are drawn in series here: one pipe path
+ * keeps the colouring and the flow animation one chain of segments.
  */
 export interface CollectorShape extends Rect {
   readonly hatch: Rect;
-  /** The free strip between the hatching and the serpentine, where the Out value sits. */
-  readonly strip: Rect;
-  /** The box around the serpentine and its feed riser. */
-  readonly serpentine: Rect;
-  /** The passes: the y of the first, the spacing, the (even) number, and the x of the left and right bends. */
-  readonly passes: {
-    readonly y0: number;
-    readonly step: number;
-    readonly count: number;
-    readonly left: number;
-    readonly right: number;
-  };
-  /** The x of the feed riser, left of the serpentine. */
+  /** The free box at the bottom, below the loops' bends and ending just left of the return riser, where the Out value sits. */
+  readonly out: Rect;
+  /** The box around the probe: the risers, the header and the loops. */
+  readonly probe: Rect;
+  /** The x of the feed riser (left) and of the return riser (right). */
   readonly feedX: number;
+  readonly returnX: number;
+  /** The x of the four legs, in flow order: loop 1 down and up, loop 2 down and up. */
+  readonly legs: readonly [number, number, number, number];
+  /** The y of the header and of the loops' bottom bends. */
+  readonly headerY: number;
+  readonly bendY: number;
 }
 
 /**
@@ -344,20 +347,51 @@ export function airUnitShape(x0: number, bottom: number): AirUnitShape {
   };
 }
 
-/** The collector placed with its left edge at `x0` and its bottom edge at `bottom`. */
+/** The distance between the two legs of a collector U-loop; its bends take half of it as their radius. */
+const COLLECTOR_LOOP = 16;
+/** The straight run between a riser and the nearest loop (the header, and the run to the return riser). */
+const COLLECTOR_RUN = 20;
+
+/**
+ * The collector placed with its left edge at `x0` and its bottom edge at `bottom`.
+ *
+ * The risers' centre lines lie `BAND.margin + DEFAULT_STROKES.pipe / 2` inside the walls: the pipe's edge sits on the band's
+ * margin at the default width (3; the thicker pipes of a phone-width card stay well inside the wall's clearance). The two U-loops are narrow
+ * (`COLLECTOR_LOOP` between their legs); the run from each riser to its loop is `COLLECTOR_RUN`, and the rest of the width is
+ * the link between the loops, so the header, the link and the run to the return riser read as straight pieces.
+ */
 export function collectorShape(x0: number, bottom: number): CollectorShape {
   const { width, height } = BAND.collector;
   const y = bottom - height;
+  const inset = BAND.margin + DEFAULT_STROKES.pipe / 2;
+  const feedX = x0 + inset;
+  const returnX = x0 + width - inset;
+  const a1 = feedX + COLLECTOR_RUN;
+  const a2 = a1 + COLLECTOR_LOOP;
+  const b2 = returnX - COLLECTOR_RUN;
+  const b1 = b2 - COLLECTOR_LOOP;
+  const bendY = y + 128;
+  // a margin would not leave room for the widest value ("−12.3 °C", 95 units at 320 px) between the risers: it ends 1.5 pipes left of the return riser's centre
+  const outRight = returnX - 1.5 * DEFAULT_STROKES.pipe;
   return {
     x: x0,
     y,
     width,
     height,
     hatch: { x: x0, y, width, height: 14 },
-    strip: { x: x0 + BAND.margin, y: y + 18, width: width - 2 * BAND.margin, height: 24 },
-    serpentine: { x: x0 + BAND.margin, y: y + 48, width: width - 2 * BAND.margin, height: height - 48 },
-    passes: { y0: y + 54, step: 30, count: 4, left: x0 + 34, right: x0 + width - 14 },
-    feedX: x0 + 14,
+    // the Out ends just left of the return riser, below the loops' bends (its text is anchored at its right edge)
+    out: { x: feedX + BAND.margin, y: y + 138, width: outRight - (feedX + BAND.margin), height: 28 },
+    probe: {
+      x: x0 + BAND.margin,
+      y: y + 18,
+      width: width - 2 * BAND.margin,
+      height: bendY + DEFAULT_STROKES.pipe - (y + 18),
+    },
+    feedX,
+    returnX,
+    legs: [a1, a2, b1, b2],
+    headerY: y + 24,
+    bendY,
   };
 }
 
@@ -463,10 +497,6 @@ export const airPortX = (unit: AirUnitShape): { feed: number; exit: number } => 
 
 /** The y of the air unit's brine face, the coil panel's bottom edge. */
 export const airFaceY = (unit: AirUnitShape): number => unit.coil.y + unit.coil.height;
-
-/** The y of the collector's passes, in order. */
-export const collectorPassYs = (collector: CollectorShape): number[] =>
-  Array.from({ length: collector.passes.count }, (_, index) => collector.passes.y0 + index * collector.passes.step);
 
 /** The outline of the external tank's body (domed top, straight walls, flat bottom), as path data. */
 export function externalTankBody({ externalTank }: Pick<BandZones, 'externalTank'>): string {
@@ -690,7 +720,7 @@ export interface Segment extends Visibility {
   reversible?: boolean;
   /** A coil drawn as a helix; `points` then keep only its two end points. */
   shape?: HelixShape;
-  /** The radius of the rounded corners of the pipe (the air coil's U-bends and the ground collector's bottom). */
+  /** The radius of the rounded corners of the pipe (the air coil's U-bends and the ground collector's loops: bends at their top and bottom). */
   bend?: number;
   /** The base stroke ends in a round cap: it closes the seam where the ground collector's half circle is split in two segments. */
   roundEnd?: true;
@@ -1225,29 +1255,36 @@ function airCoilPoints(unit: AirUnitShape): Point[] {
   return points;
 }
 
-/** The pieces of the collector's serpentine as point lists: the first half, the second half, the exit's start. */
-function collectorPoints(collector: CollectorShape): { down: Point[]; up: Point[] } {
-  const { left, right } = collector.passes;
-  const [y1, y2, y3, y4] = collectorPassYs(collector);
-  if (y1 === undefined || y2 === undefined || y3 === undefined || y4 === undefined) throw new Error('four passes');
+/**
+ * The collector's brine path as two point lists, split in the top link between the loops: the first half (feed riser, header,
+ * loop 1, half the link) and the second half (the other half, loop 2, the run to the return riser, which ends on the bottom face).
+ * The bend radius is half the legs' spacing.
+ */
+function collectorPoints(collector: CollectorShape): { down: Point[]; up: Point[]; bend: number } {
+  const { feedX, returnX, headerY: top, bendY: bottom } = collector;
+  const [a1, a2, b1, b2] = collector.legs;
   const face = collector.y + collector.height;
-  const middle = (y2 + y3) / 2;
+  const middle = (a2 + b1) / 2;
   return {
     down: [
-      [collector.feedX, face],
-      [collector.feedX, y1],
-      [right, y1],
-      [right, y2],
-      [left, y2],
-      [left, middle],
+      [feedX, face],
+      [feedX, top],
+      [a1, top],
+      [a1, bottom],
+      [a2, bottom],
+      [a2, top],
+      [middle, top],
     ],
     up: [
-      [left, middle],
-      [left, y3],
-      [right, y3],
-      [right, y4],
-      [left, y4],
+      [middle, top],
+      [b1, top],
+      [b1, bottom],
+      [b2, bottom],
+      [b2, top],
+      [returnX, top],
+      [returnX, face],
     ],
+    bend: COLLECTOR_LOOP / 2,
   };
 }
 
@@ -1383,8 +1420,7 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
     );
   }
   if (key.source === 'ground' && collector !== undefined) {
-    const { down, up } = collectorPoints(collector);
-    const bend = collector.passes.step / 2;
+    const { down, up, bend } = collectorPoints(collector);
     segments.push(
       seg('src_gnd_feed', ['brine'], from3(collector.feedX, collector.y + collector.height), BOUT, {
         source: ['ground'],
@@ -1392,7 +1428,7 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
       }),
       seg('src_gnd_down', ['brine'], line(...down), BOUT, { source: ['ground'], speedRole: BP, roundEnd: true, bend }),
       seg('src_gnd_up', ['brine'], line(...up), BIN, { source: ['ground'], speedRole: BP, bend }),
-      seg('src_gnd_exit', ['brine'], to4(collector.passes.left, collectorPassYs(collector)[3] ?? 0), BIN, {
+      seg('src_gnd_exit', ['brine'], to4(collector.returnX, collector.y + collector.height), BIN, {
         source: ['ground'],
         speedRole: BP,
       }),
@@ -1400,8 +1436,7 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
   }
   if (key.source === 'hybrid' && air !== undefined && collector !== undefined) {
     const { feed, exit } = airPortX(air);
-    const { down, up } = collectorPoints(collector);
-    const bend = collector.passes.step / 2;
+    const { down, up, bend } = collectorPoints(collector);
     segments.push(
       seg('src_hyb_feed', ['brine'], from3(feed, airFaceY(air)), BOUT, { source: ['hybrid'], speedRole: BP }),
       seg('src_hyb_coil', ['brine'], line(...airCoilPoints(air)), BOUT, {
@@ -1423,7 +1458,7 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
       ),
       seg('src_hyb_down', ['brine'], line(...down), AIRO, { source: ['hybrid'], speedRole: BP, roundEnd: true, bend }),
       seg('src_hyb_up', ['brine'], line(...up), BIN, { source: ['hybrid'], speedRole: BP, bend }),
-      seg('src_hyb_exit', ['brine'], to4(collector.passes.left, collectorPassYs(collector)[3] ?? 0), BIN, {
+      seg('src_hyb_exit', ['brine'], to4(collector.returnX, collector.y + collector.height), BIN, {
         source: ['hybrid'],
         speedRole: BP,
       }),

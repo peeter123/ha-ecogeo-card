@@ -7,7 +7,8 @@ import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
 import { states } from '../helpers';
 
-import { airFaceY, airPortX, collectorPassYs } from '../../src/diagram/geometry';
+import { BAND, airFaceY, airPortX } from '../../src/diagram/geometry';
+import { DEFAULT_STROKES } from '../../src/lib/layout';
 import { AIR_UNIT_NAME, GROUND_COLLECTOR_NAME, NO_VALUE } from '../../src/strings';
 
 // the coordinates below come from the arrangement of the card's band key (the cabinet frame's are in test/diagram/simplified.test.ts)
@@ -236,7 +237,7 @@ describe('outer-loop source', () => {
     card.remove();
   });
 
-  test('Ground collector: the strip is hatched along its top, the serpentine has four horizontal passes, both ends on the bottom face', async () => {
+  test('Collector drawing: hatched top, two U-loops in series hanging from it, a riser on each side, both ends on the bottom face', async () => {
     for (const source of ['ground', 'hybrid'] as const) {
       const card = await mount({ source });
       const arrangement = arrangementOfSource(source);
@@ -246,18 +247,40 @@ describe('outer-loop source', () => {
       // hatching: diagonal ticks along the top
       expect(body?.querySelectorAll('path.source-ground').length, source).toBeGreaterThan(8);
       expect(body?.querySelector('[data-obstacle="ground-hatch"]'), source).not.toBeNull();
-      expect(body?.querySelector('[data-obstacle="ground-serpentine"]'), source).not.toBeNull();
-      // the passes: the horizontal pieces of the two halves, at the passes' ys
-      const horizontal = ['down', 'up'].flatMap((half) => {
-        const points = need(arrangement.segments.find((entry) => entry.id === `src_${kind}_${half}`)).points;
-        return points.slice(1).flatMap((end, index) => (points[index]?.[1] === end[1] ? [end[1]] : []));
+      expect(body?.querySelector('[data-obstacle="ground-probe"]'), source).not.toBeNull();
+      const face = collector.y + collector.height;
+      const half = (name: string) =>
+        need(arrangement.segments.find((entry) => entry.id === `src_${kind}_${name}`)).points;
+      const down = half('down');
+      const up = half('up');
+      const [a1, a2, b1, b2] = collector.legs;
+      // the feed riser rises on the left from the bottom face to the header just under the hatching
+      expect(down[0]).toEqual([collector.feedX, face]);
+      expect(down[1]).toEqual([collector.feedX, collector.headerY]);
+      expect(collector.headerY).toBeGreaterThan(collector.hatch.y + collector.hatch.height);
+      // two U-loops hang from the header: each has two vertical legs that go down to the bends and back up
+      const legXs = [...down, ...up].flatMap((point, index, all) => {
+        const next = all[index + 1];
+        const vertical = next?.[0] === point[0] && next[1] !== point[1];
+        return vertical && point[0] !== collector.feedX && point[0] !== collector.returnX ? [point[0]] : [];
       });
-      expect(horizontal.length, source).toBeGreaterThanOrEqual(4);
       expect(
-        [...new Set(horizontal)].sort((x, y) => x - y),
+        legXs.sort((x, y) => x - y),
         source,
-      ).toEqual(collectorPassYs(collector));
-      // the down half's end is rounded, which closes the seam between the two halves
+      ).toEqual([a1, a2, b1, b2]);
+      expect(a1 < a2 && a2 < b1 && b1 < b2, source).toBe(true);
+      expect(collector.feedX).toBeLessThan(a1);
+      expect(collector.returnX).toBeGreaterThan(b2);
+      const bends = [...down, ...up].filter((point) => point[1] === collector.bendY);
+      expect(
+        bends.map((point) => point[0]),
+        source,
+      ).toEqual([a1, a2, b1, b2]);
+      // the return riser drops down the right side to the bottom face
+      expect(up.at(-2)).toEqual([collector.returnX, collector.headerY]);
+      expect(up.at(-1)).toEqual([collector.returnX, face]);
+      // the two halves meet in the top link between the loops, and the first half's end is rounded (it closes the seam)
+      expect(down.at(-1), source).toEqual(up[0]);
       expect(
         root(card).querySelector(`[data-segment="src_${kind}_down"]`)?.getAttribute('stroke-linecap'),
         source,
@@ -266,8 +289,39 @@ describe('outer-loop source', () => {
         root(card).querySelector(`[data-segment="src_${kind}_up"]`)?.getAttribute('stroke-linecap'),
         source,
       ).toBeNull();
+      // the Out box sits below the bends, between the risers
+      expect(collector.out.y).toBeGreaterThan(collector.bendY);
+      expect(collector.out.x).toBeGreaterThan(collector.feedX);
+      expect(collector.out.x + collector.out.width).toBe(collector.returnX - 1.5 * DEFAULT_STROKES.pipe);
       card.remove();
     }
+  });
+
+  test('Collector drawing: narrow loops with a wide gap between them, risers a margin and half a pipe inside the walls', () => {
+    for (const source of ['ground', 'hybrid'] as const) {
+      const collector = need(arrangementOfSource(source).collector);
+      const [a1, a2, b1, b2] = collector.legs;
+      const loop = a2 - a1;
+      expect(b2 - b1, source).toBe(loop);
+      expect(b1 - a2, source).toBeGreaterThan(loop);
+      expect(a1 - collector.feedX, source).toBeGreaterThanOrEqual(loop);
+      expect(collector.returnX - b2, source).toBeGreaterThanOrEqual(loop);
+      expect(collector.feedX - collector.x, source).toBe(BAND.margin + DEFAULT_STROKES.pipe / 2);
+      expect(collector.x + collector.width - collector.returnX, source).toBe(BAND.margin + DEFAULT_STROKES.pipe / 2);
+    }
+  });
+
+  test('Collector colours: the first half takes the brine outlet (the air outlet in the hybrid), the second half and the exit the brine inlet', () => {
+    const colours = (source: 'ground' | 'hybrid') =>
+      Object.fromEntries(arrangementOfSource(source).segments.map((entry) => [entry.id, entry.temperatureRole]));
+    const ground = colours('ground');
+    expect(ground['src_gnd_down']).toBe('brine.outlet_temperature');
+    expect(ground['src_gnd_up']).toBe('brine.inlet_temperature');
+    expect(ground['src_gnd_exit']).toBe('brine.inlet_temperature');
+    const hybrid = colours('hybrid');
+    expect(hybrid['src_hyb_down']).toBe('source.air_unit_outlet_temperature');
+    expect(hybrid['src_hyb_up']).toBe('brine.inlet_temperature');
+    expect(hybrid['src_hyb_exit']).toBe('brine.inlet_temperature');
   });
 
   test('a running fan rotates, faster at a higher speed', async () => {

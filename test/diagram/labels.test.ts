@@ -6,6 +6,7 @@ import { EcogeoCard } from '../../src/card/ecogeo-card';
 import { SAMPLE_STATES, sampleEntityId } from '../../src/config/sample';
 import { ROLE_BY_PATH, ROLE_PATHS, defaultEntityId, type RolePath } from '../../src/config/roles';
 import { mergeFeatures } from '../../src/config/variants';
+import { DEFAULT_STROKES } from '../../src/lib/layout';
 import { drawnSegments, partState, arrangementFor } from '../../src/diagram/geometry';
 import { COIL_51_SHAPE } from '../../src/diagram/symbols';
 import { footerItems, labelsFor, cssPosition, type LabelSpec } from '../../src/diagram/labels';
@@ -512,7 +513,7 @@ describe('source labels', () => {
     card.remove();
   });
 
-  test('Ground collector: only Out, the brine inlet, in the strip between the hatching and the serpentine, and no In', async () => {
+  test('Collector Out: only Out, the brine inlet, bare at the bottom of the collector, below the loops, and no In', async () => {
     const card = await mount({ source: 'ground' }, hassOf());
     expect(valueOf(card, 'ground_out')).toBe(nb('0.5 °C'));
     expect(label(card, 'ground_out')?.querySelector('.caption')).toBeNull();
@@ -522,11 +523,14 @@ describe('source labels', () => {
     expect(labelIds(card)).not.toContain('fan_speed');
     const ground = bandOf('ground');
     const out = ground.labels.specs.find((spec) => spec.id === 'ground_out');
-    const strip = ground.collector?.strip;
-    expect(out?.x).toBe((strip?.x ?? 0) + (strip?.width ?? 0) / 2);
-    expect(out?.y).toBe((strip?.y ?? 0) + (strip?.height ?? 0) / 2);
-    expect(out?.y).toBeGreaterThan((ground.collector?.hatch.y ?? 0) + (ground.collector?.hatch.height ?? 0));
-    expect(out?.y).toBeLessThan(ground.collector?.passes.y0 ?? 0);
+    const box = ground.collector?.out;
+    // anchored at its right edge, just left of the return riser, below the loops' bends
+    expect(out?.align).toBe('end');
+    expect(out?.x).toBe((box?.x ?? 0) + (box?.width ?? 0));
+    expect(out?.x).toBe((ground.collector?.returnX ?? 0) - 1.5 * DEFAULT_STROKES.pipe);
+    expect(out?.y).toBe((box?.y ?? 0) + (box?.height ?? 0) / 2);
+    expect(box?.y).toBeGreaterThan(ground.collector?.bendY ?? 0);
+    expect(label(card, 'ground_out')?.classList.contains('bare')).toBe(true);
     card.remove();
   });
 
@@ -557,7 +561,7 @@ describe('source labels', () => {
     card.remove();
   });
 
-  test('the source label is a value label that opens more-info: bare in the air unit, on its plate in the collector', async () => {
+  test('the source label is a value label that opens more-info: bare inside the air unit and the collector', async () => {
     const events: CustomEvent<{ entityId: string }>[] = [];
     const ids = { air: 'air_unit_out', ground: 'ground_out', hybrid: 'hybrid_ground_out' } as const;
     for (const source of ['air', 'ground', 'hybrid'] as const) {
@@ -565,7 +569,7 @@ describe('source labels', () => {
       card.addEventListener('hass-more-info', (event) => events.push(event as CustomEvent<{ entityId: string }>));
       const id = ids[source];
       const element = label(card, id);
-      expect(element?.classList.contains('bare'), id).toBe(source === 'air');
+      expect(element?.classList.contains('bare'), id).toBe(true);
       // the value joins its unit with a no-break space
       expect(valueOf(card, id), id).toMatch(/\d\s°C$/);
       const role = (element?.getAttribute('data-role') ?? '') as RolePath;
@@ -605,7 +609,7 @@ describe('source labels', () => {
       expect(mine).toHaveLength({ air: 3, ground: 1, hybrid: 3 }[source]);
       const fanBox = arr.airUnit?.fan;
       // the value's box lies inside its body, clear of the obstacles the body registers (the fan, the coil panel, the
-      // hatching, the serpentine)
+      // hatching, the probe)
       const airObstacles: Box[] =
         arr.airUnit === undefined || fanBox === undefined
           ? []
@@ -632,10 +636,10 @@ describe('source labels', () => {
               bottom: arr.collector.hatch.y + arr.collector.hatch.height,
             },
             {
-              left: arr.collector.serpentine.x,
-              right: arr.collector.serpentine.x + arr.collector.serpentine.width,
-              top: arr.collector.serpentine.y,
-              bottom: arr.collector.serpentine.y + arr.collector.serpentine.height,
+              left: arr.collector.probe.x,
+              right: arr.collector.probe.x + arr.collector.probe.width,
+              top: arr.collector.probe.y,
+              bottom: arr.collector.probe.y + arr.collector.probe.height,
             },
           ]
         : [];

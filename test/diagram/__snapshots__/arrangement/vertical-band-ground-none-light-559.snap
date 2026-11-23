@@ -14,7 +14,7 @@ suction_temperature | label start | left: 55.54054054054054%; top: 51.2760351317
 suction_pressure | label start | left: 55.54054054054054%; top: 55.29109159347554%
 compressor_speed | label middle | left: 50%; top: 59.30614805520703%
 expansion_valve | label middle | left: 57.027027027027025%; top: 86.3237139272271%
-ground_out | label middle | left: 78.31081081081082%; top: 4.51693851944793%
+ground_out | label end bare | left: 84.52702702702702%; top: 19.82434127979925%
 footer: outside_temperature, cop, dhw_power
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 740 797" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #f2711c 91%, #e8a317); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3; --outline-width: 2">
@@ -59,7 +59,7 @@ svg:
 </path>
     <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="519.5" y="6" width="120" height="14">
 </rect>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-serpentine" x="527.5" y="54" width="104" height="128">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-probe" x="527.5" y="24" width="104" height="113">
 </rect>
   </g>
   </g>
@@ -196,21 +196,21 @@ svg:
 </path>
 <path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 204 L607 238">
 </path>
-<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 216 L533.5 216 L533.5 182">
+<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 216 L529 216 L529 182">
 </path>
-<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M552 216 L533.5 216 L533.5 182">
+<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M552 216 L529 216 L529 182">
 </path>
-<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M533.5 182 L533.5 75 A15 15 0 0 1 548.5 60 L610.5 60 A15 15 0 0 1 625.5 75 L625.5 75 A15 15 0 0 1 610.5 90 L568.5 90 A15 15 0 0 0 553.5 105 L553.5 105">
+<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M529 182 L529 38 A8 8 0 0 1 537 30 L541 30 A8 8 0 0 1 549 38 L549 126 A8 8 0 0 0 557 134 L557 134 A8 8 0 0 0 565 126 L565 38 A8 8 0 0 1 573 30 L579.5 30">
 </path>
-<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.2s" d="M533.5 182 L533.5 75 A15 15 0 0 1 548.5 60 L610.5 60 A15 15 0 0 1 625.5 75 L625.5 75 A15 15 0 0 1 610.5 90 L568.5 90 A15 15 0 0 0 553.5 105 L553.5 105">
+<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.2s" d="M529 182 L529 38 A8 8 0 0 1 537 30 L541 30 A8 8 0 0 1 549 38 L549 126 A8 8 0 0 0 557 134 L557 134 A8 8 0 0 0 565 126 L565 38 A8 8 0 0 1 573 30 L579.5 30">
 </path>
-<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M553.5 105 L553.5 105 A15 15 0 0 0 568.5 120 L610.5 120 A15 15 0 0 1 625.5 135 L625.5 135 A15 15 0 0 1 610.5 150 L553.5 150">
+<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M579.5 30 L586 30 A8 8 0 0 1 594 38 L594 126 A8 8 0 0 0 602 134 L602 134 A8 8 0 0 0 610 126 L610 38 A8 8 0 0 1 618 30 L622 30 A8 8 0 0 1 630 38 L630 182">
 </path>
-<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M553.5 105 L553.5 105 A15 15 0 0 0 568.5 120 L610.5 120 A15 15 0 0 1 625.5 135 L625.5 135 A15 15 0 0 1 610.5 150 L553.5 150">
+<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M579.5 30 L586 30 A8 8 0 0 1 594 38 L594 126 A8 8 0 0 0 602 134 L602 134 A8 8 0 0 0 610 126 L610 38 A8 8 0 0 1 618 30 L622 30 A8 8 0 0 1 630 38 L630 182">
 </path>
-<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M553.5 150 L553.5 204 L607 204">
+<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M630 182 L630 204 L607 204">
 </path>
-<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M553.5 150 L553.5 204 L607 204">
+<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M630 182 L630 204 L607 204">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

@@ -142,7 +142,7 @@ the user allows it.
 
 ## 5. The borehole collector
 
-- [ ] 5.1 Redraw the collector in `collectorShape` and `bandSegments` as a borehole (design D5; outer-loop-source
+- [x] 5.1 Redraw the collector in `collectorShape` and `bandSegments` as a borehole (design D5; outer-loop-source
   "Ground collector"):
   - the hatched surface;
   - the feed riser on the left to the header;
@@ -152,11 +152,18 @@ the user allows it.
   Keep the two colour halves, with AIRO for the hybrid's first half. Record the series simplification in the code
   comment. Verify: the scenarios "Collector drawing" and "Hybrid" are unit tests, and the colour tests of the halves
   pass.
-- [ ] 5.2 Place the collector's Out at the bottom, beside the return riser (outer-loop-source "Collector Out").
+- [x] 5.2 Place the collector's Out at the bottom, beside the return riser (outer-loop-source "Collector Out").
   Extend the overlap browser tests to it at 320 px. Verify: `npm test` passes in WebKit.
-- [ ] 5.3 Update README.md and docs/ecogeo-card.md (the ground collector). Verify: `npm run check` passes.
-- [ ] 5.4 Emulator check: a subagent inspects the ground and hybrid captures in both layouts. Pass when the two
+- [x] 5.3 Update README.md and docs/ecogeo-card.md (the ground collector). Verify: `npm run check` passes.
+- [x] 5.4 Emulator check: a subagent inspects the ground and hybrid captures in both layouts. Pass when the two
   U-loops hang from the surface, the risers run up the sides, and the Out sits by the outlet. Record the verdict here.
+
+  Verdict (2026-11-23): passed (looked at the hybrid horizontal capture at 1000 px and the ground vertical one at
+  320 px). The hatched surface runs along the top. The feed riser rises on the left wall's margin to a straight header
+  under it, two narrow U-loops hang from it, joined by a wide straight link, and the return riser drops on the right
+  margin. The Out ("0.5 °C", bare) sits at the bottom below the bends, ending just left of the return riser, by the
+  outlet. In the hybrid the link pipe meets the feed riser and no pipe crosses. At 320 px the right riser clears the
+  border and the Out touches no pipe or outline.
 
 ## 6. The tank's coil and one jog level
 

@@ -6,7 +6,7 @@
 // collector and the emitter. A label that sits inside a body (BODY_LABELS: tank 50 on model C, the external tank, the air unit, the
 // ground collector, the emitter) is not compared with that body's box but must lie inside it (`label <id> x outline:<body>` otherwise),
 // and the obstacles a body registers (`data-obstacle`: the air unit's coil panel and fan, the collector's hatching and
-// serpentine) count as parts of their own; the pipes of a body (the coil, the serpentine) are sampled like every pipe.
+// probe) count as parts of their own; the pipes of a body (the coil, the probe) are sampled like every pipe.
 // Two boxes overlap when they share more
 // than TOLERANCE px in both directions. Pipes are opt-in (refine-simplified-layout D4): measureCard with
 // `{ pipes: true }` also samples every `path.pipe` along its rendered length at 1 px steps, each sample a square of the

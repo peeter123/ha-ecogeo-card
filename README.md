@@ -173,7 +173,7 @@ dhw: internal
 | `source` | Drawn |
 |---|---|
 | `air` | An air unit, the front view of an outdoor unit on two feet: a finned coil panel with a four-pass coil on the left, a guarded fan on its right. It shows the outside temperature above the fan, the fan speed below it and its Out beside the coil's outlet. |
-| `ground` | A ground collector: a ground strip hatched along its top with a flat serpentine, its Out value inside, under the hatching. |
+| `ground` | A ground collector drawn as a borehole: hatched along its top, with two U-loops in series hanging from it and its Out value at the bottom, by the return riser. |
 | `hybrid` | Both, side by side in series on one brine loop, air unit first (only the collector shows its Out; the air unit shows the outside temperature and the fan speed). |
 
 The emitter, the source and the tank stand in a band above the heat pump, each over its own connections (the emitter

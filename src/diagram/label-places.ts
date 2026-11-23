@@ -210,7 +210,7 @@ const TANK_TEMPERATURE_DY = 44;
 /**
  * The labels of the band's bodies, placed from the zones (rework-layouts D4, harmonize-band D4): the air unit's outside
  * temperature above its fan, its fan speed below it and its Out beside the exit pass (the hybrid has no Out), the
- * collector's Out (between the hatching and the serpentine), and the DHW
+ * collector's Out (at its bottom beside the return riser), and the DHW
  * temperature in the upper part of the external tank, bare on its tinted body. A body that is not in the zones'
  * band key has no label.
  */
@@ -238,11 +238,13 @@ function bodySpecs(z: Partial<BandZones>): LabelSpec[] {
     }
   }
   if (collector !== undefined && z.key?.source !== undefined && z.key.source !== 'air') {
-    const [x, y] = centre(collector.strip);
+    const x = collector.out.x + collector.out.width;
+    const y = centre(collector.out)[1];
     const hybrid = z.key.source === 'hybrid';
     specs.push(
-      makeSpec(hybrid ? 'hybrid_ground_out' : 'ground_out', 'brine.inlet_temperature', x, y, 'middle', {
+      makeSpec(hybrid ? 'hybrid_ground_out' : 'ground_out', 'brine.inlet_temperature', x, y, 'end', {
         source: [hybrid ? 'hybrid' : 'ground'],
+        bare: true,
       }),
     );
   }

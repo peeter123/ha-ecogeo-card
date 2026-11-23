@@ -336,7 +336,7 @@ All coordinates of the drawing live in one value, an `Arrangement` (`src/diagram
 the cabinet's outline, the zones (the integrated tank 50 with coil 51 inside the cabinet; above the cabinet the band
 with its slots, the join lane and the bodies: the air unit, the ground collector, the external tank with its coil),
 every component and pipe segment, the crossings and the value labels' placements. The band's pipes (the air coil, the
-collector's serpentine, the link of the hybrid, the coil pipes of ports 5 and 6) and the labels placed from the zones
+collector's probe, the link of the hybrid, the coil pipes of ports 5 and 6) and the labels placed from the zones
 are generated from the arrangement's own zone constants, so they stay connected to their ports when a zone moves.
 
 The cabinet's component and segment lists are authored once, in the cabinet frame (see The cabinet frame), so every
@@ -572,7 +572,7 @@ to the left, port 6's to the right, into the columns left and right of the coil.
 **Bodies.** None of the band's parts is a manual item: the manual's figures stop at connections 3 to 6. Their tooltips
 carry their names alone ("Underfloor heating", "Radiator", "Air unit", "Air unit fan", "Ground collector", "DHW tank"),
 no item number. Each body registers its obstacles inside (the coil panel and fan of the air unit, the hatching and
-serpentine of the collector, the tank's rim) with `data-obstacle`, so the overlap check and the place search see them.
+probe of the collector, the tank's rim) with `data-obstacle`, so the overlap check and the place search see them.
 The values of a body are placed by functions of its zone (`bodySpecs` in `src/diagram/label-places.ts`), so they follow
 the body.
 
@@ -593,11 +593,16 @@ was 170, the tank's height, with lower emitter, air unit and collector; the hori
   coil panel at the case's bottom, beside the exit pass where the brine leaves. At 320 px, where a label is 10 px high,
   the three of them fit around the fan without touching an outline, a fin, a tube, the fan or each other
   (`air-values.browser.test.ts`).
-- **Ground collector**, 120 x 176: a strip of ground, hatched along its top (14 units of diagonal ticks under the
-  surface line), the Out value in a strip 24 high under the hatching, and the serpentine in its lower part: four
-  horizontal passes 30 apart joined by half-circle bends. The brine enters on the bottom face at the feed riser (14
-  units from the left edge), rises to the top pass, runs through the passes and leaves down the left end of the bottom
-  pass (34 units from the left edge). The collector's halves take their temperatures (see Colours).
+- **Ground collector**, 120 x 176: a borehole, hatched along its top (14 units of diagonal ticks under the surface
+  line), with the brine's probe hanging from it. The brine enters on the bottom face at the feed riser (9.5 units from
+  the left edge: the pipe's edge on the 8-unit band margin), rises up the left side to a header just under the
+  hatching, runs 20 units right into the first of two narrow U-loops (legs 16 apart, bends of radius 8), crosses a
+  29-unit link to the second loop, runs 20 units on to the return riser and drops down it (9.5 units from the right
+  edge) to the bottom face. The Out value sits at the bottom, below the loops' bends, ending just left of the return
+  riser (its right edge 4.5 units left of it). A real double-U probe runs its two loops in parallel; they are drawn in
+  series, so the brine has one path. The
+  collector's halves take their temperatures (see Colours). At 320 px the Out fits clear of the pipes and the outline
+  (`collector-out.browser.test.ts`).
 - **External tank**, 160 x 176 with a dome of 14 on top and a flat bottom: see DHW storage.
 
 **One band style** (decided by the user 2026-11-23). The four bodies share one corner radius (`BAND.radius`, 6 units,
@@ -719,10 +724,10 @@ carries a "Demand" text.
   mode, so it also turns in standby when its own speed says so. With `prefers-reduced-motion` the fan stands still. The
   case's tooltip is "Air unit", the fan's "Air unit fan" (a button that opens the fan speed's more-info while the role
   has an entity).
-- **Ground:** the collector (tooltip "Ground collector"): a ground strip hatched along its top with a flat serpentine of
-  four horizontal passes in its lower part. The brine runs in at the left, up the feed riser to the top pass, through
-  the passes (the first two are the collector's first half and take the brine outlet temperature, the last two its
-  second half and take the brine inlet) and leaves down the left end of the bottom pass to port 4.
+- **Ground:** the collector (tooltip "Ground collector"): a borehole hatched along its top, with two U-loops in
+  series. The brine runs in at the left, up the feed riser to the header, through the two loops (the feed, the header
+  and the first loop are the collector's first half and take the brine outlet temperature, the second loop and the
+  return riser its second half and take the brine inlet) and leaves down the return riser on the right to port 4.
 - **Hybrid:** both on one brine loop, in series, side by side with the air unit first (left): port 3's pipe to the air
   unit's first pass, a link pipe from its last pass (down into the join lane, right and up) to the collector's feed
   riser, and the collector's exit to port 4. The link and the air unit's exit take the air unit's outlet temperature up
@@ -734,7 +739,7 @@ The air unit shows the outside temperature (`source.outside_temperature`) above 
 source's Out is the brine temperature leaving the device, which is the heat pump's brine inlet, so the outer loop reads
 at a glance without looking into the cabinet (probes 31 and 32 stay inside it). With `source: air` it is the air unit's
 outlet (`source.air_unit_outlet_temperature`), right of the coil panel at the case's bottom, beside the exit pass; with
-`source: ground` it is the collector's (`brine.inlet_temperature`) in the strip between the hatching and the serpentine;
+`source: ground` it is the collector's (`brine.inlet_temperature`) at its bottom, ending just left of the return riser;
 the hybrid shows the collector's Out and the air unit's two other values, and the link pipe carries no label. The three
 values of the air unit are bare, with no caption: the tooltips name them, and their places tell the two temperatures
 apart (the outside one at the air intake on top, the Out at the outlet pipe). There is no In value. The outside
@@ -827,9 +832,9 @@ neighbouring stops of an absolute temperature first, where hrv mixes two colours
 | Condenser 8 to the expansion valve | `refrigerant.condensation_temperature` | 8 |
 | Expansion valve to evaporator 7 | `refrigerant.evaporation_temperature` | 7 |
 | Evaporator 7 to the compressor | `compressor.suction_temperature` | 29 |
-| Exit of the air unit; in a hybrid also the link and the collector's first half (passes 1 and 2) | `source.air_unit_outlet_temperature` | air unit |
-| The collector's first half (ground source: the feed, passes 1 and 2) | `brine.outlet_temperature` | 31 |
-| The collector's second half (passes 3 and 4), and the return to connection 4 | `brine.inlet_temperature` | 32 |
+| Exit of the air unit; in a hybrid also the link and the collector's first half (feed, header, first loop) | `source.air_unit_outlet_temperature` | air unit |
+| The collector's first half (ground source: the feed, the header, the first loop) | `brine.outlet_temperature` | 31 |
+| The collector's second half (the second loop and the return riser), and the return to connection 4 | `brine.inlet_temperature` | 32 |
 | HTR water (exchanger 9, pump 17, valve 22 and their lines) | `dhw.temperature` | tank |
 | Model C stubs of connections 47, 48 and 49 | `dhw.temperature` | tank |
 
@@ -932,7 +937,7 @@ entity.
 | Compressor 11: rpm | in a third row of that lane, centred under the compressor |
 | Valve opening (%) at 12 | alone, centred under valve 12, in the row lane under the valve row |
 | Air unit: the outside temperature, the fan speed (whole percent, or its own unit) and, with `source: air` only, the Out, bare numbers | inside the case: the outside temperature centred above the fan, the fan speed centred below it, the Out right of the coil panel at the case's bottom, beside the exit pass |
-| Ground collector: the Out (the hybrid shows it as the source's Out), a bare number | inside the body: the collector's strip under its hatching |
+| Ground collector: the Out (the hybrid shows it as the source's Out), a bare number | inside the body, at its bottom, below the loops' bends and ending just left of the return riser |
 | Tank: temperature (no caption) | inside the upper part of the external tank, bare on its body; on model C inside tank 50, above coil 51 |
 
 These 18 are all the card draws. The superheat (decided by the user 2026-11-20), the compressor percentage and power,
@@ -1117,7 +1122,7 @@ air unit and with the hybrid on model C), and the card is set to every width fro
 (`--widths=a,b,c` measures only those, to iterate on a place, and prints no threshold). At each width the script
 compares, in the DOM, the bounding boxes of the value labels with each other, with the boxes of the drawing's
 component groups (the symbol groups, the DHW storage, the air unit and the ground collector) and with the obstacles
-the bodies register (the air unit's coil panel and fan, the collector's hatching and serpentine, the tank's rim) and
+the bodies register (the air unit's coil panel and fan, the collector's hatching and probe, the tank's rim) and
 with the pipes, and checks that no label's box leaves the drawing (`label X x edge`: the box extends past the svg's
 box by more than the tolerance, which the other pairs cannot see). A label that crosses the cabinet's outline, partly
 inside and partly outside, is reported as `label X x cabinet`; a label inside a body (the tank, the air unit, the
