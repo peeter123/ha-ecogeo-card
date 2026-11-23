@@ -45,16 +45,19 @@ export interface Rect {
 }
 
 /**
- * The air unit (not a manual item): a housing with the fan in its upper part, a strip for the Out value under the fan and the
- * coil block at the bottom, facing the cabinet. The brine serpentine runs in vertical passes across the coil's horizontal
- * fins and enters and leaves on the coil block's bottom face (`passes.x0` and the last pass), so that both pipes arrive from
- * the join lane below.
+ * The air unit (not a manual item): the front view of an outdoor unit (harmonize-band D4), a case on two feet. Its coil panel
+ * stands on the left, with the horizontal fins and the brine serpentine of vertical passes, which enters and leaves on the
+ * panel's bottom face (`passes.x0` and the last pass), so that both pipes arrive from the join lane below. The fan is right of
+ * it, behind a static guard; the three values (the outside temperature above the fan, the fan speed below it, the Out beside
+ * the exit pass) sit in the obstacle-free boxes of `values`.
  */
 export interface AirUnitShape extends Rect {
   readonly fan: { readonly cx: number; readonly cy: number; readonly radius: number };
-  /** The free strip between the fan and the coil block, where the Out value sits. */
-  readonly strip: Rect;
-  /** The coil block's frame; its bottom edge is the face the brine pipes use. */
+  /** The case: the body's outline, from the top down to the height of the feet above the band's bottom edge. */
+  readonly body: Rect;
+  /** The two feet under the case; their bottoms lie on the band's bottom edge, clear of the brine pipes' columns. */
+  readonly feet: readonly Rect[];
+  /** The coil panel's frame; its bottom edge is the face the brine pipes use. */
   readonly coil: Rect;
   readonly fins: {
     readonly x0: number;
@@ -71,6 +74,8 @@ export interface AirUnitShape extends Rect {
     readonly top: number;
     readonly bottom: number;
   };
+  /** The free boxes of the three values: the outside temperature above the fan, the fan speed below it, the Out beside the exit pass. */
+  readonly values: { readonly outside: Rect; readonly speed: Rect; readonly out: Rect };
 }
 
 /**
@@ -302,21 +307,40 @@ export function planBand(
 
 const round2 = (value: number): number => Math.round(value * 100) / 100;
 
+/** The height of the air unit's feet, which is also the gap between its case and the band's bottom edge. */
+const AIR_FOOT_HEIGHT = 8;
+
+/** The air fan's ring radius (harmonize-band D4: about 40; the first fallback is 34). */
+const AIR_FAN_RADIUS = 40;
+
 /** The air unit placed with its left edge at `x0` and its bottom edge at `bottom`. */
 export function airUnitShape(x0: number, bottom: number): AirUnitShape {
   const { width, height } = BAND.air;
   const y = bottom - height;
-  const coil: Rect = { x: x0 + 10, y: y + 110, width: width - 20, height: 58 };
+  const m = BAND.margin;
+  // the panel starts under the outside temperature, which is wider than the fan at its widest ("-12.3 °C" at 320 px)
+  const coil: Rect = { x: x0 + m, y: y + 36, width: 64, height: 120 };
+  const fanX = x0 + width * 0.62;
+  const fanY = y + 74;
+  const valueWidth = 128;
   return {
     x: x0,
     y,
     width,
     height,
-    fan: { cx: x0 + width / 2, cy: y + 40, radius: 28 },
-    strip: { x: x0 + BAND.margin, y: y + 82, width: width - 2 * BAND.margin, height: 24 },
+    fan: { cx: fanX, cy: fanY, radius: AIR_FAN_RADIUS },
+    // the case ends one foot's height above the band's bottom edge (the brine pipes cross the gap into the coil panel's bottom
+    // face); the feet stand on that edge, under the coil panel and under the fan, clear of the pipe columns
+    body: { x: x0, y, width, height: height - AIR_FOOT_HEIGHT },
+    feet: [x0 + 24, x0 + 138].map((x) => ({ x, y: bottom - AIR_FOOT_HEIGHT, width: 24, height: AIR_FOOT_HEIGHT })),
     coil,
-    fins: { x0: coil.x + 4, x1: coil.x + coil.width - 4, y0: coil.y + 8, step: 8, count: 6 },
-    passes: { x0: x0 + 50, step: 30, count: 4, top: coil.y + 12, bottom: coil.y + 46 },
+    fins: { x0: coil.x + 4, x1: coil.x + coil.width - 4, y0: coil.y + 10, step: 10, count: 11 },
+    passes: { x0: coil.x + 10, step: 14, count: 4, top: coil.y + 14, bottom: coil.y + 100 },
+    values: {
+      outside: { x: fanX - valueWidth / 2, y: y + 4, width: valueWidth, height: 28 },
+      speed: { x: fanX - valueWidth / 2, y: fanY + AIR_FAN_RADIUS + 2, width: valueWidth, height: 24 },
+      out: { x: coil.x + coil.width + 6, y: y + 140, width: width - 2 * m - coil.width - 6, height: 24 },
+    },
   };
 }
 
@@ -431,13 +455,13 @@ export function emitterShape(kind: EmitterShape['kind'], x0: number, bottom: num
   };
 }
 
-/** The x of the air unit's brine pipes on its coil block's bottom face: the feed (first pass) and the exit (last pass). */
+/** The x of the air unit's brine pipes on its coil panel's bottom face: the feed (first pass) and the exit (last pass). */
 export const airPortX = (unit: AirUnitShape): { feed: number; exit: number } => ({
   feed: unit.passes.x0,
   exit: unit.passes.x0 + (unit.passes.count - 1) * unit.passes.step,
 });
 
-/** The y of the air unit's brine face, the coil block's bottom edge. */
+/** The y of the air unit's brine face, the coil panel's bottom edge. */
 export const airFaceY = (unit: AirUnitShape): number => unit.coil.y + unit.coil.height;
 
 /** The y of the collector's passes, in order. */
@@ -1179,7 +1203,7 @@ const CROSSINGS: readonly Crossing[] = [
 ];
 
 /**
- * The air coil's points: a serpentine of the vertical passes of the unit's `passes`. It starts on the coil block's bottom face
+ * The air coil's points: a serpentine of the vertical passes of the unit's `passes`. It starts on the coil panel's bottom face
  * at the first pass, rises, bends over at the top into the next pass, comes down and so on; the number of passes being even,
  * it ends on the bottom face at the last pass.
  */

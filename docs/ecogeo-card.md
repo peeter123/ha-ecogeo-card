@@ -571,7 +571,7 @@ to the left, port 6's to the right, into the columns left and right of the coil.
 
 **Bodies.** None of the band's parts is a manual item: the manual's figures stop at connections 3 to 6. Their tooltips
 carry their names alone ("Underfloor heating", "Radiator", "Air unit", "Air unit fan", "Ground collector", "DHW tank"),
-no item number. Each body registers its obstacles inside (the coil block and fan of the air unit, the hatching and
+no item number. Each body registers its obstacles inside (the coil panel and fan of the air unit, the hatching and
 serpentine of the collector, the tank's rim) with `data-obstacle`, so the overlap check and the place search see them.
 The values of a body are placed by functions of its zone (`bodySpecs` in `src/diagram/label-places.ts`), so they follow
 the body.
@@ -582,14 +582,17 @@ was 170, the tank's height, with lower emitter, air unit and collector; the hori
 0.755, so the horizontal aspect test's bound is 0.76). How each body uses the extra height:
 
 - **Emitter**, 180 x 176: an underfloor loop or a radiator, (see The emitter).
-- **Air unit**, 190 x 176: the fan (a ring of radius 28) at the top, a strip 24 high for the Out value, and
-  the coil block (170 x 58) at the bottom, facing the cabinet. The brine tube winds through the block in four vertical
-  passes, 30 apart, joined by U-bends at the top and bottom of the block; it enters at the first pass and leaves at the
-  last one, both on the block's bottom face (50 and 140 units from the housing's left edge), where the pipes from the
-  join lane arrive. Six horizontal fins cross the passes. The Out value sits in the strip **between the coil block and
-  the fan**, not above the fan: it is next to the coil's outlet, and the fan keeps the top of the housing to itself,
-  which also keeps the value away from the housing's top outline in a small drawing (decided with the captures,
-  2026-11-19).
+- **Air unit**, 190 x 176: the front view of an outdoor unit (decided with the user 2026-11-23). The coil panel (64 x
+  120) stands on the left, inset by the margin, and the fan on its right (centre at 62 % of the width, ring of radius
+  40). Eleven horizontal fins cross the panel, and the brine tube winds through it in four vertical passes, 14 apart,
+  joined by U-bends at the top and bottom of the panel; it enters at the first pass and leaves at the last one, both on
+  the panel's bottom face (18 and 60 units from the case's left edge), where the pipes from the join lane arrive. The
+  case ends 8 units above the band's bottom edge and two small feet (24 x 8) stand under it on that edge, clear of those
+  two pipe columns; the brine pipes cross the gap between the case and the edge into the panel. Three values sit in free
+  boxes of the shape (`values`): the outside temperature above the fan, the fan speed below it, and the Out right of the
+  coil panel at the case's bottom, beside the exit pass where the brine leaves. At 320 px, where a label is 10 px high,
+  the three of them fit around the fan without touching an outline, a fin, a tube, the fan or each other
+  (`air-values.browser.test.ts`).
 - **Ground collector**, 120 x 176: a strip of ground, hatched along its top (14 units of diagonal ticks under the
   surface line), the Out value in a strip 24 high under the hatching, and the serpentine in its lower part: four
   horizontal passes 30 apart joined by half-circle bends. The brine enters on the bottom face at the feed riser (14
@@ -599,10 +602,11 @@ was 170, the tank's height, with lower emitter, air unit and collector; the hori
 
 **One band style** (decided by the user 2026-11-23). The four bodies share one corner radius (`BAND.radius`, 6 units,
 also the tank's bottom corners), one outline weight (`max(2.5, --outline-width)`) and one inner margin (`BAND.margin`, 8
-units), and draw no divider line from wall to wall: the air unit's value strip and the emitter's loop need none. The
-bodies' lowest edges lie on the band's bottom edge along their whole width, and the ground collector's hatching stays,
-because it is the surface and tells a collector apart. Widths: emitter 180, air unit 190, ground collector 120,
-hybrid 322 (air unit, 12 units of gap, collector), tank 160.
+units), and draw no divider line from wall to wall: the air unit's values and the emitter's loop need none. The emitter,
+the collector and the tank end flat on the band's bottom edge along their whole width, the air unit on its two feet (its
+case ends above the edge), and the ground collector's hatching stays, because it is the surface and tells a collector
+apart. Widths: emitter 180, air unit 190, ground collector 120, hybrid 322 (air unit, 12 units of gap, collector), tank
+160.
 
 ### The emitter
 
@@ -704,15 +708,17 @@ tank"): the tooltips name the parts (see The band for the bodies and their sizes
 numbers, with no Out or DHW caption either (the body and its tooltip name them). No value of the drawing
 carries a "Demand" text.
 
-- **Air:** the housing with the fan at its top, the Out strip and the coil block at its bottom. The brine tube winds
-  through the block in four vertical passes joined by rounded U-bends (half circles), across six horizontal fins. It
-  enters at the first pass and leaves at the last one, both on the block's bottom face, the side facing the cabinet: the
-  feed reaches the first pass from port 3's pipe, the exit leaves the last pass towards port 4. The fan is a ring with a
-  hub and five swept blades. It rotates while `source.fan_speed` is above 0 % (a full turn takes 120 s divided by the
-  speed in %, between 0.5 and 6 s) and stands still at 0 % or without a value. A fan speed in another unit (rpm) above 0
-  turns it at a fixed medium speed (3 s). It does not depend on the mode, so it also turns in standby when its own speed
-  says so. With `prefers-reduced-motion` the fan stands still. The housing's tooltip is "Air unit", the fan's "Air unit
-  fan" (a button that opens the fan speed's more-info while the role has an entity).
+- **Air:** the front view of an outdoor unit: a case on two feet, with the finned coil panel on the left and the guarded
+  fan on its right. The brine tube winds through the panel in four vertical passes joined by rounded U-bends (half
+  circles), across eleven horizontal fins. It enters at the first pass and leaves at the last one, both on the panel's
+  bottom face, the side facing the cabinet: the feed reaches the first pass from port 3's pipe, the exit leaves the last
+  pass towards port 4. The fan is a ring with a hub and five swept blades behind a static guard: three concentric rings
+  and an X of four spokes, drawn thin like the fins so the blades stay visible. It rotates while `source.fan_speed` is
+  above 0 % (a full turn takes 120 s divided by the speed in %, between 0.5 and 6 s) and stands still at 0 % or without
+  a value. A fan speed in another unit (rpm) above 0 turns it at a fixed medium speed (3 s). It does not depend on the
+  mode, so it also turns in standby when its own speed says so. With `prefers-reduced-motion` the fan stands still. The
+  case's tooltip is "Air unit", the fan's "Air unit fan" (a button that opens the fan speed's more-info while the role
+  has an entity).
 - **Ground:** the collector (tooltip "Ground collector"): a ground strip hatched along its top with a flat serpentine of
   four horizontal passes in its lower part. The brine runs in at the left, up the feed riser to the top pass, through
   the passes (the first two are the collector's first half and take the brine outlet temperature, the last two its
@@ -723,13 +729,19 @@ carries a "Demand" text.
   to the first half of the collector. Series keeps the drawing free of crossings, which two branches in parallel would
   not.
 
-The source shows one value, its Out: the brine temperature leaving the device, which is the heat pump's brine inlet, so
-the outer loop reads at a glance without looking into the cabinet (probes 31 and 32 stay inside it). It sits inside the
-body: the air unit's Out (`source.air_unit_outlet_temperature`) in the strip between the coil block and the fan, the
-collector's Out (`brine.inlet_temperature`) in the strip between the hatching and the serpentine; the hybrid shows only
-the collector's Out, and the air unit and the link pipe carry no label. There is no In value, no fan speed and no
-outside temperature on the drawing (their roles stay in the config, and the fan still turns by its speed). It is an
-ordinary value label (see Live values).
+The air unit shows the outside temperature (`source.outside_temperature`) above its fan and the fan speed
+(`source.fan_speed`) below it, a whole percent for a percentage and the entity's own unit otherwise ("900 rpm"). The
+source's Out is the brine temperature leaving the device, which is the heat pump's brine inlet, so the outer loop reads
+at a glance without looking into the cabinet (probes 31 and 32 stay inside it). With `source: air` it is the air unit's
+outlet (`source.air_unit_outlet_temperature`), right of the coil panel at the case's bottom, beside the exit pass; with
+`source: ground` it is the collector's (`brine.inlet_temperature`) in the strip between the hatching and the serpentine;
+the hybrid shows the collector's Out and the air unit's two other values, and the link pipe carries no label. The three
+values of the air unit are bare, with no caption: the tooltips name them, and their places tell the two temperatures
+apart (the outside one at the air intake on top, the Out at the outlet pipe). There is no In value. The outside
+temperature is not in the footer while an air unit is drawn, so it is shown once. The air unit's values are value labels
+that open more-info (see Live values). Known limitation: a fan speed in rpm with four
+digits ("1450 rpm") is wider than the room right of the coil panel and can touch the panel in the vertical layout at
+320 px; a percentage always fits.
 
 ### DHW storage (`dhw`)
 
@@ -847,7 +859,7 @@ A pipe is drawn in the theme's disabled colour (`--disabled-text-color`), withou
 - or its probe has no value (unavailable, unknown, not a number or the firmware sentinel -999.9), even when its
   circuit is active. Such a pipe keeps its animation, since the flow is known and only the colour is not.
 
-The source's symbols (air unit housing and coil, ground collector) are muted the same way while the brine circuit is
+The source's symbols (air unit case and coil, ground collector) are muted the same way while the brine circuit is
 inactive; the fan keeps following its own speed. The emitter is muted with its pipes while the DG1 production circuit is
 inactive (in DHW mode, for one): its outline or columns, the spiral's runs and the radiator's fill take the muted
 colour, and nothing flows.
@@ -919,23 +931,23 @@ entity.
 | Discharge (30) and suction (29) temperatures, pressures 36 and 35 | one two-row block per pair (temperature over pressure, 24 units apart) in the row lane under the compressor row, below the pair |
 | Compressor 11: rpm | in a third row of that lane, centred under the compressor |
 | Valve opening (%) at 12 | alone, centred under valve 12, in the row lane under the valve row |
-| Source: the Out of the air unit or the ground collector (the hybrid: of its collector only), a bare number | inside the body: the air unit's strip between coil block and fan, the collector's strip under its hatching |
+| Air unit: the outside temperature, the fan speed (whole percent, or its own unit) and, with `source: air` only, the Out, bare numbers | inside the case: the outside temperature centred above the fan, the fan speed centred below it, the Out right of the coil panel at the case's bottom, beside the exit pass |
+| Ground collector: the Out (the hybrid shows it as the source's Out), a bare number | inside the body: the collector's strip under its hatching |
 | Tank: temperature (no caption) | inside the upper part of the external tank, bare on its body; on model C inside tank 50, above coil 51 |
 
-These 16 are all the card draws. The superheat (decided by the user 2026-11-20), the compressor percentage and power,
-the condensation and evaporation temperatures, the fan speed, the outside temperature (it is in the footer), the air
-unit's and ground collector's In, the DG1 setpoint and the DHW setpoint and start delta-T have no label; their roles
-stay configurable and keep their more-info and suggestions. Tap valve 12 or a component with an entity for its
-more-info.
+These 18 are all the card draws. The superheat (decided by the user 2026-11-20), the compressor percentage and power,
+the condensation and evaporation temperatures, the air unit's and ground collector's In, the DG1 setpoint and the DHW
+setpoint and start delta-T have no label; their roles stay configurable and keep their more-info and suggestions. Tap
+valve 12 or a component with an entity for its more-info.
 
 A value of a part that is not drawn is not shown (no DHW storage, or an unused tank (`dhw: unused`), no tank values; a
 source that is not drawn, no source values). A drawn value with no value shows a muted dash and keeps its place. A role
 set to `none` shows nothing (see Using another source).
 
-The footer is one list, the same in both layouts: the mode, the outside temperature, the efficiency (COP or EER), the
-power items of the mode, and the alarm and offline indications. It shows no on/off state and no season (the roles
-`unit.on_off`, `unit.summer` and `unit.winter` still feed the derived mode). An item whose role is `none` is left
-out.
+The footer is one list, the same in both layouts: the mode, the outside temperature (with a ground source only: an air
+unit shows it itself, above its fan), the efficiency (COP or EER), the power items of the mode, and the alarm and
+offline indications. It shows no on/off state and no season (the roles `unit.on_off`, `unit.summer` and `unit.winter`
+still feed the derived mode). An item whose role is `none` is left out.
 
 The power items follow the mode, because the firmware's DHW power already includes the HTR heat: showing DG1, DHW and
 HTR together while heating would count that heat twice. By mode, the items of one mode add up to the useful heat (DG1
@@ -978,10 +990,10 @@ The card formats every number itself (`src/calc/display.ts`), never through `has
   state ("45.6" is "45.6 Hz", "2400" is "2400 rpm").
 - The decimals come from the entity's `display_precision` in the entity registry when it has one and the entity's unit
   is the role's own unit; else (no precision, or a converted value such as kW shown as W, a Fahrenheit probe) from the
-  role table (1 for temperatures, the superheat, bar and the compressor percentage, 0 for rpm, W, the valve opening
-  and the pump speeds). The pump speeds in % are the exception: they show whole percentages, "100 %" for 99.9 %,
-  whatever the entity's display precision (decided by the user 2026-11-20, so the value is short enough to sit above
-  pump 15 in the vertical layout); a pump on an on/off entity still reads "On" or "Off", and one in rpm keeps that
+  role table (1 for temperatures, the superheat, bar and the compressor percentage, 0 for rpm, W, the valve opening and
+  the pump speeds). The pump speeds and the fan speed in % are the exception: they show whole percentages, "100 %" for
+  99.9 %, whatever the entity's display precision (decided by the user 2026-11-20, so the value is short enough to sit
+  above pump 15 in the vertical layout); a pump on an on/off entity still reads "On" or "Off", and one in rpm keeps that
   unit's decimals.
 - The unit is the role's own, joined to the number by a no-break space: °C for temperatures, K for temperature
   differences (the superheat), bar, %, rpm and W. The COP has none.
@@ -1004,7 +1016,7 @@ see Hysteresis); the threshold constant is this card's own. A re-render happens 
 so state updates keep their entity-based gating, and an observation whose width did not change is ignored. A width
 change that keeps the layout but changes the stroke widths (see Minimum rendered sizes) renders again too.
 
-Both layouts draw the same parts, the same 16 values with the same texts and the same footer (see The arrangement and
+Both layouts draw the same parts, the same 18 values with the same texts and the same footer (see The arrangement and
 The vertical arrangement); they differ in the arrangement (the vertical drawing is taller for its width) and in the
 orientation of the vertical layout's rotated values. The former values `full` and `compact` and the
 `detail` option are gone: the card rejects them as configuration errors, and the emulator ignores an old `layout=full`,
@@ -1030,13 +1042,13 @@ drawing would be taller than the screen and the footer would be below the fold. 
 `drawingWidth` in `src/lib/layout.ts`: the card's width, or in a panel view at most `(window height - header height -
 footer allowance) * viewBox width / viewBox height`. The header height is Home Assistant's `--header-height` (56 px if
 unset) plus its `--safe-area-inset-top` (0 if unset); outside a panel view the card reads neither. The footer allowance
-is 64 px: one footer line is about 20 px with 8 + 12 px of padding. The longest footer (active cooling with HTR: mode,
-outside temperature, EER, Cooling and HTR) fits one line (37 px) from the threshold plus the hysteresis, 584 px, up, and
-wraps to two lines (58 px) only at phone widths such as 320 px (`sizes.browser.test.ts` checks it stays within the
-allowance at 584 px and inside the card at 320 px); a one-line footer leaves up to 27 px of free space under it. The
-width is never below 320 px, the narrowest width verified for the vertical layout (a window too short for that scrolls).
-In a 1280 x 800 px window the horizontal arrangement (1000 x 755) is 900 px wide; for a 1280 px wide card, a window
-about 1080 px or more tall leaves the drawing at the card's width.
+is 64 px: one footer line is about 20 px with 8 + 12 px of padding. The longest footer (active cooling with HTR and a
+ground source: mode, outside temperature, EER, Cooling and HTR) fits one line (37 px) from the threshold plus the
+hysteresis, 584 px, up, and wraps to two lines (58 px) only at phone widths such as 320 px (`sizes.browser.test.ts`
+checks it stays within the allowance at 584 px and inside the card at 320 px); a one-line footer leaves up to 27 px of
+free space under it. The width is never below 320 px, the narrowest width verified for the vertical layout (a window too
+short for that scrolls). In a 1280 x 800 px window the horizontal arrangement (1000 x 755) is 900 px wide; for a 1280 px
+wide card, a window about 1080 px or more tall leaves the drawing at the card's width.
 
 The card sets the width as the `max-width` of the drawing and centres it, and recomputes on the window's `resize`. The
 layout choice (`nextVertical`, with its hysteresis) and the stroke widths take the drawing's width, not the card's, so
@@ -1080,20 +1092,21 @@ least 10 px); `test/card/panel.browser.test.ts` the panel fit in a 1280 x 800 wi
 
 The threshold is 560 px (`VERTICAL_BELOW`; decided on 2026-11-20, re-measured the same day after the refinements of the
 cabinet, see Browser below). It is the narrowest card width on the 20 px grid at which the place search finds an allowed
-place for every one of the 16 labels, in Chromium and in WebKit: a place where its box, with a 2 px margin, overlaps no
-other label, component, pipe at its rendered stroke width, outline or the drawing's edge, in any emulator scenario, and
-which its own spec allows (the value blocks at their pairs, the hydraulic values beside their parts, the values of the
-bodies inside their bodies). At 560 px every label is free at its default place in all 312 cases, in both engines, so
-`HORIZONTAL_PLACES` has no entry. The zone constant of tank 50's temperature is the place the first search at 560 px
-found free (it ends 70 units from the tank's left wall). The refinements of 2026-11-20 (no superheat, whole-percent
-pumps, no valve 25, compressor 11 and exchanger 10 on the centre line with the x map balanced, one band body height) did
-not change the result: the search at 560 px keeps every default place free in both engines, and balancing the x map cost
-nothing. The overlap measurement of `npm run measure-layout` (no margin, 0.5 px tolerance) is clean from 540 px in both
-engines (130 overlaps in 130 cases at 520 px in both). What the result depends on: the grid (20 px steps from 320 to 800
-px, 25 widths); the label box, the em box of the text with the half-leading above and below trimmed; the tolerance, 0.5
-px (two boxes overlap when they share more than that in both directions); and the margin, 2 px horizontally and 1 px
-vertically around the label box, which the search keeps and the measurement does not. The two rows of a value block (a
-temperature over a pressure, 24 units apart) are exempt from the margin between them, as they keep their pitch.
+place for every one of the 16 labels of the 2026-11-20 search, in Chromium and in WebKit: a place where its box, with a
+2 px margin, overlaps no other label, component, pipe at its rendered stroke width, outline or the drawing's edge, in
+any emulator scenario, and which its own spec allows (the value blocks at their pairs, the hydraulic values beside their
+parts, the values of the bodies inside their bodies). At 560 px every label is free at its default place in all 312
+cases, in both engines, so `HORIZONTAL_PLACES` has no entry. The zone constant of tank 50's temperature is the place the
+first search at 560 px found free (it ends 70 units from the tank's left wall). The refinements of 2026-11-20 (no
+superheat, whole-percent pumps, no valve 25, compressor 11 and exchanger 10 on the centre line with the x map balanced,
+one band body height) did not change the result: the search at 560 px keeps every default place free in both engines,
+and balancing the x map cost nothing. The overlap measurement of `npm run measure-layout` (no margin, 0.5 px tolerance)
+is clean from 540 px in both engines (130 overlaps in 130 cases at 520 px in both). What the result depends on: the grid
+(20 px steps from 320 to 800 px, 25 widths); the label box, the em box of the text with the half-leading above and below
+trimmed; the tolerance, 0.5 px (two boxes overlap when they share more than that in both directions); and the margin, 2
+px horizontally and 1 px vertically around the label box, which the search keeps and the measurement does not. The two
+rows of a value block (a temperature over a pressure, 24 units apart) are exempt from the margin between them, as they
+keep their pitch.
 
 Method (`npm run measure-layout`, `scripts/measure-layout.mjs`, Playwright): every emulator scenario is opened in the
 forced horizontal layout (`--layout=vertical` forces the vertical one, to check the phone widths), in thirteen
@@ -1104,7 +1117,7 @@ air unit and with the hybrid on model C), and the card is set to every width fro
 (`--widths=a,b,c` measures only those, to iterate on a place, and prints no threshold). At each width the script
 compares, in the DOM, the bounding boxes of the value labels with each other, with the boxes of the drawing's
 component groups (the symbol groups, the DHW storage, the air unit and the ground collector) and with the obstacles
-the bodies register (the air unit's coil block and fan, the collector's hatching and serpentine, the tank's rim) and
+the bodies register (the air unit's coil panel and fan, the collector's hatching and serpentine, the tank's rim) and
 with the pipes, and checks that no label's box leaves the drawing (`label X x edge`: the box extends past the svg's
 box by more than the tolerance, which the other pairs cannot see). A label that crosses the cabinet's outline, partly
 inside and partly outside, is reported as `label X x cabinet`; a label inside a body (the tank, the air unit, the

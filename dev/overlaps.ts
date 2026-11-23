@@ -5,7 +5,7 @@
 // leading without their text touching. Components are the symbol groups, the DHW storage, the air unit, the ground
 // collector and the emitter. A label that sits inside a body (BODY_LABELS: tank 50 on model C, the external tank, the air unit, the
 // ground collector, the emitter) is not compared with that body's box but must lie inside it (`label <id> x outline:<body>` otherwise),
-// and the obstacles a body registers (`data-obstacle`: the air unit's coil block and fan, the collector's hatching and
+// and the obstacles a body registers (`data-obstacle`: the air unit's coil panel and fan, the collector's hatching and
 // serpentine) count as parts of their own; the pipes of a body (the coil, the serpentine) are sampled like every pipe.
 // Two boxes overlap when they share more
 // than TOLERANCE px in both directions. Pipes are opt-in (refine-simplified-layout D4): measureCard with
@@ -226,6 +226,8 @@ export const BODY_LABELS: Readonly<Record<string, string>> = {
   tank_internal_temperature: 'symbol-group:50',
   tank_external_temperature: 'dhw-storage:external',
   air_unit_out: 'air-unit:air',
+  outside_temperature: 'air-unit:air',
+  fan_speed: 'air-unit:air',
   ground_out: 'ground-collector:ground',
   hybrid_ground_out: 'ground-collector:ground',
 };

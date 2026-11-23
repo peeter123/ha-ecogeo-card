@@ -244,7 +244,7 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
   };
   for (const label of m.labels) {
     // a label inside a body (tank 50, the external tank, the air unit, the ground collector) stays inside that body's box and
-    // ignores the body as an obstacle; the obstacles the body registers (coil block, fan, hatching, serpentine) still count
+    // ignores the body as an obstacle; the obstacles the body registers (coil panel, fan, hatching, serpentine) still count
     const bodyId = bodies[label.id];
     const body =
       bodyId === undefined ? undefined : m.parts.find((/** @type {{ id: string }} */ part) => part.id === bodyId);

@@ -27,8 +27,12 @@ export function displayPrecision(entry: unknown): number | undefined {
     : undefined;
 }
 
-/** The pump speeds show whole percentages whatever their entity's display precision (live-values "Locale and precision", design D14). */
-const WHOLE_PERCENT_ROLES: ReadonlySet<RolePath> = new Set<RolePath>(['production.pump', 'brine.pump']);
+/** The pump speeds and the fan speed show whole percentages whatever their entity's display precision (live-values "Locale and precision", design D14). */
+const WHOLE_PERCENT_ROLES: ReadonlySet<RolePath> = new Set<RolePath>([
+  'production.pump',
+  'brine.pump',
+  'source.fan_speed',
+]);
 
 /** The decimals of a role: the entity's display precision when it has one, else the role table's default. */
 export const decimalsOf = (role: RoleSpec, precision: number | undefined): number => precision ?? role.decimals ?? 0;

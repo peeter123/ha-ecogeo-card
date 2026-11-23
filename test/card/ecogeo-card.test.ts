@@ -94,6 +94,7 @@ describe('sample mode', () => {
       {
         mode: 'heating',
         features: mergeFeatures(4, {}),
+        source: 'ground',
         dhw: 'external',
         notPresent: new Set(),
         absent: absentOptionalRoles(SAMPLE_STATES, SAMPLE_ENTITIES, new Set()),

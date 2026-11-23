@@ -323,7 +323,7 @@ export class EcogeoCard extends LitElement {
       </div>
       <div class="footer">
         <span class="mode">${MODE_LABELS[mode]}</span>
-        ${renderFooterItems(footerItems(readings, resolved.entities, display, { mode, features: resolved.features, dhw: resolved.dhw, notPresent: resolved.notPresent, absent }), onTap)}
+        ${renderFooterItems(footerItems(readings, resolved.entities, display, { mode, features: resolved.features, source: resolved.source, dhw: resolved.dhw, notPresent: resolved.notPresent, absent }), onTap)}
         ${isAlarm(readings['unit.alarm']) ? html`<span class="alarm">${INDICATIONS.alarm}</span>` : nothing}
         ${offline ? html`<span class="offline">${INDICATIONS.offline}</span>` : nothing}
         ${resolved.sample ? html`<span class="sample">${INDICATIONS.sampleValues}</span>` : nothing}

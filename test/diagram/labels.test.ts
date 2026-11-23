@@ -409,6 +409,7 @@ describe('footer', () => {
       {
         mode: 'heating',
         features: mergeFeatures(4, {}),
+        source: 'ground',
         dhw: 'external',
         notPresent: new Set(),
         absent: new Set(),
@@ -483,23 +484,31 @@ describe('efficient updates', () => {
 });
 
 describe('source labels', () => {
-  test('air: only the Out of the air unit, as a bare number inside the unit (no caption), and no fan speed, outside temperature or In', async () => {
+  test('air: the outside temperature, the fan speed and the Out, bare inside the unit (no caption), and no In', async () => {
     const card = await mount({ source: 'air' }, hassOf());
     expect(valueOf(card, 'air_unit_out')).toBe(nb('0.5 °C'));
     expect(label(card, 'air_unit_out')?.querySelector('.caption')).toBeNull();
     expect(label(card, 'air_unit_out')?.textContent.trim()).toBe(nb('0.5 °C'));
     expect(label(card, 'air_unit_out')?.getAttribute('data-role')).toBe('source.air_unit_outlet_temperature');
-    for (const id of ['fan_speed', 'outside_temperature', 'air_unit_in', 'hybrid_air_unit_in']) {
+    expect(label(card, 'outside_temperature')?.getAttribute('data-role')).toBe('source.outside_temperature');
+    expect(label(card, 'fan_speed')?.getAttribute('data-role')).toBe('source.fan_speed');
+    for (const id of ['air_unit_in', 'hybrid_air_unit_in']) {
       expect(labelIds(card), id).not.toContain(id);
     }
     expect(labelIds(card).some((id) => id.startsWith('ground_'))).toBe(false);
-    // Out sits inside the housing, in the strip between the fan and the coil block
+    // the three values sit in the obstacle-free boxes of the air unit's shape
     const air = bandOf('air');
-    const out = air.labels.specs.find((spec) => spec.id === 'air_unit_out');
-    const strip = air.airUnit?.strip;
-    expect(out?.align).toBe('middle');
-    expect(out?.x).toBe((strip?.x ?? 0) + (strip?.width ?? 0) / 2);
-    expect(out?.y).toBe((strip?.y ?? 0) + (strip?.height ?? 0) / 2);
+    const boxes = air.airUnit?.values;
+    const place = (id: string) => air.labels.specs.find((spec) => spec.id === id);
+    const centre = (box: { x: number; y: number; width: number; height: number } | undefined): [number, number] => [
+      (box?.x ?? 0) + (box?.width ?? 0) / 2,
+      (box?.y ?? 0) + (box?.height ?? 0) / 2,
+    ];
+    expect([place('outside_temperature')?.x, place('outside_temperature')?.y]).toEqual(centre(boxes?.outside));
+    expect([place('fan_speed')?.x, place('fan_speed')?.y]).toEqual(centre(boxes?.speed));
+    expect(place('air_unit_out')?.align).toBe('start');
+    expect(place('air_unit_out')?.x).toBe(boxes?.out.x);
+    expect(place('air_unit_out')?.y).toBe(centre(boxes?.out)[1]);
     card.remove();
   });
 
@@ -521,13 +530,13 @@ describe('source labels', () => {
     card.remove();
   });
 
-  test('Hybrid: only the ground loop shows its Out, the air unit shows no value and the link pipe has no label', async () => {
+  test('Hybrid: the collector shows its Out, the air unit the outside temperature and the fan speed and no Out, the link pipe has no label', async () => {
     const card = await mount({ source: 'hybrid' }, hassOf());
     const ids = labelIds(card);
     expect(ids).toContain('hybrid_ground_out');
+    expect(ids).toContain('outside_temperature');
+    expect(ids).toContain('fan_speed');
     for (const id of [
-      'fan_speed',
-      'outside_temperature',
       'hybrid_air_unit_in',
       'ground_in',
       'ground_out',
@@ -548,7 +557,7 @@ describe('source labels', () => {
     card.remove();
   });
 
-  test('the source label is an ordinary value label: the same plate and size, never bare, and it opens more-info', async () => {
+  test('the source label is a value label that opens more-info: bare in the air unit, on its plate in the collector', async () => {
     const events: CustomEvent<{ entityId: string }>[] = [];
     const ids = { air: 'air_unit_out', ground: 'ground_out', hybrid: 'hybrid_ground_out' } as const;
     for (const source of ['air', 'ground', 'hybrid'] as const) {
@@ -556,7 +565,7 @@ describe('source labels', () => {
       card.addEventListener('hass-more-info', (event) => events.push(event as CustomEvent<{ entityId: string }>));
       const id = ids[source];
       const element = label(card, id);
-      expect(element?.classList.contains('bare'), id).toBe(false);
+      expect(element?.classList.contains('bare'), id).toBe(source === 'air');
       // the value joins its unit with a no-break space
       expect(valueOf(card, id), id).toMatch(/\d\s°C$/);
       const role = (element?.getAttribute('data-role') ?? '') as RolePath;
@@ -585,49 +594,56 @@ describe('source labels', () => {
     };
     const apart = (u: Box, v: Box): boolean =>
       u.right <= v.left || v.right <= u.left || u.bottom <= v.top || v.bottom <= u.top;
-    const SOURCE_IDS = new Set(['air_unit_out', 'ground_out', 'hybrid_ground_out']);
+    const SOURCE_IDS = new Set(['air_unit_out', 'outside_temperature', 'fan_speed', 'ground_out', 'hybrid_ground_out']);
+    const AIR_IDS = new Set(['air_unit_out', 'outside_temperature', 'fan_speed']);
 
     test.each(['air', 'ground', 'hybrid'] as const)('%s', (source) => {
       const arr = bandOf(source);
       const context = { model: 'B', dhw: 'external', source, features: mergeFeatures(4, {}) } as const;
       const shown = arr.labels.specs.filter((spec) => partState(spec, context) !== 'hidden');
       const mine = shown.filter((spec) => SOURCE_IDS.has(spec.id));
-      expect(mine).toHaveLength(1);
-      const body = source === 'air' ? arr.airUnit : arr.collector;
-      if (body === undefined) throw new Error('no body');
-      // the value's strip lies inside the body, clear of the obstacles the body registers (the fan, the coil block, the
+      expect(mine).toHaveLength({ air: 3, ground: 1, hybrid: 3 }[source]);
+      const fanBox = arr.airUnit?.fan;
+      // the value's box lies inside its body, clear of the obstacles the body registers (the fan, the coil panel, the
       // hatching, the serpentine)
-      const obstacles: Box[] =
-        source === 'air'
-          ? [
-              {
-                left: body.x,
-                right: body.x + body.width,
-                top: body.y,
-                bottom: (arr.airUnit?.fan.cy ?? 0) + (arr.airUnit?.fan.radius ?? 0),
-              },
-              {
-                left: arr.airUnit?.coil.x ?? 0,
-                right: (arr.airUnit?.coil.x ?? 0) + (arr.airUnit?.coil.width ?? 0),
-                top: arr.airUnit?.coil.y ?? 0,
-                bottom: (arr.airUnit?.coil.y ?? 0) + (arr.airUnit?.coil.height ?? 0),
-              },
-            ]
+      const airObstacles: Box[] =
+        arr.airUnit === undefined || fanBox === undefined
+          ? []
           : [
               {
-                left: body.x,
-                right: body.x + body.width,
-                top: body.y,
-                bottom: arr.collector ? arr.collector.hatch.y + arr.collector.hatch.height : 0,
+                left: fanBox.cx - fanBox.radius,
+                right: fanBox.cx + fanBox.radius,
+                top: fanBox.cy - fanBox.radius,
+                bottom: fanBox.cy + fanBox.radius,
               },
               {
-                left: arr.collector?.serpentine.x ?? 0,
-                right: (arr.collector?.serpentine.x ?? 0) + (arr.collector?.serpentine.width ?? 0),
-                top: arr.collector?.serpentine.y ?? 0,
-                bottom: (arr.collector?.serpentine.y ?? 0) + (arr.collector?.serpentine.height ?? 0),
+                left: arr.airUnit.coil.x,
+                right: arr.airUnit.coil.x + arr.airUnit.coil.width,
+                top: arr.airUnit.coil.y,
+                bottom: arr.airUnit.coil.y + arr.airUnit.coil.height,
               },
             ];
+      const groundObstacles: Box[] = arr.collector
+        ? [
+            {
+              left: arr.collector.x,
+              right: arr.collector.x + arr.collector.width,
+              top: arr.collector.y,
+              bottom: arr.collector.hatch.y + arr.collector.hatch.height,
+            },
+            {
+              left: arr.collector.serpentine.x,
+              right: arr.collector.serpentine.x + arr.collector.serpentine.width,
+              top: arr.collector.serpentine.y,
+              bottom: arr.collector.serpentine.y + arr.collector.serpentine.height,
+            },
+          ]
+        : [];
       for (const spec of mine) {
+        const air = AIR_IDS.has(spec.id);
+        const body = air ? arr.airUnit : arr.collector;
+        if (body === undefined) throw new Error('no body');
+        const obstacles = air ? airObstacles : groundObstacles;
         const box = boxOf(spec);
         // inside the body's outline, with room
         expect(box.left, spec.id).toBeGreaterThan(body.x + 2);
@@ -686,8 +702,9 @@ describe('DHW tank labels', () => {
     const tank = label(card, 'tank_external_temperature');
     const out = label(card, 'air_unit_out');
     if (tank === null || out === null) throw new Error('no tank or source label');
-    // the same classes but the tank's bare plate, and no emphasis class at all
-    const classes = (element: Element): string[] => [...element.classList].filter((name) => name !== 'bare').sort();
+    // the same classes but the alignment (the Out is placed from its left edge), and no emphasis class at all
+    const classes = (element: Element): string[] =>
+      [...element.classList].filter((name) => !['bare', 'start', 'middle', 'end'].includes(name)).sort();
     expect(classes(tank)).toEqual(classes(out));
     expect(tank.classList.contains('emphasis')).toBe(false);
     expect(getComputedStyle(tank).fontWeight).toBe(getComputedStyle(out).fontWeight);
@@ -930,6 +947,7 @@ describe('footer power items and efficiency (add-htr-state)', () => {
     options: {
       htr?: boolean;
       dhw?: 'external' | 'internal' | 'unused' | 'none';
+      source?: 'air' | 'ground' | 'hybrid';
       absent?: readonly RolePath[];
       none?: readonly RolePath[];
     } = {},
@@ -942,6 +960,7 @@ describe('footer power items and efficiency (add-htr-state)', () => {
     return footerItems(readRoles(states, entities), entities, display, {
       mode,
       features: mergeFeatures(4, { htr: options.htr ?? true }),
+      source: options.source ?? 'ground',
       dhw: options.dhw ?? 'external',
       notPresent,
       absent,
@@ -951,6 +970,13 @@ describe('footer power items and efficiency (add-htr-state)', () => {
     items.map((item) => `${item.caption === undefined ? '' : `${item.caption} `}${item.text}`);
   const power = (items: ReturnType<typeof footerOf>): string[] =>
     items.filter((item) => item.id.endsWith('_power')).map((item) => item.id);
+
+  test('Footer with an air unit: no outside temperature, which the air unit shows (harmonize-band D9)', () => {
+    const ids = (source: 'air' | 'ground' | 'hybrid') => footerOf('heating', {}, { source }).map((item) => item.id);
+    expect(ids('air')).toEqual(['cop', 'dg1_power', 'htr_power']);
+    expect(ids('hybrid')).toEqual(['cop', 'dg1_power', 'htr_power']);
+    expect(ids('ground')).toEqual(['outside_temperature', 'cop', 'dg1_power', 'htr_power']);
+  });
 
   test('Footer while heating: system COP, DG1 and HTR, no condensation or evaporation item', () => {
     const items = footerOf('heating', {
@@ -1025,6 +1051,7 @@ describe('footer power items and efficiency (add-htr-state)', () => {
     const items = footerItems(readRoles(liveStates(), entities), entities, display, {
       mode: 'heating',
       features: mergeFeatures(4, {}),
+      source: 'ground',
       dhw: 'external',
       notPresent: new Set(),
       absent: new Set(),
@@ -1082,11 +1109,10 @@ describe('footer power items and efficiency (add-htr-state)', () => {
   });
 });
 
-// 16 labels until the air unit's outside temperature and fan speed arrive (harmonize-band group 4), which make 18
 describe('the values (live-values "Values on the drawing")', () => {
   const HEATING_BOTH_DEMANDS = { 'heating.demand': 'on', 'dhw.demand': 'on' } as const;
 
-  test('heating, model B, air, external tank, variant 4, both demands on: exactly these 16 labels', async () => {
+  test('heating, model B, air, external tank, variant 4, both demands on: exactly these 18 labels', async () => {
     const card = await mount({ model: 'B', source: 'air', dhw: 'external', variant: 4 }, hassOf(HEATING_BOTH_DEMANDS));
     expect(labelIds(card).sort()).toEqual(
       [
@@ -1105,10 +1131,12 @@ describe('the values (live-values "Values on the drawing")', () => {
         'compressor_speed',
         'expansion_valve',
         'air_unit_out',
+        'outside_temperature',
+        'fan_speed',
         'tank_external_temperature',
       ].sort(),
     );
-    expect(labelIds(card)).toHaveLength(16);
+    expect(labelIds(card)).toHaveLength(18);
     card.remove();
   });
 
@@ -1118,8 +1146,6 @@ describe('the values (live-values "Values on the drawing")', () => {
       'compressor_power',
       'condensation_temperature',
       'evaporation_temperature',
-      'fan_speed',
-      'outside_temperature',
       'air_unit_in',
       'ground_in',
       'hybrid_air_unit_in',
@@ -1137,6 +1163,9 @@ describe('the values (live-values "Values on the drawing")', () => {
     const card = await mount({ model: 'B', source: 'ground', dhw: 'external' }, hassOf(HEATING_BOTH_DEMANDS));
     expect(labelIds(card)).toContain('ground_out');
     expect(labelIds(card)).not.toContain('ground_in');
+    // no fan speed or outside temperature on the drawing: the footer shows the outside temperature
+    expect(labelIds(card)).not.toContain('fan_speed');
+    expect(labelIds(card)).not.toContain('outside_temperature');
     card.remove();
   });
 

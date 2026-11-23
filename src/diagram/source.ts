@@ -1,14 +1,14 @@
 // The outer-loop source (add-schematic-card D5, D6; refine-schematic-drawing D11-D14; rework-layouts D3, D4; outer-loop-source spec): the
 // air unit, the ground collector or both side by side on one brine loop, drawn in the band above the cabinet, over connections
-// 3/4. This file draws what is not a pipe: the air unit's housing, finned coil block and fan, and the collector's ground strip
+// 3/4. This file draws what is not a pipe: the air unit's case on two feet, finned coil panel and guarded fan, and the collector's ground strip
 // with its hatching (no captions: the tooltips name the parts, rework-layouts "No in-drawing captions"). The pipes (ports 3/4
 // up through the join lane into the bottom faces, the serpentines and the link) are segments in geometry.ts, so pipes.ts
 // colours and animates them like every other pipe. None of these parts is a manual item: the manual's figures stop at
 // connections 3 (brine outlet) and 4 (brine inlet).
 //
-// The live value (labels.ts): the source's Out only, inside the air unit's housing (the strip between the fan and the coil
-// block) or the collector's strip (between the hatching and the serpentine); the bodies register their obstacles with
-// `data-obstacle` so that the overlap check sees the coil, the fan, the hatching and the serpentine inside them.
+// The live values (labels.ts): the air unit's outside temperature above the fan, its fan speed below it and (air only) its Out
+// beside the exit pass; the collector's Out in its strip (between the hatching and the serpentine). The bodies register their
+// obstacles with `data-obstacle` so that the overlap check sees the coil, the fan, the hatching and the serpentine inside them.
 import { css, svg, type SVGTemplateResult } from 'lit';
 import type { AnimationReadings } from '../calc/readings';
 import { AIR_UNIT_FAN_NAME, AIR_UNIT_NAME, GROUND_COLLECTOR_NAME } from '../strings';
@@ -35,7 +35,7 @@ export const sourceStyles = css`
     stroke: var(--secondary-text-color);
     stroke-width: calc(var(--outline-width, 2) * 0.75);
   }
-  /* The brine circuit is inactive: the housing, coil and ground line are muted like the pipes; the fan follows its own speed. */
+  /* The brine circuit is inactive: the case, coil and ground line are muted like the pipes; the fan follows its own speed. */
   .muted .source-outline,
   .muted .source-frame,
   .muted .source-fin,
@@ -47,6 +47,16 @@ export const sourceStyles = css`
   }
   .fan-part[role='button']:focus-visible {
     ${focusRingStyles}
+  }
+  /* the fan's static guard (rings and spokes) is drawn in the fin style, so the turning blades stay visible through it */
+  .fan-guard {
+    fill: none;
+    stroke: var(--secondary-text-color);
+    stroke-opacity: 0.8;
+    stroke-width: calc(var(--outline-width, 2) * 0.7);
+  }
+  .muted .fan-guard {
+    stroke: var(--disabled-text-color);
   }
   .fan-ring {
     fill: none;
@@ -97,7 +107,10 @@ const BLADES = [0, 72, 144, 216, 288].map(
     svg`<path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(${angle})" />`,
 );
 
-/** The blades are drawn for a ring of this radius; a smaller ring scales them. */
+/** The guard's three rings, as fractions of the fan's ring radius; the four spokes of its X start at the innermost one. */
+const GUARD_RINGS = [0.75, 0.5, 0.25] as const;
+
+/** The blades are drawn for a ring of this radius; a different ring scales them. */
 const BLADE_RING = 34;
 
 function airUnit(
@@ -106,14 +119,27 @@ function airUnit(
   muted: boolean,
   taps: Taps | undefined,
 ): SVGTemplateResult {
-  const { x, y, width, height, fan, coil, fins: fin } = unit;
+  const { body, fan, coil, fins: fin, feet } = unit;
   const duration = fanDuration(speed);
   const finYs = Array.from({ length: fin.count }, (_, index) => round2(fin.y0 + index * fin.step));
   const fanScale = round2(fan.radius / BLADE_RING);
+  // the spokes run from the innermost guard ring to the fan's ring along the two diagonals
+  const spokeFrom = fan.radius * GUARD_RINGS[2] * Math.SQRT1_2;
+  const spokeTo = fan.radius * Math.SQRT1_2;
+  const spokes = [
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+    [-1, 1],
+  ].map(
+    ([dx, dy]) =>
+      svg`<path class="fan-guard fan-spoke" d="M${round2(fan.cx + (dx ?? 0) * spokeFrom)} ${round2(fan.cy + (dy ?? 0) * spokeFrom)} L${round2(fan.cx + (dx ?? 0) * spokeTo)} ${round2(fan.cy + (dy ?? 0) * spokeTo)}" />`,
+  );
   const tap = tapBindings(tapTarget(FAN_ROLE, taps), taps?.onTap);
   return svg`<g class="air-unit${muted ? ' muted' : ''}" data-source="air" aria-label=${AIR_UNIT_NAME}>
     <title>${AIR_UNIT_NAME}</title>
-    <rect class="source-outline band-outline" x=${x} y=${y} width=${width} height=${height} rx=${BAND.radius} />
+    <rect class="source-outline band-outline" x=${body.x} y=${body.y} width=${body.width} height=${body.height} rx=${BAND.radius} />
+    ${feet.map((foot) => svg`<rect class="source-frame air-foot" x=${foot.x} y=${foot.y} width=${foot.width} height=${foot.height} />`)}
     <rect class="source-frame" data-coil-block data-obstacle="air-coil" x=${coil.x} y=${coil.y} width=${coil.width} height=${coil.height} rx="3" />
     ${finYs.map((finY) => svg`<path class="source-fin" d="M${fin.x0} ${finY} H${fin.x1}" />`)}
     <g class="fan-part" aria-label=${AIR_UNIT_FAN_NAME} role=${tap.role} tabindex=${tap.tabindex} @click=${tap.click} @keydown=${tap.keydown}>
@@ -122,6 +148,10 @@ function airUnit(
       <circle class="fan-hit" cx=${fan.cx} cy=${fan.cy} r=${fan.radius} fill="transparent" stroke="none" />
       <g class="fan" data-fan transform="translate(${fan.cx} ${fan.cy})${fanScale === 1 ? '' : ` scale(${String(fanScale)})`}">
         <g class=${duration === undefined ? 'fan-rotor still' : 'fan-rotor'} style=${duration === undefined ? '' : `--fan-duration: ${String(duration)}s`}>${BLADES}<circle class="fan-hub" r="5" fill="var(--primary-text-color)" /></g>
+      </g>
+      <g class="fan-guard-group">
+        ${GUARD_RINGS.map((ratio) => svg`<circle class="fan-guard fan-guard-ring" cx=${fan.cx} cy=${fan.cy} r=${round2(fan.radius * ratio)} />`)}
+        ${spokes}
       </g>
     </g>
   </g>`;
@@ -143,7 +173,7 @@ function collectorBody(collector: CollectorShape, muted: boolean): SVGTemplateRe
 
 /**
  * The source for the config: air unit, ground collector or both (hybrid), with the fan turning at `source.fan_speed`. The
- * housing, coil and collector are muted while the brine circuit is inactive (`brineActive` false), like the pipes.
+ * case, coil and collector are muted while the brine circuit is inactive (`brineActive` false), like the pipes.
  */
 export function renderSource(
   context: DrawContext,

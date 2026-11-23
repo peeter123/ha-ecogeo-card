@@ -14,37 +14,53 @@ suction_temperature | label start | left: 54.1%; top: 51.25827814569537%
 suction_pressure | label start | left: 54.1%; top: 54.437086092715234%
 compressor_speed | label middle | left: 50%; top: 57.615894039735096%
 expansion_valve | label middle | left: 55.2%; top: 85.56291390728477%
+outside_temperature | label middle bare | left: 60.18%; top: 3.1788079470198674%
+fan_speed | label middle bare | left: 60.18%; top: 17.748344370860927%
 hybrid_ground_out | label middle | left: 74.6%; top: 4.768211920529802%
 tank_external_temperature | label middle bare | left: 91%; top: 6.622516556291391%
-footer: outside_temperature, cop, dg1_power, htr_power
+footer: cop, dg1_power, htr_power
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 755" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #d7263d 10.5%, #f2711c); --ecogeo-coil-muted: var(--disabled-text-color); --pipe-width: 3.6; --outline-width: 2.3">
           <g class="source" data-source-kind="hybrid">
     <g data-source="air" class="air-unit" aria-label="Air unit">
     <title>Air unit</title>
-    <rect class="source-outline band-outline" x="484" y="6" width="190" height="176" rx="6">
+    <rect class="source-outline band-outline" x="484" y="6" width="190" height="168" rx="6">
 </rect>
-    <rect class="source-frame" data-coil-block="" data-obstacle="air-coil" rx="3" x="494" y="116" width="170" height="58">
+    <rect class="source-frame air-foot" x="508" y="174" width="24" height="8">
 </rect>
-    <path class="source-fin" d="M498 124 H660">
+<rect class="source-frame air-foot" x="622" y="174" width="24" height="8">
+</rect>
+    <rect class="source-frame" data-coil-block="" data-obstacle="air-coil" rx="3" x="492" y="42" width="64" height="120">
+</rect>
+    <path class="source-fin" d="M496 52 H552">
 </path>
-<path class="source-fin" d="M498 132 H660">
+<path class="source-fin" d="M496 62 H552">
 </path>
-<path class="source-fin" d="M498 140 H660">
+<path class="source-fin" d="M496 72 H552">
 </path>
-<path class="source-fin" d="M498 148 H660">
+<path class="source-fin" d="M496 82 H552">
 </path>
-<path class="source-fin" d="M498 156 H660">
+<path class="source-fin" d="M496 92 H552">
 </path>
-<path class="source-fin" d="M498 164 H660">
+<path class="source-fin" d="M496 102 H552">
+</path>
+<path class="source-fin" d="M496 112 H552">
+</path>
+<path class="source-fin" d="M496 122 H552">
+</path>
+<path class="source-fin" d="M496 132 H552">
+</path>
+<path class="source-fin" d="M496 142 H552">
+</path>
+<path class="source-fin" d="M496 152 H552">
 </path>
     <g class="fan-part" aria-label="Air unit fan" role="button" tabindex="0">
       <title>Air unit fan</title>
-      <circle class="fan-ring" data-obstacle="air-fan" cx="579" cy="46" r="28">
+      <circle class="fan-ring" data-obstacle="air-fan" cx="601.8" cy="80" r="40">
 </circle>
-      <circle class="fan-hit" fill="transparent" stroke="none" cx="579" cy="46" r="28">
+      <circle class="fan-hit" fill="transparent" stroke="none" cx="601.8" cy="80" r="40">
 </circle>
-      <g class="fan" data-fan="" transform="translate(579 46) scale(0.82)">
+      <g class="fan" data-fan="" transform="translate(601.8 80) scale(1.18)">
         <g class="fan-rotor" style="--fan-duration: 3.4782608695652173s">
 <path class="fan-blade" d="M0 -4 C9 -6 21 -16 17 -30 C6 -26 -3 -17 -3 -6 Z" transform="rotate(0)">
 </path>
@@ -59,6 +75,22 @@ svg:
 <circle class="fan-hub" r="5" fill="var(--primary-text-color)">
 </circle>
 </g>
+      </g>
+      <g class="fan-guard-group">
+        <circle class="fan-guard fan-guard-ring" cx="601.8" cy="80" r="30">
+</circle>
+<circle class="fan-guard fan-guard-ring" cx="601.8" cy="80" r="20">
+</circle>
+<circle class="fan-guard fan-guard-ring" cx="601.8" cy="80" r="10">
+</circle>
+        <path class="fan-guard fan-spoke" d="M594.73 72.93 L573.52 51.72">
+</path>
+<path class="fan-guard fan-spoke" d="M608.87 72.93 L630.08 51.72">
+</path>
+<path class="fan-guard fan-spoke" d="M608.87 87.07 L630.08 108.28">
+</path>
+<path class="fan-guard fan-spoke" d="M594.73 87.07 L573.52 108.28">
+</path>
       </g>
     </g>
   </g>
@@ -319,17 +351,17 @@ svg:
 </path>
 <path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M821 204 L821 238">
 </path>
-<path class="pipe " data-segment="src_hyb_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 216 L534 216 L534 174">
+<path class="pipe " data-segment="src_hyb_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 216 L502 216 L502 162">
 </path>
-<path class="flow " data-flow="src_hyb_feed" style="--flow-duration: 1.2s" d="M682 216 L534 216 L534 174">
+<path class="flow " data-flow="src_hyb_feed" style="--flow-duration: 1.2s" d="M682 216 L502 216 L502 162">
 </path>
-<path class="pipe " data-segment="src_hyb_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M534 174 L534 143 A15 15 0 0 1 549 128 L549 128 A15 15 0 0 1 564 143 L564 147 A15 15 0 0 0 579 162 L579 162 A15 15 0 0 0 594 147 L594 143 A15 15 0 0 1 609 128 L609 128 A15 15 0 0 1 624 143 L624 174">
+<path class="pipe " data-segment="src_hyb_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M502 162 L502 63 A7 7 0 0 1 509 56 L509 56 A7 7 0 0 1 516 63 L516 135 A7 7 0 0 0 523 142 L523 142 A7 7 0 0 0 530 135 L530 63 A7 7 0 0 1 537 56 L537 56 A7 7 0 0 1 544 63 L544 162">
 </path>
-<path class="flow " data-flow="src_hyb_coil" style="--flow-duration: 1.2s" d="M534 174 L534 143 A15 15 0 0 1 549 128 L549 128 A15 15 0 0 1 564 143 L564 147 A15 15 0 0 0 579 162 L579 162 A15 15 0 0 0 594 147 L594 143 A15 15 0 0 1 609 128 L609 128 A15 15 0 0 1 624 143 L624 174">
+<path class="flow " data-flow="src_hyb_coil" style="--flow-duration: 1.2s" d="M502 162 L502 63 A7 7 0 0 1 509 56 L509 56 A7 7 0 0 1 516 63 L516 135 A7 7 0 0 0 523 142 L523 142 A7 7 0 0 0 530 135 L530 63 A7 7 0 0 1 537 56 L537 56 A7 7 0 0 1 544 63 L544 162">
 </path>
-<path class="pipe " data-segment="src_hyb_link" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M624 174 L624 192 L700 192 L700 182">
+<path class="pipe " data-segment="src_hyb_link" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M544 162 L544 192 L700 192 L700 182">
 </path>
-<path class="flow " data-flow="src_hyb_link" style="--flow-duration: 1.2s" d="M624 174 L624 192 L700 192 L700 182">
+<path class="flow " data-flow="src_hyb_link" style="--flow-duration: 1.2s" d="M544 162 L544 192 L700 192 L700 182">
 </path>
 <path class="pipe " data-segment="src_hyb_down" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" stroke-linecap="round" d="M700 182 L700 75 A15 15 0 0 1 715 60 L777 60 A15 15 0 0 1 792 75 L792 75 A15 15 0 0 1 777 90 L735 90 A15 15 0 0 0 720 105 L720 105">
 </path>

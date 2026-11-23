@@ -8,7 +8,7 @@ import type { HassLike } from '../../src/lib/hass';
 import { states } from '../helpers';
 
 import { airFaceY, airPortX, collectorPassYs } from '../../src/diagram/geometry';
-import { AIR_UNIT_NAME, GROUND_COLLECTOR_NAME } from '../../src/strings';
+import { AIR_UNIT_NAME, GROUND_COLLECTOR_NAME, NO_VALUE } from '../../src/strings';
 
 // the coordinates below come from the arrangement of the card's band key (the cabinet frame's are in test/diagram/simplified.test.ts)
 const arrangementOfSource = (source: 'air' | 'ground' | 'hybrid') =>
@@ -60,7 +60,7 @@ describe('outer-loop source', () => {
     }
   });
 
-  test('air: a housing with a coil and a fan, and no ground collector', async () => {
+  test('air: a case with a coil panel and a fan, and no ground collector', async () => {
     const card = await mount({ source: 'air' });
     expect(root(card).querySelector('.air-unit')).not.toBeNull();
     expect(root(card).querySelector('.ground-collector')).toBeNull();
@@ -69,12 +69,24 @@ describe('outer-loop source', () => {
     card.remove();
   });
 
-  test('Air unit with its value inside: a finned coil block crossed by the serpentine, a fan of blades in a ring, a free strip between them', async () => {
+  test('Air unit drawing: a case on two feet, a finned coil panel crossed by four passes, a guarded fan right of it', async () => {
     for (const source of ['air', 'hybrid'] as const) {
       const card = await mount({ source });
-      const unit = need(arrangementOfSource(source).airUnit);
+      const own = arrangementOfSource(source);
+      const unit = need(own.airUnit);
       const rendered = root(card).querySelector('.air-unit');
-      // the coil block with at least six horizontal fins, all inside it
+      // the case on two feet: the feet stand on the band's bottom edge and clear of the brine pipes' columns
+      const feet = [...(rendered?.querySelectorAll('.air-foot') ?? [])];
+      expect(feet, source).toHaveLength(2);
+      const { feed, exit } = airPortX(unit);
+      for (const foot of feet) {
+        const [x, width] = [Number(foot.getAttribute('x')), Number(foot.getAttribute('width'))];
+        expect(Number(foot.getAttribute('y')) + Number(foot.getAttribute('height')), source).toBe(own.band.bottom);
+        for (const column of [feed, exit]) {
+          expect(column < x - 2 || column > x + width + 2, `${source} ${String(column)}`).toBe(true);
+        }
+      }
+      // the coil panel with at least six horizontal fins, all inside it
       const block = rendered?.querySelector('[data-coil-block]');
       expect(block, source).not.toBeNull();
       const fins = [...(rendered?.querySelectorAll('.source-fin') ?? [])];
@@ -86,7 +98,7 @@ describe('outer-loop source', () => {
         expect(y).toBeLessThan(unit.coil.y + unit.coil.height);
       }
       // the serpentine: an even number of vertical passes (at least four) joined by rounded U-bends, drawn over the fins, entering
-      // and leaving on the coil block's bottom face
+      // and leaving on the coil panel's bottom face
       const coilId = source === 'air' ? 'src_air_coil' : 'src_hyb_coil';
       const coil = root(card).querySelector(`path[data-segment="${coilId}"]`);
       const d = coil?.getAttribute('d') ?? '';
@@ -94,22 +106,100 @@ describe('outer-loop source', () => {
       expect(bends, source).toBe(unit.passes.count * 2 - 2);
       expect(unit.passes.count % 2, source).toBe(0);
       expect(unit.passes.count, source).toBeGreaterThanOrEqual(4);
-      const { feed, exit } = airPortX(unit);
       expect(d.startsWith(`M${String(feed)} ${String(airFaceY(unit))}`), source).toBe(true);
       expect(d.endsWith(`L${String(exit)} ${String(airFaceY(unit))}`), source).toBe(true);
       expect(
         coil !== null && (fins[0]?.compareDocumentPosition(coil) ?? 0) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
-      // the fan: a ring, a hub and five blades, above the free strip, which lies above the coil block
+      // the fan: a ring, a hub and five rotating blades, right of the coil panel, with the static guard over them: three rings and
+      // an X of four spokes, outside the rotor
+      expect(unit.fan.cx - unit.fan.radius, source).toBeGreaterThan(unit.coil.x + unit.coil.width);
       expect(rendered?.querySelectorAll('.fan-ring')).toHaveLength(1);
       expect(rendered?.querySelectorAll('.fan-hub')).toHaveLength(1);
       expect(rendered?.querySelectorAll('.fan-rotor .fan-blade')).toHaveLength(5);
-      expect(unit.fan.cy + unit.fan.radius).toBeLessThan(unit.strip.y);
-      expect(unit.strip.y + unit.strip.height).toBeLessThan(unit.coil.y);
-      // the tooltips name the housing and the fan
+      const rings = [...(rendered?.querySelectorAll('.fan-guard-ring') ?? [])];
+      const spokes = [...(rendered?.querySelectorAll('.fan-spoke') ?? [])];
+      expect(rings, source).toHaveLength(3);
+      expect(spokes, source).toHaveLength(4);
+      expect(new Set(rings.map((ring) => ring.getAttribute('r'))).size, source).toBe(3);
+      for (const ring of rings) {
+        expect(Number(ring.getAttribute('r')), source).toBeLessThan(unit.fan.radius);
+        expect(ring.closest('.fan-rotor'), source).toBeNull();
+      }
+      for (const spoke of spokes) expect(spoke.closest('.fan-rotor'), source).toBeNull();
+      // the guard is drawn after the blades, so it lies over them
+      const rotor = rendered?.querySelector('.fan-rotor');
+      const first = rings[0];
+      expect(
+        rotor !== null && rotor !== undefined && first !== undefined
+          ? rotor.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING
+          : 0,
+        source,
+      ).toBeTruthy();
+      // the tooltips name the case and the fan
       expect(rendered?.querySelector(':scope > title')?.textContent, source).toBe(AIR_UNIT_NAME);
       card.remove();
     }
+  });
+
+  const NB = ' ';
+  const valueText = (card: EcogeoCard, id: string): string | undefined =>
+    root(card).querySelector(`.label[data-label="${id}"] .value`)?.textContent.trim();
+  const airHass = (speed: string, unit?: string): HassLike => ({
+    locale: { language: 'en', number_format: 'language' },
+    states: states(
+      [`sensor.${P}_outside_temperature`, '8.4', '°C'],
+      [`sensor.${P}_brine_temperature_air_unit_outlet`, '5.7', '°C'],
+      unit === undefined
+        ? [`sensor.${P}_aerothermal_fan_speed`, speed]
+        : [`sensor.${P}_aerothermal_fan_speed`, speed, unit],
+    ),
+  });
+
+  test('Air unit values inside: the outside temperature above the fan, the fan speed below it, the Out beside the exit pass, all bare', async () => {
+    const card = await mount({ prefix: P, source: 'air' }, airHass('45.2', '%'));
+    const own = arrangementOfSource('air');
+    const unit = need(own.airUnit);
+    expect(valueText(card, 'outside_temperature')).toBe(`8.4${NB}°C`);
+    expect(valueText(card, 'fan_speed')).toBe(`45${NB}%`);
+    expect(valueText(card, 'air_unit_out')).toBe(`5.7${NB}°C`);
+    const spec = (id: string) => need(own.labels.specs.find((item) => item.id === id));
+    // above the fan, below it, and right of the coil panel at the case's bottom
+    expect(spec('outside_temperature').x).toBe(unit.fan.cx);
+    expect(spec('outside_temperature').y).toBeLessThan(unit.fan.cy - unit.fan.radius);
+    expect(spec('fan_speed').x).toBe(unit.fan.cx);
+    expect(spec('fan_speed').y).toBeGreaterThan(unit.fan.cy + unit.fan.radius);
+    expect(spec('air_unit_out').x).toBeGreaterThan(unit.coil.x + unit.coil.width);
+    expect(spec('air_unit_out').y).toBeGreaterThan(unit.fan.cy + unit.fan.radius);
+    for (const id of ['outside_temperature', 'fan_speed', 'air_unit_out']) {
+      const element = root(card).querySelector(`.label[data-label="${id}"]`);
+      expect(element?.classList.contains('bare'), id).toBe(true);
+      expect(element?.querySelector('.caption'), id).toBeNull();
+    }
+    expect(root(card).querySelector('.label[data-label="air_unit_in"]')).toBeNull();
+    card.remove();
+  });
+
+  test('Running fan: the fan rotates and the speed shows as a whole percent below it', async () => {
+    const card = await mount({ prefix: P, source: 'air' }, airHass('34.5', '%'));
+    expect(fan(card)?.classList.contains('still')).toBe(false);
+    expect(valueText(card, 'fan_speed')).toBe(`35${NB}%`);
+    card.remove();
+  });
+
+  test('Hybrid: the air unit shows the outside temperature and the fan speed and no Out', async () => {
+    const card = await mount({ prefix: P, source: 'hybrid' }, airHass('45.2', '%'));
+    expect(valueText(card, 'outside_temperature')).toBe(`8.4${NB}°C`);
+    expect(valueText(card, 'fan_speed')).toBe(`45${NB}%`);
+    expect(root(card).querySelector('.label[data-label="air_unit_out"]')).toBeNull();
+    card.remove();
+  });
+
+  test('ground: the collector shows no outside temperature or fan speed', async () => {
+    const card = await mount({ prefix: P, source: 'ground' }, airHass('45.2', '%'));
+    expect(root(card).querySelector('.label[data-label="outside_temperature"]')).toBeNull();
+    expect(root(card).querySelector('.label[data-label="fan_speed"]')).toBeNull();
+    card.remove();
   });
 
   test('ground: a ground collector, and no air unit or fan', async () => {
@@ -206,6 +296,10 @@ describe('outer-loop source', () => {
     const zero = await mount({ prefix: P, source: 'air' }, withFan('0'));
     const unavailable = await mount({ prefix: P, source: 'air' }, withFan('unavailable'));
     const none = await mount({ prefix: P, source: 'air' }, { states: {} });
+    // the value below the fan: "0 %" at 0, the dash while the speed is unavailable or has no entity state
+    expect(valueText(zero, 'fan_speed')).toBe(`0${NB}%`);
+    expect(valueText(unavailable, 'fan_speed')).toBe(NO_VALUE);
+    expect(valueText(none, 'fan_speed')).toBe(NO_VALUE);
     for (const card of [zero, unavailable, none]) {
       expect(fan(card)?.classList.contains('still')).toBe(true);
       expect(fan(card)?.querySelectorAll('.fan-blade')).toHaveLength(5);
@@ -240,14 +334,14 @@ describe('outer-loop source', () => {
 });
 
 describe('fan speed in another unit', () => {
-  test('fan speed in rpm: the fan rotates at the fixed medium speed and no fan speed label is shown', async () => {
+  test('Fan speed in rpm: the fan rotates at the fixed medium speed and the speed shows with its unit', async () => {
     const hass: HassLike = {
       states: states([`sensor.${P}_aerothermal_fan_speed`, '900', 'rpm']),
     };
     const card = await mount({ prefix: P, source: 'air', layout: 'horizontal' }, hass);
     expect(fan(card)?.classList.contains('still')).toBe(false);
     expect(fan(card)?.getAttribute('style') ?? '').toContain('--fan-duration: 3s');
-    expect(root(card).querySelector('[data-label="fan_speed"]')).toBeNull();
+    expect(root(card).querySelector('.label[data-label="fan_speed"] .value')?.textContent.trim()).toBe('900 rpm');
     card.remove();
   });
 

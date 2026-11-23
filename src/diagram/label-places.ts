@@ -208,21 +208,34 @@ const centre = (rect: { x: number; y: number; width: number; height: number }): 
 const TANK_TEMPERATURE_DY = 44;
 
 /**
- * The labels of the band's bodies, placed from the zones (rework-layouts D4): the source's Out in the free strip of the air
- * unit (between the fan and the coil block) or of the collector (between the hatching and the serpentine), and the DHW
+ * The labels of the band's bodies, placed from the zones (rework-layouts D4, harmonize-band D4): the air unit's outside
+ * temperature above its fan, its fan speed below it and its Out beside the exit pass (the hybrid has no Out), the
+ * collector's Out (between the hatching and the serpentine), and the DHW
  * temperature in the upper part of the external tank, bare on its tinted body. A body that is not in the zones'
- * band key has no label; the hybrid shows only its collector's Out.
+ * band key has no label.
  */
 function bodySpecs(z: Partial<BandZones>): LabelSpec[] {
   const specs: LabelSpec[] = [];
   const { airUnit, collector, externalTank } = z;
-  if (airUnit !== undefined && z.key?.source === 'air') {
-    const [x, y] = centre(airUnit.strip);
+  if (airUnit !== undefined && (z.key?.source === 'air' || z.key?.source === 'hybrid')) {
+    const { outside, speed, out } = airUnit.values;
+    const air: ['air', 'hybrid'] = ['air', 'hybrid'];
     specs.push(
-      makeSpec('air_unit_out', 'source.air_unit_outlet_temperature', x, y, 'middle', {
-        source: ['air'],
+      makeSpec('outside_temperature', 'source.outside_temperature', ...centre(outside), 'middle', {
+        source: air,
+        bare: true,
       }),
+      makeSpec('fan_speed', 'source.fan_speed', ...centre(speed), 'middle', { source: air, bare: true }),
     );
+    // the hybrid's link pipe carries the air unit's outlet, and the Out of the source is the collector's: no Out here
+    if (z.key.source === 'air') {
+      specs.push(
+        makeSpec('air_unit_out', 'source.air_unit_outlet_temperature', out.x, centre(out)[1], 'start', {
+          source: ['air'],
+          bare: true,
+        }),
+      );
+    }
   }
   if (collector !== undefined && z.key?.source !== undefined && z.key.source !== 'air') {
     const [x, y] = centre(collector.strip);

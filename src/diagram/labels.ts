@@ -14,7 +14,7 @@ import { css, html, nothing, unsafeCSS, type TemplateResult } from 'lit';
 import { formatReading, type DisplayContext } from '../calc/display';
 import type { Mode } from '../calc/mode';
 import type { Readings } from '../calc/readings';
-import type { DhwStorage } from '../config/options';
+import type { DhwStorage, Source } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { Features } from '../config/variants';
 import { FOOTER_LABELS, NO_VALUE } from '../strings';
@@ -168,6 +168,8 @@ export interface FooterInputs {
   mode: Mode;
   /** The `htr` feature: the HTR item needs it `true`. */
   features: Pick<Features, 'htr'>;
+  /** The outer-loop source: an air unit (`air`, `hybrid`) shows the outside temperature itself, so the footer drops it. */
+  source: Source;
   /** The DHW storage: the HTR item needs a tank in use (`external` or `internal`). */
   dhw: DhwStorage;
   /** The roles set to `none`: an item whose roles are all in it is left out. */
@@ -177,7 +179,8 @@ export interface FooterInputs {
 }
 
 /**
- * The footer's values (the same in both layouts): the outside temperature, the efficiency and the mode's power items
+ * The footer's values (the same in both layouts): the outside temperature (only with a ground source: an air unit shows
+ * it on the drawing), the efficiency and the mode's power items
  * (add-htr-state D2): heating DG1 (`heating.power`, else `heating.capacity`) and HTR (`htr.power`), dhw DHW (`dhw.power`,
  * else `heating.capacity`), active_cooling Cooling (`cooling.capacity`) and HTR, no power item in any other mode. HTR
  * shows only with the feature `true`, a DHW tank in use and an `htr.power` entity, also at 0 W. The efficiency is
@@ -250,7 +253,9 @@ export function footerItems(
           ? [number('cooling_power', 'cooling.capacity', FOOTER_LABELS.cooling), htr]
           : [];
   const items = [
-    number('outside_temperature', 'source.outside_temperature', FOOTER_LABELS.outside),
+    inputs.source === 'ground'
+      ? number('outside_temperature', 'source.outside_temperature', FOOTER_LABELS.outside)
+      : undefined,
     efficiency,
     ...power,
   ];

@@ -112,7 +112,7 @@ the tank to be centred on the coil.
 The air unit is a front view of an outdoor unit (proposal, from the user's photo of 2026-11-23). All of its parts are
 offsets from its slot in `airUnitShape`:
 
-- **Case:** the body rectangle (radius 6) from the top to 10 units above the band's bottom.
+- **Case:** the body rectangle (radius 6) from the top to 8 units above the band's bottom (the feet's height).
 - **Feet:** two small feet under the case, standing on the band's bottom. They sit clear of the brine pipes' columns.
 - **Coil panel:** on the case's left, inset by the margin, about 64 units wide and nearly the case's height. It holds
   the horizontal fins and the brine serpentine of four vertical passes. The serpentine enters and leaves on the
@@ -134,6 +134,19 @@ today's strip. There are no captions: the tooltips name the values, and the posi
 The fan speed takes the role's unit. A percentage shows whole percent, as the pump speeds do (rework-layouts), and
 rpm shows the rpm value. In the hybrid the air unit shows the outside temperature and the fan speed, but no Out: the
 link pipe carries the air unit's outlet, and the source's Out is the collector's.
+
+Applied 2026-11-23: none of the fallbacks. The fan ring keeps its radius of 40 and the speed stays below the fan: the
+overlap tests at both layouts' thresholds and at 320 px pass with the three values in the boxes of `values`. The case
+ends above the band's bottom and the two feet stand on it, as in the Case and Feet bullets above (decided by the user
+2026-11-23 during apply, after a first version drew the feet inside a full-height case; the "Shared style" scenario
+names the air unit's feet as its lowest edge). The columns moved left with the coil panel: the feed to 18 and the
+exit to 60 units from the unit's left edge; the pipes still meet them and cross nothing in any band key.
+
+Known limitation (accepted by the user 2026-11-23 during apply): a fan speed in rpm of four digits ("1450 rpm") is
+wider than the room between the coil panel and the case wall in the vertical layout at 320 px, so it can touch the
+coil panel there. Percentages, three-digit rpm values, the defrost values and both layouts at their thresholds fit.
+Neither fallback above gains width. The docs name the limitation, and the browser test keeps the case as an expected
+failure, so it turns red if a later change makes it fit.
 
 ### D5 The borehole collector
 

@@ -32,15 +32,17 @@ converging from its suction side towards its discharge side, drawn as outlines w
 
 ### Requirement: One band style
 The band's bodies (the emitter, the air unit, the ground collector and the external tank) SHALL share one corner
-radius, one outline weight and one inner margin, SHALL draw no divider line across the body, and SHALL stand flat on
-the band's bottom edge (decided by the user 2026-11-23).
+radius, one outline weight and one inner margin, SHALL draw no divider line across the body, and SHALL stand on the
+band's bottom edge (decided by the user 2026-11-23): the emitter, the collector and the tank flat along their width,
+the air unit on its two feet, with its case ending above the edge (decided by the user 2026-11-23, during apply).
 
 #### Scenario: Shared style
 - **WHEN** the card renders model B with `dhw: external`, `source: hybrid` and `emitter: underfloor`, in either layout
 - **THEN** the emitter, the air unit, the collector and the tank have the same corner radius and share one outline
   class (so one outline width), no divider line crosses any of them from wall to wall (a pipe, the collector's
-  surface line and the tank's rim are not dividers), and the lowest edge of each body's outline lies on the band's
-  bottom edge along the body's width
+  surface line and the tank's rim are not dividers), the lowest edge of the emitter's, the collector's and the tank's
+  outline lies on the band's bottom edge along the body's width, and the air unit's case ends above that edge while
+  the bottoms of its two feet lie on it
 
 ### Requirement: One jog level
 The horizontal sections of the pipes between the cabinet's top edge and the band's bodies SHALL lie at one height above

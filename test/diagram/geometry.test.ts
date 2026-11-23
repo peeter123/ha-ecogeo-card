@@ -329,7 +329,7 @@ describe.each(LAYOUTS)('integrity in every configuration, %s layout', (layout) =
       }
 
       // only the coil lines enter the integrated tank (the taps end on its top wall), only the external coil pipes the external tank
-      // and only the air coil pipes the air unit's housing
+      // and only the air coil pipes the air unit's case
       const entering = (rect: { x: number; y: number; width: number; height: number }): string[] =>
         segments.filter((segment) => enters(routePoints(segment), rect)).map((segment) => segment.id);
       // (a tank that is not drawn is not checked)

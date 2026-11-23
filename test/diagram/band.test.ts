@@ -329,7 +329,20 @@ describe('the band key of a draw context', () => {
       for (const rect of rects) {
         expect(rect.classList.contains('band-outline')).toBe(true);
         expect(Number(rect.getAttribute('rx'))).toBe(BAND.radius);
-        expect(Number(rect.getAttribute('y')) + Number(rect.getAttribute('height'))).toBe(own.band.bottom);
+        const bottom = Number(rect.getAttribute('y')) + Number(rect.getAttribute('height'));
+        if (rect.closest('g[data-source="air"]') === null) {
+          // the emitter, the collector: flat along their width on the band's bottom edge
+          expect(bottom).toBe(own.band.bottom);
+        } else {
+          // the air unit's case ends above the edge, and the bottoms of its two feet lie on it (harmonize-band D4)
+          expect(bottom).toBeLessThan(own.band.bottom);
+          const feet = [...(rect.closest('g[data-source="air"]')?.querySelectorAll('.air-foot') ?? [])];
+          expect(feet).toHaveLength(2);
+          for (const foot of feet) {
+            expect(Number(foot.getAttribute('y')) + Number(foot.getAttribute('height'))).toBe(own.band.bottom);
+            expect(Number(foot.getAttribute('y'))).toBe(bottom);
+          }
+        }
       }
       // the tank: the shared class, the same radius at its bottom corners, the outline reaching the band's bottom at both walls
       const tank = own.externalTank;
