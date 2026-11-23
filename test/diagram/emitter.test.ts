@@ -6,7 +6,7 @@ import '../../src/index';
 import { EcogeoCard } from '../../src/card/ecogeo-card';
 import type { RolePath } from '../../src/config/roles';
 import { temperatureColor } from '../../src/diagram/colors';
-import { BAND, arrangementFor, crossingPoints, type EmitterShape } from '../../src/diagram/geometry';
+import { BAND, arrangementFor, crossingPoints, type EmitterShape, type Point } from '../../src/diagram/geometry';
 import { MUTED_COLOR } from '../../src/diagram/colors';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassLike } from '../../src/lib/hass';
@@ -102,9 +102,10 @@ describe('heating-emitter "Emitter above connections 1/2"', () => {
         expect(found, `${one.id} x ${two.id}`).toEqual([]);
       }
     });
-    // the loop's own path (the body's) crosses neither pipe
-    for (const segment of pipes) {
-      expect(crossingPoints(emitter.loop, segment.points), segment.id).toEqual([]);
+    // the spiral's runs cross neither connection pipe
+    for (const segment of pipes.filter((one) => !one.id.startsWith('dg1_loop'))) {
+      expect(crossingPoints(emitter.loopIn, segment.points), segment.id).toEqual([]);
+      expect(crossingPoints(emitter.loopOut, segment.points), segment.id).toEqual([]);
     }
   });
 
@@ -138,32 +139,83 @@ describe('heating-emitter "Emitter above connections 1/2"', () => {
   });
 });
 
+/** The two runs of the underfloor spiral as one path, from the inlet to the outlet. */
+const spiralOf = (shape: EmitterShape): Point[] => [...shape.loopIn, ...shape.loopOut.slice(1)];
+
+/** The distance of a point from a segment. */
+function distance(point: Point, from: Point, to: Point): number {
+  const [px, py] = point;
+  const [ax, ay] = from;
+  const [bx, by] = to;
+  const length = (bx - ax) ** 2 + (by - ay) ** 2;
+  const t = length === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / length));
+  return Math.hypot(px - (ax + t * (bx - ax)), py - (ay + t * (by - ay)));
+}
+
 describe('heating-emitter "Underfloor loop drawing"', () => {
-  test('at least four horizontal passes joined by bends, inside a rectangle, the ends on the supply and return pipes', async () => {
+  test('a bifilar spiral of two or three inward turns, a pitch of at least 12, both ends on the bottom face', async () => {
     const card = await mount({ emitter: 'underfloor' });
     const shape = shapeOf('underfloor');
-    const horizontal = shape.loop.slice(1).filter((point, index) => point[1] === shape.loop[index]?.[1]);
-    expect(horizontal.length).toBeGreaterThanOrEqual(4);
-    // the passes lie inside the body's rectangle
-    for (const [x, y] of shape.loop) {
-      expect(x).toBeGreaterThan(shape.x);
-      expect(x).toBeLessThan(shape.x + shape.width);
-      expect(y).toBeGreaterThan(shape.y);
-      expect(y).toBeLessThan(shape.y + shape.height);
+    const face = shape.y + shape.height;
+    // the inward run: up the feed, then four corners per turn (left, top left, top right, down to the next turn) and the
+    // reversal; so its vertices number 2 + 3 * turns + (turns - 1) + 1 = 4 * turns + 2
+    const turns = (shape.loopIn.length - 2) / 4;
+    expect(Number.isInteger(turns)).toBe(true);
+    expect(turns).toBeGreaterThanOrEqual(2);
+    expect(turns).toBeLessThanOrEqual(3);
+    expect(shape.pitch).toBeGreaterThanOrEqual(12);
+    // inside the body's rectangle, at the band's margin
+    for (const [x, y] of spiralOf(shape).slice(1, -1)) {
+      expect(x).toBeGreaterThanOrEqual(shape.x + BAND.margin);
+      expect(x).toBeLessThanOrEqual(shape.x + shape.width - BAND.margin);
+      expect(y).toBeGreaterThanOrEqual(shape.y + BAND.margin);
+      expect(y).toBeLessThanOrEqual(face - BAND.margin);
     }
-    expect(shape.loop[0]).toEqual(shape.inlet);
-    expect(shape.loop.at(-1)).toEqual(shape.outlet);
-    // drawn: one loop path with rounded bends (arcs), and the rectangle
-    const loop = root(card).querySelector('path[data-emitter-loop]');
-    expect(loop).not.toBeNull();
-    expect((loop?.getAttribute('d') ?? '').match(/A/g)?.length).toBeGreaterThanOrEqual(2 * 4 - 2);
+    // both ends on the bottom face, where the supply and return pipes meet them
+    expect(shape.inlet).toEqual([shape.feedX, face]);
+    expect(shape.outlet).toEqual([shape.exitX, face]);
+    expect(shape.loopIn[0]).toEqual(shape.inlet);
+    expect(shape.loopOut.at(-1)).toEqual(shape.outlet);
+    expect(shape.loopIn.at(-1)).toEqual(shape.loopOut[0]);
+    // drawn as two pipe segments with rounded bends, and the rectangle
+    for (const id of ['dg1_loop_in', 'dg1_loop_out']) {
+      expect(pipe(card, id).getAttribute('d') ?? '', id).toMatch(/A/);
+    }
     expect(root(card).querySelector('g.emitter rect.emitter-outline')).not.toBeNull();
-    // the supply pipe ends where the loop starts and the return pipe starts where it ends
     const sup = arrangementFor('horizontal', { source: 'ground', tank: true, emitter: 'underfloor' }).segments.find(
       (segment) => segment.id === 'dg1_sup',
     );
-    expect(sup?.points.at(-1)).toEqual(shape.loop[0]);
+    expect(sup?.points.at(-1)).toEqual(shape.inlet);
     card.remove();
+  });
+
+  test('the spiral does not cross itself and its runs stay a pitch apart', () => {
+    const shape = shapeOf('underfloor');
+    expect(crossingPoints(shape.loopIn, shape.loopOut)).toEqual([]);
+    for (const run of [shape.loopIn, shape.loopOut]) {
+      for (let one = 0; one < run.length - 1; one += 1) {
+        for (let two = one + 2; two < run.length - 1; two += 1) {
+          expect(
+            crossingPoints(run.slice(one, one + 2), run.slice(two, two + 2)),
+            `${String(one)} x ${String(two)}`,
+          ).toEqual([]);
+        }
+      }
+    }
+    // a vertex of one run is a pitch from every segment of the other, bar those at the shared reversal
+    const reversal = shape.loopIn.at(-1);
+    const apart = (these: readonly Point[], others: readonly Point[]): void => {
+      for (const point of these) {
+        for (let index = 0; index < others.length - 1; index += 1) {
+          const from = others[index];
+          const to = others[index + 1];
+          if (from === undefined || to === undefined || from === reversal || to === reversal) continue;
+          expect(distance(point, from, to)).toBeGreaterThanOrEqual(shape.pitch - 1e-9);
+        }
+      }
+    };
+    apart(shape.loopIn.slice(0, -1), shape.loopOut.slice(1));
+    apart(shape.loopOut.slice(1), shape.loopIn.slice(0, -1));
   });
 });
 
@@ -195,7 +247,20 @@ describe('heating-emitter "Emitter follows the DG1 production circuit"', () => {
       expect(flow(card, 'dg1_sup'), emitter).not.toBeNull();
       expect(flow(card, 'dg1_ret'), emitter).not.toBeNull();
       expect(emitterOf(card).classList.contains('muted'), emitter).toBe(false);
-      if (emitter === 'underfloor') expect(flow(card, 'dg1_loop')).not.toBeNull();
+      if (emitter === 'underfloor') {
+        expect(flow(card, 'dg1_loop_in')).not.toBeNull();
+        expect(flow(card, 'dg1_loop_out')).not.toBeNull();
+        // the flow runs in from the feed on the bottom face and back out from the reversal in the centre
+        const shape = shapeOf('underfloor');
+        const start = (id: string): number[] =>
+          (flow(card, id)?.getAttribute('d') ?? '')
+            .split(/[^0-9.-]+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map(Number);
+        expect(start('dg1_loop_in')).toEqual([...shape.inlet]);
+        expect(start('dg1_loop_out')).toEqual([...(shape.loopOut[0] ?? [])]);
+      }
       card.remove();
     }
   });
@@ -208,8 +273,14 @@ describe('heating-emitter "Emitter follows the DG1 production circuit"', () => {
       expect(emitterOf(card).classList.contains('muted'), emitter).toBe(true);
       expect(flow(card, 'dg1_sup'), emitter).toBeNull();
       expect(flow(card, 'dg1_ret'), emitter).toBeNull();
-      expect(flow(card, 'dg1_loop'), emitter).toBeNull();
-      expect(stops(card), emitter).toMatchObject({ start: MUTED_COLOR, end: MUTED_COLOR, muted: 'true' });
+      expect(flow(card, 'dg1_loop_in'), emitter).toBeNull();
+      expect(flow(card, 'dg1_loop_out'), emitter).toBeNull();
+      if (emitter === 'underfloor') {
+        expect(pipe(card, 'dg1_loop_in').classList.contains('muted')).toBe(true);
+        expect(pipe(card, 'dg1_loop_out').classList.contains('muted')).toBe(true);
+      } else {
+        expect(stops(card), emitter).toMatchObject({ start: MUTED_COLOR, end: MUTED_COLOR, muted: 'true' });
+      }
       card.remove();
     }
   });
@@ -228,28 +299,18 @@ describe('heating-emitter "Emitter follows the DG1 production circuit"', () => {
 });
 
 describe('heating-emitter "Emitter colours from supply to return"', () => {
-  test('underfloor: the pass nearest the inlet has the 35.0 degrees colour and the pass nearest the outlet the 30.0 degrees colour', async () => {
+  test('underfloor: the inward run has the 35.0 degrees colour, the outward run the 30.0 degrees colour, no gradient', async () => {
     const card = await mount({ emitter: 'underfloor' }, 'heating', BOTH);
-    const shape = shapeOf('underfloor');
-    const gradient = stops(card);
-    expect(gradient).toMatchObject({ start: HOT, end: COLD });
-    // the gradient runs vertically from the first (inlet) pass to the last (outlet) pass
-    expect(gradient.y1).toBe(shape.passes[0]);
-    expect(gradient.y2).toBe(shape.passes.at(-1));
-    expect(gradient.y1).toBeLessThan(gradient.y2);
-    expect(shape.inlet[1]).toBe(gradient.y1);
-    expect(shape.outlet[1]).toBe(gradient.y2);
-    const loop = root(card).querySelector('path[data-emitter-loop]');
-    expect(loop?.getAttribute('style')).toMatch(/stroke:\s*url\(#[^)]+\)/);
-    // the gradient the loop refers to is the one in the emitter
-    const id = /url\(#([^)]+)\)/.exec(loop?.getAttribute('style') ?? '')?.[1] ?? '';
-    expect(root(card).querySelector(`linearGradient[id="${id}"]`)).not.toBeNull();
+    expect(strokeOf(pipe(card, 'dg1_loop_in'))).toBe(HOT);
+    expect(strokeOf(pipe(card, 'dg1_loop_out'))).toBe(COLD);
+    expect(root(card).querySelector('g.emitter linearGradient')).toBeNull();
     card.remove();
   });
 
-  test('underfloor: the loop keeps its gradient with exchanger_fill none', async () => {
+  test('underfloor: exchanger_fill none changes nothing in the runs', async () => {
     const card = await mount({ emitter: 'underfloor', exchanger_fill: 'none' }, 'heating', BOTH);
-    expect(stops(card)).toMatchObject({ start: HOT, end: COLD });
+    expect(strokeOf(pipe(card, 'dg1_loop_in'))).toBe(HOT);
+    expect(strokeOf(pipe(card, 'dg1_loop_out'))).toBe(COLD);
     card.remove();
   });
 
@@ -283,7 +344,7 @@ describe('heating-emitter "Emitter colours from supply to return"', () => {
   });
 
   test('a missing production probe mutes its pipe and the gradient takes the muted colour at that end', async () => {
-    const card = await mount({ emitter: 'underfloor' }, 'heating', { 'production.return_temperature': 'unavailable' });
+    const card = await mount({ emitter: 'radiator' }, 'heating', { 'production.return_temperature': 'unavailable' });
     expect(pipe(card, 'dg1_ret').classList.contains('muted')).toBe(true);
     expect(stops(card)).toMatchObject({
       start: expect.not.stringMatching(/^var\(--disabled/) as string,

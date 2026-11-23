@@ -98,21 +98,23 @@ export interface CollectorShape extends Rect {
 
 /**
  * The heat emitter on connections 1/2 (rework-layouts D5; not a manual item: it is outside the unit): an underfloor loop (a
- * serpentine of horizontal passes in a floor strip) or a radiator (a panel with vertical columns). The supply pipe runs from connection 1 to `inlet` and the return pipe from `outlet` to
- * connection 2, rising through the body's bottom face at `feedX` and `exitX`.
+ * bifilar spiral in a floor body) or a radiator (a panel with vertical columns). The supply pipe runs from connection 1 to
+ * `inlet` and the return pipe from `outlet` to connection 2, rising through the body's bottom face at `feedX` and `exitX`.
  */
 export interface EmitterShape extends Rect {
   readonly kind: Exclude<Emitter, 'none'>;
   /** The x of the supply and return pipes on the bottom face. */
   readonly feedX: number;
   readonly exitX: number;
-  /** Where the supply pipe ends (the first pass, the radiator's top left) and the return pipe starts (the last pass, the bottom right). */
+  /** Where the supply pipe ends (the spiral's start on the bottom face, the radiator's top left) and the return pipe starts (the spiral's end on the bottom face, the radiator's bottom right). */
   readonly inlet: Point;
   readonly outlet: Point;
-  /** The underfloor serpentine, from the inlet to the outlet (empty for a radiator). */
-  readonly loop: readonly Point[];
-  /** The y of the underfloor passes, in order (empty for a radiator): the first is the inlet's, the last the outlet's. */
-  readonly passes: readonly number[];
+  /** The spiral's inward run, from the inlet to the middle of its reversal (empty for a radiator): the supply colour. */
+  readonly loopIn: readonly Point[];
+  /** The spiral's outward run, from the middle of its reversal to the outlet (empty for a radiator): the return colour. */
+  readonly loopOut: readonly Point[];
+  /** The distance between adjacent runs of the spiral, twice the radius of its bends (0 for a radiator). */
+  readonly pitch: number;
   /** The radiator's columns (empty for an underfloor loop). */
   readonly columns: readonly Rect[];
 }
@@ -338,53 +340,76 @@ export function collectorShape(x0: number, bottom: number): CollectorShape {
 /** The stub length of connections 1/2 without an emitter. */
 export const STUB_LENGTH = 12;
 
-/** The pass spacing of the underfloor loop, and the columns of the radiator. */
-const UNDERFLOOR = { top: 50, step: 26, count: 5, inset: 52 } as const;
+/** The spiral's pitch (heating-emitter: at least 12 units, so the turns stay apart at 320 px) and its number of inward turns. */
+const UNDERFLOOR = { pitch: 14, turns: 3 } as const;
 const RADIATOR = { count: 6, width: 10, gap: 8, top: 52, bottom: 168, inletY: 62, outletY: 158 } as const;
+
+/**
+ * The underfloor spiral (heating-emitter "Underfloor loop drawing"): a rectangular bifilar spiral inside the body, at the band's
+ * margin. Both ends are on the bottom face, side by side at the body's centre, one pitch apart. The inward run turns left along
+ * the bottom and then winds clockwise towards the centre, each turn one pair of pitches inside the last. The outward run lies one
+ * pitch inside it (the same corners, inset by the pitch), so adjacent runs alternate between the two. In the last turn the inward
+ * run's top reaches over to the reversal, where the outward run, one pitch below it, starts back: the two meet in a half circle
+ * (every bend takes half the pitch as its radius). The runs are split at the middle of that half circle.
+ */
+function underfloorLoop(x0: number, y: number): { loopIn: Point[]; loopOut: Point[]; feedX: number; exitX: number } {
+  const { width, height } = BAND.emitter;
+  const pitch = UNDERFLOOR.pitch;
+  const face = y + height;
+  const turn = (k: number): { l: number; r: number; t: number; b: number } => ({
+    l: x0 + BAND.margin + 2 * pitch * k,
+    r: x0 + width - BAND.margin - 2 * pitch * k,
+    t: y + BAND.margin + 2 * pitch * k,
+    b: face - BAND.margin - 2 * pitch * k,
+  });
+  const feedX = x0 + width / 2 - pitch / 2;
+  const exitX = x0 + width / 2 + pitch / 2;
+  const inward: Point[] = [
+    [feedX, face],
+    [feedX, turn(0).b],
+  ];
+  const outward: Point[] = [
+    [exitX, face],
+    [exitX, turn(0).b - pitch],
+  ];
+  for (let k = 0; k < UNDERFLOOR.turns; k += 1) {
+    const now = turn(k);
+    inward.push([now.l, now.b], [now.l, now.t], [now.r, now.t]);
+    outward.push([now.l + pitch, now.b - pitch], [now.l + pitch, now.t + pitch]);
+    if (k < UNDERFLOOR.turns - 1) {
+      const next = turn(k + 1);
+      inward.push([now.r, next.b]);
+      outward.push([now.r - pitch, now.t + pitch], [now.r - pitch, next.b - pitch]);
+    } else {
+      outward.push([now.r, now.t + pitch]);
+    }
+  }
+  const last = turn(UNDERFLOOR.turns - 1);
+  const reversal: Point = [last.r, last.t + pitch / 2];
+  return { loopIn: [...inward, reversal], loopOut: [reversal, ...outward.reverse()], feedX, exitX };
+}
 
 /** The emitter placed with its left edge at `x0` and its bottom edge at `bottom`. */
 export function emitterShape(kind: EmitterShape['kind'], x0: number, bottom: number): EmitterShape {
   const { width, height } = BAND.emitter;
   const y = bottom - height;
-  const feedX = x0 + 34;
-  const exitX = x0 + width - 34;
-  const base = {
-    kind,
-    x: x0,
-    y,
-    width,
-    height,
-    feedX,
-    exitX,
-  } as const;
+  const base = { kind, x: x0, y, width, height } as const;
   if (kind === 'underfloor') {
-    const passes = Array.from({ length: UNDERFLOOR.count }, (_, index) => y + UNDERFLOOR.top + index * UNDERFLOOR.step);
-    const [y1, y2, y3, y4, y5] = passes;
-    if (y1 === undefined || y2 === undefined || y3 === undefined || y4 === undefined || y5 === undefined) {
-      throw new Error('five passes');
-    }
-    const left = x0 + UNDERFLOOR.inset;
-    const right = x0 + width - UNDERFLOOR.inset;
+    const { loopIn, loopOut, feedX, exitX } = underfloorLoop(x0, y);
     return {
       ...base,
-      inlet: [feedX, y1],
-      outlet: [exitX, y5],
-      loop: [
-        [feedX, y1],
-        [right, y1],
-        [right, y2],
-        [left, y2],
-        [left, y3],
-        [right, y3],
-        [right, y4],
-        [left, y4],
-        [left, y5],
-        [exitX, y5],
-      ],
-      passes,
+      feedX,
+      exitX,
+      inlet: [feedX, bottom],
+      outlet: [exitX, bottom],
+      loopIn,
+      loopOut,
+      pitch: UNDERFLOOR.pitch,
       columns: [],
     };
   }
+  const feedX = x0 + 34;
+  const exitX = x0 + width - 34;
   const span = RADIATOR.count * RADIATOR.width + (RADIATOR.count - 1) * RADIATOR.gap;
   const first = x0 + (width - span) / 2;
   const columns = Array.from({ length: RADIATOR.count }, (_, index): Rect => ({
@@ -395,10 +420,13 @@ export function emitterShape(kind: EmitterShape['kind'], x0: number, bottom: num
   }));
   return {
     ...base,
+    feedX,
+    exitX,
     inlet: [first, y + RADIATOR.inletY],
     outlet: [first + span, y + RADIATOR.outletY],
-    loop: [],
-    passes: [],
+    loopIn: [],
+    loopOut: [],
+    pitch: 0,
     columns,
   };
 }
@@ -1227,7 +1255,8 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
     );
   } else {
     // the emitter: the supply from connection 1 to its inlet (production outlet 33), the return from its outlet to connection 2
-    // (production return 34), both rising through the body's bottom face; the underfloor loop between them is the body's own path
+    // (production return 34), both rising through the body's bottom face. The underfloor spiral between them is two segments,
+    // the inward run in the supply colour (33) and the outward run in the return colour (34), both with the DG1 circuit's flow.
     const face = emitter.y + emitter.height;
     segments.push(
       seg(
@@ -1246,6 +1275,12 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
         OUT,
         { speedRole: PP },
       ),
+      ...(emitter.kind === 'underfloor'
+        ? [
+            seg('dg1_loop_in', DG1, line(...emitter.loopIn), OUT, { speedRole: PP, bend: emitter.pitch / 2 }),
+            seg('dg1_loop_out', DG1, line(...emitter.loopOut), RET, { speedRole: PP, bend: emitter.pitch / 2 }),
+          ]
+        : []),
       seg(
         'dg1_ret',
         DG1,

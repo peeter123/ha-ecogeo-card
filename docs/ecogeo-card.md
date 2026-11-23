@@ -613,24 +613,26 @@ item number (the comments in `src/diagram/emitter.ts` and `src/diagram/geometry.
 "Underfloor heating" or "Radiator". The `emitter` option chooses it: `underfloor` (the default), `radiator` or `none`.
 
 - **Pipes.** The supply pipe `dg1_sup` runs from connection 1 up through the join lane (at most one jog, 22 units over
-  the top edge) into the body's bottom face, 34 units inside its left edge, and on to the inlet; the return pipe
-  `dg1_ret` runs from the outlet down the right side of the body (34 units inside its right edge) to connection 2. Both
-  are in the DG1 production circuit, like the cabinet's `p1_up` and `p2_in`, so activity and animation follow the
-  circuit without logic of their own: they are coloured and animated while it is active (heating, passive cooling) and
-  muted and still otherwise (DHW). The supply takes production outlet 33 and the return production return 34, and the
-  DG1 pipes inside the cabinet continue them (see Colours).
-- **Underfloor** (`underfloor`), 180 x 176: a floor strip (a rounded rectangle in the outline style). One serpentine
-  runs in five horizontal passes 26 apart, joined by half-circle bends: the supply pipe enters at the top pass at the
-  left, the passes run right, left, right, left and right, and the return pipe leaves the bottom pass at the right. The
-  serpentine is one path stroked with a vertical gradient (user space, from the first pass to the last) from the supply
-  colour at the first, top pass (the inlet) to the return colour at the last, bottom pass (the outlet); the gradient is
-  the loop's own and does not follow `exchanger_fill`. Idle, the loop takes the muted colour; while the circuit flows,
-  the dash overlay runs along it like on the pipes.
+  the top edge) into the body's bottom face and on to the inlet; the return pipe `dg1_ret` runs from the outlet to
+  connection 2. On the radiator they meet the body 34 units inside its left and right edges; on the underfloor spiral
+  both meet it at its centre, 14 units apart. Both are in the DG1 production circuit, like the cabinet's `p1_up` and
+  `p2_in`, so activity and animation follow the circuit without logic of their own: they are coloured and animated
+  while it is active (heating, passive cooling) and muted and still otherwise (DHW). The supply takes production outlet
+  33 and the return production return 34, and the DG1 pipes inside the cabinet continue them (see Colours).
+- **Underfloor** (`underfloor`), 180 x 176: a floor body (a rounded rectangle in the outline style) holding a bifilar
+  spiral inside the band's 8-unit margin. It has three inward turns and a pitch of 14 units between adjacent runs, with
+  rounded bends of half the pitch. The supply and return pipes enter on the bottom face side by side. The inward run
+  winds clockwise from the supply pipe to the middle of the spiral's last turn, where it reverses; the outward run lies
+  between the turns of the inward run and leaves at the return pipe. The two runs are band segments, `dg1_loop_in`
+  (production outlet 33, the supply colour) and `dg1_loop_out` (production return 34, the return colour), both in the
+  DG1 production circuit: so adjacent turns alternate between the warm and the cool colour, and the dash overlay runs
+  in along the first and back out along the second like on the other pipes. Idle, both take the muted colour. The
+  spiral has no gradient and does not depend on `exchanger_fill`. A tap on the runs reaches the body's button.
 - **Radiator** (`radiator`), 180 x 176: a panel with six vertical columns (10 wide, 8 apart, 116 tall) in outline style.
   The supply pipe meets the first column at the top left (62 units under the body's top) and the return pipe leaves the
   last column at the bottom right (158 under it): inlet at the top on one side, outlet at the bottom on the other. With
   `exchanger_fill: gradient` (the default) the whole body is filled with the same vertical gradient, supply colour at
-  its top to return colour at its bottom (opacity 0.5, the exchangers' 0.55 less a little for the loop and columns);
+  its top to return colour at its bottom (opacity 0.5, the exchangers' 0.55 less a little for the columns);
   with `exchanger_fill: none` the body has no fill, and its outline, columns and pipes are drawn as with it.
 - **No emitter** (`none`): the slot is empty and connections 1 and 2 end in the short dead-end stubs of the cabinet
   (`p1_stub`, `p2_stub`, band segments like the emitter's pipes, 12 units over the top edge, coloured, never animated).
@@ -639,8 +641,9 @@ item number (the comments in `src/diagram/emitter.ts` and `src/diagram/geometry.
 - **Tap.** The emitter is a button for the DG1 demand's more-info dialog (the role `heating.demand`); with that role set
   to `none` (or without an entity) it is neither a button nor focusable. Nothing is tappable while the sample values
   show.
-- **Checks.** The body registers its columns (radiator) with `data-obstacle`; the loop, like
-  every pipe, is sampled by the overlap check. `test/diagram/emitter.test.ts` holds the heating-emitter scenarios.
+- **Checks.** The radiator registers its columns (the spiral's runs are pipes) with `data-obstacle`; every pipe,
+  the spiral's included, is sampled by the overlap check. `test/diagram/emitter.test.ts` holds the heating-emitter
+  scenarios.
 
 ### How the B4 figure is laid out
 
@@ -805,7 +808,7 @@ neighbouring stops of an absolute temperature first, where hrv mixes two colours
 |---|---|---|
 | Supply from the condenser to connection 1 (or 5 in DHW mode), the DHW supply, from connection 1 to the emitter (`dg1_sup`) or the stub of connection 1 | `production.outlet_temperature` | 33 |
 | Return from the emitter to connection 2 (`dg1_ret`) or the stub of connection 2, and from connection 2 (or 6) to the condenser | `production.return_temperature` | 34 |
-| The underfloor loop's passes (a gradient from the first to the last) and the radiator's fill (top to bottom) | outlet at the inlet, return at the outlet | 33, 34 |
+| The underfloor spiral's inward run (`dg1_loop_in`) and outward run (`dg1_loop_out`), and the radiator's fill (a gradient, top to bottom) | outlet 33 for the inward run and the radiator's top, return 34 for the outward run and its bottom | 33, 34 |
 | Brine from connection 4 to the evaporator | `brine.inlet_temperature` | 32 |
 | Brine from the evaporator to connection 3, and the pipes from 3 to the source | `brine.outlet_temperature` | 31 |
 | Compressor 11 through HTR exchanger 9 and valve 14 to the condenser | `compressor.discharge_temperature` | 30 |
@@ -846,7 +849,7 @@ A pipe is drawn in the theme's disabled colour (`--disabled-text-color`), withou
 
 The source's symbols (air unit housing and coil, ground collector) are muted the same way while the brine circuit is
 inactive; the fan keeps following its own speed. The emitter is muted with its pipes while the DG1 production circuit is
-inactive (in DHW mode, for one): its outline or columns, the loop and the radiator's fill take the muted
+inactive (in DHW mode, for one): its outline or columns, the spiral's runs and the radiator's fill take the muted
 colour, and nothing flows.
 
 The tap-water stubs of model C (47, 48, 49) are the exception: they are coloured by the DHW temperature in every

@@ -100,7 +100,7 @@ function samplePipe(path: SVGPathElement): Box[] {
 /** The pipe samples of a card, one entry per `path.pipe`. */
 function measurePipes(root: ParentNode): PipeSamples[] {
   return [...root.querySelectorAll<SVGPathElement>('path.pipe')].map((path) => ({
-    id: `pipe:${path.closest('[data-segment]')?.getAttribute('data-segment') ?? (path.hasAttribute('data-emitter-loop') ? 'dg1_loop' : '?')}`,
+    id: `pipe:${path.closest('[data-segment]')?.getAttribute('data-segment') ?? '?'}`,
     squares: samplePipe(path),
   }));
 }

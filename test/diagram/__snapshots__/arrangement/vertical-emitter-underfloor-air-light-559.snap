@@ -21,22 +21,12 @@ svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 740 797" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #d7263d 10.5%, #f2711c); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3; --outline-width: 2">
           <g data-emitter="body" class="emitter" data-emitter-kind="underfloor" aria-label="Underfloor heating" role="button" tabindex="0">
     <title>Underfloor heating</title>
-    <defs>
-      <linearGradient gradientUnits="userSpaceOnUse" x1="0" x2="0" id="ecogeoN-emitter" y1="56" y2="160" data-muted="false">
-        <stop offset="0" style="stop-color: color-mix(in srgb, #e8a317 52%, #8ecae6)">
-</stop>
-        <stop offset="1" style="stop-color: color-mix(in srgb, #e8a317 20%, #8ecae6)">
-</stop>
-      </linearGradient>
-    </defs>
+    
     <rect class="emitter-hit" fill="transparent" stroke="none" x="23.5" y="6" width="180" height="176">
 </rect>
     <rect class="emitter-outline band-outline" x="23.5" y="6" width="180" height="176" rx="6" fill="none" fill-opacity="0.5">
 </rect>
-    <path data-emitter-loop="" stroke-linecap="round" class="pipe" style="stroke: url(#ecogeoN-emitter)" d="M57.5 56 L138.5 56 A13 13 0 0 1 151.5 69 L151.5 69 A13 13 0 0 1 138.5 82 L88.5 82 A13 13 0 0 0 75.5 95 L75.5 95 A13 13 0 0 0 88.5 108 L138.5 108 A13 13 0 0 1 151.5 121 L151.5 121 A13 13 0 0 1 138.5 134 L88.5 134 A13 13 0 0 0 75.5 147 L75.5 147 A13 13 0 0 0 88.5 160 L169.5 160">
-</path>
-<path class="flow" data-flow="dg1_loop" style="--flow-duration: 1.2012012012012012s" d="M57.5 56 L138.5 56 A13 13 0 0 1 151.5 69 L151.5 69 A13 13 0 0 1 138.5 82 L88.5 82 A13 13 0 0 0 75.5 95 L75.5 95 A13 13 0 0 0 88.5 108 L138.5 108 A13 13 0 0 1 151.5 121 L151.5 121 A13 13 0 0 1 138.5 134 L88.5 134 A13 13 0 0 0 75.5 147 L75.5 147 A13 13 0 0 0 88.5 160 L169.5 160">
-</path>
+    
   </g>
 <g class="source" data-source-kind="air">
     <g data-source="air" class="air-unit" aria-label="Air unit">
@@ -265,13 +255,21 @@ svg:
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M382 759 L532 759 L532 722 M532 708 L532 670">
 </path>
-<path class="pipe " data-segment="dg1_sup" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M75 238 L75 216 L57.5 216 L57.5 182 L57.5 56">
+<path class="pipe " data-segment="dg1_sup" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M75 238 L75 216 L106.5 216 L106.5 182">
 </path>
-<path class="flow " data-flow="dg1_sup" style="--flow-duration: 1.2012012012012012s" d="M75 238 L75 216 L57.5 216 L57.5 182 L57.5 56">
+<path class="flow " data-flow="dg1_sup" style="--flow-duration: 1.2012012012012012s" d="M75 238 L75 216 L106.5 216 L106.5 182">
 </path>
-<path class="pipe " data-segment="dg1_ret" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M169.5 160 L169.5 182 L169.5 216 L152 216 L152 238">
+<path class="pipe " data-segment="dg1_loop_in" style="stroke: color-mix(in srgb, #e8a317 52%, #8ecae6)" d="M106.5 182 L106.5 181 A7 7 0 0 0 99.5 174 L38.5 174 A7 7 0 0 1 31.5 167 L31.5 21 A7 7 0 0 1 38.5 14 L188.5 14 A7 7 0 0 1 195.5 21 L195.5 139 A7 7 0 0 1 188.5 146 L66.5 146 A7 7 0 0 1 59.5 139 L59.5 49 A7 7 0 0 1 66.5 42 L160.5 42 A7 7 0 0 1 167.5 49 L167.5 111 A7 7 0 0 1 160.5 118 L94.5 118 A7 7 0 0 1 87.5 111 L87.5 77 A7 7 0 0 1 94.5 70 L132.5 70 A7 7 0 0 1 139.5 77 L139.5 77">
 </path>
-<path class="flow " data-flow="dg1_ret" style="--flow-duration: 1.2012012012012012s" d="M169.5 160 L169.5 182 L169.5 216 L152 216 L152 238">
+<path class="flow " data-flow="dg1_loop_in" style="--flow-duration: 1.2012012012012012s" d="M106.5 182 L106.5 181 A7 7 0 0 0 99.5 174 L38.5 174 A7 7 0 0 1 31.5 167 L31.5 21 A7 7 0 0 1 38.5 14 L188.5 14 A7 7 0 0 1 195.5 21 L195.5 139 A7 7 0 0 1 188.5 146 L66.5 146 A7 7 0 0 1 59.5 139 L59.5 49 A7 7 0 0 1 66.5 42 L160.5 42 A7 7 0 0 1 167.5 49 L167.5 111 A7 7 0 0 1 160.5 118 L94.5 118 A7 7 0 0 1 87.5 111 L87.5 77 A7 7 0 0 1 94.5 70 L132.5 70 A7 7 0 0 1 139.5 77 L139.5 77">
+</path>
+<path class="pipe " data-segment="dg1_loop_out" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M139.5 77 L139.5 77 A7 7 0 0 1 132.5 84 L108.5 84 A7 7 0 0 0 101.5 91 L101.5 97 A7 7 0 0 0 108.5 104 L146.5 104 A7 7 0 0 0 153.5 97 L153.5 63 A7 7 0 0 0 146.5 56 L80.5 56 A7 7 0 0 0 73.5 63 L73.5 125 A7 7 0 0 0 80.5 132 L174.5 132 A7 7 0 0 0 181.5 125 L181.5 35 A7 7 0 0 0 174.5 28 L52.5 28 A7 7 0 0 0 45.5 35 L45.5 153 A7 7 0 0 0 52.5 160 L113.5 160 A7 7 0 0 1 120.5 167 L120.5 182">
+</path>
+<path class="flow " data-flow="dg1_loop_out" style="--flow-duration: 1.2012012012012012s" d="M139.5 77 L139.5 77 A7 7 0 0 1 132.5 84 L108.5 84 A7 7 0 0 0 101.5 91 L101.5 97 A7 7 0 0 0 108.5 104 L146.5 104 A7 7 0 0 0 153.5 97 L153.5 63 A7 7 0 0 0 146.5 56 L80.5 56 A7 7 0 0 0 73.5 63 L73.5 125 A7 7 0 0 0 80.5 132 L174.5 132 A7 7 0 0 0 181.5 125 L181.5 35 A7 7 0 0 0 174.5 28 L52.5 28 A7 7 0 0 0 45.5 35 L45.5 153 A7 7 0 0 0 52.5 160 L113.5 160 A7 7 0 0 1 120.5 167 L120.5 182">
+</path>
+<path class="pipe " data-segment="dg1_ret" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M120.5 182 L120.5 216 L152 216 L152 238">
+</path>
+<path class="flow " data-flow="dg1_ret" style="--flow-duration: 1.2012012012012012s" d="M120.5 182 L120.5 216 L152 216 L152 238">
 </path>
 <path class="pipe muted" data-segment="dhw_ext_in" d="M677 238 L677 198 L600 198 L600 96 L612 96">
 </path>

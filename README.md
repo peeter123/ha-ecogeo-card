@@ -128,7 +128,7 @@ fault.
 | `entities` | group | from the prefix | Entity id per role, nested by role path, or `none` for a role the unit does not have (see Roles). |
 | `states` | group | `off: [OFF]`, `defrost: [Defrost]` | The state texts that mean off (the on/off entity) and defrost (the compressor mode entity); a list replaces its default, case-insensitive. See Using another source in the docs. |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
-| `emitter` | `underfloor`, `radiator`, `none` | `underfloor` | The heat emitter drawn above connections 1 and 2, on the DG1 heating circuit: an underfloor loop (a flat serpentine in a floor strip), a panel radiator, or none (connections 1 and 2 then end in short stubs). It follows the DG1 production circuit: coloured and animated while that circuit is active, muted otherwise. |
+| `emitter` | `underfloor`, `radiator`, `none` | `underfloor` | The heat emitter drawn above connections 1 and 2, on the DG1 heating circuit: an underfloor loop (a flat spiral in a floor body), a panel radiator, or none (connections 1 and 2 then end in short stubs). It follows the DG1 production circuit: coloured and animated while that circuit is active, muted otherwise. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
 | `layout` | `auto`, `horizontal`, `vertical` | `auto` | `auto` shows the vertical layout while the card is narrower than 560 px and the horizontal layout otherwise (and before the width is known), with 24 px of hysteresis once vertical (see Layout in the docs); `horizontal` and `vertical` use that layout at any width. The former values `full` and `compact` are errors. |
 
@@ -181,13 +181,13 @@ over 1/2, the source over 3/4, the tank over 5/6), joined to them by short pipes
 
 | `emitter` | Drawn |
 |---|---|
-| `underfloor` (default) | A floor strip with one flat serpentine of five passes, entered at the top pass by the supply pipe from connection 1 and left at the bottom pass by the return pipe to connection 2; the passes shade from the supply colour at the top to the return colour at the bottom. |
+| `underfloor` (default) | A floor body with one flat spiral of three turns: the supply pipe from connection 1 runs in along the spiral and the return pipe to connection 2 runs back out between its turns, so adjacent turns alternate between the supply colour and the return colour. |
 | `radiator` | A panel with six vertical columns, the supply pipe meeting it at the top left and the return pipe at the bottom right; with `exchanger_fill: gradient` the body is filled from the supply colour at the top to the return colour at the bottom, with `none` it is not filled. |
 | `none` | No emitter: connections 1 and 2 end in short stubs. |
 
 The emitter is on the DG1 production circuit: its pipes and body are coloured by production outlet 33 (supply) and
 return 34 (return) and animated while that circuit is active (heating, passive cooling), and muted and still otherwise
-(DHW). Only the pipes and the underfloor loop carry the flow animation; the radiator body is coloured but shows no
+(DHW). Only the pipes and the underfloor spiral carry the flow animation; the radiator body is coloured but shows no
 flow. Tapping it opens the DG1 demand entity's more-info dialog. It is not a
 part of the unit and has no manual item number.
 

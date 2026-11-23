@@ -37,6 +37,12 @@ the user allows it.
   demands on. Pass when the compressor is open, there is no "Demand" anywhere, and the tank value is regular weight.
   Record the verdict here.
 
+  Verdict (2026-11-23): pass. The captures scenario-heating (horizontal), vertical-light-heating (320 px) and
+  phone-heating (360 px) show a three-turn spiral. Adjacent turns alternate between the supply and the return colour
+  and stay clearly apart, no turn crosses another, and the dashes run in along the outer supply turns and back out
+  along the return turns between them. The supply and return pipes meet the spiral side by side on the bottom face
+  and cross nothing.
+
   Verdict (2026-11-23): `npm run capture` (316 captures). Inspected labels-air-1000-heating (model B, external tank, DG1
   demand on), labels-air-1000-dhw (DHW demand on) and labels-modelC-1000-heating. Pass: compressor 11 is open (circle
   and two converging lines, no fill); no "Demand" text anywhere (emitter, stubs, external tank, tank 50); the tank
@@ -71,7 +77,7 @@ the user allows it.
 
 ## 3. The spiral emitter
 
-- [ ] 3.1 Build the underfloor emitter as a bifilar spiral in `emitterShape` (design D6; heating-emitter "Underfloor
+- [x] 3.1 Build the underfloor emitter as a bifilar spiral in `emitterShape` (design D6; heating-emitter "Underfloor
   loop drawing"):
   - at least two inward turns, at most three;
   - a pitch of at least 12 units;
@@ -79,13 +85,13 @@ the user allows it.
   - feed and exit on the bottom face.
 
   Verify: unit tests assert the turn count, the pitch, no self-crossing, and both ends on the bottom face.
-- [ ] 3.2 Split the loop into the segments `dg1_loop_in` (production outlet 33) and `dg1_loop_out` (production return
+- [x] 3.2 Split the loop into the segments `dg1_loop_in` (production outlet 33) and `dg1_loop_out` (production return
   34), both animated with the DG1 circuit. Keep the emitter's gradient for the radiator only (heating-emitter "Emitter
   colours from supply to return"). Verify: the heating-emitter scenarios "Underfloor colours" and "Spiral without
   crossings" are unit tests; the radiator tests pass unchanged.
-- [ ] 3.3 Update README.md and docs/ecogeo-card.md (the underfloor spiral and its colours). Verify: `npm run check`
+- [x] 3.3 Update README.md and docs/ecogeo-card.md (the underfloor spiral and its colours). Verify: `npm run check`
   passes.
-- [ ] 3.4 Emulator check: a subagent inspects the underfloor captures in heating, in both layouts and at 320 px. Pass
+- [x] 3.4 Emulator check: a subagent inspects the underfloor captures in heating, in both layouts and at 320 px. Pass
   when the turns alternate warm and cool, stay apart, and the flow runs in and back out. Record the verdict here.
 
 ## 4. The air unit

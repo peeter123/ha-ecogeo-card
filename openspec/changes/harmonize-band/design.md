@@ -173,6 +173,10 @@ because it needs two parallel flow paths in the segment model for no extra infor
 - The outward run winds back out between the inward turns and leaves on the bottom face at the exit column.
 - The pitch between adjacent runs is at least 12 units, so the turns stay apart at 320 px.
 - With the demand strip gone, the spiral uses the whole body inside the margin.
+- The feed and exit columns lie side by side at the body's centre, one pitch apart (settled 2026-11-23 during
+  apply): the runs open towards them, so the bottom-right corner stays free. The connection pipes from ports 1/2
+  keep separate horizontal spans on the jog level (port 1 < feed < exit < port 2 in every band key); group 6's
+  `jogSpans` starts from these columns. The radiator keeps its columns 34 units inside each edge.
 
 The loop becomes two segments, `dg1_loop_in` (production outlet 33) and `dg1_loop_out` (production return 34),
 instead of one path with a vertical gradient. Two segments because:
