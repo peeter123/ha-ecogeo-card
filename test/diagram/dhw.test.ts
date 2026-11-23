@@ -161,7 +161,7 @@ describe('DHW storage', () => {
     expect(coil?.outX).toBeGreaterThan(extent.right);
     // the value labels sit inside the tank's upper part (above the coil), centred on it, bare on the tinted body
     const specs = LABEL_SPECS.filter((spec) => spec.id.startsWith('tank_external'));
-    expect(specs.map((spec) => spec.id).sort()).toEqual(['tank_external_demand', 'tank_external_temperature']);
+    expect(specs.map((spec) => spec.id).sort()).toEqual(['tank_external_temperature']);
     for (const spec of specs) {
       expect(spec.x).toBe(EXTERNAL_TANK.x + EXTERNAL_TANK.width / 2);
       expect(spec.y).toBeGreaterThan(EXTERNAL_TANK.y + EXTERNAL_TANK.dome);

@@ -19,7 +19,7 @@ for the explanation of what the card shows and where each part comes from.
   with lanes between them, where the values sit, 720 units wide, with compressor 11 and exchanger 10 on its centre line;
   the horizontal layout widens the column lanes, equally on both sides of that line, to a cabinet 980 units wide, and
   the vertical layout heightens the row lanes. The emitter, the source and the external tank stand in a band above it,
-  all of one height.
+  all of one height. Compressor 11 is the manual's open symbol: a circle with two converging lines, with no fill.
 - Pipes coloured by temperature on an absolute scale (blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at
   30 °C, orange at 50 °C, red at 70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe
   with no probe value is muted. The plate exchangers are filled on each side with a gradient from the colour of the pipe
@@ -27,10 +27,11 @@ for the explanation of what the card shows and where each part comes from.
 - The active circuits move: dashes run in the direction of the flow at a speed that follows the pump or the compressor,
   the refrigerant reverses in active cooling, and the circuits that are idle in the derived operating mode are muted.
   `prefers-reduced-motion` stops all animation.
-- Live values beside their components, 18 in all: the production and brine temperatures with Out and In captions, both
+- Live values beside their components, 16 in all: the production and brine temperatures with Out and In captions, both
   pressures and pump speeds (whole percentages), the discharge and suction temperatures and pressures, the compressor
-  speed, the expansion valve's opening, the source's Out, the DHW temperature, and the DG1 and DHW demand. The drawing
-  carries no captions naming its parts; hover a part for its name. The source's Out and the DHW temperature are bare
+  speed, the expansion valve's opening, the source's Out and the DHW temperature. The drawing
+  carries no captions naming its parts, and no demand caption (the DHW demand sets the mode, the DG1 demand is the
+  emitter's tap); hover a part for its name. The source's Out and the DHW temperature are bare
   numbers inside the air unit, the ground collector and the tank, which have no Out or DHW caption. Labels are at
   least 10 px, and grow with the drawing from a 770 px card (horizontal) or a 417 px card (vertical). Below it a
   footer shows the mode, the outside temperature, COP (EER while cooling) and the power items of the mode (DG1 and HTR
@@ -75,7 +76,7 @@ runs. In the card editor, the help link opens this README. How a release is made
 
 The card measures its own width and chooses a layout from it (the `layout` option, see Options). With `layout: auto`
 (the default) it shows the horizontal layout from 560 px wide, which is a panel view or a wide section, and the vertical
-layout below that, which is what a phone gets. Both draw the same parts, the same 18 values and the same footer. The
+layout below that, which is what a phone gets. Both draw the same parts, the same 16 values and the same footer. The
 horizontal layout is a wide drawing with the values beside their parts. The vertical layout is a taller arrangement of
 the same cabinet (740 units wide, with more height between the rows) that works from 320 px up: the hydraulic values
 along the vertical pipes (production and brine Out, In and pressure, and the brine pump) are turned to read from bottom
@@ -127,7 +128,7 @@ fault.
 | `entities` | group | from the prefix | Entity id per role, nested by role path, or `none` for a role the unit does not have (see Roles). |
 | `states` | group | `off: [OFF]`, `defrost: [Defrost]` | The state texts that mean off (the on/off entity) and defrost (the compressor mode entity); a list replaces its default, case-insensitive. See Using another source in the docs. |
 | `colors` | list | built-in scale | Temperature colour stops, see Colours. |
-| `emitter` | `underfloor`, `radiator`, `none` | `underfloor` | The heat emitter drawn above connections 1 and 2, on the DG1 heating circuit: an underfloor loop (a flat serpentine in a floor strip), a panel radiator, or none (connections 1 and 2 then end in short stubs). It follows the DG1 production circuit: coloured and animated while that circuit is active, muted otherwise, and its "Demand" value sits inside it. |
+| `emitter` | `underfloor`, `radiator`, `none` | `underfloor` | The heat emitter drawn above connections 1 and 2, on the DG1 heating circuit: an underfloor loop (a flat serpentine in a floor strip), a panel radiator, or none (connections 1 and 2 then end in short stubs). It follows the DG1 production circuit: coloured and animated while that circuit is active, muted otherwise. |
 | `exchanger_fill` | `gradient`, `none` | `gradient` | `gradient` fills each side of the plate exchangers 7, 8, 9 and 10 with a gradient from the colour of the pipe that enters it to the colour of the pipe that leaves it (muted when the circuit is idle); `none` leaves them unfilled. |
 | `layout` | `auto`, `horizontal`, `vertical` | `auto` | `auto` shows the vertical layout while the card is narrower than 560 px and the horizontal layout otherwise (and before the width is known), with 24 px of hysteresis once vertical (see Layout in the docs); `horizontal` and `vertical` use that layout at any width. The former values `full` and `compact` are errors. |
 
@@ -182,17 +183,17 @@ over 1/2, the source over 3/4, the tank over 5/6), joined to them by short pipes
 |---|---|
 | `underfloor` (default) | A floor strip with one flat serpentine of five passes, entered at the top pass by the supply pipe from connection 1 and left at the bottom pass by the return pipe to connection 2; the passes shade from the supply colour at the top to the return colour at the bottom. |
 | `radiator` | A panel with six vertical columns, the supply pipe meeting it at the top left and the return pipe at the bottom right; with `exchanger_fill: gradient` the body is filled from the supply colour at the top to the return colour at the bottom, with `none` it is not filled. |
-| `none` | No emitter: connections 1 and 2 end in short stubs, with the DG1 demand beside them. |
+| `none` | No emitter: connections 1 and 2 end in short stubs. |
 
 The emitter is on the DG1 production circuit: its pipes and body are coloured by production outlet 33 (supply) and
 return 34 (return) and animated while that circuit is active (heating, passive cooling), and muted and still otherwise
 (DHW). Only the pipes and the underfloor loop carry the flow animation; the radiator body is coloured but shows no
-flow. The DG1 "Demand" value sits inside it, and tapping it opens the demand entity's more-info dialog. It is not a
+flow. Tapping it opens the DG1 demand entity's more-info dialog. It is not a
 part of the unit and has no manual item number.
 
 | `dhw` | Drawn |
 |---|---|
-| `external` | A tank with a coil above ports 5/6 (model B), with the DHW temperature and the DHW demand inside its upper part. |
+| `external` | A tank with a coil above ports 5/6 (model B), with the DHW temperature inside its upper part. |
 | `internal` | The integrated tank 50 with coil 51 inside the cabinet (model C). |
 | `unused` | The model's tank (external on B, integrated on C) drawn muted, with no tank value and no DHW circuit active; HTR is drawn if its feature says so. |
 | `none` | Nothing DHW related (model B only). |

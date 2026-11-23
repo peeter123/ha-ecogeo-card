@@ -33,7 +33,7 @@ export const INSTALLATIONS = [
   { name: 'air-B-none', query: 'source=air&dhw=none' },
   { name: 'hybrid-B-none', query: 'source=hybrid&dhw=none' },
   { name: 'hybrid-C-internal', query: 'source=hybrid&model=C&dhw=internal' },
-  // the emitters: the default is the underfloor loop (every installation above); the radiator and none, whose DG1 demand sits beside the stubs
+  // the emitters: the default is the underfloor loop (every installation above); the radiator and none
   { name: 'ground-B-radiator', query: 'source=ground&emitter=radiator' },
   { name: 'air-B-no-emitter', query: 'source=air&emitter=none' },
   { name: 'hybrid-C-no-emitter', query: 'source=hybrid&model=C&dhw=internal&emitter=none' },
@@ -224,13 +224,10 @@ export function overlapPairs({ labels, parts, pipes = [], drawing, cabinet }: Me
  */
 export const BODY_LABELS: Readonly<Record<string, string>> = {
   tank_internal_temperature: 'symbol-group:50',
-  tank_internal_demand: 'symbol-group:50',
   tank_external_temperature: 'dhw-storage:external',
-  tank_external_demand: 'dhw-storage:external',
   air_unit_out: 'air-unit:air',
   ground_out: 'ground-collector:ground',
   hybrid_ground_out: 'ground-collector:ground',
-  emitter_demand: 'emitter:body',
 };
 
 /**

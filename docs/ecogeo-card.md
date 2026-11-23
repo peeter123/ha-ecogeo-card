@@ -407,8 +407,8 @@ probe 33's column, directly above resistor 44 with no other part between them (i
 and a unit test checks that they are neighbours); pump 16 stands on riser 4 at y 298, below transducer 37; and model C's
 tank 50 fills the one stretch of columns between the lanes that is wide enough for it (x 358 to 532), 174 wide, so coil
 51 sits in it with its ports 6 units inside the left wall. A unit test also checks that every cabinet label lies in a
-lane: its anchor in the frame, its whole box in the horizontal arrangement (the values inside the bodies and the DG1
-demand above the top edge are not cabinet labels).
+lane: its anchor in the frame, its whole box in the horizontal arrangement (the values inside the bodies are not cabinet
+labels).
 
 ### The horizontal arrangement
 
@@ -474,14 +474,13 @@ already 720 units wide, the width of the widest band, and a y map that heightens
   pitch of `PAIR_ROW_GAP.vertical` (the label height at 320 px with its margin): the discharge and suction blocks and
   the compressor speed. Frame y 0, 156, 228 and 520 become 238, 394, 490 and 782. The lane over the probe row holds no
   value, and the opening has its one row (36 units) under the valve row.
-- **Tank 50's head.** Where tank 50 is drawn (model C with internal storage; `BandKey.internal`) the y map adds 28
-  units at frame y 10 to 24 (`VERTICAL_MAP_Y_TANK50`, `VERTICAL_TANK_HEAD`; decided by the user 2026-11-20). That
-  range holds only tank 50's wall (its top is at y 8) and vertical pipes, no symbol: the DHW lines, valve 26, coil 51
-  and probe 54 start below it, so they keep their size and move down with the tank's floor. The tank's wall stretches
-  (the zone's height is `mapY(74) - mapY(8)`, 94 instead of 66), and the temperature and "Demand" stack above coil 51,
-  the temperature over Demand. 24 units leave no place for the two values at 320 px in either engine and 26 leave the
-  Demand blocked by 1 px of margin in the one scenario that shows it, so it is 28. It is not a value lane: it is the
-  one y-map breakpoint inside a body, and it applies only where tank 50 is drawn, because elsewhere the range holds
+- **Tank 50's head.** Where tank 50 is drawn (model C with internal storage; `BandKey.internal`) the y map adds 28 units
+  at frame y 10 to 24 (`VERTICAL_MAP_Y_TANK50`, `VERTICAL_TANK_HEAD`; decided by the user 2026-11-20). That range holds
+  only tank 50's wall (its top is at y 8) and vertical pipes, no symbol: the DHW lines, valve 26, coil 51 and probe 54
+  start below it, so they keep their size and move down with the tank's floor. The tank's wall stretches (the zone's
+  height is `mapY(74) - mapY(8)`, 94 instead of 66), and the temperature sits above coil 51. The 28 units were found
+  with the place search at 320 px: 24 left no place for tank 50's values in either engine. It is not a value lane: it is
+  the one y-map breakpoint inside a body, and it applies only where tank 50 is drawn, because elsewhere the range holds
   only vertical pipes and growing it would leave an empty strip. The horizontal layout does not change.
 - **Band.** The slots fill the 720 units exactly in the widest case, so the tank's slot (x 570 to 730) lies over port 4
   (x 607): the tank's pipe from port 5 runs left over port 4's riser, and the tank's jog (40 units over the top edge,
@@ -525,7 +524,6 @@ arrangement without tank 50's head; `headShift` lowers them where it applies), i
 | Brine pressure (37) | 664, 420, middle, turned | the same gap, next to In |
 | Pump 16 | 636, 560, middle, turned | the same gap, right of the pump |
 | Pump 15 | 192, 620, start | horizontal, above the pump (the search keeps it no lower than its default place) |
-| DG1 demand | 208, 224, middle | only without an emitter: above the cabinet, beside the stubs |
 
 The gaps between vertical pipes in the frame, in the rows beside the probes (frame x): 0 to 65, 65 to 142, 142 to 172,
 172 to 193, 193 to 542 (the lane over the probe row only), 542 to 597 and 597 to 720. A rotated value needs about 37
@@ -549,8 +547,7 @@ height. Nothing is drawn beside the cabinet and no pipe runs over it: each pipe 
 join lane, takes at most one horizontal jog there and rises into its part.
 
 The emitter is the `emitter` option's body (see The emitter): 200 units wide, in the first slot. With `emitter: none`
-its slot is empty (width 0) and gives its space to the others, and ports 1/2 keep short stubs with the DG1 demand beside
-them.
+its slot is empty (width 0) and gives its space to the others, and ports 1/2 keep short stubs.
 
 **Slots.** `planBand` places the parts. Each is centred over the middle of its port pair (the emitter over ports 1/2 at
 x 139 and 264, the source over 3/4 at x 694 and 827, the tank over 5/6 at x 937 and 977) where its width allows. Where
@@ -580,12 +577,11 @@ The values of a body are placed by functions of its zone (`bodySpecs` in `src/di
 the body.
 
 One body height (decided by the user 2026-11-20): the emitter, the air unit, the ground collector (and the hybrid's two
-bodies) and the external tank are all 176 units tall, in both layouts, each standing on the band's bottom edge. The
-band was 170, the tank's height, with lower emitter, air unit and collector; the 6 more units let the tank's temperature
-and Demand stack at 320 px, and the horizontal drawing grows 6 units (aspect 0.755, so the horizontal aspect test's
-bound is 0.76). How each body uses the extra height:
+bodies) and the external tank are all 176 units tall, in both layouts, each standing on the band's bottom edge. The band
+was 170, the tank's height, with lower emitter, air unit and collector; the horizontal drawing grew 6 units (aspect
+0.755, so the horizontal aspect test's bound is 0.76). How each body uses the extra height:
 
-- **Emitter**, 200 x 176: an underfloor loop or a radiator, with the DG1 demand in a strip at its top (see The emitter).
+- **Emitter**, 200 x 176: an underfloor loop or a radiator, (see The emitter).
 - **Air unit**, 130 x 176: the fan (a ring of radius 28) at the top, a divider, a strip 24 high for the Out value, and
   the coil block (110 x 58) at the bottom, facing the cabinet. The brine tube winds through the block in four vertical
   passes, 22 apart, joined by U-bends at the top and bottom of the block; it enters at the first pass and leaves at the
@@ -628,14 +624,12 @@ item number (the comments in `src/diagram/emitter.ts` and `src/diagram/geometry.
   The supply pipe meets the first column at the top left (62 units under the body's top) and the return pipe leaves the
   last column at the bottom right (158 under it): inlet at the top on one side, outlet at the bottom on the other. With
   `exchanger_fill: gradient` (the default) the whole body is filled with the same vertical gradient, supply colour at
-  its top to return colour at its bottom (opacity 0.5, the exchangers' 0.55 less a little for the demand text); with
-  `exchanger_fill: none` the body has no fill, and its outline, columns and pipes are drawn as with it.
+  its top to return colour at its bottom (opacity 0.5, the exchangers' 0.55 less a little for the loop and columns);
+  with `exchanger_fill: none` the body has no fill, and its outline, columns and pipes are drawn as with it.
 - **No emitter** (`none`): the slot is empty and connections 1 and 2 end in the short dead-end stubs of the cabinet
   (`p1_stub`, `p2_stub`, band segments like the emitter's pipes, 12 units over the top edge, coloured, never animated).
-- **Demand.** The DG1 demand is the label `emitter_demand` ("Demand" while the demand entity is on, nothing otherwise),
-  inside the body in a strip 24 high at its top (14 units under the top), above the divider or the columns, so it
-  touches no pipe. Without an emitter it is the label `dg1_demand`, beside the stubs of connections 1 and 2 (a recorded
-  place, see The label places). It is one value: a configuration shows one of the two.
+- **No demand caption.** The body shows no "Demand" text, and without an emitter the stubs carry none either; the DG1
+  demand is only the emitter's tap.
 - **Tap.** The emitter is a button for the DG1 demand's more-info dialog (the role `heating.demand`); with that role set
   to `none` (or without an entity) it is neither a button nor focusable. Nothing is tappable while the sample values
   show.
@@ -651,19 +645,15 @@ The topology below is the figure's; the coordinates are the cabinet frame's (see
   the band (see The band and the Source and DHW sections), so no pipe outside the cabinet crosses another.
 - **DHW lines:** valve 26 sits on port 1's line. Its DHW output is the supply line across the cabinet to port 5, and
   the return line from port 6 runs back across to join port 2's line. Exchanger 9 taps the supply, pump 17 the return.
--  **Refrigerant:** compressor 11 is in the middle, drawn as the standard compressor symbol: a circle with two
-  straight lines that start on it at the suction side and converge towards the discharge side, so the wide side faces
-  the suction pipe (right) and the narrow side the discharge pipe (left). The two parts of the circle outside the
-  lines (between each line and the circle) are filled solid in the outline colour, `currentColor`, which the card sets
-  to the theme's primary text colour (the compressor has no feature, so it is never muted): black on a light
-  theme, the light outline colour on a dark one. Each filled part is one closed path: along its line, on to the circle
-  on the same slope (the lines end 1 unit inside it) and back along the arc, so no sliver stays unfilled; the part
-  between the lines stays empty. The discharge runs left through 36 and 30 into HTR exchanger 9 and on to inversion
-  valve 14, which feeds condenser 8 (heating) or evaporator 7 (active cooling). The expansion leg 8, 13, 12, 7 runs
-  along the lower row; the suction returns through 29 and 35. Each temperature probe sits next to its pressure
-  transducer as a pair on the same line, 22 units apart (30 at frame x 287 and 36 at 309 on the discharge line; 29 at
-  410 and 35 at 432 on the suction line), with no part between them. (The figure's mini-pressure switches 39 and 40
-  and service outlets 41 are not drawn.)
+-  **Refrigerant:** compressor 11 is in the middle, drawn as the standard compressor symbol: a circle with two straight
+  lines that start on it at the suction side and converge towards the discharge side, so the wide side faces the suction
+  pipe (right) and the narrow side the discharge pipe (left). The symbol is open, as in the manual's figure: the circle
+  and the two lines, drawn in the outline colour with no fill. The discharge runs left through 36 and 30 into HTR
+  exchanger 9 and on to inversion valve 14, which feeds condenser 8 (heating) or evaporator 7 (active cooling). The
+  expansion leg 8, 13, 12, 7 runs along the lower row; the suction returns through 29 and 35. Each temperature probe
+  sits next to its pressure transducer as a pair on the same line, 22 units apart (30 at frame x 287 and 36 at 309 on
+  the discharge line; 29 at 410 and 35 at 432 on the suction line), with no part between them. (The figure's
+  mini-pressure switches 39 and 40 and service outlets 41 are not drawn.)
 - **Valve 14's ports:** the three ports on its right are ordered suction (top), evaporator 7 (middle), condenser 8
   (bottom). The figure orders them evaporator, suction, condenser, which makes two refrigerant pipes cross; this
   order does not. It is a layout choice, the connections are the same.
@@ -702,8 +692,8 @@ they are active with it, defrost included.
 
 The drawing carries no captions that name a group or part ("DG1", "Outer loop", "DHW", "Air unit", "Ground loop", "DHW
 tank"): the tooltips name the parts (see The band for the bodies and their sizes). The values inside the bodies are bare
-numbers, with no Out or DHW caption either (the body and its tooltip name them); only "Demand" stays, as it is the value
-itself.
+numbers, with no Out or DHW caption either (the body and its tooltip name them). No value of the drawing
+carries a "Demand" text.
 
 - **Air:** the housing with the fan at its top, the Out strip and the coil block at its bottom. The brine tube winds
   through the block in four vertical passes joined by rounded U-bends (half circles), across six horizontal fins. It
@@ -737,24 +727,22 @@ ordinary value label (see Live values).
 - **External (model B):** ports 5 (outlet) and 6 (inlet), the manual's "DHW inter-accumulator", rise into the join lane
   and jog outward into the columns left and right of the coil, to a tank drawn as a rounded cylinder (straight walls,
   elliptical domed caps) above them. The tank is centred on the coil and stands on the band's bottom edge. Its values,
-  the DHW temperature (a bare number, no caption) and "Demand" while the DHW demand is on, sit in its upper part as bare
-  labels on the tinted body, under the top cap's rim and over the coil: the temperature 42 units under the tank's top
-  and the demand 68 under it, 26 apart so that the two keep the search's 2 px margin at the threshold, where the 10 px
-  label font makes a label tallest in units (21 units), and in WebKit, whose boxes were a unit taller. The coil starts
-  84 units under the tank's top, so the rows clear it. The coil is a helix in the lower part of the tank, seen from the
-  side: four and a half turns, the front half of each turn solid and the back half faint (35 % opacity). It is mirrored,
-  so that port 5's pipe (the left one) reaches its upper left end and port 6's pipe (the right one) its lower right end,
-  and the two pipes do not cross. The colour, the muting and the flow animation are those of the coil pipe; the dash
-  overlay runs along the front halves only. An idle coil (no flow) is drawn in a neutral grey, darker than the other
-  muted pipes in the light theme so that it stays visible on the tank's tinted body; the dark theme keeps the normal
-  muted grey. While the coil is idle, the two pipes that feed it are drawn in that same grey where they run inside the
-  tank (clipped to the tank body), so the grey changes at the tank wall and not at the joint with the coil. The back
-  halves are drawn first, under the front halves, with butt caps, so the joints at the coil's sides are covered by a
-  solid front half. Model C's coil 51 is drawn the same way, lying on its side, with closer (pitch 8) and rounder turns
-  (seven and a half) than the external coil.
+  the DHW temperature (a bare number, no caption, at the regular weight and size of every value), sits in its upper part
+  as a bare label on the tinted body, under the top cap's rim and over the coil: 44 units under the tank's top. The coil
+  starts 84 units under the tank's top, so the label clears it. The coil is a helix in the lower part of the tank, seen
+  from the side: four and a half turns, the front half of each turn solid and the back half faint (35 % opacity). It is
+  mirrored, so that port 5's pipe (the left one) reaches its upper left end and port 6's pipe (the right one) its lower
+  right end, and the two pipes do not cross. The colour, the muting and the flow animation are those of the coil pipe;
+  the dash overlay runs along the front halves only. An idle coil (no flow) is drawn in a neutral grey, darker than the
+  other muted pipes in the light theme so that it stays visible on the tank's tinted body; the dark theme keeps the
+  normal muted grey. While the coil is idle, the two pipes that feed it are drawn in that same grey where they run
+  inside the tank (clipped to the tank body), so the grey changes at the tank wall and not at the joint with the coil.
+  The back halves are drawn first, under the front halves, with butt caps, so the joints at the coil's sides are covered
+  by a solid front half. Model C's coil 51 is drawn the same way, lying on its side, with closer (pitch 8) and rounder
+  turns (seven and a half) than the external coil.
 - **Internal (model C):** the integrated tank is drawn inside the cabinet, under the top edge, after figure C: tank 50
   with coil 51 (a helix, see above), probe 54 and the connections 47 (tap water inlet), 48 (DHW outlet) and 49
-  (recirculation) on the top edge, their stubs below the join lane's jogs. Its DHW temperature and demand sit inside
+  (recirculation) on the top edge, their stubs below the join lane's jogs. Its DHW temperature sits inside
   tank 50, above coil 51. The figure's manual trap 52 and drain valve 53 are not drawn. The figure's tank is tall and
   fills the cabinet; this one is squat so that the probe row and the rest of the cabinet stay as in the B figures. It
   differs from the figure in these ways: 47 and 49 are short stubs that end at the tank's top rather than dip tubes (the
@@ -771,7 +759,7 @@ ordinary value label (see Live values).
   configuration error; use `unused`.
 
 The tank body takes the DHW temperature colour through the custom property `--dhw-tank-color` (see Colours). The
-source's Out and the tank's DHW temperature and demand are live labels (see Live values).
+source's Out and the tank's DHW temperature are live labels (see Live values).
 
 ## Colours
 
@@ -918,15 +906,14 @@ entity.
 | Value | Where |
 |---|---|
 | Production outlet (33, "Out") and return (34, "In"), pressure (38), pump 15 | beside the probes and the transducer, left of their bodies in the lanes the x map opens (Out left of probe 33, In and the pressure between riser 270 and probes 34 and 38), about 35 units above pump 15 |
-| "Demand" while the DG1 demand is on | inside the emitter's body, in the strip at its top; without an emitter just above the cabinet's top edge, right of connection 2's stub |
 | Brine outlet (31, "Out") and inlet (32, "In"), pressure (37), pump 16 | right of the risers at the probes (Out right of riser 630, In right of riser 690), left of transducer 37, left of the pump |
 | Discharge (30) and suction (29) temperatures, pressures 36 and 35 | one two-row block per pair (temperature over pressure, 24 units apart) in the row lane under the compressor row, below the pair |
 | Compressor 11: rpm | in a third row of that lane, centred under the compressor |
 | Valve opening (%) at 12 | alone, centred under valve 12, in the row lane under the valve row |
 | Source: the Out of the air unit or the ground collector (the hybrid: of its collector only), a bare number | inside the body: the air unit's strip between coil block and fan, the collector's strip under its hatching |
-| Tank: temperature (no caption), and "Demand" while on | inside the upper part of the external tank, bare on its body; on model C inside tank 50, above coil 51 |
+| Tank: temperature (no caption) | inside the upper part of the external tank, bare on its body; on model C inside tank 50, above coil 51 |
 
-These 18 are all the card draws. The superheat (decided by the user 2026-11-20), the compressor percentage and power,
+These 16 are all the card draws. The superheat (decided by the user 2026-11-20), the compressor percentage and power,
 the condensation and evaporation temperatures, the fan speed, the outside temperature (it is in the footer), the air
 unit's and ground collector's In, the DG1 setpoint and the DHW setpoint and start delta-T have no label; their roles
 stay configurable and keep their more-info and suggestions. Tap valve 12 or a component with an entity for its
@@ -1008,7 +995,7 @@ see Hysteresis); the threshold constant is this card's own. A re-render happens 
 so state updates keep their entity-based gating, and an observation whose width did not change is ignored. A width
 change that keeps the layout but changes the stroke widths (see Minimum rendered sizes) renders again too.
 
-Both layouts draw the same parts, the same 18 values with the same texts and the same footer (see The arrangement and
+Both layouts draw the same parts, the same 16 values with the same texts and the same footer (see The arrangement and
 The vertical arrangement); they differ in the arrangement (the vertical drawing is taller for its width) and in the
 orientation of the vertical layout's rotated values. The former values `full` and `compact` and the
 `detail` option are gone: the card rejects them as configuration errors, and the emulator ignores an old `layout=full`,
@@ -1082,27 +1069,22 @@ least 10 px); `test/card/panel.browser.test.ts` the panel fit in a 1280 x 800 wi
 
 ### The vertical threshold
 
-The threshold is 560 px (`VERTICAL_BELOW`; decided on 2026-11-20, re-measured the same day after the refinements of
-the cabinet, see Browser below). It is the narrowest card width on the 20 px grid at which the place search finds an
-allowed place for every one of the 18 labels, in Chromium and in WebKit: a place where its box, with a 2 px margin,
-overlaps no other label, component, pipe at its rendered stroke width, outline or the drawing's edge, in any emulator
-scenario, and which its own spec allows (the value blocks at their pairs, the hydraulic values beside their parts, the
-values of the bodies inside their bodies). At 560 px every label is free at its default place in all 312 cases, in
-both engines, so `HORIZONTAL_PLACES` has no entry. At 540 px the search finds no place at all for the two values
-inside tank 50 (model C), in either engine: the temperature (65 units wide) and the demand (75) meet each other, and
-the demand also meets the stubs of connections 48 and 49; production Out also needs a moved place there (112, 312, end).
-The zone constants of tank 50's values are the places the
-first search at 560 px found free (the temperature ending 70 units from the tank's left wall, the demand ending 150
-units from it and 4 units higher, so the two are not on one line). The refinements of 2026-11-20 (no superheat,
-whole-percent pumps, no valve 25, compressor 11 and exchanger 10 on the centre line with the x map balanced, one band
-body height) did not change the result: the search at 560 px keeps every default place free in both engines, and
-balancing the x map cost nothing. The overlap measurement of `npm run measure-layout` (no margin, 0.5 px tolerance) is
-clean from 540 px in both engines (130 overlaps in 130 cases at 520 px in both). What the result depends on: the grid
-(20 px steps from 320 to 800 px, 25 widths); the label box, the em box of the text with the half-leading above and
-below trimmed; the tolerance, 0.5 px (two boxes overlap when they share more than that in both directions); and the
-margin, 2 px horizontally and 1 px vertically around the label box, which the search keeps and the measurement does
-not. The two rows of a value block (a temperature over a pressure, 24 units apart) are exempt from the margin between
-them, as they keep their pitch.
+The threshold is 560 px (`VERTICAL_BELOW`; decided on 2026-11-20, re-measured the same day after the refinements of the
+cabinet, see Browser below). It is the narrowest card width on the 20 px grid at which the place search finds an allowed
+place for every one of the 16 labels, in Chromium and in WebKit: a place where its box, with a 2 px margin, overlaps no
+other label, component, pipe at its rendered stroke width, outline or the drawing's edge, in any emulator scenario, and
+which its own spec allows (the value blocks at their pairs, the hydraulic values beside their parts, the values of the
+bodies inside their bodies). At 560 px every label is free at its default place in all 312 cases, in both engines, so
+`HORIZONTAL_PLACES` has no entry. The zone constant of tank 50's temperature is the place the first search at 560 px
+found free (it ends 70 units from the tank's left wall). The refinements of 2026-11-20 (no superheat, whole-percent
+pumps, no valve 25, compressor 11 and exchanger 10 on the centre line with the x map balanced, one band body height) did
+not change the result: the search at 560 px keeps every default place free in both engines, and balancing the x map cost
+nothing. The overlap measurement of `npm run measure-layout` (no margin, 0.5 px tolerance) is clean from 540 px in both
+engines (130 overlaps in 130 cases at 520 px in both). What the result depends on: the grid (20 px steps from 320 to 800
+px, 25 widths); the label box, the em box of the text with the half-leading above and below trimmed; the tolerance, 0.5
+px (two boxes overlap when they share more than that in both directions); and the margin, 2 px horizontally and 1 px
+vertically around the label box, which the search keeps and the measurement does not. The two rows of a value block (a
+temperature over a pressure, 24 units apart) are exempt from the margin between them, as they keep their pitch.
 
 Method (`npm run measure-layout`, `scripts/measure-layout.mjs`, Playwright): every emulator scenario is opened in the
 forced horizontal layout (`--layout=vertical` forces the vertical one, to check the phone widths), in thirteen
@@ -1133,12 +1115,11 @@ overlaps back fails `npm test`. The layout at real widths (`test/card/layout.bro
 happy-dom has no layout.
 
 Browser: the place search ran in Chromium on a host with font smoothing on (see Text widths and font smoothing) and in
-WebKit, at 540 and 560 px, with the same result in both: at 540 px no place for the two tank 50 values, at 560 px every
-default place is free. At 560 px the widest box of a label is 92 units wide (production Out and brine Out,
-"Out -12.3 °C") and 18 units tall, the same in both engines at the 10 px font. The measurement of `measure-layout` is in
-the paragraph above, and the browser tests pass in both engines.
+WebKit, at 560 px, with the same result in both: every default place is free. At 560 px the widest box of a label is 92
+units wide (production Out and brine Out, "Out -12.3 °C") and 18 units tall, the same in both engines at the 10 px font.
+The measurement of `measure-layout` is in the paragraph above, and the browser tests pass in both engines.
 
-Result (the 18 values, no entry): at 560 px the search finds every label free at its default place, in both engines, and
+Result (the 16 values, no entry): at 560 px the search finds every label free at its default place, in both engines, and
 the recorded places (none) leave `measure-layout` clean from 540 px up in both engines (checked at 520, 540, 560, 580,
 600, 640, 700 and 800 px). History: before this change the
 threshold was 680 px (with the cabinet 620 units wide and the source and tank in zones beside it); the x stretch of the
@@ -1179,7 +1160,6 @@ The default places, in the cabinet frame (the maps carry them to the arrangement
 | Suction block (29, 35) | 401, 167 and 191, start | the same under the suction pair |
 | Compressor speed (11) | 360, 215, middle | in a third row of the row lane under the compressor row, under the blocks, centred under the compressor |
 | Opening (12) | 412, 426, middle | alone, centred under valve 12, in the row lane under the valve row |
-| DG1 demand | 150, -14, start | only without an emitter (with one the demand is the body label `emitter_demand`): above the cabinet's top edge, right of connection 2's stub |
 
 Production In, Out and the pressure are beside probes 34 and 33 and transducer 38, and brine Out beside probe 31, with
 no other part between: a unit test (`test/diagram/simplified.test.ts`, "values beside their probes") bounds the gap to
@@ -1187,14 +1167,13 @@ no other part between: a unit test (`test/diagram/simplified.test.ts`, "values b
 across another part, and the pressure labels stay within 8 units of their transducers at the threshold and at 1000 px
 (their places are end-aligned, so they stay beside the transducer when the card widens).
 
-The discharge and suction pairs are two-row blocks (same x and alignment, `PAIR_ROW_GAP` units between the rows),
-which the search places together like the Out and In pairs (`BLOCK_PAIRS` in `dev/overlaps.ts`). The pitch follows the
-label height at the threshold: a label is 12 px tall at the 10 px font, 12 px / 0.56 = 21.4 units at 560 px, plus a
-unit, rounded up to the search's 4-unit grid: 24 (`PAIR_ROW_GAP` in `src/diagram/label-places.ts`; the search script
-reads it, so the code and the search agree). The vertical layout's own pitch is 32 (320 px, see The vertical
-arrangement). In the horizontal layout the values of tank 50 (model C) sit in one row above coil 51, both end-aligned:
-the temperature ends 70 units from the tank's left wall and the demand, 4 units higher, 150 units from it, 24 units
-short of the right wall, where probe 54 sits. In the vertical layout they are stacked (see The vertical arrangement).
+The discharge and suction pairs are two-row blocks (same x and alignment, `PAIR_ROW_GAP` units between the rows), which
+the search places together like the Out and In pairs (`BLOCK_PAIRS` in `dev/overlaps.ts`). The pitch follows the label
+height at the threshold: a label is 12 px tall at the 10 px font, 12 px / 0.56 = 21.4 units at 560 px, plus a unit,
+rounded up to the search's 4-unit grid: 24 (`PAIR_ROW_GAP` in `src/diagram/label-places.ts`; the search script reads it,
+so the code and the search agree). The vertical layout's own pitch is 32 (320 px, see The vertical arrangement). In the
+horizontal layout the temperature of tank 50 (model C) sits above coil 51, end-aligned, ending 70 units from the tank's
+left wall. In the vertical layout it sits at the left (see The vertical arrangement).
 
 ### The expansion valve opening
 

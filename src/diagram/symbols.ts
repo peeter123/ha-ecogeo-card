@@ -75,17 +75,6 @@ function helixCoil({ internalTank, coil51 }: Arrangement): SVGTemplateResult {
 /** Compressor lines in the symbol's frame: from the circle (r 14) at 50 degrees either side of the suction axis (+x) to the narrow discharge end. */
 const COMPRESSOR_LINES = 'M9 -10.7 L-13 -3 M9 10.7 L-13 3';
 
-/**
- * The compressor's two filled parts (rework-layouts D6): the part of the circle on the far side of each line. Each runs
- * along its line, on to the circle (the lines end at x -13, just inside it, so the shape continues on the same slope to
- * the circle point (-13.73, -2.75)) and back along the arc to where the line starts, so no unfilled sliver remains
- * between the line and the circle. The part between the lines stays unfilled.
- */
-const COMPRESSOR_FILLS = [
-  'M9 -10.7 L-13.73 -2.75 A14 14 0 0 1 9 -10.7 Z',
-  'M9 10.7 L-13.73 2.75 A14 14 0 0 0 9 10.7 Z',
-] as const;
-
 const stem = (length: number, from: number): SVGTemplateResult => svg`<path d="M0 ${from} V${length}" />`;
 
 /** A triangle of a three-way valve, filled when its arm is open. */
@@ -125,10 +114,8 @@ function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
     case 'compressor':
       // the standard compressor symbol: a circle and two straight lines that start on it at the suction side and
       // converge towards the discharge side. Drawn with the suction at +x and the discharge at -x, turned by the rotation.
-      // The two parts outside the lines are filled solid with `currentColor`, the outline colour (the symbol group's
-      // colour, the primary text colour: the compressor has no feature, so it is never muted): black on a light theme,
-      // the light outline colour on a dark one.
-      return svg`<circle r="14" />${COMPRESSOR_FILLS.map((d) => svg`<path class="compressor-fill" d=${d} fill="currentColor" />`)}<path class="compressor-lines" d="${COMPRESSOR_LINES}" />`;
+      // Open, with no fill, as in the manual's figure.
+      return svg`<circle r="14" /><path class="compressor-lines" d="${COMPRESSOR_LINES}" />`;
     case 'valve':
       return svg`<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z" />`;
     case 'resistor':

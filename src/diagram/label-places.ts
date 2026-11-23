@@ -1,11 +1,11 @@
-// The value labels' placements (refine-simplified-layout D1, rework-layouts D7): where each of the 18 values sits in an
+// The value labels' placements (refine-simplified-layout D1, rework-layouts D7): where each of the values sits in an
 // arrangement, as a function of the arrangement's zone constants. Labels.ts reads them from the arrangement; the
 // texts, captions and visibility rules stay there. Positions are viewBox points with an alignment: `start` puts the label's
 // left edge at x, `end` its right edge, `middle` centres it; y is the vertical centre. They sit where the drawing leaves
 // room, and on no pipe (found with `npm run search-places`, checked by the overlap browser tests), every cabinet value in a lane
 // of the cabinet frame beside its part (in the horizontal layout the probes' and pumps' values in the column lanes; in the vertical layout the
 // rotated values and the pump 15 value in the gaps between vertical pipes beside their part), the pair blocks, the compressor's speed
-// and the opening in the row lane under its row. The values of the band's bodies (the DG1 demand inside the emitter, the source's Out, the DHW values) inside their bodies, and, for
+// and the opening in the row lane under its row. The values of the band's bodies (the source's Out, the DHW temperature) inside their bodies, and, for
 // model C, inside tank 50 above its coil. The bodies' labels are functions of the zones: they follow their body.
 import type { RolePath } from '../config/roles';
 import { MIN_DRAWING_WIDTH, VERTICAL_BELOW } from '../lib/layout';
@@ -58,10 +58,6 @@ export interface LabelSpec extends Pick<Visibility, 'dhw' | 'source'> {
   align: Align;
   /** A small text in front of the value, where its position alone would not say what it is. */
   caption?: string;
-  /** The label shows "Demand" while the (binary) role is on, and nothing otherwise. */
-  demand?: true;
-  /** Larger text: the tank temperature. */
-  emphasis?: true;
   /** No background plate: the label sits on a tinted body (the external tank's values, the values inside tank 50). */
   bare?: true;
   /** Turned by -90 degrees about its place, so it reads from bottom to top (the vertical layout's values along vertical pipes). */
@@ -165,11 +161,6 @@ export const VERTICAL_PLACES: Readonly<Record<string, PlaceOverride>> = (() => {
       'horizontal, above pump 15 (the search keeps it no lower than its default place): the default place meets valve 27, so it starts 10 units right of it',
       false,
     ),
-    dg1_demand: {
-      at: () => ({ x: 208, y: 224, align: 'middle' }),
-      reason:
-        'in the join lane over the cabinet, beside the stubs of connections 1/2 (emitter: none): the default place meets the stub of connection 2',
-    },
   };
 })();
 
@@ -211,27 +202,20 @@ const centre = (rect: { x: number; y: number; width: number; height: number }): 
 ];
 
 /**
- * The rows of the external tank's values: 44 and 74 units under its top edge, centred on it, 30 apart so that the rows keep the
- * search's 2 px margin at 320 px in the vertical layout, where the 10 px floor makes a label tallest in units, and in WebKit too
- * (its boxes are a unit taller). The rim of the top cap reaches 28 units under the top edge, the coil starts 90 under it.
+ * The row of the external tank's temperature: 44 units under its top edge, centred on it. The rim of the top cap reaches 28
+ * units under the top edge, the coil starts 90 under it.
  */
 const TANK_TEMPERATURE_DY = 44;
-const TANK_DEMAND_DY = 74;
 
 /**
- * The labels of the band's bodies, placed from the zones (rework-layouts D4): the DG1 demand in the strip at the top of the
- * emitter, the source's Out in the free strip of the air
+ * The labels of the band's bodies, placed from the zones (rework-layouts D4): the source's Out in the free strip of the air
  * unit (between the fan and the coil block) or of the collector (between the hatching and the serpentine), and the DHW
- * temperature and demand in the upper part of the external tank, bare on its tinted body. A body that is not in the zones'
+ * temperature in the upper part of the external tank, bare on its tinted body. A body that is not in the zones'
  * band key has no label; the hybrid shows only its collector's Out.
  */
 function bodySpecs(z: Partial<BandZones>): LabelSpec[] {
   const specs: LabelSpec[] = [];
-  const { airUnit, collector, externalTank, emitter } = z;
-  if (emitter !== undefined) {
-    const [x, y] = centre(emitter.strip);
-    specs.push(makeSpec('emitter_demand', 'heating.demand', x, y, 'middle', { item: 1, demand: true }));
-  }
+  const { airUnit, collector, externalTank } = z;
   if (airUnit !== undefined && z.key?.source === 'air') {
     const [x, y] = centre(airUnit.strip);
     specs.push(
@@ -254,12 +238,6 @@ function bodySpecs(z: Partial<BandZones>): LabelSpec[] {
     specs.push(
       makeSpec('tank_external_temperature', 'dhw.temperature', x, externalTank.y + TANK_TEMPERATURE_DY, 'middle', {
         dhw: 'external',
-        emphasis: true,
-        bare: true,
-      }),
-      makeSpec('tank_external_demand', 'dhw.demand', x, externalTank.y + TANK_DEMAND_DY, 'middle', {
-        dhw: 'external',
-        demand: true,
         bare: true,
       }),
     );
@@ -271,9 +249,9 @@ function bodySpecs(z: Partial<BandZones>): LabelSpec[] {
  * The placements of an arrangement: each label's place computed from its zones. `place` maps a
  * point of the frame's cabinet to the arrangement's own: the labels at the cabinet's
  * components go through it, the ones placed from the zones (the band's bodies, tank 50) do not.
- * The 18 values of live-values "Values on the drawing": production out and in, brine out and in, the two pressures, the
+ * The values of live-values "Values on the drawing": production out and in, brine out and in, the two pressures, the
  * two pumps, the discharge and suction pairs, the compressor speed, the expansion valve opening, the
- * source's Out, the DHW temperature and the DG1 and DHW demand.
+ * source's Out and the DHW temperature.
  */
 export function labelPlacesFor(
   z: CabinetZones & Partial<BandZones>,
@@ -282,13 +260,12 @@ export function labelPlacesFor(
 ): LabelPlaces {
   const { internalTank } = z;
   /**
-   * Model C's tank values: one row in the strip above coil 51 (about 30 units tall), 16 units under the tank's top: the temperature
-   * ends 70 units from the left wall (so its left edge is about 7 units in) and the demand, 4 units higher, ends 150 units from it,
-   * 24 units short of the right wall, where probe 54 sits. Both are end-aligned, the places the search finds free at 560 px.
+   * Model C's tank temperature: in the strip above coil 51 (about 30 units tall), 16 units under the tank's top, ending 70 units
+   * from the left wall (so its left edge is about 7 units in), end-aligned, the place the search finds free at 560 px.
    */
   const INTERNAL_ROW_Y = internalTank.y + 16;
-  /** The vertical layout's tank 50 values: stacked, the temperature over Demand, in the head the y map adds above coil 51. */
-  const stacked = layout === 'vertical';
+  /** The vertical layout's tank 50 temperature: at the left, in the head the y map adds above coil 51. */
+  const vertical = layout === 'vertical';
   const spec = makeSpec;
   const cab: typeof spec = (id, role, x, y, align, extra) => {
     const home = layout === 'vertical' ? VERTICAL_HOMES[id] : undefined;
@@ -307,7 +284,7 @@ export function labelPlacesFor(
   };
   const specs: readonly LabelSpec[] = [
     // production: probes 33 and 34 (Out, In) in the lanes beside them (left of probe 33, between riser 1 and probe 34), pressure 38 under the
-    // return value, pump 15's value right of the pump (above its pipe), and the DG1 demand beside connection 2's stub
+    // return value, pump 15's value right of the pump (above its pipe)
     cab('production_out', 'production.outlet_temperature', 38, 112, 'end', {
       item: 33,
       caption: VALUE_CAPTIONS.portOut,
@@ -318,9 +295,6 @@ export function labelPlacesFor(
     }),
     cab('production_pressure', 'production.pressure', 115, 142, 'end', { item: 38 }),
     cab('production_pump', 'production.pump', 229, 370, 'start', { item: 15 }),
-    ...(z.key === undefined || z.key.emitter === 'none'
-      ? [cab('dg1_demand', 'heating.demand', 150, -14, 'start', { item: 1, demand: true })]
-      : []),
     // brine: probe 31 (Out) right of riser 3, probe 32 (In) right of riser 4, pressure 37 left of its body, pump 16's value left of the pump
     cab('brine_out', 'brine.outlet_temperature', 544, 112, 'start', { item: 31, caption: VALUE_CAPTIONS.portOut }),
     cab('brine_in', 'brine.inlet_temperature', 609, 112, 'start', { item: 32, caption: VALUE_CAPTIONS.portIn }),
@@ -336,28 +310,15 @@ export function labelPlacesFor(
     cab('expansion_valve', 'refrigerant.expansion_valve', 412, 426, 'middle', { item: 12 }),
     // the band's bodies: the source's Out and the external tank's values (bodySpecs)
     ...bodySpecs(z),
-    // model C: the DHW temperature and, right of it in the same row, the demand, inside tank 50 in the strip above coil 51,
-    // with no background plate
+    // model C: the DHW temperature inside tank 50 in the strip above coil 51, with no background plate
     spec(
       'tank_internal_temperature',
       'dhw.temperature',
-      internalTank.x + (stacked ? 24 : 70),
-      stacked ? internalTank.y + 18 : INTERNAL_ROW_Y,
-      stacked ? 'start' : 'end',
+      internalTank.x + (vertical ? 24 : 70),
+      vertical ? internalTank.y + 18 : INTERNAL_ROW_Y,
+      vertical ? 'start' : 'end',
       {
         dhw: 'internal',
-        bare: true,
-      },
-    ),
-    spec(
-      'tank_internal_demand',
-      'dhw.demand',
-      internalTank.x + (stacked ? 24 : 150),
-      stacked ? internalTank.y + 46 : INTERNAL_ROW_Y - 4,
-      stacked ? 'start' : 'end',
-      {
-        dhw: 'internal',
-        demand: true,
         bare: true,
       },
     ),

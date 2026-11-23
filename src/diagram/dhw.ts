@@ -13,8 +13,8 @@
 // The tank body hook (add-schematic-card D7: the body takes the DHW temperature on the card's colour scale): both
 // tank bodies are a `.tank-body` shape (a path for the external cylinder, a rect for tank 50) with a `data-dhw-tank` attribute, filled
 // from the custom property `--dhw-tank-color` (no fill while it is not set). A muted body (DHW temperature unavailable) gets the muted
-// colour through the same property. The DHW temperature and demand go inside the tank (labels.ts); in tank 50 they sit above
-// coil 51, in one row in the horizontal layout and stacked in the vertical one.
+// colour through the same property. The DHW temperature goes inside the tank (labels.ts); in tank 50 it sits above
+// coil 51.
 import { css, svg, type SVGTemplateResult } from 'lit';
 import { DHW_LABELS } from '../strings';
 import { EXTERNAL_TANK_ROLE, focusRingStyles, tapBindings, tapTarget, type Taps } from './component-info';

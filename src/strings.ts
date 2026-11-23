@@ -85,12 +85,7 @@ export const CONFIG_ERRORS = {
 /** The name of the external DHW tank, a tooltip (not a manual item: ports 5/6 are the "DHW inter-accumulator"). */
 export const DHW_LABELS = {
   externalTank: 'DHW tank',
-  /** Shown beside the tank values only while the DHW demand is on. */
-  demand: 'Demand',
 } as const;
-
-/** Shown inside the emitter (beside the stubs of connections 1/2 without one) only while the DG1 demand is on. */
-export const HEATING_LABELS = { demand: 'Demand' } as const;
 
 /** The tooltip and accessible name of the emitter (not a manual item: it is outside the unit, on connections 1/2). */
 export const EMITTER_NAMES = { underfloor: 'Underfloor heating', radiator: 'Radiator' } as const;

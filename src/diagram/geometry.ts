@@ -100,14 +100,11 @@ export interface CollectorShape extends Rect {
 
 /**
  * The heat emitter on connections 1/2 (rework-layouts D5; not a manual item: it is outside the unit): an underfloor loop (a
- * serpentine of horizontal passes in a floor strip) or a radiator (a panel with vertical columns). A strip at the top of the
- * body holds the DG1 demand. The supply pipe runs from connection 1 to `inlet` and the return pipe from `outlet` to
+ * serpentine of horizontal passes in a floor strip) or a radiator (a panel with vertical columns). The supply pipe runs from connection 1 to `inlet` and the return pipe from `outlet` to
  * connection 2, rising through the body's bottom face at `feedX` and `exitX`.
  */
 export interface EmitterShape extends Rect {
   readonly kind: Exclude<Emitter, 'none'>;
-  /** The free strip at the top of the body, where the demand sits. */
-  readonly strip: Rect;
   /** The x of the supply and return pipes on the bottom face. */
   readonly feedX: number;
   readonly exitX: number;
@@ -357,7 +354,6 @@ export function emitterShape(kind: EmitterShape['kind'], x0: number, bottom: num
     y,
     width,
     height,
-    strip: { x: x0 + 8, y: y + 14, width: width - 16, height: 24 },
     feedX,
     exitX,
   } as const;
@@ -1531,8 +1527,7 @@ export const VERTICAL_MAP_Y: AxisMap = laneMap(
 /**
  * The head of tank 50 in the vertical layout: the frame's y 10-24 holds only tank 50's wall (its top is at y 8) and vertical pipes
  * (the stubs 47-49, the risers of connections 1/2): no symbol, and the DHW lines, valve 26, coil 51 and probe 54 start below
- * it. The vertical y map adds 28 units there, found with the place search at 320 px (24 leave no place for tank 50's two values
- * stacked, in Chromium and in WebKit; 26 leave one value blocked by 1 px of margin in one case, 28 do), so the temperature and Demand stack above coil 51 (rework-layouts D2). It is
+ * it. The vertical y map adds 28 units there, the place search's current result at 320 px, so the temperature sits above coil 51 (rework-layouts D2). It is
  * not a value lane: it is the one y-map breakpoint inside a body, and it applies only where tank 50 is drawn
  * (`BandKey.internal`): elsewhere the range holds only vertical pipes, and growing it would leave an empty strip.
  */

@@ -11,16 +11,7 @@ import { COIL_51_SHAPE } from '../../src/diagram/symbols';
 import { footerItems, labelsFor, cssPosition, type LabelSpec } from '../../src/diagram/labels';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
-import {
-  DHW_LABELS,
-  FOOTER_LABELS,
-  HEATING_LABELS,
-  INDICATIONS,
-  MODE_LABELS,
-  NBSP,
-  NO_VALUE,
-  VALUE_CAPTIONS,
-} from '../../src/strings';
+import { FOOTER_LABELS, INDICATIONS, MODE_LABELS, NBSP, NO_VALUE, VALUE_CAPTIONS } from '../../src/strings';
 
 // the default config draws the simplified level
 const arrangement = arrangementFor('horizontal');
@@ -557,7 +548,7 @@ describe('source labels', () => {
     card.remove();
   });
 
-  test('the source label is an ordinary value label: the same plate and size, never bare or emphasised, and it opens more-info', async () => {
+  test('the source label is an ordinary value label: the same plate and size, never bare, and it opens more-info', async () => {
     const events: CustomEvent<{ entityId: string }>[] = [];
     const ids = { air: 'air_unit_out', ground: 'ground_out', hybrid: 'hybrid_ground_out' } as const;
     for (const source of ['air', 'ground', 'hybrid'] as const) {
@@ -566,7 +557,6 @@ describe('source labels', () => {
       const id = ids[source];
       const element = label(card, id);
       expect(element?.classList.contains('bare'), id).toBe(false);
-      expect(element?.classList.contains('emphasis'), id).toBe(false);
       // the value joins its unit with a no-break space
       expect(valueOf(card, id), id).toMatch(/\d\s°C$/);
       const role = (element?.getAttribute('data-role') ?? '') as RolePath;
@@ -678,56 +668,31 @@ describe('DHW tank labels', () => {
     card.remove();
   });
 
-  test('"Demand" shows only while the DHW demand is on', async () => {
-    const off = await mount({}, hassOf({ 'dhw.demand': 'off' }));
-    expect(label(off, 'tank_external_demand')).toBeNull();
-    off.remove();
-    const on = await mount({}, hassOf({ 'dhw.demand': 'on' }));
-    expect(valueOf(on, 'tank_external_demand')).toBe(DHW_LABELS.demand);
-    on.remove();
-  });
-
-  test.each(['underfloor', 'radiator'] as const)(
-    'heating-emitter "Demand on": "Demand" inside the %s shows only while the DG1 demand is on',
+  test.each(['underfloor', 'radiator', 'none'] as const)(
+    'heating-emitter "No demand caption": with both demands on and the %s emitter no label shows "Demand" and no demand label exists',
     async (emitter) => {
-      const on = await mount({ emitter }, hassOf({ 'heating.demand': 'on' }));
-      expect(valueOf(on, 'emitter_demand')).toBe(HEATING_LABELS.demand);
-      expect(label(on, 'emitter_demand')?.getAttribute('data-label-item')).toBe('1');
-      expect(label(on, 'dg1_demand')).toBeNull();
-      on.remove();
-      const off = await mount({ emitter }, hassOf({ 'heating.demand': 'off' }));
-      expect(label(off, 'emitter_demand')).toBeNull();
-      off.remove();
-      const unavailable = await mount({ emitter }, hassOf({ 'heating.demand': 'unavailable' }));
-      expect(label(unavailable, 'emitter_demand')).toBeNull();
-      unavailable.remove();
+      const card = await mount({ emitter }, hassOf({ 'heating.demand': 'on', 'dhw.demand': 'on' }));
+      for (const element of root(card).querySelectorAll('[data-label]'))
+        expect(element.textContent, element.getAttribute('data-label') ?? '').not.toMatch(/demand/i);
+      expect(root(card).textContent).not.toMatch(/demand/i);
+      for (const id of ['emitter_demand', 'dg1_demand', 'tank_external_demand', 'tank_internal_demand'])
+        expect(label(card, id), id).toBeNull();
+      card.remove();
     },
   );
 
-  test('heating-emitter "Demand without an emitter": with emitter none "Demand" sits beside the stubs, in the cabinet-side place', async () => {
-    const on = await mount({ emitter: 'none' }, hassOf({ 'heating.demand': 'on' }));
-    expect(valueOf(on, 'dg1_demand')).toBe(HEATING_LABELS.demand);
-    expect(label(on, 'dg1_demand')?.getAttribute('data-label-item')).toBe('1');
-    expect(label(on, 'emitter_demand')).toBeNull();
-    on.remove();
-    const off = await mount({ emitter: 'none' }, hassOf({ 'heating.demand': 'off' }));
-    expect(label(off, 'dg1_demand')).toBeNull();
-    off.remove();
-  });
-
-  test('the demand is a label of the emitter body: its place is the strip at the top of the body, from the zones', () => {
-    for (const emitter of ['underfloor', 'radiator'] as const) {
-      const arrangement = arrangementFor('horizontal', { source: 'ground', tank: true, emitter });
-      const spec = arrangement.labels.specs.find((candidate) => candidate.id === 'emitter_demand');
-      const body = arrangement.emitter;
-      expect(spec, emitter).toBeDefined();
-      expect(body, emitter).toBeDefined();
-      if (spec === undefined || body === undefined) continue;
-      expect(spec.align).toBe('middle');
-      expect(spec.x).toBe(body.strip.x + body.strip.width / 2);
-      expect(spec.y).toBe(body.strip.y + body.strip.height / 2);
-      expect(spec.y, emitter).toBeLessThan(body.y + 40);
-    }
+  test('dhw-storage "DHW values inside the tank": the external tank temperature has the class and weight of the source Out', async () => {
+    const card = await mount({ source: 'air', dhw: 'external' }, hassOf());
+    const tank = label(card, 'tank_external_temperature');
+    const out = label(card, 'air_unit_out');
+    if (tank === null || out === null) throw new Error('no tank or source label');
+    // the same classes but the tank's bare plate, and no emphasis class at all
+    const classes = (element: Element): string[] => [...element.classList].filter((name) => name !== 'bare').sort();
+    expect(classes(tank)).toEqual(classes(out));
+    expect(tank.classList.contains('emphasis')).toBe(false);
+    expect(getComputedStyle(tank).fontWeight).toBe(getComputedStyle(out).fontWeight);
+    expect(getComputedStyle(tank).fontSize).toBe(getComputedStyle(out).fontSize);
+    card.remove();
   });
 
   test('DHW temperature unavailable: the tank body is muted and the label shows no number', async () => {
@@ -746,17 +711,16 @@ describe('DHW tank labels', () => {
     card.remove();
   });
 
-  test('model C: the DHW temperature (no caption) and the demand inside tank 50 above coil 51, and nothing under an external tank', async () => {
-    const card = await mount({ model: 'C' }, hassOf({ 'dhw.demand': 'on' }));
+  test('model C: the DHW temperature (no caption) inside tank 50 above coil 51, with both demands on, and nothing under an external tank', async () => {
+    const card = await mount({ model: 'C' }, hassOf({ 'heating.demand': 'on', 'dhw.demand': 'on' }));
     const ids = labelIds(card).filter((id) => id.startsWith('tank_'));
-    expect(ids).toEqual(['tank_internal_temperature', 'tank_internal_demand']);
+    expect(ids).toEqual(['tank_internal_temperature']);
     expect(valueOf(card, 'tank_internal_temperature')).toBe(nb('52.1 °C'));
     expect(label(card, 'tank_internal_temperature')?.querySelector('.caption')).toBeNull();
     expect(label(card, 'tank_internal_temperature')?.textContent.trim()).toBe(nb('52.1 °C'));
-    // no background plate and no emphasised size: the values sit on the tank's tint at the normal label size
+    // no background plate: the value sits on the tank's tint at the normal label size
     for (const id of ids) {
       expect(label(card, id)?.classList.contains('bare'), id).toBe(true);
-      expect(label(card, id)?.classList.contains('emphasis'), id).toBe(false);
     }
     card.remove();
   });
@@ -774,7 +738,6 @@ describe('DHW tank labels', () => {
     // where 0.95cqw is at least 8 px
     const SIZE: Record<string, [number, number]> = {
       tank_internal_temperature: [66, 13],
-      tank_internal_demand: [41, 12],
     };
     const boxOf = (id: string): Box => {
       const spec = arr.labels.specs.find((item) => item.id === id);
@@ -794,7 +757,7 @@ describe('DHW tank labels', () => {
     const STUB_STROKE = 3;
     const coilTop = coil.y - (COIL_51_SHAPE.cx + COIL_51_SHAPE.rx) - STUB_STROKE / 2;
 
-    test('inside tank 50, above the coil, in one row', () => {
+    test('inside tank 50, above the coil', () => {
       const tank = arr.internalTank;
       for (const id of ids) {
         const box = boxOf(id);
@@ -804,12 +767,6 @@ describe('DHW tank labels', () => {
         // (the row estimate is a unit or two taller than the drawn text; the browser overlap tests are exact)
         expect(box.bottom, id).toBeLessThan(coilTop + 2);
       }
-      // the demand sits right of the temperature, in the same row (it is 4 units higher, clear of probe 54's circle)
-      const [temperature, demand] = ['tank_internal_temperature', 'tank_internal_demand'].map((id) =>
-        arr.labels.specs.find((item) => item.id === id),
-      );
-      expect(Math.abs((demand?.y ?? 0) - (temperature?.y ?? 0))).toBeLessThanOrEqual(4);
-      expect(demand?.x ?? 0).toBeGreaterThan((temperature?.x ?? 0) + (SIZE['tank_internal_temperature']?.[0] ?? 0));
     });
 
     test('no overlap with each other, other labels, components or pipes', () => {
@@ -1125,10 +1082,11 @@ describe('footer power items and efficiency (add-htr-state)', () => {
   });
 });
 
-describe('the 18 values (live-values "Values on the drawing")', () => {
+// 16 labels until the air unit's outside temperature and fan speed arrive (harmonize-band group 4), which make 18
+describe('the values (live-values "Values on the drawing")', () => {
   const HEATING_BOTH_DEMANDS = { 'heating.demand': 'on', 'dhw.demand': 'on' } as const;
 
-  test('heating, model B, air, external tank, variant 4, both demands on: exactly these 18 labels', async () => {
+  test('heating, model B, air, external tank, variant 4, both demands on: exactly these 16 labels', async () => {
     const card = await mount({ model: 'B', source: 'air', dhw: 'external', variant: 4 }, hassOf(HEATING_BOTH_DEMANDS));
     expect(labelIds(card).sort()).toEqual(
       [
@@ -1148,11 +1106,9 @@ describe('the 18 values (live-values "Values on the drawing")', () => {
         'expansion_valve',
         'air_unit_out',
         'tank_external_temperature',
-        'emitter_demand',
-        'tank_external_demand',
       ].sort(),
     );
-    expect(labelIds(card)).toHaveLength(18);
+    expect(labelIds(card)).toHaveLength(16);
     card.remove();
   });
 

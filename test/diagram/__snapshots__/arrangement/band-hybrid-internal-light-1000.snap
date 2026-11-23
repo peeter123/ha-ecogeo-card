@@ -16,7 +16,6 @@ compressor_speed | label middle | left: 50%; top: 57.615894039735096%
 expansion_valve | label middle | left: 55.2%; top: 85.56291390728477%
 hybrid_ground_out | label middle | left: 82.25%; top: 4.768211920529802%
 tank_internal_temperature | label end bare | left: 56.8%; top: 34.70198675496688%
-tank_internal_demand | label end bare | left: 64.8%; top: 34.17218543046358%
 footer: outside_temperature, cop, dhw_power
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 1000 755" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #f2711c 91%, #e8a317); --ecogeo-coil-muted: #8a8a8a; --pipe-width: 3; --outline-width: 2">
@@ -481,10 +480,6 @@ svg:
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol compressor" transform="rotate(0)">
 <circle r="14">
 </circle>
-<path class="compressor-fill" fill="currentColor" d="M9 -10.7 L-13.73 -2.75 A14 14 0 0 1 9 -10.7 Z">
-</path>
-<path class="compressor-fill" fill="currentColor" d="M9 10.7 L-13.73 2.75 A14 14 0 0 0 9 10.7 Z">
-</path>
 <path class="compressor-lines" d="M9 -10.7 L-13 -3 M9 10.7 L-13 3">
 </path>
 </g>

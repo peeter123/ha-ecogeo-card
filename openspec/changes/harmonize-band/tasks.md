@@ -14,11 +14,11 @@ the user allows it.
 
 ## 1. Compressor and captions
 
-- [ ] 1.1 Remove `COMPRESSOR_FILLS` and its paths from `src/diagram/symbols.ts` and draw compressor 11 as the circle
+- [x] 1.1 Remove `COMPRESSOR_FILLS` and its paths from `src/diagram/symbols.ts` and draw compressor 11 as the circle
   and two converging lines (design D10; schematic-drawing "Refrigerant components after the manual figure"). Delete
   the browser test of the fill in both themes. Verify: a unit test asserts that the compressor symbol has no filled
   path, and `npm test` passes.
-- [ ] 1.2 Remove the "Demand" labels (design D7; heating-emitter, removed "DG1 demand on the emitter";
+- [x] 1.2 Remove the "Demand" labels (design D7; heating-emitter, removed "DG1 demand on the emitter";
   dhw-storage "DHW values inside the tank" and "Internal tank for model C"):
   - the emitter's, and the one beside the connection 1/2 stubs;
   - the external tank's and tank 50's;
@@ -27,15 +27,21 @@ the user allows it.
   Keep the emitter's button for the DG1 demand's more-info. Verify: the label snapshots are recorded again with no
   demand label; a unit test with both demands on finds no "Demand" text on the drawing; the component-info test of
   "Tap the emitter" still passes.
-- [ ] 1.3 Drop the `emphasis` of the external tank's DHW temperature, so it renders at the regular weight and size
+- [x] 1.3 Drop the `emphasis` of the external tank's DHW temperature, so it renders at the regular weight and size
   (design D7). Verify: a unit test asserts that the tank's label has the same class and font weight as the source's
   Out.
-- [ ] 1.4 Update README.md and docs/ecogeo-card.md: no demand captions, the compressor symbol, and the values list
+- [x] 1.4 Update README.md and docs/ecogeo-card.md: no demand captions, the compressor symbol, and the values list
   without the demands. Verify: `npm run check` passes, and a search of both files finds no statement that "Demand" is
   shown.
-- [ ] 1.5 Emulator check: a subagent inspects the horizontal captures with model B external and model C, with both
+- [x] 1.5 Emulator check: a subagent inspects the horizontal captures with model B external and model C, with both
   demands on. Pass when the compressor is open, there is no "Demand" anywhere, and the tank value is regular weight.
   Record the verdict here.
+
+  Verdict (2026-11-23): `npm run capture` (316 captures). Inspected labels-air-1000-heating (model B, external tank, DG1
+  demand on), labels-air-1000-dhw (DHW demand on) and labels-modelC-1000-heating. Pass: compressor 11 is open (circle
+  and two converging lines, no fill); no "Demand" text anywhere (emitter, stubs, external tank, tank 50); the tank
+  temperature (52.1 / 48.2 degrees C) is regular weight and size, like the source's Out. Note: the live values are now
+  16 (the 18 of live-values return with the air unit's two values in group 4).
 
 ## 2. One band style and the new widths
 

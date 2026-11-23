@@ -158,21 +158,15 @@ describe('arrangementFor: the simplified arrangement', () => {
     // at the threshold every label's default place is free (the search's paste output is empty), so the table has no entry; an
     // entry, when the drawing needs one again, is checked here: it has a reason and the arrangement uses its place
     expect(Object.keys(HORIZONTAL_PLACES)).toEqual([]);
-    // the DG1 demand beside the stubs exists only without an emitter
     const bare = arrangementFor('horizontal', { ...simplified.key, emitter: 'none' });
     for (const [id, place] of Object.entries(HORIZONTAL_PLACES)) {
       expect(place.reason.length, id).toBeGreaterThan(20);
       const spec = [simplified, bare].flatMap((own) => own.labels.specs).find((label) => label.id === id);
       expect(spec, id).toBeDefined();
       expect({ x: spec?.x, y: spec?.y, align: spec?.align }, id).toEqual(
-        place.at(spec?.id === 'dg1_demand' ? bare : simplified, (x, y) => [
-          mapAxis(HORIZONTAL_MAP_X, x),
-          mapAxis(HORIZONTAL_MAP_Y, y),
-        ]),
+        place.at(simplified, (x, y) => [mapAxis(HORIZONTAL_MAP_X, x), mapAxis(HORIZONTAL_MAP_Y, y)]),
       );
     }
-    // the labels of the cabinet sit at the frame's default places under the maps, the DG1 demand among them without an emitter
-    expect(bare.labels.specs.map((spec) => spec.id)).toContain('dg1_demand');
   });
 
   test("every cabinet point is the frame's point under the maps", () => {

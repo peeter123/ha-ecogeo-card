@@ -11,7 +11,7 @@
 // bottom when `exchanger_fill` is `gradient`, and has no fill otherwise. Idle (the circuit inactive, or no probe value) the body, loop
 // and fill are muted like the pipes. The dash overlay on the loop follows the supply pipe's flow.
 //
-// The DG1 demand is a label inside the body (labels.ts, label-places.ts: the strip at the top of the body); the body registers
+// The body shows no demand caption. The body registers
 // its divider and columns with `data-obstacle` so that the overlap check sees them. The body is a button for the demand's more-info.
 import { css, nothing, svg, type SVGTemplateResult } from 'lit';
 import { EMITTER_NAMES } from '../strings';
@@ -48,10 +48,10 @@ export const emitterStyles = css`
   }
 `;
 
-/** The opacity of the radiator's fill: low enough that the columns and the demand stay readable (as the exchangers' fills). */
+/** The opacity of the radiator's fill: low enough that the columns stay readable (as the exchangers' fills). */
 const RADIATOR_FILL_OPACITY = 0.5;
 
-/** Where the underfloor loop's divider (the floor surface under the demand strip) lies, below the body's top. */
+/** Where the underfloor loop's divider (the floor surface) lies, below the body's top. */
 const DIVIDER_DY = 43;
 
 /** The body of the emitter: outline (with the gradient fill of a radiator), the underfloor divider or the radiator's columns, and the loop. */

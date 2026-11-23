@@ -17,9 +17,9 @@ import type { Readings } from '../calc/readings';
 import type { DhwStorage } from '../config/options';
 import type { RolePath } from '../config/roles';
 import type { Features } from '../config/variants';
-import { DHW_LABELS, FOOTER_LABELS, HEATING_LABELS, NO_VALUE } from '../strings';
+import { FOOTER_LABELS, NO_VALUE } from '../strings';
 import { arrangementOf, partState, type DrawContext } from './geometry';
-import { LABEL_FONT_K, labelFontSize, type Align, type LabelSpec, type Placement } from './label-places';
+import { labelFontSize, type Align, type LabelSpec, type Placement } from './label-places';
 
 export type { LabelSpec, Placement };
 
@@ -63,13 +63,6 @@ export const labelStyles = css`
   [data-layout='vertical'] .label {
     font-size: ${unsafeCSS(labelFontSize('vertical'))};
   }
-  .label.emphasis {
-    font-size: max(11px, ${unsafeCSS(String(1.2 * LABEL_FONT_K.horizontal))}cqw);
-    font-weight: 600;
-  }
-  [data-layout='vertical'] .label.emphasis {
-    font-size: max(11px, ${unsafeCSS(String(1.2 * LABEL_FONT_K.vertical))}cqw);
-  }
   .caption {
     color: var(--secondary-text-color);
     font-size: 0.85em;
@@ -104,7 +97,6 @@ export interface ShownLabel {
   y: number;
   align: Align;
   caption?: string;
-  emphasis: boolean;
   bare?: true;
   /** Turned by -90 degrees about its anchor (the vertical layout's values along vertical pipes). */
   rotate?: -90;
@@ -121,7 +113,7 @@ const ALL_PRESENT: ReadonlySet<RolePath> = new Set();
 
 /**
  * The labels to show: those of parts that are drawn (the same rules as geometry.ts `partState`), each with its text
- * from display.ts, or the dash while its value is missing. The "Demand" label is shown only while its role is on.
+ * from display.ts, or the dash while its value is missing.
  * Inputs: the draw context (DHW storage, source, features), the readings, the roles' entity ids and the display context.
  */
 export function labelsFor(
@@ -143,7 +135,6 @@ export function labelsFor(
       id: label.id,
       role: label.role,
       ...place,
-      emphasis: label.emphasis === true,
       ...(label.bare === true ? { bare: true as const } : {}),
       ...(label.rotate === undefined ? {} : { rotate: label.rotate }),
       entityId,
@@ -151,10 +142,6 @@ export function labelsFor(
       ...(caption === undefined ? {} : { caption }),
     };
     const value: unknown = readings[label.role];
-    if (label.demand === true) {
-      const text = label.role === 'heating.demand' ? HEATING_LABELS.demand : DHW_LABELS.demand;
-      return value === true ? [{ ...common, text, missing: false }] : [];
-    }
     const text = formatReading(
       label.role,
       typeof value === 'number' || typeof value === 'boolean' ? value : undefined,
@@ -309,7 +296,7 @@ export function renderLabels(
   return html`${labels.map((label) => {
     const { left, top } = cssPosition(label, viewBox);
     return html`<span
-      class="label ${label.align}${label.emphasis ? ' emphasis' : ''}${label.bare === true ? ' bare' : ''}${label.rotate === undefined ? '' : ' rotated'}"
+      class="label ${label.align}${label.bare === true ? ' bare' : ''}${label.rotate === undefined ? '' : ' rotated'}"
       data-label=${label.id}
       data-role=${label.role}
       data-label-item=${label.item ?? nothing}

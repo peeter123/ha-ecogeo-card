@@ -148,7 +148,7 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
   // where tank 50 is drawn the vertical layout stretches its head: the cabinet's labels (not the bodies') lie `headShift` units lower
   const shift = root.querySelector('[data-dhw-tank="internal"]') === null ? 0 : headShift;
   /** @param {string} id */
-  // (a label whose default place is above the cabinet, the DG1 demand beside the stubs, lies in the join lane, which the head does not move)
+  // (a label whose default place is above the cabinet lies in the join lane, which the head does not move)
   const shiftOf = (id) =>
     bodies[id] !== undefined || (homes[id] !== undefined && homes[id].y * scale < cab.top) ? 0 : shift;
   const aligns = ['start', 'middle', 'end'];
@@ -377,7 +377,6 @@ try {
   loadedInOrder = overlaps['inOrder'];
   // each label's own place: its default place under the maps, before HORIZONTAL_PLACES (a rerun never measures from a
   // recorded place)
-  // (with an emitter its demand is a body label, `emitter_demand`; without one, `dg1_demand` has its own default place)
   for (const [emitter, internal] of [
     ['underfloor', true],
     ['underfloor', false],

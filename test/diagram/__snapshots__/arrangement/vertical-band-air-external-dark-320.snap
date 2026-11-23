@@ -15,8 +15,7 @@ suction_pressure | label start | left: 55.54054054054054%; top: 55.2910915934755
 compressor_speed | label middle | left: 50%; top: 59.30614805520703%
 expansion_valve | label middle | left: 57.027027027027025%; top: 86.3237139272271%
 air_unit_out | label middle | left: 65%; top: 12.547051442910917%
-tank_external_temperature | label middle emphasis bare | left: 87.83783783783784%; top: 6.273525721455458%
-tank_external_demand | label middle bare | left: 87.83783783783784%; top: 10.037641154328734%
+tank_external_temperature | label middle bare | left: 87.83783783783784%; top: 6.273525721455458%
 footer: outside_temperature, cop, dhw_power
 svg:
 <svg preserveAspectRatio="xMidYMid meet" role="group" viewBox="0 0 740 797" aria-label="ecoGEO heat pump schematic" style="--dhw-tank-color: color-mix(in srgb, #f2711c 91%, #e8a317); --ecogeo-coil-muted: var(--disabled-text-color); --pipe-width: 4.7; --outline-width: 2.9">
@@ -463,10 +462,6 @@ svg:
 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="symbol compressor" transform="rotate(0)">
 <circle r="14">
 </circle>
-<path class="compressor-fill" fill="currentColor" d="M9 -10.7 L-13.73 -2.75 A14 14 0 0 1 9 -10.7 Z">
-</path>
-<path class="compressor-fill" fill="currentColor" d="M9 10.7 L-13.73 2.75 A14 14 0 0 0 9 10.7 Z">
-</path>
 <path class="compressor-lines" d="M9 -10.7 L-13 -3 M9 10.7 L-13 3">
 </path>
 </g>

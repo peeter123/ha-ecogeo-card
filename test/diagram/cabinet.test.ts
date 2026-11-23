@@ -102,14 +102,12 @@ describe('cabinet drawing', () => {
       expect(discharge.length).toBeGreaterThan(0);
       for (const end of suction) expect(dot(end, wide)).toBeGreaterThan(0);
       for (const end of discharge) expect(dot(end, narrow)).toBeGreaterThan(0);
-      // the two parts outside the lines are filled solid in the outline colour (currentColor, which the theme's
-      // outline variable sets), each closed on the circle; the lines and the part between them are unchanged
-      const fills = [...(symbol?.querySelectorAll('.compressor-fill') ?? [])];
-      expect(fills).toHaveLength(2);
-      for (const shape of fills) {
-        expect(shape.getAttribute('fill')).toBe('currentColor');
-        // each shape starts where a line starts on the circle and ends on the circle through an arc of the circle's radius
-        expect(shape.getAttribute('d')).toMatch(/^M9 -?10.7 L-13.73 -?2.75 A14 14 0 0 [01] 9 -?10.7 Z$/);
+      // the symbol is open: the circle and the two lines, with no filled path (schematic-drawing "Refrigerant components
+      // after the manual figure")
+      expect(symbol?.querySelectorAll('.compressor-fill')).toHaveLength(0);
+      for (const shape of symbol?.querySelectorAll('path, circle') ?? []) {
+        const fill = shape.getAttribute('fill');
+        expect(fill === null || fill === 'none', shape.outerHTML).toBe(true);
       }
       expect(symbol?.querySelector('.compressor-lines')?.getAttribute('d')).toBe('M9 -10.7 L-13 -3 M9 10.7 L-13 3');
       // the title, aria label and tap stay on the group (component-info)
