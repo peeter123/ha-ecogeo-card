@@ -251,9 +251,15 @@ the user allows it.
 
 ## 8. Release
 
-- [ ] 8.1 Bump the minor version with `npm version minor --no-git-tag-version`, add its CHANGELOG.md section (the band
+- [x] 8.1 Bump the minor version with `npm version minor --no-git-tag-version`, add its CHANGELOG.md section (the band
   style, the spiral, the air unit and its values, the borehole collector, the tank's coil, no demand captions, the
   open compressor) and run `npm run release`. Verify: `npm run release` and `npm run verify-dist` pass.
+  Verdict (2026-11-24, font smoothing on): the version is 1.1.0 in package.json and both lock entries. The 1.1.0
+  section (Added, Changed, Removed; no date until the GitHub release) passed two reviews; round 1 corrected the
+  demand more-info (the emitter opens the DG1 demand, DHW valve 26 the DHW demand, the tanks the DHW temperature),
+  the air unit standing on its feet, the lifted pipes' wording and the term Out. `npm run release` passes (87 of 87
+  files, 13686 passed, 4 expected failures, Chromium and WebKit included) and copies the bundle; `npm run
+  verify-dist` reports `dist/ecogeo-card.js` current at version 1.1.0.
 
 ## 9. Live installation (each step needs the user's explicit go)
 

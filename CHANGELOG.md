@@ -3,6 +3,47 @@
 All notable changes to the ecoGEO heat pump card, newest first, in the style of Keep a Changelog. A release's heading
 is `## <version> - <YYYY-MM-DD>`; the heading has no date until the release is made, and the release adds it.
 
+## 1.1.0
+
+The band above the cabinet follows one style, and the air unit, the ground collector, the underfloor loop and the
+external tank are redrawn.
+
+### Added
+
+- The fan speed (a whole percentage, or the entity's own unit such as rpm) and the outside temperature as values inside
+  the air unit.
+
+### Changed
+
+- The emitter, the air unit, the ground collector and the external tank share one corner radius, one outline weight and
+  one inner margin. They have no divider lines and stand on the band's bottom edge: the emitter, the collector and the
+  tank flat, the air unit on its two feet. Their values have one size and regular weight and sit next to the part or
+  pipe they measure. The body widths changed so that the widest band still fits the vertical layout.
+- The horizontal runs of the pipes between the cabinet and the band share one height above the cabinet. Where that
+  would make two pipes cross, as for most sources in the vertical layout, the fewest pipes possible move up to a second
+  or third height.
+- The air unit is drawn as an outdoor unit: a case on two feet, one large fan with a guard of rings and spokes, and the
+  finned coil with the brine serpentine as a panel beside it. It shows the outside temperature, the fan speed and its
+  Out inside its case. In the hybrid it shows the outside temperature and the fan speed but no Out: the collector's Out
+  is the source's Out.
+- The outside temperature leaves the footer whenever the air unit is drawn.
+- The ground collector is drawn as a borehole: the surface on top, the brine rising on the left to just under it, two
+  U-loops hanging down into the ground and the brine returning down the right side. Its Out sits at the bottom next to
+  the outlet pipe.
+- The underfloor emitter is drawn as a spiral: in towards the centre and out between the inward turns. The inward run
+  has the supply colour and the outward run the return colour. The radiator keeps its columns.
+- The external DHW tank has a flat bottom with only the top dome kept. Its coil is a helix of four and a half turns:
+  the supply rises beside the coil's left side straight into the helix's upper end, and the return drops from its
+  lower end on the right. No straight pipe runs along the coil's top or bottom. The DHW temperature is no longer bold.
+  Coil 51 of model C is unchanged.
+- Compressor 11 is the open symbol again: a circle with two converging lines and no fill.
+
+### Removed
+
+- The "Demand" captions of the emitter, the external tank, tank 50 and the connection 1/2 stubs. The demand shows in
+  the circuit's colour and animation. The emitter still opens the DG1 demand's more-info, and DHW valve 26 the DHW
+  demand's.
+
 ## 1.0.0 - 2026-11-20
 
 The first release. A Lovelace card for Ecoforest ecoGEO heat pumps that draws the unit's internal schematic as inline
