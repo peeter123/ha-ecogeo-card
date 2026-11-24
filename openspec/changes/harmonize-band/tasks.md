@@ -235,8 +235,11 @@ the user allows it.
 
 ## 7. Visual references
 
-- [ ] 7.1 With the user's go for a push, record the visual references again through the `update_references` input of
+- [x] 7.1 With the user's go for a push, record the visual references again through the `update_references` input of
   the Check workflow, and commit them. Verify: the next CI run passes the visual project 16 of 16.
+  Verdict (2026-11-24): run 45415431971 recorded the references; after a pixel diff against the previous set they
+  were committed in 805806c. Its push run 45437371729 passes `npm run check` and compares the visual references 16
+  of 16; only `verify-dist` fails, as expected before the release.
 - [x] 7.2 Run the Chromium checks of the Workflow follow-up, with font smoothing on. Verify: the browser project
   passes in Chromium, and the place search and `measure-layout` agree with WebKit.
   Verdict (2026-11-24, font smoothing on): the browser project passes in Chromium (12 of 12 files, 2317 passed, 2

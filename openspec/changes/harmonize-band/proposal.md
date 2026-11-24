@@ -55,14 +55,15 @@ The user reviewed the released card on 2026-11-23 and asked for:
   turns alternate warm and cool. The radiator keeps its columns.
 - **External tank.**
   - A flat bottom on the band's edge, with only the top dome kept.
-  - Its coil is flipped vertically, so the straight pipe runs along the top: the supply rises beside the coil, runs
-    along the top to the helix's start, and the helix winds down to the return.
+  - Its coil is flipped and has four and a half turns: the supply rises beside the coil's left side, touching no
+    turn, straight into the helix's upper end, and the helix winds down to the return on the right. No straight pipe
+    runs along the coil's top or bottom (amended by the user 2026-11-24).
   - The DHW temperature loses its bold emphasis.
 
   Coil 51 of model C is unchanged.
 - **Compressor.** Compressor 11 returns to the open symbol: a circle with two converging lines and no fill.
 - **Body widths.** The bodies change width so that the widest band still fits the vertical layout's 720 units:
-  emitter 180, air unit 190, ground collector 120, tank 160 (710 with the hybrid and two gaps of 24).
+  emitter 180, air unit 190, ground collector 126, tank 160 (716 with the hybrid and two gaps of 24).
 - The emulator, README.md, docs/ecogeo-card.md and the visual references follow. The release group bumps the minor
   version.
 
@@ -83,7 +84,7 @@ None.
   - the spiral underfloor loop and its colouring by run;
   - the DG1 demand caption removed.
 - `dhw-storage`:
-  - the flat-bottomed external tank with its coil's straight pipe on top;
+  - the flat-bottomed external tank with its coil fed by the supply riser beside it;
   - no "Demand" in either tank;
   - no bold DHW temperature in the external tank.
 - `schematic-drawing`:
