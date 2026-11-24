@@ -30,7 +30,7 @@ The user reviewed the released card on 2026-11-23 and asked for:
   the design names that case.
 - **Demand captions removed.** The "Demand" text is no longer drawn anywhere: not in the emitter, not beside the
   connection 1/2 stubs, not in the external tank and not in tank 50. The demand stays visible through the circuit's
-  colouring and animation, and the emitter and the tanks still open the demand entities' more-info.
+  colouring and animation; the emitter still opens the DG1 demand's more-info and DHW valve 26 the DHW demand's.
 - **Air unit.** The air unit is redrawn as a wide outdoor unit, modelled on a photo the user supplied:
   - a case on two feet;
   - one large fan right of centre, with a guard of concentric rings and four spokes;
