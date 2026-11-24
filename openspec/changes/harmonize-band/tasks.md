@@ -263,12 +263,26 @@ the user allows it.
 
 ## 9. Live installation (each step needs the user's explicit go)
 
-- [ ] 9.1 Deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource's `?v=` (id and value in
+- [x] 9.1 Deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource's `?v=` (id and value in
   `private/installation.md`) and record the deploy there. Verify:
   - a subagent takes light screenshots of the schematic view at phone width (vertical) and at 1280 x 800
     (horizontal), and returns a verdict against the review criteria;
   - the air unit shows the outside temperature, the fan speed and its Out;
   - the system log shows no `ecogeo` errors.
+
+  Verdict (2026-11-24, with the user's go): the 1.1.0 bundle was uploaded with no conflict, the resource was bumped
+  by one and the deploy is recorded in the installation notes. A subagent's light screenshots at phone width and at
+  1280 x 800 both pass (unit in DHW mode):
+  - the spiral emitter;
+  - the air unit on its two feet with the outside temperature, the fan speed and its Out inside the case;
+  - the flat-bottomed tank with its helix fed by the riser beside it, with no straight top pipe;
+  - the open compressor;
+  - no "Demand" caption and no overlapping label;
+  - a footer without the outside temperature.
+
+  The system log has no `ecogeo` entries. With the same go, tag `v1.1.0` and the GitHub release 1.1.0 were published
+  with the bundle attached (byte-identical to `dist/ecogeo-card.js`); the Check runs on the release commit and the
+  dated changelog commit are green.
 
 ## Workflow follow-up
 
@@ -278,4 +292,3 @@ the user allows it.
 - One fresh review of the whole change before archiving.
 - At archive, update the Purpose of outer-loop-source (the air unit's values, the borehole) and heating-emitter (no
   DG1 demand caption), and name the change in AGENTS.md.
-- The GitHub release and tag of the new version only on the user's explicit request.
