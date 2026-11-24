@@ -205,18 +205,33 @@ the user allows it.
   on second, the tank's two pipes on third, the lifts D3 lists; at 320 px the same order shows. No two pipes cross in
   any capture; the risers rise clear of the lifted runs. The external coil is a flipped helix of four turns, both
   ends on its right: the supply rises left of the coil and runs straight along its top, nothing runs along its
-  bottom, and the return drops from the helix end through the tank's bottom. The collector's Out reads "0.5 °C" in
+  bottom, and the return drops from the helix end through the tank's bottom (this coil is superseded by 6.7). The
+  collector's Out reads "0.5 °C" in
   the heating captures and "-12.3 °C" in the 320 px defrost capture, legible, clear of both risers and of the
   outline. Nothing else against the review criteria: no label on a pipe, part or outline, values inside their bodies,
   band order emitter, source, tank, text legible. Not looked at: the captures without a tank and the dark ones.
 
-- [ ] 6.7 Start the external coil on its left (added 2026-11-24 after the group 6 commit, decided by the user; design
+- [x] 6.7 Start the external coil on its left (added 2026-11-24 after the group 6 commit, decided by the user; design
   D8 and dhw-storage "External tank above connections 5/6", amended). The helix starts at the top left where the
   supply rises, winds down in four and a half turns and ends at the bottom right; the straight pipe along the coil's
   top goes. The return is unchanged. Verify: the "Helical coil" and "Tank geometry" scenarios are unit tests, the coil
   51 snapshot is unchanged, the arrangement snapshots are recorded again, the band tests (jog levels, `MOVED`) pass,
   `npm run check` passes with the browser project in WebKit, and a subagent inspects the external tank in the
   horizontal and vertical captures (pass when the supply runs straight into the helix and no line doubles a turn).
+
+  Verdict (2026-11-24): pass, in the second version. The first version put the riser in the column at cx - rx, the x
+  of every left turning point of the helix, so the rising supply ran through all of them; its capture check missed
+  it and the user saw it. Now the supply rises 12 units left of the coil (`inX`), and the helix's first half, the
+  extra back half, starts at the top of that column (`HelixShape.startX`) and arcs over to the right side, a little
+  wider than the other halves on its left end. The coil's top line moved from 90 to 94 units below the tank's top,
+  so the pitch is a whole 6 units. A unit test samples every half and requires 8 units between the riser and every
+  helix point below the start; the old column gives 0, the new one 12. `npm run capture`: in
+  band-ground-external-light-1000 and vertical-band-hybrid-external-light-320 the riser touches no turn except where
+  it joins the start, no line doubles a turn, the return drops straight down from the end at the right, and no pipe
+  crosses another. The tank's two pipes stay on `third` in every vertical key with the tank, as in the group 6
+  commit (`MOVED` unchanged). Against HEAD the arrangement snapshots differ only in `dhw_ext_in` and the helix
+  halves; coil 51 and the model C snapshots are unchanged. Typecheck, lint, format:check and lint:ha are clean, and
+  the unit and WebKit browser projects pass (11369 passed, 2 expected failures).
 
 ## 7. Visual references
 

@@ -4,7 +4,7 @@ import { EcogeoCard } from '../../src/card/ecogeo-card';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState, HassLike } from '../../src/lib/hass';
 import { COIL_51_SHAPE } from '../../src/diagram/symbols';
-import { helixHalves } from '../../src/diagram/geometry';
+import { helixEnds, helixHalves } from '../../src/diagram/geometry';
 import { bandJogs, externalTankBody, helixExtent, arrangementFor } from '../../src/diagram/geometry';
 import { cabinetStyles } from '../../src/diagram/cabinet';
 import {
@@ -32,9 +32,10 @@ const SEGMENTS = horizontal.segments;
 const portX = (item: number): number => COMPONENTS.find((component) => component.item === item)?.x ?? Number.NaN;
 const COIL = SEGMENTS.find((segment) => segment.id === 'dhw_ext_coil')?.shape;
 if (COIL === undefined) throw new Error('no external coil');
-/** The coil's two ends, both on its right (harmonize-band D8): where it meets the pipes from ports 5 and 6. */
-const COIL_START = `${String(COIL.cx + COIL.rx)} ${String(COIL.top)}`;
-const COIL_END = `${String(COIL.cx + COIL.rx)} ${String(COIL.bottom)}`;
+/** The coil's two ends (harmonize-band D8): the start at the top left, where the supply rises, the end at the bottom right. */
+const COIL_ENDS = helixEnds(COIL);
+const COIL_START = COIL_ENDS.start.join(' ');
+const COIL_END = COIL_ENDS.end.join(' ');
 const LABEL_SPECS = horizontal.labels.specs;
 
 async function mount(config: CardConfig = {}, hass?: HassLike): Promise<EcogeoCard> {
@@ -114,23 +115,35 @@ describe('DHW storage', () => {
     // its ends meet the pipes from ports 5 and 6
     const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
     expect(d('dhw_ext_in').endsWith(`L${COIL_START}`)).toBe(true);
-    expect(front[0]?.getAttribute('d')?.startsWith(`M${COIL_START}`)).toBe(true);
-    // the helix winds down in whole turns and ends on the right again: its last half is a back half
-    expect(halves.length % 2).toBe(0);
+    expect(back[0]?.getAttribute('d')?.startsWith(`M${COIL_START}`)).toBe(true);
+    // the helix starts at the top left, in the riser's column 12 units left of its left side, winds down in four and a half turns and ends at the bottom right on a back half
+    expect(COIL.startX).toBe(COIL.cx - COIL.rx - 12);
+    expect(COIL_ENDS.start).toEqual([COIL.startX, COIL.top + (2 * (COIL.bottom - COIL.top)) / 29]);
+    expect(COIL_ENDS.end).toEqual([COIL.cx + COIL.rx, COIL.bottom]);
+    expect(halves).toHaveLength(9);
     expect(back.at(-1)?.getAttribute('d')?.endsWith(COIL_END)).toBe(true);
-    // the supply's last piece is the straight pipe along the coil's top; the return drops straight down, none runs along the bottom
+    // the first half is a back half, so the helix does not rise above its top line, and none dips below its bottom line
+    const extent = helixExtent(COIL);
+    // (the peak of a half lies about 0.63 pitch above its start, so the sampled extent top is the line itself)
+    expect(extent.top).toBe(COIL.top);
+    // the last front half peaks above `bottom` and the last back half ends on it, so the extent ends exactly there
+    expect(extent.bottom).toBe(COIL.bottom);
+    // the supply rises straight up beside the coil into the upper end: its last piece is vertical, with no pipe along
+    // the coil's top; the return drops straight down from the lower end on the right, and none runs along the bottom
     const supply = SEGMENTS.find((segment) => segment.id === 'dhw_ext_in')?.points ?? [];
     const [supplyFrom, supplyTo] = supply.slice(-2);
-    expect(supplyFrom?.[1]).toBe(COIL.top);
-    expect(supplyTo).toEqual([COIL.cx + COIL.rx, COIL.top]);
-    expect(supplyFrom?.[0]).toBeLessThan(COIL.cx - COIL.rx);
+    expect(supplyTo).toEqual(COIL_ENDS.start);
+    expect(supplyFrom?.[0]).toBe(COIL.cx - COIL.rx - 12);
+    expect(supplyFrom?.[1]).toBeGreaterThan(COIL.bottom);
     const returned = SEGMENTS.find((segment) => segment.id === 'dhw_ext_out')?.points ?? [];
     const [returnFrom, returnTo] = returned;
+    expect(returnFrom).toEqual(COIL_ENDS.end);
     expect(returnFrom?.[0]).toBe(returnTo?.[0]);
     expect(returnTo?.[1]).toBeGreaterThan(COIL.bottom);
     for (const points of [supply, returned]) {
       points.slice(1).forEach((end, index) => {
-        expect(points[index]?.[1] === end[1] && end[1] === COIL.bottom).toBe(false);
+        const from = points[index];
+        expect(from?.[1] === end[1] && (end[1] === COIL.bottom || end[1] === COIL.top)).toBe(false);
       });
     }
     // clean joints (refine-schematic-drawing D8a): every back half is drawn before every front half; backs have butt caps, fronts round
@@ -174,7 +187,7 @@ describe('DHW storage', () => {
     expect(extent.top).toBeGreaterThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height / 3);
     expect(extent.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height);
     const coil = horizontal.externalCoil;
-    expect(coil?.inX).toBeLessThan(extent.left);
+    expect(coil?.inX).toBe(extent.left);
     expect(COIL.cx + COIL.rx).toBeGreaterThanOrEqual(extent.right - 1);
     // the value labels sit inside the tank's upper part (above the coil), centred on it, bare on the tinted body
     const specs = LABEL_SPECS.filter((spec) => spec.id.startsWith('tank_external'));

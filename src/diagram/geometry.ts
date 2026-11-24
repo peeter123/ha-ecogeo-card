@@ -132,7 +132,7 @@ export type TankShape = Rect & { readonly dome: number };
 
 /**
  * The external coil: its centre line is the tank's, and it sits in the tank's lower part (the upper part holds the values).
- * `inX` is the column of the supply pipe that rises beside the coil, left of it; the return drops from the helix's end on the coil's right.
+ * `inX` is the column of the supply pipe that rises beside the coil, left of it, into the helix's start (the first half arcs over from there); the return drops from the helix's end on the coil's right.
  */
 export interface ExternalCoil {
   readonly cx: number;
@@ -699,11 +699,20 @@ export interface HelixShape {
   rx: number;
   turns: number;
   /**
-   * Both ends on the right (harmonize-band D8): with whole turns the helix starts and ends at cx + rx. `flip` keeps the last
-   * half's vertical tangent, so a pipe straight down from the end does not hook (the default flattens the last half into a
-   * pipe that leaves sideways). The external tank's coil is flipped; coil 51 is not.
+   * Starts on the left (harmonize-band D8): the first half is a back half, so a pipe rising beside the coil runs on
+   * into it, and every half, the last too, has a vertical tangent, so a pipe straight down from the end does not hook (the
+   * default flattens the last half into a pipe that leaves sideways). The start lies two thirds of a pitch below `top`, so the
+   * first half's peak (0.63 pitch above the start, at `top` + pitch / 27) does not rise above it, as long as the pitch is at
+   * least 3 (the bulge is 4/3 of the larger of 3 and the pitch, so a smaller pitch peaks higher). `bottom` is the end;
+   * no half dips below it. The external tank's coil starts on the left; coil 51 does not.
    */
-  flip?: true;
+  fromLeft?: true;
+  /**
+   * The x of the first half's start, for a helix from the left: it lies left of the coil's left side (the riser's column), so
+   * the first half arcs over from there to the right end, a little wider than the others on its left end, and the riser
+   * passes none of the left turning points. The half's peak depends on the y values only, so it stays on `top`.
+   */
+  startX?: number;
 }
 
 export interface Segment extends Visibility {
@@ -1346,9 +1355,9 @@ export function bandAssignment(
 
 /**
  * The band's segments with each pipe's horizontal section on the level its group is assigned (0 is the jog level).
- * The external tank's coil is flipped (harmonize-band D8): both its ends lie on its right. The supply (connection 5) rises in
- * the column left of the coil to the coil's top and runs straight along it to the helix's start; the return (connection 6)
- * drops straight down from the helix's end through the tank's bottom to the jog level. The air unit and the collector are
+ * The external tank's helix starts on its left and ends on its right (harmonize-band D8). The supply (connection 5) rises
+ * straight up beside the coil into the helix's start; the return (connection 6) drops straight down from the helix's
+ * end through the tank's bottom to the jog level. The air unit and the collector are
  * entered and left on their bottom faces.
  */
 function bandPipes(z: Zones, layout: ShownLayout, assigned: Readonly<Record<string, number>>): readonly Segment[] {
@@ -1414,13 +1423,22 @@ function bandPipes(z: Zones, layout: ShownLayout, assigned: Readonly<Record<stri
     );
   }
   if (key.tank && tank !== undefined) {
-    const start: Point = [tank.cx + tank.rx, tank.top];
-    const end: Point = [tank.cx + tank.rx, tank.bottom];
+    const shape: HelixShape = {
+      kind: 'helix',
+      cx: tank.cx,
+      top: tank.top,
+      bottom: tank.bottom,
+      rx: tank.rx,
+      turns: 4.5,
+      fromLeft: true,
+      startX: tank.inX,
+    };
+    const { start, end } = helixEnds(shape);
     segments.push(
       seg(
         'dhw_ext_in',
         ['dhw_coil'],
-        line(...route([ports[5], top], [ports[5], tankY], [tank.inX, tankY], [tank.inX, tank.top], start)),
+        line(...route([ports[5], top], [ports[5], tankY], [tank.inX, tankY], start)),
         OUT,
         {
           dhw: 'external',
@@ -1430,15 +1448,7 @@ function bandPipes(z: Zones, layout: ShownLayout, assigned: Readonly<Record<stri
       seg('dhw_ext_coil', ['dhw_coil'], line(start, end), OUT, {
         dhw: 'external',
         speedRole: PP,
-        shape: {
-          kind: 'helix',
-          cx: tank.cx,
-          top: tank.top,
-          bottom: tank.bottom,
-          rx: tank.rx,
-          turns: 4,
-          flip: true,
-        },
+        shape,
       }),
       seg('dhw_ext_out', ['dhw_coil'], line(...route(end, [end[0], tankY], [ports[6], tankY], [ports[6], top])), RET, {
         dhw: 'external',
@@ -1915,7 +1925,7 @@ function bandZonesFor(layout: ShownLayout, key: BandKey, cabinet: CabinetZones):
       ? undefined
       : {
           cx: tankShape.x + tankShape.width / 2,
-          top: tankShape.y + 90,
+          top: tankShape.y + 94,
           bottom: tankShape.y + 152,
           rx: 38,
           inX: tankShape.x + tankShape.width / 2 - 38 - 12,
@@ -2194,22 +2204,25 @@ type Cubic = readonly [Point, Point, Point, Point];
 /**
  * The half-turns of a helix as cubic Beziers, each a half ellipse from one side of the coil to the other, going down
  * by an equal pitch: even ones pass in front (the lower arc), odd ones behind (the upper arc). The last half ends with
- * a horizontal tangent, so the pipe that leaves the coil there does not hook; a flipped helix (`flip`) ends with the
- * vertical tangent of its other halves instead, for a pipe that drops straight down from its end.
+ * a horizontal tangent, so the pipe that leaves the coil there does not hook; a helix from the left (`fromLeft`) starts with a
+ * back half, ends with the vertical tangent of its other halves, for a pipe that drops straight down from its end, and
+ * starts two thirds of a pitch below `top`.
  */
 function helixCubics(shape: HelixShape): { front: boolean; curve: Cubic }[] {
   const count = Math.max(1, Math.round(shape.turns * 2));
-  const pitch = (shape.bottom - shape.top) / count;
+  const fromLeft = shape.fromLeft === true;
+  const pitch = fromLeft ? (3 * (shape.bottom - shape.top)) / (3 * count + 2) : (shape.bottom - shape.top) / count;
   const bulge = (4 / 3) * Math.max(3, pitch);
   return Array.from({ length: count }, (_, index) => {
-    const front = index % 2 === 0;
+    const front = fromLeft ? index % 2 === 1 : index % 2 === 0;
     const rightEnd = shape.cx + shape.rx;
     const leftEnd = shape.cx - shape.rx;
-    const [from, to] = front ? [rightEnd, leftEnd] : [leftEnd, rightEnd];
-    const y0 = shape.top + index * pitch;
+    const first = index === 0 && fromLeft;
+    const [from, to] = front ? [rightEnd, leftEnd] : [first ? (shape.startX ?? leftEnd) : leftEnd, rightEnd];
+    const y0 = shape.top + (fromLeft ? (2 * pitch) / 3 : 0) + index * pitch;
     const y1 = y0 + pitch;
     const lift = front ? bulge : -bulge;
-    const last = index === count - 1 && shape.flip !== true;
+    const last = index === count - 1 && !fromLeft;
     const curve: Cubic = [
       [from, y0],
       [from, y0 + lift],
@@ -2225,6 +2238,15 @@ export const helixDrawOrder = (halves: readonly HelixHalf[]): HelixHalf[] => [
   ...halves.filter((half) => !half.front),
   ...halves.filter((half) => half.front),
 ];
+
+/** The two ends of a helix, where the pipes join it: the start, and the end on `bottom` (the other side after an odd number of halves). */
+export function helixEnds(shape: HelixShape): { start: Point; end: Point } {
+  const cubics = helixCubics(shape);
+  const first = cubics[0];
+  const last = cubics[cubics.length - 1];
+  if (first === undefined || last === undefined) throw new Error('helix without halves');
+  return { start: first.curve[0], end: last.curve[3] };
+}
 
 /** The half-turns of a helix, in order from its start: the lower arcs (front, solid) and the upper arcs (back, faint). */
 export function helixHalves(shape: HelixShape): HelixHalf[] {
@@ -2264,14 +2286,10 @@ export function routePoints(segment: Pick<Segment, 'points' | 'shape'>): readonl
   const { shape } = segment;
   if (shape === undefined) return segment.points;
   const { left, right, top, bottom } = helixExtent(shape);
-  // the supply of a flipped helix runs along its top edge (harmonize-band D8): that edge is the pipe's, not the coil's
-  if (shape.flip === true) {
-    return [
-      [right, top],
-      [right, bottom],
-      [left, bottom],
-      [left, top],
-    ];
+  // the supply of a helix from the left rises along its left edge to the start and the return drops from its end on the
+  // right (harmonize-band D8): the box is closed along the bottom but open on the left below the start, where the riser runs
+  if (shape.fromLeft === true) {
+    return [helixEnds(shape).start, [left, top], [right, top], [right, bottom], [left, bottom]];
   }
   return [
     [right, top],

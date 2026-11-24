@@ -571,7 +571,7 @@ conflicts between them: two sections on one level whose x spans touch, and a ver
 into a body) that crosses the level inside another pipe's span. `bandSegments` groups the pipes (the emitter's two,
 port 3's, port 4's, the hybrid's link, and the tank's two as one group) and tries the level assignments from the
 cheapest to the dearest, all on `jog` first, and takes the first one without a conflict; nothing is set per band key,
-and the emitter does not change the result. The tank's supply along the coil's top is not a section for `jogSpans`.
+and the emitter does not change the result.
 Where the source lies left of its ports (the vertical layout, the air unit with the tank in the horizontal one, and the
 hybrid's link in both) some pipes have to leave `jog`; a test lists them for every band key in both layouts and checks
 that no assignment with fewer lifted pipes is free of conflicts:
@@ -776,12 +776,15 @@ digits ("1450 rpm") is wider than the room right of the coil panel and can touch
   a rounded cylinder (straight walls, a domed top cap, a flat bottom with corners of the band radius) above them. The
   tank is centred on the coil and stands on the band's bottom edge. Its values, the DHW temperature (a bare number, no
   caption, at the regular weight and size of every value), sits in its upper part as a bare label on the tinted body,
-  under the top cap's rim and over the coil: 44 units under the tank's top. The coil starts 84 units under the tank's
-  top, so the label clears it. The coil is a helix in the lower part of the tank, seen from the side: four whole
-  turns, the front half of each turn solid and the back half faint (35 % opacity). It is flipped (`HelixShape.flip`),
-  so that both its ends are on its right: port 5's pipe rises up the column left of the coil, runs straight along the
-  coil's top to the helix's start, and port 6's pipe drops straight down from the helix's end, through the tank's
-  bottom. The two pipes do not cross. The colour, the muting and the flow animation are those of the coil pipe; the
+  under the top cap's rim and over the coil: 44 units under the tank's top. The coil's top line lies 94 units under the
+  tank's top, so the label clears it. The coil is a helix in the lower part of the tank, seen from the side: four and
+  a half turns, the front half of each turn solid and the back half faint (35 % opacity). It starts on the left
+  (`HelixShape.fromLeft`) with an extra back half, so the helix does not rise above its top line, and ends on the right
+  with a vertical tangent: port 5's pipe rises straight up in a column 12 units left of the coil's left side, which none
+  of the helix's left turning points touch, into the helix's start at the column's top; the extra half turn arcs over
+  from there to the right side, a little wider than the other halves on its left end (`HelixShape.startX`), and port
+  6's pipe drops straight down from the helix's end, through the tank's bottom.
+  The two pipes do not cross. The colour, the muting and the flow animation are those of the coil pipe; the
   dash overlay runs along the front halves only. An idle coil (no flow) is drawn in a neutral grey, darker than the
   other muted pipes in the light theme so that it stays visible on the tank's tinted body; the dark theme keeps the
   normal muted grey. While the coil is idle, the two pipes that feed it are drawn in that same grey where they run

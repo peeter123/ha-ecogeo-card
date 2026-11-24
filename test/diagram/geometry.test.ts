@@ -574,8 +574,9 @@ describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
     if (coil === undefined || shape === undefined) throw new Error('no helix');
     expect(shape.turns).toBeGreaterThanOrEqual(4);
     expect(coil.points).toHaveLength(2);
-    expect(shape.flip).toBe(true);
-    expect(coil.points[0]).toEqual([shape.cx + shape.rx, shape.top]);
+    expect(shape.fromLeft).toBe(true);
+    // it starts at the top left, two thirds of a pitch below the top line, and ends at the bottom right
+    expect(coil.points[0]).toEqual([shape.cx - shape.rx - 12, shape.top + (2 * (shape.bottom - shape.top)) / 29]);
     expect(coil.points[1]).toEqual([shape.cx + shape.rx, shape.bottom]);
     expect(segmentPoints('dhw_ext_in').at(-1)).toEqual(coil.points[0]);
     expect(segmentPoints('dhw_ext_out')[0]).toEqual(coil.points[1]);
@@ -584,20 +585,43 @@ describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
     expect(shape.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height - EXTERNAL_TANK.dome);
   });
 
+  test('the supply rises in a column that clears every point of the helix but its start', () => {
+    if (coil === undefined || shape === undefined) throw new Error('no helix');
+    const [startX, startY] = coil.points[0] ?? [Number.NaN, Number.NaN];
+    // sample every half independently of helixExtent (the path data holds its four points)
+    let nearest = Infinity;
+    for (const half of helixHalves(shape)) {
+      const n = (half.d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+      for (let step = 0; step <= 64; step += 1) {
+        const t = step / 64;
+        const w = [(1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t ** 2, t ** 3];
+        const at = (offset: number): number => w.reduce((sum, weight, i) => sum + weight * (n[offset + 2 * i] ?? 0), 0);
+        // the riser runs from the tank's line up to the start: only the part of the helix below the start is in its way
+        if (at(1) > startY + 0.5) nearest = Math.min(nearest, Math.abs(at(0) - startX));
+      }
+    }
+    expect(nearest).toBeGreaterThanOrEqual(8);
+    // the first half leaves the start straight up and does not rise above the top line (its peak depends on y only)
+    expect(helixExtent(shape).top).toBe(shape.top);
+  });
+
   test('helixHalves alternates front (lower arcs) and back halves, two per turn, from the start to the end', () => {
     if (shape === undefined) throw new Error('no helix');
     const halves = helixHalves(shape);
     expect(halves).toHaveLength(Math.round(shape.turns * 2));
-    expect(halves.map((half) => half.front)).toEqual(halves.map((_, index) => index % 2 === 0));
-    expect(halves[0]?.d.startsWith(`M${String(shape.cx + shape.rx)} ${String(shape.top)} `)).toBe(true);
+    // the first half is a back half (the helix starts at the top left and does not rise above its top line)
+    expect(halves.map((half) => half.front)).toEqual(halves.map((_, index) => index % 2 === 1));
+    expect(halves[0]?.d.startsWith(`M${coil?.points[0]?.join(' ') ?? ''} `)).toBe(true);
     expect(halves.at(-1)?.d.endsWith(`${String(shape.cx + shape.rx)} ${String(shape.bottom)}`)).toBe(true);
   });
 
   test('a helix is checked as the rectangle of its extent, other segments as their points', () => {
     if (coil === undefined || shape === undefined) throw new Error('no helix');
     const ring = routePoints(coil);
-    // both end points lie on the box's edge
+    // both end points lie on the box's edge, which is closed along the bottom but open on the left below the start (the supply rises there)
     for (const end of coil.points) expect(onPolyline(end, ring)).toBe(true);
+    expect(onPolyline([shape.cx - shape.rx, shape.bottom], ring)).toBe(true);
+    expect(onPolyline([ring[0]?.[0] ?? 0, (ring[0]?.[1] ?? 0) + 10], ring)).toBe(false);
     expect(routePoints({ points: segmentPoints('trunk') })).toEqual(segmentPoints('trunk'));
     // a pipe that cuts through the coil would be found
     expect(
@@ -611,8 +635,8 @@ describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
   test('every point of the drawn helix lies inside the box that stands for it', () => {
     if (shape === undefined || coil === undefined) throw new Error('no helix');
     const box = routePoints(coil);
-    const [right, top] = box[0] ?? [0, 0];
-    const [left, bottom] = box[2] ?? [0, 0];
+    const [left, top] = box[1] ?? [0, 0];
+    const [right, bottom] = box[3] ?? [0, 0];
     expect({ left, right, top, bottom }).toEqual(helixExtent(shape));
     expect(bottom).toBeGreaterThanOrEqual(shape.bottom);
     expect(top).toBeLessThanOrEqual(shape.top);

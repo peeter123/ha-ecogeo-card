@@ -29,7 +29,8 @@ Manual trap 52 and drain valve 53 SHALL NOT be drawn: they have no live value.
 ### Requirement: External tank above connections 5/6
 With `dhw: external`, the card SHALL draw a tank above connections 5 and 6 in the band: an upright cylinder with a
 domed top and a flat bottom, centred on a helical coil seen from the side (front halves solid, back halves faint). The
-supply from connection 5 SHALL rise at the coil's left side straight into the helix's upper end; the return SHALL
+supply from connection 5 SHALL rise beside the coil's left side, touching no turn, straight into the helix's upper
+end; the return SHALL
 leave the helix's lower end on the right straight down to connection 6, crossing no pipe (amended by the user
 2026-11-24).
 
@@ -40,8 +41,8 @@ leave the helix's lower end on the right straight down to connection 6, crossing
 #### Scenario: Helical coil
 - **WHEN** the card renders model B with `dhw: external`
 - **THEN** the coil has at least four turns, each turn's front half is drawn solid and its back half faint, the
-  supply rises at the coil's left side into the helix's upper end, the return drops from the helix's lower end on the
-  right, and no straight pipe runs along the coil's top or bottom
+  supply rises beside the coil's left side, touching no turn, into the helix's upper end, the return drops from the
+  helix's lower end on the right, and no straight pipe runs along the coil's top or bottom
 
 #### Scenario: Tank geometry
 - **WHEN** the card renders model B with `dhw: external`

@@ -130,9 +130,10 @@ explicit expected list, so a new lift cannot appear silently. On 2026-11-24 they
 tank (port 4's on `second`, the tank's on `third`), vertical air without the tank (port 4's on `second`), vertical
 ground with the tank (port 4's on `second`, the tank's on `third`), vertical hybrid with the tank (the link and port
 4's on `second`, the tank's on `third`), and vertical hybrid without the tank (the link on `second`). The emitter does
-not change the assignment. `jogSpans` counts only the sections below the band's bottom edge, so the tank's supply
-along the coil's top is not one of them. No tank entry avoids a level of its own without moving the tank off the
-coil's centre line.
+not change the assignment. `jogSpans` counts only the sections below the band's bottom edge. The tank's supply rises
+12 units left of the coil (D8), so in the vertical layout its span covers port 4's riser; a supply at the coil's
+left side would avoid the lift, but it runs through the helix's left turning points (tried in task 6.7 and rejected
+by the user).
 
 Alternatives considered at the amendment: moving the air unit's exit column right and routing the hybrid's link
 through the gap between its bodies, to cut the lifts; and the old fixed level per pipe. The user chose the plain
@@ -260,11 +261,15 @@ keeps its button for the DHW temperature. Tank 50 keeps its temperature, centred
 
 - **Body:** the domed top, straight walls, and a flat bottom on the band's bottom edge with corners of the band
   radius. The rim (the top dome's lower arc) stays.
-- **Coil:** `HelixShape` gains `flip: true`. The helix starts at the top left and winds down in four and a half
-  turns, so its end lies at the bottom right. `flip` makes the last half arrive with a vertical tangent, as the others
-  do, instead of flattening into a pipe that leaves sideways, so the return drops straight down.
-- **Supply:** rises in the inlet column at the coil's left side (`cx - rx`) and joins the helix's start directly, with
-  no straight pipe along the coil's top or bottom.
+- **Coil:** `HelixShape` gains `fromLeft: true`. The helix starts at the top left with a back half and winds down in
+  four and a half turns, so its end lies at the bottom right. Its last half arrives with a vertical tangent, as the
+  others do, instead of flattening into a pipe that leaves sideways, so the return drops straight down. The coil's
+  top line lies 94 units below the tank's top (90 before), which makes the pitch a whole 6 units.
+- **Supply:** rises in the inlet column 12 units left of the coil's left side (`inX`), so it passes none of the
+  helix's left turning points. The helix's first half starts at the top of that column (`HelixShape.startX`) and arcs
+  over to the right side: it is the extra half turn, a little wider than the others on its left end.
+  No straight pipe runs along the coil's top or bottom (decided by the user 2026-11-24, after a first version put the
+  column at `cx - rx`, through every left turning point).
 - **Return:** drops straight down from the helix's end at `cx + rx`, through the tank's bottom, to the jog level and
   on to port 6.
 
@@ -274,7 +279,7 @@ above the first turn and read as a doubled stroke. The helix now takes half a tu
 rises (task 6.7).
 
 The supply still enters at the top and the return leaves at the bottom (counterflow, as in a real tank). The front
-and back halves keep `helixDrawOrder`. Coil 51 does not take `flip` (out of scope).
+and back halves keep `helixDrawOrder`. Coil 51 takes neither `fromLeft` nor `startX` (out of scope).
 
 ### D8a Body-placed labels in the place search
 

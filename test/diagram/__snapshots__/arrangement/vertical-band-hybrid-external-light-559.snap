@@ -335,28 +335,30 @@ svg:
 </path>
 <path class="pipe muted" data-segment="dg1_ret" d="M111 182 L111 210 L152 210 L152 238">
 </path>
-<path class="pipe " data-segment="dhw_ext_in" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" d="M677 238 L677 186 L600 186 L600 96 L688 96">
+<path class="pipe " data-segment="dhw_ext_in" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" d="M677 238 L677 186 L600 186 L600 104">
 </path>
-<path class="flow " data-flow="dhw_ext_in" style="--flow-duration: 1.2012012012012012s" d="M677 238 L677 186 L600 186 L600 96 L688 96">
+<path class="flow " data-flow="dhw_ext_in" style="--flow-duration: 1.2012012012012012s" d="M677 238 L677 186 L600 186 L600 104">
 </path>
 <g class="helix " data-segment="dhw_ext_coil" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)">
-    <path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="butt" opacity="0.35" d="M612 103.75 C612 93.42 688 101.17 688 111.5">
+    <path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="butt" opacity="0.35" d="M600 104 C600 96 688 102 688 110">
 </path>
-<path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="butt" opacity="0.35" d="M612 119.25 C612 108.92 688 116.67 688 127">
+<path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="butt" opacity="0.35" d="M612 116 C612 108 688 114 688 122">
 </path>
-<path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="butt" opacity="0.35" d="M612 134.75 C612 124.42 688 132.17 688 142.5">
+<path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="butt" opacity="0.35" d="M612 128 C612 120 688 126 688 134">
 </path>
-<path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="butt" opacity="0.35" d="M612 150.25 C612 139.92 688 147.67 688 158">
+<path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="butt" opacity="0.35" d="M612 140 C612 132 688 138 688 146">
 </path>
-<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="round" d="M688 96 C688 106.33 612 114.08 612 103.75">
+<path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="butt" opacity="0.35" d="M612 152 C612 144 688 150 688 158">
 </path>
-<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="round" d="M688 111.5 C688 121.83 612 129.58 612 119.25">
+<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="round" d="M688 110 C688 118 612 124 612 116">
 </path>
-<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="round" d="M688 127 C688 137.33 612 145.08 612 134.75">
+<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="round" d="M688 122 C688 130 612 136 612 128">
 </path>
-<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="round" d="M688 142.5 C688 152.83 612 160.58 612 150.25">
+<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="round" d="M688 134 C688 142 612 148 612 140">
 </path>
-    <path class="flow " data-flow="dhw_ext_coil" style="--flow-duration: 1.2012012012012012s" d="M688 96 C688 106.33 612 114.08 612 103.75 M688 111.5 C688 121.83 612 129.58 612 119.25 M688 127 C688 137.33 612 145.08 612 134.75 M688 142.5 C688 152.83 612 160.58 612 150.25">
+<path class="pipe " data-half="front" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="round" d="M688 146 C688 154 612 160 612 152">
+</path>
+    <path class="flow " data-flow="dhw_ext_coil" style="--flow-duration: 1.2012012012012012s" d="M688 110 C688 118 612 124 612 116 M688 122 C688 130 612 136 612 128 M688 134 C688 142 612 148 612 140 M688 146 C688 154 612 160 612 152">
 </path>
   </g>
 <path class="pipe " data-segment="dhw_ext_out" style="stroke: color-mix(in srgb, #f2711c 95%, #e8a317)" d="M688 158 L688 186 L717 186 L717 238">
