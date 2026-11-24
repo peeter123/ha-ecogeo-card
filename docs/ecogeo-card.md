@@ -1173,17 +1173,17 @@ WebKit, at 560 px: every default place is free, and the labels placed by their b
 label is 92 units wide (production Out and brine Out, "Out -12.3 °C") and 18 units tall, the same in both engines at the
 10 px font. The measurement of `measure-layout` is in the paragraph above, and the browser tests pass in both engines.
 
-Result (WebKit, 2026-11-24, after the collector widened to 126 units; `HORIZONTAL_PLACES` has no entry): the search
-lists 21 label ids over all configurations (one configuration shows at most 18 values). Of them, 16 are searched on the
-grid with the 2 px margin: 14 cabinet values and the two tank temperatures. At 560 px (horizontal) and 320 px (vertical)
-each of the 16 has a place, and the report is empty. The other 5 are placed by their body's shape boxes and are not
-searched on the grid: the collector's Out (`ground_out`, `hybrid_ground_out`) and the air unit's outside temperature,
-fan speed and Out (`outside_temperature`, `fan_speed`, `air_unit_out`). Their rule has no margin (harmonize-band D8a),
-as `measure-layout` measures: the label lies inside its body's box and touches no pipe, part, outline or other label.
-Where one of them breaks it, the search reports NO PLACE, a decision point; in both layouts it reports none, in all 312
-cases. With the 2 px margin the collector's Out would meet the return riser (`src_gnd_up`, `src_hyb_up`) and the air
-unit's speed and Out would meet each other, which is why the margin is not their rule. The browser tests
-(`collector-out.browser.test.ts` for the collector, with the widest value of every scenario, and
+Result (Chromium and WebKit, 2026-11-24, after the collector widened to 126 units; `HORIZONTAL_PLACES` has no entry):
+the search lists 21 label ids over all configurations (one configuration shows at most 18 values). Of them, 16 are
+searched on the grid with the 2 px margin: 14 cabinet values and the two tank temperatures. At 560 px (horizontal) and
+320 px (vertical) each of the 16 has a place, and the report is empty. The other 5 are placed by their body's shape
+boxes and are not searched on the grid: the collector's Out (`ground_out`, `hybrid_ground_out`) and the air unit's
+outside temperature, fan speed and Out (`outside_temperature`, `fan_speed`, `air_unit_out`). Their rule has no margin
+(harmonize-band D8a), as `measure-layout` measures: the label lies inside its body's box and touches no pipe, part,
+outline or other label. Where one of them breaks it, the search reports NO PLACE, a decision point; in both layouts it
+reports none, in all 312 cases. With the 2 px margin the collector's Out would meet the return riser (`src_gnd_up`,
+`src_hyb_up`) and the air unit's speed and Out would meet each other, which is why the margin is not their rule. The
+browser tests (`collector-out.browser.test.ts` for the collector, with the widest value of every scenario, and
 `air-values.browser.test.ts`) pass. The recorded places leave `measure-layout` clean from 540 px up in both engines
 (checked at 520, 540, 560, 580, 600, 640, 700 and 800 px). History: before this change the threshold was 680 px (with
 the cabinet 620 units wide and the source and tank in zones beside it); the x stretch of the manual figure's frame to
@@ -1206,9 +1206,9 @@ the search asks that its place there is free in every case; for the collector's 
 is the one of `measure-layout` (inside the body's box, touching no pipe, part, outline or other label, with no margin).
 No label sits on a pipe, and there is no exception list: a label with no place is a decision point. The search also
 prints, per label, what its default place meets ("Default place meets"), and the table is its paste output. At 560 px
-the report is empty in WebKit (no NO PLACE), so `HORIZONTAL_PLACES` is empty; the table and its unit test stay for the
-next time the drawing needs an entry. `--quick`, `--scenario=`, `--installation=` and `--naming=` pick a single case to
-iterate on a place.
+the report is empty in both engines (no NO PLACE), so `HORIZONTAL_PLACES` is empty; the table and its unit test stay for
+the next time the drawing needs an entry. `--quick`, `--scenario=`, `--installation=` and `--naming=` pick a single case
+to iterate on a place.
 
 The default places, in the cabinet frame (the maps carry them to the arrangement), each in the lane beside its part:
 

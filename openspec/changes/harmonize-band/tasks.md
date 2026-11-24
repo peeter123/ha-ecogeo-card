@@ -114,7 +114,7 @@ the user allows it.
 - [x] 4.4 Extend the overlap browser tests to the air unit's three values at both layouts' thresholds and at 320 px
   (outer-loop-source "Air unit values at phone width"). If they do not fit, apply design D4's fallbacks in order and
   record which one was used. Then run `npm run measure-layout` and confirm the vertical threshold is unchanged.
-  Verify: `npm test` passes in WebKit; Chromium runs per the Workflow follow-up.
+  Verify: `npm test` passes in WebKit; Chromium runs in task 7.2.
 - [x] 4.5 Update README.md (the air unit's values, the footer) and docs/ecogeo-card.md (the air unit, the footer
   rule). Verify: `npm run check` passes.
 - [x] 4.6 Emulator check: a subagent inspects the air and hybrid captures, in both layouts and at 320 px, with the fan
@@ -237,8 +237,14 @@ the user allows it.
 
 - [ ] 7.1 With the user's go for a push, record the visual references again through the `update_references` input of
   the Check workflow, and commit them. Verify: the next CI run passes the visual project 16 of 16.
-- [ ] 7.2 Run the Chromium checks of the Workflow follow-up, with font smoothing on. Verify: the browser project
+- [x] 7.2 Run the Chromium checks of the Workflow follow-up, with font smoothing on. Verify: the browser project
   passes in Chromium, and the place search and `measure-layout` agree with WebKit.
+  Verdict (2026-11-24, font smoothing on): the browser project passes in Chromium (12 of 12 files, 2317 passed, 2
+  expected failures). `measure-layout` in Chromium gives the WebKit thresholds: vertical 320 px (clean from 320 to
+  800 px), horizontal 540 px (130 overlaps in 130 cases at 500 and 520 px, clean from 540 px; `VERTICAL_BELOW` stays
+  560). The place search reports no NO PLACE in either layout; the horizontal paste is empty, and the vertical paste
+  equals `VERTICAL_PLACES` in all eight entries (coordinates, alignment and rotation). The docs now name both engines
+  for the place-search result.
 
 ## 8. Release
 
@@ -257,8 +263,6 @@ the user allows it.
 
 ## Workflow follow-up
 
-- Chromium on the development host: while an RDP session runs with font smoothing off, the Chromium browser run stops
-  at the preflight. Browser checks run in WebKit until then, and group 7 repeats them in Chromium.
 - `dev/overlaps.ts`: its `outline:` test uses the air unit's group box, which includes the feet, so a label in the
   gap under the case would pass there. The browser test checks the three air unit values against the case outline.
   Give the overlap check a separate case-outline box when the file is next changed (recorded 2026-11-23, group 4).
