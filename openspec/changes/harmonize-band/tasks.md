@@ -167,7 +167,7 @@ the user allows it.
 
 ## 6. The tank's coil and one jog level
 
-- [ ] 6.1 Add `flip` to `HelixShape` and draw the external coil flipped, with both ends on its right (design D8;
+- [x] 6.1 Add `flip` to `HelixShape` and draw the external coil flipped, with both ends on its right (design D8;
   dhw-storage "External tank above connections 5/6"):
   - the supply up the inlet column and straight along the coil's top to the helix's start;
   - the helix winding down in whole turns;
@@ -175,17 +175,40 @@ the user allows it.
 
   Coil 51 is unchanged. Verify: the dhw-storage scenarios "Helical coil" and "Tank geometry" are unit tests, and the
   coil 51 snapshot is unchanged.
-- [ ] 6.2 Replace `BAND_JOGS` with one jog level per layout and add `jogSpans` with its planarity check (design D3).
-  The tank's pipes use the second level only for the band keys the check reports. Verify:
+- [x] 6.2 Replace `BAND_JOGS` with the levels `jog`, `second` and `third` and add `jogSpans` with its planarity check
+  (design D3, amended 2026-11-24). `bandSegments` takes the cheapest level assignment the check accepts, all on `jog`
+  first. Verify:
   - the schematic-drawing "One jog level" scenarios are unit tests over every band key in both layouts;
-  - the test lists the keys that use the tank's level;
+  - the test lists the keys and pipes that leave `jog`;
   - the existing no-crossing tests pass.
-- [ ] 6.3 Run the place search and `npm run measure-layout` for both layouts in WebKit. Re-record any cabinet place
+- [x] 6.3 Run the place search and `npm run measure-layout` for both layouts in WebKit. Re-record any cabinet place
   or threshold that moved, with its reason. Verify: `npm test` passes in WebKit.
-- [ ] 6.4 Update docs/ecogeo-card.md (the join lane and the tank's coil). Verify: `npm run check` passes.
-- [ ] 6.5 Emulator check: a subagent inspects the captures of every source with the external tank, in both layouts.
+- [x] 6.4 Update docs/ecogeo-card.md (the join lane and the tank's coil). Verify: `npm run check` passes.
+- [x] 6.5 Give the collector's Out room at 320 px (added 2026-11-24, decided by the user). 6.3 found the vertical
+  layout clean only from 340 px: in defrost the widest Out of the ground collector, alone or in the hybrid, touches
+  the feed riser at 320 px. Group 5 has the same overlaps (measured at its commit); its browser test did not cover
+  the defrost values. Make the smallest geometry change that fits it, for example the risers closer to the walls or a
+  slightly wider collector within design D2's 720-unit check, and record it in design D5. Extend the collector Out
+  browser test to the widest values of every scenario, defrost included. Verify: `npm run measure-layout` in WebKit
+  gives the vertical threshold 320 px again and the horizontal one unchanged; the place search's report for the
+  collector Out is understood and recorded; `npm test` passes in WebKit.
+- [x] 6.6 Emulator check: a subagent inspects the captures of every source with the external tank, in both layouts.
   Pass when the horizontal pipe sections line up, the coil's straight pipe runs on top, and no pipe crosses. Record
-  the verdict, and the band keys with a second tank level, here.
+  the verdict here, with the band keys and pipes that leave the lowest jog level.
+
+  Verdict (2026-11-24): pass. `npm run capture` (316 captures). Inspected band-{air,ground,hybrid}-external-light-1000,
+  vertical-band-{air,ground,hybrid}-external-light-559, vertical-band-{ground,hybrid}-external-light-320 and
+  vertical-light-defrost (ground collector, 320 px). Horizontal: the pipes between the cabinet's top edge and the
+  bodies run on one level, except what leaves it: air's port 4 pipe (`src_in`) and the hybrid's link
+  (`src_hyb_link`) sit one level higher (second); the ground key has every pipe on the jog level. Vertical: ground,
+  air and hybrid have port 3's pipe on the jog level; port 4's pipe (air, ground, hybrid) and the hybrid's link run
+  on second, the tank's two pipes on third, the lifts D3 lists; at 320 px the same order shows. No two pipes cross in
+  any capture; the risers rise clear of the lifted runs. The external coil is a flipped helix of four turns, both
+  ends on its right: the supply rises left of the coil and runs straight along its top, nothing runs along its
+  bottom, and the return drops from the helix end through the tank's bottom. The collector's Out reads "0.5 °C" in
+  the heating captures and "-12.3 °C" in the 320 px defrost capture, legible, clear of both risers and of the
+  outline. Nothing else against the review criteria: no label on a pipe, part or outline, values inside their bodies,
+  band order emitter, source, tank, text legible. Not looked at: the captures without a tank and the dark ones.
 
 ## 7. Visual references
 

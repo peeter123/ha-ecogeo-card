@@ -1,7 +1,7 @@
 // The collector's Out (outer-loop-source "Collector Out"): the brine inlet sits bare inside the collector at its bottom,
 // ending just left of the return riser, at least 10 px high, crossing no outline, hatching, pipe or other label, at the horizontal
-// layout's threshold and at the vertical layout's 320 px and just under its threshold. Two states: heating and
-// defrost (its values differ). Real layout, so Chromium and WebKit; the boxes are the overlap check's
+// layout's threshold and at the vertical layout's 320 px and just under its threshold. Every scenario (the values differ,
+// defrost's is the widest). Real layout, so Chromium and WebKit; the boxes are the overlap check's
 // (dev/overlaps.ts).
 import { afterEach, describe, expect, test } from 'vitest';
 import '../../dev/ha-stubs';
@@ -25,9 +25,10 @@ const CASES = [
   { layout: 'vertical', width: VERTICAL_BELOW - 1 },
 ] as const;
 
-const SCENARIOS_SHOWN = ['heating', 'defrost'] as const;
+// every scenario: the Out's value differs (defrost has the widest, a negative brine temperature), and the check holds for all
+const SCENARIOS_SHOWN = Object.keys(SCENARIOS) as (keyof typeof SCENARIOS)[];
 
-async function show(source: 'ground' | 'hybrid', layout: string, width: number, scenario: 'heating' | 'defrost') {
+async function show(source: 'ground' | 'hybrid', layout: string, width: number, scenario: keyof typeof SCENARIOS) {
   const state = parseState(`?scenario=${scenario}&source=${source}&layout=${layout}`);
   const wrapper = document.createElement('div');
   wrapper.style.fontFamily = EMULATOR_FONT.family;
@@ -80,6 +81,10 @@ describe.each(CASES)('Collector Out: $layout layout at $width px', ({ layout, wi
         const margin = (BAND.margin * body.width) / BAND.collector.width;
         expect(riser.right - box.right, id).toBeGreaterThan(0);
         expect(riser.right - box.right, id).toBeLessThan(2 * margin + 4);
+        // the widest value must not touch the feed riser either: the pipe measure above passes by a fraction of a pixel at 320 px,
+        // so the clearance is checked in units of the collector (the riser's edge lies 11 units inside the wall; 3 units of room)
+        const scale = body.width / BAND.collector.width;
+        expect((box.left - body.left) / scale, id).toBeGreaterThanOrEqual(BAND.margin + 3 + 3);
         // no pair that names the value: no outline, hatching, pipe or other label
         expect(overlapPairs(measured).filter((pair) => pair.includes(id))).toEqual([]);
       },

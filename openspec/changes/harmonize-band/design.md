@@ -72,12 +72,12 @@ value strips, and the values move next to what they measure (D5, D6).
 |---|---|---|---|
 | emitter | 180 | 176 | |
 | air unit | 190 | 176 | |
-| ground collector | 120 | 176 | |
-| hybrid | 322 | 176 | air unit, gap 12, collector |
+| ground collector | 126 | 176 | 120 until task 6.5 (D5) |
+| hybrid | 328 | 176 | air unit, gap 12, collector |
 | tank | 160 | 176 | |
 
 The height stays 176 (schematic-drawing "One body height in the band"). The widest band, the emitter with the hybrid
-and the tank, is 180 + 24 + 322 + 24 + 160 = 710 units. That fits the vertical layout's 720-unit frame, so neither
+and the tank, is 180 + 24 + 328 + 24 + 160 = 716 units. That fits the vertical layout's 720-unit frame, so neither
 layout needs a new map.
 
 The air unit is wide enough for its fan, its coil panel and three values at the vertical layout's 320 px. A 260-unit
@@ -106,6 +106,37 @@ test asserts one level everywhere.
 
 Alternative considered: shifting the tank's coil off the tank's centre line. Rejected, because dhw-storage requires
 the tank to be centred on the coil.
+
+Amended 2026-11-24 during apply (decided by the user): one level for every pipe but the tank's cannot be met. The
+check reports conflicts that the analysis above missed:
+
+- **Vertical layout, the source left of ports 3 and 4:** port 3 feeds the source's left column and port 4 its right
+  one, so port 4's span always contains port 3's riser. This follows from the hydraulics: two nested pipes on one
+  level are planar only when the outer ports join the outer columns.
+- **Horizontal layout, air unit with the tank:** the air unit's exit column lands just left of port 3 (x 676 against
+  682), so the two source pipes overlap.
+- **Hybrid, both layouts:** port 3's pipe to the air unit's feed passes under the link's start.
+
+The rule is therefore the lowest level per arrangement. The levels are `jog` (28 above the cabinet's top edge),
+`second` (40) and `third` (52). `bandSegments` groups the band pipes: port 1's, port 2's, port 3's, port 4's, the
+hybrid's link, and the tank's two pipes as one group. It tries the level assignments ordered by the number of lifted
+pipes first (the tank's group counts as two) and by a fixed weight per group second, all on `jog` first, and takes the
+first one for which `jogSpans` reports no conflict (settled 2026-11-24 at the group 6 review, to match the spec's
+"fewer lifted pipes"). If no assignment is conflict-free, it keeps all on `jog` and draws the crossing rather than
+fail the card's render; the unit test over every band key rules that case out. Nothing is set per band key. The unit
+test asserts no conflicts for every band key in both layouts, and it lists the keys and pipes that leave `jog` as an
+explicit expected list, so a new lift cannot appear silently. On 2026-11-24 they are: horizontal air with the tank
+(port 4's pipe on `second`), horizontal hybrid with or without the tank (the link on `second`), vertical air with the
+tank (port 4's on `second`, the tank's on `third`), vertical air without the tank (port 4's on `second`), vertical
+ground with the tank (port 4's on `second`, the tank's on `third`), vertical hybrid with the tank (the link and port
+4's on `second`, the tank's on `third`), and vertical hybrid without the tank (the link on `second`). The emitter does
+not change the assignment. `jogSpans` counts only the sections below the band's bottom edge, so the tank's supply
+along the coil's top is not one of them. No tank entry avoids a level of its own without moving the tank off the
+coil's centre line.
+
+Alternatives considered at the amendment: moving the air unit's exit column right and routing the hybrid's link
+through the gap between its bodies, to cut the lifts; and the old fixed level per pipe. The user chose the plain
+lowest-level rule.
 
 ### D4 The air unit
 
@@ -158,7 +189,7 @@ failure, so it turns red if a later change makes it fit.
 - a short top link joins it to U-loop 2, which goes down and back up the same way;
 - a return riser runs from the top down the right side to the bottom face.
 
-The legs are spaced evenly inside the 120-unit body, at the margin from the walls. The feed is on the left, towards
+The risers sit at the margin from the walls. The feed is on the left, towards
 port 3, and the return on the right, towards port 4, which keeps the jogs disjoint (D3).
 
 The segments keep today's split in two halves for the colours:
@@ -170,6 +201,14 @@ The segments keep today's split in two halves for the colours:
 
 The Out (`brine.inlet_temperature`) sits at the bottom, left of the return riser and below the loops' bends: next to
 the outlet, as at the air unit.
+
+Amended 2026-11-24 during apply (task 6.5): the collector is 126 units wide, 6 more than the 120 of D2. The widest Out
+("-12.3 °C" in defrost, about 95 units at 320 px) left 0.4 units to the feed riser's edge at 120 units, so the label
+touched the feed riser (`src_gnd_down`, `src_hyb_down`) in the defrost cases of the vertical layout at 320 px, and the
+threshold had measured 340 px. The extra 6 units go to the room between the risers: 6.4 units of clearance on the left,
+the Out's right edge unchanged at 1.5 pipes left of the return riser. The risers stay at the band's margin, and the
+loops and the runs stay as they were, so the link between the loops is 6 units longer. The hybrid becomes 328 and the
+widest band key (emitter, hybrid, tank, with two gaps) 716 units, inside the 720-unit frame, with the gaps unchanged.
 
 A real double-U probe runs its two loops in parallel from a split at the top. Drawing them in series keeps one pipe
 path, so the colouring and the flow animation stay one segment chain. This simplification is recorded here and in the
@@ -221,8 +260,10 @@ keeps its button for the DHW temperature. Tank 50 keeps its temperature, centred
 
 - **Body:** the domed top, straight walls, and a flat bottom on the band's bottom edge with corners of the band
   radius. The rim (the top dome's lower arc) stays.
-- **Coil:** `HelixShape` gains `flip: true`, which mirrors the helix vertically: its start is at the top right and it
-  winds down to its end at the bottom right, in four whole turns, so that both ends lie on the same side.
+- **Coil:** `HelixShape` gains `flip: true`. The helix starts at the top right and winds down in four whole turns, so
+  its end lies at the bottom right, on the same side; whole turns put both ends there. `flip` makes the last half
+  arrive with a vertical tangent, as the others do, instead of flattening into a pipe that leaves sideways, so the
+  return drops straight down (worded 2026-11-24 at the group 6 review to match the code).
 - **Supply:** rises in the inlet column left of the coil (`inX`) to the coil's top and runs straight along the top to
   the helix's start. That top line is the straight pipe the user asked to have on top.
 - **Return:** drops straight down from the helix's end at `cx + rx`, through the tank's bottom, to the jog level and
@@ -230,6 +271,14 @@ keeps its button for the DHW temperature. Tank 50 keeps its temperature, centred
 
 The supply still enters at the top and the return leaves at the bottom (counterflow, as in a real tank). The front
 and back halves keep `helixDrawOrder`. Coil 51 does not take `flip` (out of scope).
+
+### D8a Body-placed labels in the place search
+
+Added 2026-11-24 at the group 6 review (decided by the user). The values inside the band's bodies (the collector's Out,
+the air unit's outside temperature, fan speed and Out) are placed by their shape's boxes, not by the search. The place
+search checks them by their own rule: the label lies inside its body's box and touches no pipe, part or outline,
+without the search's 2 px margin, as `measure-layout` measures. Its report is then empty for them, so the docs' rule
+that a label without a place is a decision point holds without an exception.
 
 ### D9 The outside temperature leaves the footer with the air unit
 

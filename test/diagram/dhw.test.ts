@@ -32,8 +32,8 @@ const SEGMENTS = horizontal.segments;
 const portX = (item: number): number => COMPONENTS.find((component) => component.item === item)?.x ?? Number.NaN;
 const COIL = SEGMENTS.find((segment) => segment.id === 'dhw_ext_coil')?.shape;
 if (COIL === undefined) throw new Error('no external coil');
-/** The coil's two ends: where it meets the pipes from ports 5 and 6. */
-const COIL_START = `${String(COIL.cx - COIL.rx)} ${String(COIL.top)}`;
+/** The coil's two ends, both on its right (harmonize-band D8): where it meets the pipes from ports 5 and 6. */
+const COIL_START = `${String(COIL.cx + COIL.rx)} ${String(COIL.top)}`;
 const COIL_END = `${String(COIL.cx + COIL.rx)} ${String(COIL.bottom)}`;
 const LABEL_SPECS = horizontal.labels.specs;
 
@@ -72,7 +72,7 @@ describe('DHW storage', () => {
     const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
     expect(
       d('dhw_ext_in').startsWith(
-        `M${String(portX(5))} ${String(CABINET.y)} L${String(portX(5))} ${String(bandJogs(CABINET.y).tank)}`,
+        `M${String(portX(5))} ${String(CABINET.y)} L${String(portX(5))} ${String(bandJogs(CABINET.y).jog)}`,
       ),
     ).toBe(true);
     expect(d('dhw_ext_out').endsWith(`L${String(portX(6))} ${String(CABINET.y)}`)).toBe(true);
@@ -115,7 +115,24 @@ describe('DHW storage', () => {
     const d = (id: string): string => root(card).querySelector(`[data-segment="${id}"]`)?.getAttribute('d') ?? '';
     expect(d('dhw_ext_in').endsWith(`L${COIL_START}`)).toBe(true);
     expect(front[0]?.getAttribute('d')?.startsWith(`M${COIL_START}`)).toBe(true);
-    expect(front.at(-1)?.getAttribute('d')?.endsWith(COIL_END)).toBe(true);
+    // the helix winds down in whole turns and ends on the right again: its last half is a back half
+    expect(halves.length % 2).toBe(0);
+    expect(back.at(-1)?.getAttribute('d')?.endsWith(COIL_END)).toBe(true);
+    // the supply's last piece is the straight pipe along the coil's top; the return drops straight down, none runs along the bottom
+    const supply = SEGMENTS.find((segment) => segment.id === 'dhw_ext_in')?.points ?? [];
+    const [supplyFrom, supplyTo] = supply.slice(-2);
+    expect(supplyFrom?.[1]).toBe(COIL.top);
+    expect(supplyTo).toEqual([COIL.cx + COIL.rx, COIL.top]);
+    expect(supplyFrom?.[0]).toBeLessThan(COIL.cx - COIL.rx);
+    const returned = SEGMENTS.find((segment) => segment.id === 'dhw_ext_out')?.points ?? [];
+    const [returnFrom, returnTo] = returned;
+    expect(returnFrom?.[0]).toBe(returnTo?.[0]);
+    expect(returnTo?.[1]).toBeGreaterThan(COIL.bottom);
+    for (const points of [supply, returned]) {
+      points.slice(1).forEach((end, index) => {
+        expect(points[index]?.[1] === end[1] && end[1] === COIL.bottom).toBe(false);
+      });
+    }
     // clean joints (refine-schematic-drawing D8a): every back half is drawn before every front half; backs have butt caps, fronts round
     const lastBack = halves.map((half) => half.getAttribute('data-half')).lastIndexOf('back');
     const firstFront = halves.map((half) => half.getAttribute('data-half')).indexOf('front');
@@ -158,7 +175,7 @@ describe('DHW storage', () => {
     expect(extent.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height);
     const coil = horizontal.externalCoil;
     expect(coil?.inX).toBeLessThan(extent.left);
-    expect(coil?.outX).toBeGreaterThan(extent.right);
+    expect(COIL.cx + COIL.rx).toBeGreaterThanOrEqual(extent.right - 1);
     // the value labels sit inside the tank's upper part (above the coil), centred on it, bare on the tinted body
     const specs = LABEL_SPECS.filter((spec) => spec.id.startsWith('tank_external'));
     expect(specs.map((spec) => spec.id).sort()).toEqual(['tank_external_temperature']);

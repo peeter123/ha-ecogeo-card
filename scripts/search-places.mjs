@@ -6,6 +6,10 @@
 // (Chromium and WebKit differ by 1-2 px in text width). There is no on-pipe set and no pipe-free option: a label without a
 // place is reported and is a decision point (design Risks), not an exception. Of the feasible places it takes the one
 // nearest the label's default place (its probe or component, before the recorded places), most constrained label first.
+// Exception (harmonize-band D8a): the labels their body places by its shape boxes (EXACT_LABELS: the collector's Out and the
+// air unit's outside temperature, fan speed and Out) are not searched on the grid. Their rule is that the label lies inside
+// its body's box and touches no pipe, part, outline or other label, without the margin, as measure-layout measures; a
+// violation is reported as NO PLACE, so the report is empty when they pass.
 //
 // How: the card is opened in the emulator in the chosen layout and measured with dev/overlaps.ts (pipes: true), so the
 // obstacles are what renders. The obstacles are rasterised on a 0.25 px grid and a summed-area table answers "does this
@@ -79,9 +83,9 @@ const ALIGNS = /** @type {const} */ (['start', 'middle', 'end']);
 
 /**
  * Runs in the page: for each label of the card, which candidate places are free of obstacles, as packed bits.
- * @param {{ step: number; cell: number; marginX: number; marginY: number; bodies: Readonly<Record<string, string>>; homes: Readonly<Record<string, { x: number; y: number; align: string }>>; partners: Readonly<Record<string, string>>; rows: number; headShift: number }} options
+ * @param {{ step: number; cell: number; marginX: number; marginY: number; bodies: Readonly<Record<string, string>>; exact: readonly string[]; homes: Readonly<Record<string, { x: number; y: number; align: string }>>; partners: Readonly<Record<string, string>>; rows: number; headShift: number }} options
  */
-async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partners, rows, headShift }) {
+async function searchInPage({ step, cell, marginX, marginY, bodies, exact, homes, partners, rows, headShift }) {
   const path = '/dev/overlaps.ts';
   const shared = await import(path);
   const root = document.querySelector('ecogeo-card')?.shadowRoot;
@@ -164,14 +168,23 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
       const w = label.right - label.left;
       const h = label.bottom - label.top;
       // a body's label is placed from its zones (it follows its body): its home is where it renders
+      // (harmonize-band D8a: the labels of EXACT_LABELS are checked on their rendered box, without the margin)
       if (bodies[label.id] !== undefined) {
+        const mx = exact.includes(label.id) ? 0 : marginX;
+        const my = exact.includes(label.id) ? 0 : marginY;
         return {
           id: label.id,
           box: {
-            left: label.left - drawing.left - marginX,
-            right: label.right - drawing.left + marginX,
-            top: label.top - drawing.top - marginY,
-            bottom: label.bottom - drawing.top + marginY,
+            left: label.left - drawing.left - mx,
+            right: label.right - drawing.left + mx,
+            top: label.top - drawing.top - my,
+            bottom: label.bottom - drawing.top + my,
+          },
+          raw: {
+            left: label.left - drawing.left,
+            right: label.right - drawing.left,
+            top: label.top - drawing.top,
+            bottom: label.bottom - drawing.top,
           },
         };
       }
@@ -187,8 +200,10 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
   );
   /** @param {string} id */
   const homeHits = (id) => {
-    const mine = homeBoxes.find((/** @type {{ id: string }} */ entry) => entry.id === id)?.box;
+    const own = homeBoxes.find((/** @type {{ id: string }} */ entry) => entry.id === id);
+    const mine = own?.box;
     if (mine === undefined) return [];
+    const isExact = exact.includes(id);
     /** @type {string[]} */
     const hit = [];
     for (const part of m.parts) {
@@ -215,8 +230,13 @@ async function searchInPage({ step, cell, marginX, marginY, bodies, homes, partn
     }
     for (const other of homeBoxes)
       // the two rows of a block keep their fixed pitch: a row's margin does not count against its partner
-      if (other.id !== id && partners[id] !== other.id && other.box !== undefined && meets(mine, other.box))
-        hit.push(`label:${other.id}`);
+      // (a pair with an exact label compares the rendered boxes: the margin is for the grid search)
+      if (other.id !== id && partners[id] !== other.id && other.box !== undefined) {
+        const bothRaw = isExact || exact.includes(other.id);
+        const a = bothRaw && own?.raw !== undefined ? own.raw : mine;
+        const b = bothRaw ? (other.raw ?? other.box) : other.box;
+        if (meets(a, b)) hit.push(`label:${other.id}`);
+      }
     if (mine.left < 0 || mine.top < 0 || mine.right > dw || mine.bottom > dh) hit.push('edge');
     const overlapsCabinet = meets(mine, cab);
     const withinCabinet =
@@ -337,6 +357,12 @@ const found = new Map();
 let viewBox;
 /** @type {Record<string, { x: number; y: number; align: string }>} */
 const homes = {};
+/**
+ * The labels the bodies place by their shape boxes (harmonize-band D8a): the collector's Out and the air unit's three values
+ * (bodySpecs of src/diagram/label-places.ts). Their rule is not the grid search's: the label lies inside its body's box and
+ * touches no pipe, part or outline, without the margin, as measure-layout measures. A violation is reported as NO PLACE.
+ */
+const EXACT_LABELS = new Set(['ground_out', 'hybrid_ground_out', 'outside_temperature', 'fan_speed', 'air_unit_out']);
 /** @type {Readonly<Record<string, string>> | undefined} */
 let loadedBodies;
 /** @type {readonly (readonly [string, string])[] | undefined} */
@@ -422,6 +448,7 @@ try {
           marginX: MARGIN_X,
           marginY: MARGIN_Y,
           bodies: loadedBodies ?? {},
+          exact: [...EXACT_LABELS],
           rows: grid.rows,
           headShift: grid.headShift,
           homes,

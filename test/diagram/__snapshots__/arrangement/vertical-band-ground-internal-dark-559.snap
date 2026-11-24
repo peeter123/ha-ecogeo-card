@@ -14,7 +14,7 @@ suction_temperature | label start | left: 55.54054054054054%; top: 52.9296969696
 suction_pressure | label start | left: 55.54054054054054%; top: 56.80848484848485%
 compressor_speed | label middle | left: 50%; top: 60.687272727272735%
 expansion_valve | label middle | left: 57.027027027027025%; top: 86.7878787878788%
-ground_out | label end bare | left: 84.52702702702702%; top: 19.151515151515152%
+ground_out | label end bare | left: 84.93243243243244%; top: 19.151515151515152%
 tank_internal_temperature | label start bare | left: 52.972972972972975%; top: 32%
 footer: outside_temperature, cop, dhw_power
 svg:
@@ -32,35 +32,35 @@ svg:
     
     <g data-source="ground" class="ground-collector" aria-label="Ground collector">
     <title>Ground collector</title>
-    <rect class="source-outline band-outline" x="519.5" y="6" width="120" height="176" rx="6">
+    <rect class="source-outline band-outline" x="516.5" y="6" width="126" height="176" rx="6">
 </rect>
-    <path class="source-ground" d="M519.5 20 H639.5">
+    <path class="source-ground" d="M516.5 20 H642.5">
 </path>
-    <path class="source-ground" d="M533.5 6 l-8 14">
+    <path class="source-ground" d="M530.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M543.5 6 l-8 14">
+<path class="source-ground" d="M540.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M553.5 6 l-8 14">
+<path class="source-ground" d="M550.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M563.5 6 l-8 14">
+<path class="source-ground" d="M560.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M573.5 6 l-8 14">
+<path class="source-ground" d="M570.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M583.5 6 l-8 14">
+<path class="source-ground" d="M580.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M593.5 6 l-8 14">
+<path class="source-ground" d="M590.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M603.5 6 l-8 14">
+<path class="source-ground" d="M600.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M613.5 6 l-8 14">
+<path class="source-ground" d="M610.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M623.5 6 l-8 14">
+<path class="source-ground" d="M620.5 6 l-8 14">
 </path>
-<path class="source-ground" d="M633.5 6 l-8 14">
+<path class="source-ground" d="M630.5 6 l-8 14">
 </path>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="519.5" y="6" width="120" height="14">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="516.5" y="6" width="126" height="14">
 </rect>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-probe" x="527.5" y="24" width="104" height="113">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-probe" x="524.5" y="24" width="110" height="113">
 </rect>
   </g>
   </g>
@@ -239,37 +239,37 @@ svg:
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M382 787 L532 787 L532 750 M532 736 L532 698">
 </path>
-<path class="pipe muted" data-segment="dg1_sup" d="M75 238 L75 216 L106.5 216 L106.5 182">
+<path class="pipe muted" data-segment="dg1_sup" d="M75 238 L75 210 L106.5 210 L106.5 182">
 </path>
 <path class="pipe muted" data-segment="dg1_loop_in" d="M106.5 182 L106.5 181 A7 7 0 0 0 99.5 174 L38.5 174 A7 7 0 0 1 31.5 167 L31.5 21 A7 7 0 0 1 38.5 14 L188.5 14 A7 7 0 0 1 195.5 21 L195.5 139 A7 7 0 0 1 188.5 146 L66.5 146 A7 7 0 0 1 59.5 139 L59.5 49 A7 7 0 0 1 66.5 42 L160.5 42 A7 7 0 0 1 167.5 49 L167.5 111 A7 7 0 0 1 160.5 118 L94.5 118 A7 7 0 0 1 87.5 111 L87.5 77 A7 7 0 0 1 94.5 70 L132.5 70 A7 7 0 0 1 139.5 77 L139.5 77">
 </path>
 <path class="pipe muted" data-segment="dg1_loop_out" d="M139.5 77 L139.5 77 A7 7 0 0 1 132.5 84 L108.5 84 A7 7 0 0 0 101.5 91 L101.5 97 A7 7 0 0 0 108.5 104 L146.5 104 A7 7 0 0 0 153.5 97 L153.5 63 A7 7 0 0 0 146.5 56 L80.5 56 A7 7 0 0 0 73.5 63 L73.5 125 A7 7 0 0 0 80.5 132 L174.5 132 A7 7 0 0 0 181.5 125 L181.5 35 A7 7 0 0 0 174.5 28 L52.5 28 A7 7 0 0 0 45.5 35 L45.5 153 A7 7 0 0 0 52.5 160 L113.5 160 A7 7 0 0 1 120.5 167 L120.5 182">
 </path>
-<path class="pipe muted" data-segment="dg1_ret" d="M120.5 182 L120.5 216 L152 216 L152 238">
+<path class="pipe muted" data-segment="dg1_ret" d="M120.5 182 L120.5 210 L152 210 L152 238">
 </path>
-<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 238 L552 216">
+<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 238 L552 210">
 </path>
-<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M552 238 L552 216">
+<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M552 238 L552 210">
 </path>
-<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M607 204 L607 238">
+<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M607 210 L607 238">
 </path>
-<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 204 L607 238">
+<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 210 L607 238">
 </path>
-<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 216 L529 216 L529 182">
+<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 210 L526 210 L526 182">
 </path>
-<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M552 216 L529 216 L529 182">
+<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M552 210 L526 210 L526 182">
 </path>
-<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M529 182 L529 38 A8 8 0 0 1 537 30 L541 30 A8 8 0 0 1 549 38 L549 126 A8 8 0 0 0 557 134 L557 134 A8 8 0 0 0 565 126 L565 38 A8 8 0 0 1 573 30 L579.5 30">
+<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M526 182 L526 38 A8 8 0 0 1 534 30 L538 30 A8 8 0 0 1 546 38 L546 126 A8 8 0 0 0 554 134 L554 134 A8 8 0 0 0 562 126 L562 38 A8 8 0 0 1 570 30 L579.5 30">
 </path>
-<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.2s" d="M529 182 L529 38 A8 8 0 0 1 537 30 L541 30 A8 8 0 0 1 549 38 L549 126 A8 8 0 0 0 557 134 L557 134 A8 8 0 0 0 565 126 L565 38 A8 8 0 0 1 573 30 L579.5 30">
+<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.2s" d="M526 182 L526 38 A8 8 0 0 1 534 30 L538 30 A8 8 0 0 1 546 38 L546 126 A8 8 0 0 0 554 134 L554 134 A8 8 0 0 0 562 126 L562 38 A8 8 0 0 1 570 30 L579.5 30">
 </path>
-<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M579.5 30 L586 30 A8 8 0 0 1 594 38 L594 126 A8 8 0 0 0 602 134 L602 134 A8 8 0 0 0 610 126 L610 38 A8 8 0 0 1 618 30 L622 30 A8 8 0 0 1 630 38 L630 182">
+<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M579.5 30 L589 30 A8 8 0 0 1 597 38 L597 126 A8 8 0 0 0 605 134 L605 134 A8 8 0 0 0 613 126 L613 38 A8 8 0 0 1 621 30 L625 30 A8 8 0 0 1 633 38 L633 182">
 </path>
-<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M579.5 30 L586 30 A8 8 0 0 1 594 38 L594 126 A8 8 0 0 0 602 134 L602 134 A8 8 0 0 0 610 126 L610 38 A8 8 0 0 1 618 30 L622 30 A8 8 0 0 1 630 38 L630 182">
+<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M579.5 30 L589 30 A8 8 0 0 1 597 38 L597 126 A8 8 0 0 0 605 134 L605 134 A8 8 0 0 0 613 126 L613 38 A8 8 0 0 1 621 30 L625 30 A8 8 0 0 1 633 38 L633 182">
 </path>
-<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M630 182 L630 204 L607 204">
+<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M633 182 L633 210 L607 210">
 </path>
-<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M630 182 L630 204 L607 204">
+<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M633 182 L633 210 L607 210">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

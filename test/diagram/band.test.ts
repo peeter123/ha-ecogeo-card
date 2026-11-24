@@ -10,8 +10,11 @@ import {
   BAND,
   arrangementFor,
   bandJogs,
+  bandAssignment,
+  bandGroupsOf,
   bandKeyOf,
   crossingPoints,
+  jogSpans,
   planBand,
   sourceWidth,
   type BandKey,
@@ -240,6 +243,95 @@ describe.each(LAYOUTS.flatMap((layout) => KEYS.map((key) => [name(layout, key), 
     });
   },
 );
+
+/**
+ * The pipes that do not run on the jog level, per layout and band key: the pipe, and the level it uses (1 is the second level,
+ * 2 the third). The explicit lists keep the lifts from spreading silently (harmonize-band D3).
+ */
+const moved = (
+  source: BandKey['source'],
+  tank: boolean,
+  pipes: Record<string, number>,
+): Record<string, Record<string, number>> =>
+  Object.fromEntries(EMITTERS.map((emitter) => [keyName({ source, tank, emitter }), pipes]));
+const TANK_2 = { dhw_ext_in: 2, dhw_ext_out: 2 };
+const MOVED: Record<ShownLayout, Record<string, Record<string, number>>> = {
+  // port 3's and port 4's pipes of an air unit that sits left of its ports overlap; the hybrid's link passes port 3
+  horizontal: {
+    ...moved('air', true, { src_in: 1 }),
+    ...moved('hybrid', true, { src_hyb_link: 1 }),
+    ...moved('hybrid', false, { src_hyb_link: 1 }),
+  },
+  // the source's slot lies left of its ports, so port 4's pipe passes port 3's riser, and the tank's pipes pass port 4's
+  vertical: {
+    ...moved('air', true, { src_in: 1, ...TANK_2 }),
+    ...moved('air', false, { src_in: 1 }),
+    ...moved('ground', true, { src_in: 1, ...TANK_2 }),
+    ...moved('hybrid', true, { src_hyb_link: 1, src_in: 1, ...TANK_2 }),
+    ...moved('hybrid', false, { src_hyb_link: 1 }),
+  },
+};
+
+/** The pipes of an arrangement that run on a level other than the jog level, with their level (1 or 2). */
+const movedPipes = (layout: ShownLayout, key: BandKey): Record<string, number> => {
+  const arrangement = arrangementFor(layout, key);
+  const levels = bandJogs(arrangement.cabinet.y, layout);
+  const moved: Record<string, number> = {};
+  for (const span of jogSpans(arrangement).spans) {
+    const index = [levels.jog, levels.second, levels.third].indexOf(span.level);
+    if (index > 0) moved[span.pipe] = index;
+  }
+  return moved;
+};
+
+// harmonize-band D3, schematic-drawing "One jog level", scenario "One level where it fits".
+describe('one jog level: one level where it fits', () => {
+  test.each(EMITTERS.flatMap((emitter) => [true, false].map((tank) => [emitter, tank] as const)))(
+    'horizontal ground, emitter %s, tank %s: every section on one height and no conflicts',
+    (emitter, tank) => {
+      const arrangement = arrangementFor('horizontal', { source: 'ground', tank, emitter });
+      const { spans, conflicts } = jogSpans(arrangement);
+      expect(spans.length).toBeGreaterThan(0);
+      expect(new Set(spans.map((span) => span.level)).size).toBe(1);
+      expect(conflicts).toEqual([]);
+    },
+  );
+});
+
+/** The number of pipes a level assignment lifts off the jog level: the tank's group is two pipes. */
+const liftedCount = (assigned: Readonly<Record<string, number>>): number =>
+  Object.entries(assigned).reduce((sum, [group, level]) => sum + (level > 0 ? (group === 'tank' ? 2 : 1) : 0), 0);
+
+// scenario "Lowest levels": no conflicts, the lifted pipes are the listed ones, and no assignment lifting fewer pipes is free of conflicts.
+describe.each(LAYOUTS)('one jog level: lowest levels, %s', (layout) => {
+  test('every band key breaks no planarity, and the pipes off the jog level are exactly the listed ones', () => {
+    const used: Record<string, Record<string, number>> = {};
+    for (const key of KEYS) {
+      expect(jogSpans(arrangementFor(layout, key)).conflicts, name(layout, key)).toEqual([]);
+      const moved = movedPipes(layout, key);
+      if (Object.keys(moved).length > 0) used[keyName(key)] = moved;
+    }
+    expect(used).toEqual(MOVED[layout]);
+  });
+
+  test('no assignment that lifts fewer pipes is free of conflicts', () => {
+    for (const key of KEYS) {
+      const lifted = Object.keys(movedPipes(layout, key)).length;
+      if (lifted === 0) continue;
+      const groups = bandGroupsOf(key);
+      const total = 3 ** groups.length;
+      for (let n = 0; n < total; n += 1) {
+        const assigned = Object.fromEntries(groups.map((group, index) => [group, Math.floor(n / 3 ** index) % 3]));
+        if (liftedCount(assigned) >= lifted) continue;
+        const { segments, band } = bandAssignment(layout, key, assigned);
+        expect(
+          jogSpans({ segments, band }).conflicts.length,
+          `${name(layout, key)} ${JSON.stringify(assigned)}`,
+        ).toBeGreaterThan(0);
+      }
+    }
+  });
+});
 
 describe('the band key of a draw context', () => {
   test('the source, whether the external tank is drawn, and the emitter (underfloor unless set)', () => {

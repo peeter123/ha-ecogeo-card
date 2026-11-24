@@ -132,7 +132,7 @@ export type TankShape = Rect & { readonly dome: number };
 
 /**
  * The external coil: its centre line is the tank's, and it sits in the tank's lower part (the upper part holds the values).
- * `inX` and `outX` are the columns of the pipes that enter the tank, left and right of the coil, so that they run beside it.
+ * `inX` is the column of the supply pipe that rises beside the coil, left of it; the return drops from the helix's end on the coil's right.
  */
 export interface ExternalCoil {
   readonly cx: number;
@@ -140,7 +140,6 @@ export interface ExternalCoil {
   readonly bottom: number;
   readonly rx: number;
   readonly inX: number;
-  readonly outX: number;
 }
 
 /** What decides the band's slots: the source, whether the external tank is drawn and the emitter (an empty slot gives its space away). */
@@ -215,7 +214,7 @@ export const BAND = {
   radius: 6,
   margin: 8,
   air: { width: 190, height: 176 },
-  collector: { width: 120, height: 176 },
+  collector: { width: 126, height: 176 },
   /** The gap between the air unit and the collector of the hybrid. */
   hybridGap: 12,
   tank: { width: 160, height: 176, dome: 14 },
@@ -224,16 +223,14 @@ export const BAND = {
 } as const;
 
 /**
- * The jogs' distances above the cabinet's top edge, per layout: port 3's pipe jogs lowest, port 4's above it, the hybrid's link
- * highest, so a vertical never meets a horizontal. The horizontal layout stretches the cabinet so that port 4 (x 827) lies left of
- * the tank's slot and the tank's jog (28) is free to be lower than port 4's. In the vertical layout the frame is not stretched: the
- * widest band fills the 720 units, the tank's slot (x 570-730) covers port 4 (x 607), and the tank's pipe from port 5 runs left to its
- * coil's inlet (x 600) over port 4's riser, so the tank's jog (40) lies above port 4's (34): port 4's riser ends below it and
- * the two pipes do not cross. Both stay below the link (46) and above the stubs of connections 47-49 (12).
+ * The join lane's jog levels, as distances above the cabinet's top edge. Every band pipe runs its horizontal section on the
+ * first, `jog` (harmonize-band D3), so the sections line up; it lies above the stubs of connections 47-49 (12) and the others
+ * stay below the bodies' bottom edge (56). `jogSpans` checks the planarity condition; a pipe whose section would break it on
+ * the first level moves to `second`, or `third` (see `bandSegments`), so the pipes do not cross.
  */
-export const BAND_JOGS: Readonly<Record<ShownLayout, { out: number; in: number; link: number; tank: number }>> = {
-  horizontal: { out: 22, in: 34, link: 46, tank: 28 },
-  vertical: { out: 22, in: 34, link: 46, tank: 40 },
+export const BAND_JOGS: Readonly<Record<ShownLayout, { jog: number; second: number; third: number }>> = {
+  horizontal: { jog: 28, second: 40, third: 52 },
+  vertical: { jog: 28, second: 40, third: 52 },
 };
 
 /** The width of the source's body (the air unit, the collector, or both side by side). */
@@ -371,7 +368,7 @@ export function collectorShape(x0: number, bottom: number): CollectorShape {
   const b2 = returnX - COLLECTOR_RUN;
   const b1 = b2 - COLLECTOR_LOOP;
   const bendY = y + 128;
-  // a margin would not leave room for the widest value ("−12.3 °C", 95 units at 320 px) between the risers: it ends 1.5 pipes left of the return riser's centre
+  // a margin would not leave room for the widest value ("−12.3 °C", 95 units at 320 px) between the risers: it ends 1.5 pipes left of the return riser's centre, and the 126-unit body leaves it 6 units from the feed riser's edge
   const outRight = returnX - 1.5 * DEFAULT_STROKES.pipe;
   return {
     x: x0,
@@ -701,8 +698,12 @@ export interface HelixShape {
   bottom: number;
   rx: number;
   turns: number;
-  /** Starts at the left end (cx - rx) and ends at the right one, instead of the other way round. */
-  mirror?: true;
+  /**
+   * Both ends on the right (harmonize-band D8): with whole turns the helix starts and ends at cx + rx. `flip` keeps the last
+   * half's vertical tangent, so a pipe straight down from the end does not hook (the default flattens the last half into a
+   * pipe that leaves sideways). The external tank's coil is flipped; coil 51 is not.
+   */
+  flip?: true;
 }
 
 export interface Segment extends Visibility {
@@ -1293,19 +1294,71 @@ const route = (...points: Point[]): Point[] =>
   points.filter((point, index) => index === 0 || !same(point, points[index - 1] ?? point));
 
 /**
- * The pipes of the band (rework-layouts D3): the external tank's and the source's, each rising from its port in the join lane,
- * with at most one horizontal jog, into its part. Authored in the arrangement's own units from the zones.
- *
- * The jogs' heights keep the pipes apart (`BAND_JOGS`): port 3's pipe jogs lowest, port 4's above it, the hybrid's link
- * highest, so a vertical never meets a horizontal. The external tank is joined with a mirrored helix: port 5 (the
- * left one) reaches the coil's upper left end through the column left of the coil, port 6 the coil's lower right end through
- * the column right of it, so the two do not cross. The air unit and the collector are entered and left on their bottom faces.
+ * The pipes of the band (rework-layouts D3, harmonize-band D3): the emitter's, the external tank's and the source's, each rising
+ * from its port in the join lane, with one horizontal section on the jog level, into its part. Any group may move to the
+ * second or third level. The assignments are tried with the fewest lifted pipes first (the tank's group counts as two), then by
+ * the weights in `JOG_COST`, and the first one for which `jogSpans` reports no conflict wins. If none is conflict-free, all
+ * stay on the jog level and the crossing is drawn.
  */
 function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
+  const groups = bandGroupsOf(z.key);
+  const levels = [0, 1, 2];
+  // every assignment of the groups to the levels: all on the first level first, then the fewest lifted pipes (the tank's group
+  // counts as two), then the lowest weighted sum; the sort is stable, so equal assignments keep their generated order
+  const combos = groups
+    .reduce<number[][]>((all) => all.flatMap((chosen) => levels.map((level) => [...chosen, level])), [[]])
+    .map((chosen) => ({
+      chosen,
+      lifted: chosen.reduce((sum, level, index) => sum + (level > 0 ? (groups[index] === 'tank' ? 2 : 1) : 0), 0),
+      cost: chosen.reduce((sum, level, index) => sum + level * (JOG_COST[groups[index] ?? ''] ?? 0), 0),
+    }))
+    .sort((one, two) => one.lifted - two.lifted || one.cost - two.cost);
+  const build = (chosen: readonly number[]): readonly Segment[] =>
+    bandPipes(z, layout, Object.fromEntries(groups.map((group, index) => [group, chosen[index] ?? 0])));
+  for (const { chosen } of combos) {
+    const segments = build(chosen);
+    if (jogSpans({ segments, band: z.band }).conflicts.length === 0) return segments;
+  }
+  // no assignment is conflict-free (the unit test over every band key rules this out): all on the jog level, drawn rather than thrown
+  return build(groups.map(() => 0));
+}
+
+/** The pipe groups of a band key that can sit on their own jog level (the tank's two pipes are one group). */
+export const bandGroupsOf = (key: BandKey): string[] =>
+  JOG_GROUPS.filter(
+    (group) =>
+      (group === 'tank' ? key.tank : group === 'dg1_sup' || group === 'dg1_ret' ? key.emitter !== 'none' : true) &&
+      (group === 'src_hyb_link' ? key.source === 'hybrid' : true),
+  );
+
+/**
+ * The band's pipes of a layout and key with the given level per group (0 is the jog level, 1 `second`, 2 `third`; a group left
+ * out is on 0), and the band's bottom edge for `jogSpans`. The test of the lowest-level rule builds every assignment with it.
+ */
+export function bandAssignment(
+  layout: ShownLayout,
+  key: BandKey,
+  assigned: Readonly<Record<string, number>>,
+): { segments: readonly Segment[]; band: { bottom: number } } {
+  const zones: Zones = { ...zonesFor(layout, key), ...bandZonesFor(layout, key, zonesFor(layout, key)) };
+  return { segments: bandPipes(zones, layout, assigned), band: zones.band };
+}
+
+/**
+ * The band's segments with each pipe's horizontal section on the level its group is assigned (0 is the jog level).
+ * The external tank's coil is flipped (harmonize-band D8): both its ends lie on its right. The supply (connection 5) rises in
+ * the column left of the coil to the coil's top and runs straight along it to the helix's start; the return (connection 6)
+ * drops straight down from the helix's end through the tank's bottom to the jog level. The air unit and the collector are
+ * entered and left on their bottom faces.
+ */
+function bandPipes(z: Zones, layout: ShownLayout, assigned: Readonly<Record<string, number>>): readonly Segment[] {
   const { ports, cabinet, key } = z;
   const top = cabinet.y;
   const tank = z.externalCoil;
   const level = bandJogs(top, layout);
+  const ys = [level.jog, level.second, level.third];
+  const at = (group: string): number => ys[assigned[group] ?? 0] ?? level.jog;
+  const tankY = at('tank');
   const segments: Segment[] = [];
   const { emitter } = z;
   if (emitter === undefined) {
@@ -1326,8 +1379,8 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
         line(
           ...route(
             [ports[1], top],
-            [ports[1], level.out],
-            [emitter.feedX, level.out],
+            [ports[1], at('dg1_sup')],
+            [emitter.feedX, at('dg1_sup')],
             [emitter.feedX, face],
             [emitter.feedX, emitter.inlet[1]],
             emitter.inlet,
@@ -1350,8 +1403,8 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
             emitter.outlet,
             [emitter.exitX, emitter.outlet[1]],
             [emitter.exitX, face],
-            [emitter.exitX, level.out],
-            [ports[2], level.out],
+            [emitter.exitX, at('dg1_ret')],
+            [ports[2], at('dg1_ret')],
             [ports[2], top],
           ),
         ),
@@ -1361,13 +1414,13 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
     );
   }
   if (key.tank && tank !== undefined) {
-    const start: Point = [tank.cx - tank.rx, tank.top];
+    const start: Point = [tank.cx + tank.rx, tank.top];
     const end: Point = [tank.cx + tank.rx, tank.bottom];
     segments.push(
       seg(
         'dhw_ext_in',
         ['dhw_coil'],
-        line(...route([ports[5], top], [ports[5], level.tank], [tank.inX, level.tank], [tank.inX, tank.top], start)),
+        line(...route([ports[5], top], [ports[5], tankY], [tank.inX, tankY], [tank.inX, tank.top], start)),
         OUT,
         {
           dhw: 'external',
@@ -1383,30 +1436,26 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
           top: tank.top,
           bottom: tank.bottom,
           rx: tank.rx,
-          turns: 4.5,
-          mirror: true,
+          turns: 4,
+          flip: true,
         },
       }),
-      seg(
-        'dhw_ext_out',
-        ['dhw_coil'],
-        line(...route(end, [tank.outX, tank.bottom], [tank.outX, level.tank], [ports[6], level.tank], [ports[6], top])),
-        RET,
-        {
-          dhw: 'external',
-          speedRole: PP,
-        },
-      ),
+      seg('dhw_ext_out', ['dhw_coil'], line(...route(end, [end[0], tankY], [ports[6], tankY], [ports[6], top])), RET, {
+        dhw: 'external',
+        speedRole: PP,
+      }),
     );
   }
   // the source: port 3 (brine out) rises to its jog and on into the part, the part's exit comes down to port 4's jog (brine in)
   segments.push(
-    seg('src_out', ['brine'], line([ports[3], top], [ports[3], level.out]), BOUT, { speedRole: BP }),
-    seg('src_in', ['brine'], line([ports[4], level.in], [ports[4], top]), BIN, { speedRole: BP }),
+    seg('src_out', ['brine'], line([ports[3], top], [ports[3], at('src_out')]), BOUT, { speedRole: BP }),
+    seg('src_in', ['brine'], line([ports[4], at('src_in')], [ports[4], top]), BIN, { speedRole: BP }),
   );
   const { airUnit: air, collector } = z;
-  const from3 = (x: number, faceY: number): string => line(...route([ports[3], level.out], [x, level.out], [x, faceY]));
-  const to4 = (x: number, fromY: number): string => line(...route([x, fromY], [x, level.in], [ports[4], level.in]));
+  const from3 = (x: number, faceY: number): string =>
+    line(...route([ports[3], at('src_out')], [x, at('src_out')], [x, faceY]));
+  const to4 = (x: number, fromY: number): string =>
+    line(...route([x, fromY], [x, at('src_in')], [ports[4], at('src_in')]));
   if (key.source === 'air' && air !== undefined) {
     const { feed, exit } = airPortX(air);
     segments.push(
@@ -1449,8 +1498,8 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
         ['brine'],
         line(
           [exit, airFaceY(air)],
-          [exit, level.link],
-          [collector.feedX, level.link],
+          [exit, at('src_hyb_link')],
+          [collector.feedX, at('src_hyb_link')],
           [collector.feedX, collector.y + collector.height],
         ),
         AIRO,
@@ -1590,7 +1639,7 @@ export const HORIZONTAL_MAP_Y: AxisMap = laneMap(
 
 /**
  * The vertical layout's x map: the identity, the cabinet at x 10-730 (rework-layouts D2). The frame is 720 units wide, the width
- * of the widest band (the emitter 180, the hybrid source 322, the tank 160 and two gaps of 24), so the vertical layout needs no
+ * of the widest band (the emitter 180, the hybrid source 328, the tank 160 and two gaps of 24), so the vertical layout needs no
  * x stretch. Its viewBox is 740 wide (the cabinet and a margin of 10 at each side), not the horizontal layout's 1000: every
  * unit renders `width / 740` px, which `strokeWidths` and the label fonts (`LABEL_FONT_K`) take into account.
  */
@@ -1663,14 +1712,109 @@ const mapperOf = (
   return { mapX: (x) => mapAxis(maps.x, x), mapY: (v) => mapAxis(y, v) };
 };
 
-/** The heights of the horizontal jogs in the join lane of a layout, from the cabinet's top edge. */
+/** The heights (y) of the jog levels in the join lane of a layout, from the cabinet's top edge. */
 export const bandJogs = (
   top: number,
   layout: ShownLayout = 'horizontal',
-): { out: number; in: number; link: number; tank: number } => {
-  const jog = BAND_JOGS[layout];
-  return { out: top - jog.out, in: top - jog.in, link: top - jog.link, tank: top - jog.tank };
+): { jog: number; second: number; third: number } => {
+  const levels = BAND_JOGS[layout];
+  return { jog: top - levels.jog, second: top - levels.second, third: top - levels.third };
 };
+
+/** One horizontal section of a band pipe on a jog level. */
+export interface JogSpan {
+  /** The pipe: the source's two pipes keep their two segments (riser and run) under one name. */
+  readonly pipe: string;
+  readonly level: number;
+  readonly x0: number;
+  readonly x1: number;
+}
+
+/** Two band pipes that break the planarity on a level: the two pipes (for a vertical, its pipe first) and where. */
+export interface JogConflict {
+  readonly pipes: readonly [string, string];
+  readonly x: number;
+  readonly level: number;
+}
+
+/**
+ * The pipes that can move to another level as a group, dearest to move first (the emitter's two, port 3's, port 4's, the
+ * hybrid's link, then the external tank's), as `JOG_COST` weighs them.
+ */
+const JOG_GROUPS: readonly string[] = ['dg1_sup', 'dg1_ret', 'src_out', 'src_in', 'src_hyb_link', 'tank'];
+
+/** What moving a group one level costs (the order of `JOG_GROUPS`, dearest first, in powers of two). */
+const JOG_COST: Readonly<Record<string, number>> = {
+  dg1_sup: 16,
+  dg1_ret: 16,
+  src_out: 8,
+  src_in: 4,
+  src_hyb_link: 2,
+  tank: 1,
+};
+
+/** The segments that make up the band's pipes, with the pipe each belongs to (the source's riser and run are one pipe). */
+const JOG_PIPES: Readonly<Record<string, string>> = {
+  dg1_sup: 'dg1_sup',
+  dg1_ret: 'dg1_ret',
+  dhw_ext_in: 'dhw_ext_in',
+  dhw_ext_out: 'dhw_ext_out',
+  src_out: 'src_out',
+  src_air_feed: 'src_out',
+  src_gnd_feed: 'src_out',
+  src_hyb_feed: 'src_out',
+  src_in: 'src_in',
+  src_air_exit: 'src_in',
+  src_gnd_exit: 'src_in',
+  src_hyb_exit: 'src_in',
+  src_hyb_link: 'src_hyb_link',
+};
+
+/**
+ * The horizontal sections of the band's pipes on the jog levels, and the conflicts that break their planarity (harmonize-band
+ * D3): two sections on one level whose x spans touch, and a vertical of one pipe, from a port or into a body, that crosses
+ * the level inside another pipe's span (touching counts). Each conflict names the two pipes.
+ */
+export function jogSpans(arrangement: Pick<Arrangement, 'segments'> & { band: { bottom: number } }): {
+  spans: JogSpan[];
+  conflicts: JogConflict[];
+} {
+  const spans: JogSpan[] = [];
+  const verticals: { pipe: string; x: number; y0: number; y1: number }[] = [];
+  for (const segment of arrangement.segments) {
+    const pipe = JOG_PIPES[segment.id];
+    if (pipe === undefined) continue;
+    segment.points.forEach((point, index) => {
+      const next = segment.points[index + 1];
+      if (next === undefined) return;
+      if (point[1] === next[1] && point[0] !== next[0] && point[1] > arrangement.band.bottom) {
+        spans.push({ pipe, level: point[1], x0: Math.min(point[0], next[0]), x1: Math.max(point[0], next[0]) });
+      } else if (point[0] === next[0]) {
+        verticals.push({ pipe, x: point[0], y0: Math.min(point[1], next[1]), y1: Math.max(point[1], next[1]) });
+      }
+    });
+  }
+  const conflicts: JogConflict[] = [];
+  spans.forEach((span, index) => {
+    for (const other of spans.slice(index + 1)) {
+      if (other.level === span.level && other.pipe !== span.pipe && other.x0 <= span.x1 && span.x0 <= other.x1) {
+        conflicts.push({ pipes: [span.pipe, other.pipe], x: Math.max(span.x0, other.x0), level: span.level });
+      }
+    }
+    for (const vertical of verticals) {
+      if (
+        vertical.pipe !== span.pipe &&
+        vertical.x >= span.x0 &&
+        vertical.x <= span.x1 &&
+        vertical.y0 <= span.level &&
+        span.level <= vertical.y1
+      ) {
+        conflicts.push({ pipes: [vertical.pipe, span.pipe], x: vertical.x, level: span.level });
+      }
+    }
+  });
+  return { spans, conflicts };
+}
 
 /** The emitter a context without one draws: the option's default. */
 const DEFAULT_EMITTER: Emitter = 'underfloor';
@@ -1775,7 +1919,6 @@ function bandZonesFor(layout: ShownLayout, key: BandKey, cabinet: CabinetZones):
           bottom: tankShape.y + 152,
           rx: 38,
           inX: tankShape.x + tankShape.width / 2 - 38 - 12,
-          outX: tankShape.x + tankShape.width / 2 + 38 + 12,
         };
   return {
     key,
@@ -2051,7 +2194,8 @@ type Cubic = readonly [Point, Point, Point, Point];
 /**
  * The half-turns of a helix as cubic Beziers, each a half ellipse from one side of the coil to the other, going down
  * by an equal pitch: even ones pass in front (the lower arc), odd ones behind (the upper arc). The last half ends with
- * a horizontal tangent, so the pipe that leaves the coil there does not hook.
+ * a horizontal tangent, so the pipe that leaves the coil there does not hook; a flipped helix (`flip`) ends with the
+ * vertical tangent of its other halves instead, for a pipe that drops straight down from its end.
  */
 function helixCubics(shape: HelixShape): { front: boolean; curve: Cubic }[] {
   const count = Math.max(1, Math.round(shape.turns * 2));
@@ -2059,13 +2203,13 @@ function helixCubics(shape: HelixShape): { front: boolean; curve: Cubic }[] {
   const bulge = (4 / 3) * Math.max(3, pitch);
   return Array.from({ length: count }, (_, index) => {
     const front = index % 2 === 0;
-    const [rightEnd, leftEnd] =
-      shape.mirror === true ? [shape.cx - shape.rx, shape.cx + shape.rx] : [shape.cx + shape.rx, shape.cx - shape.rx];
+    const rightEnd = shape.cx + shape.rx;
+    const leftEnd = shape.cx - shape.rx;
     const [from, to] = front ? [rightEnd, leftEnd] : [leftEnd, rightEnd];
     const y0 = shape.top + index * pitch;
     const y1 = y0 + pitch;
     const lift = front ? bulge : -bulge;
-    const last = index === count - 1;
+    const last = index === count - 1 && shape.flip !== true;
     const curve: Cubic = [
       [from, y0],
       [from, y0 + lift],
@@ -2120,6 +2264,15 @@ export function routePoints(segment: Pick<Segment, 'points' | 'shape'>): readonl
   const { shape } = segment;
   if (shape === undefined) return segment.points;
   const { left, right, top, bottom } = helixExtent(shape);
+  // the supply of a flipped helix runs along its top edge (harmonize-band D8): that edge is the pipe's, not the coil's
+  if (shape.flip === true) {
+    return [
+      [right, top],
+      [right, bottom],
+      [left, bottom],
+      [left, top],
+    ];
+  }
   return [
     [right, top],
     [left, top],

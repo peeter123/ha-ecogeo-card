@@ -574,8 +574,8 @@ describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
     if (coil === undefined || shape === undefined) throw new Error('no helix');
     expect(shape.turns).toBeGreaterThanOrEqual(4);
     expect(coil.points).toHaveLength(2);
-    expect(shape.mirror).toBe(true);
-    expect(coil.points[0]).toEqual([shape.cx - shape.rx, shape.top]);
+    expect(shape.flip).toBe(true);
+    expect(coil.points[0]).toEqual([shape.cx + shape.rx, shape.top]);
     expect(coil.points[1]).toEqual([shape.cx + shape.rx, shape.bottom]);
     expect(segmentPoints('dhw_ext_in').at(-1)).toEqual(coil.points[0]);
     expect(segmentPoints('dhw_ext_out')[0]).toEqual(coil.points[1]);
@@ -589,7 +589,7 @@ describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
     const halves = helixHalves(shape);
     expect(halves).toHaveLength(Math.round(shape.turns * 2));
     expect(halves.map((half) => half.front)).toEqual(halves.map((_, index) => index % 2 === 0));
-    expect(halves[0]?.d.startsWith(`M${String(shape.cx - shape.rx)} ${String(shape.top)} `)).toBe(true);
+    expect(halves[0]?.d.startsWith(`M${String(shape.cx + shape.rx)} ${String(shape.top)} `)).toBe(true);
     expect(halves.at(-1)?.d.endsWith(`${String(shape.cx + shape.rx)} ${String(shape.bottom)}`)).toBe(true);
   });
 

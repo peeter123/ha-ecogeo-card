@@ -32,35 +32,35 @@ svg:
     
     <g data-source="ground" class="ground-collector" aria-label="Ground collector">
     <title>Ground collector</title>
-    <rect class="source-outline band-outline" x="686" y="6" width="120" height="176" rx="6">
+    <rect class="source-outline band-outline" x="680" y="6" width="126" height="176" rx="6">
 </rect>
-    <path class="source-ground" d="M686 20 H806">
+    <path class="source-ground" d="M680 20 H806">
 </path>
-    <path class="source-ground" d="M700 6 l-8 14">
+    <path class="source-ground" d="M694 6 l-8 14">
 </path>
-<path class="source-ground" d="M710 6 l-8 14">
+<path class="source-ground" d="M704 6 l-8 14">
 </path>
-<path class="source-ground" d="M720 6 l-8 14">
+<path class="source-ground" d="M714 6 l-8 14">
 </path>
-<path class="source-ground" d="M730 6 l-8 14">
+<path class="source-ground" d="M724 6 l-8 14">
 </path>
-<path class="source-ground" d="M740 6 l-8 14">
+<path class="source-ground" d="M734 6 l-8 14">
 </path>
-<path class="source-ground" d="M750 6 l-8 14">
+<path class="source-ground" d="M744 6 l-8 14">
 </path>
-<path class="source-ground" d="M760 6 l-8 14">
+<path class="source-ground" d="M754 6 l-8 14">
 </path>
-<path class="source-ground" d="M770 6 l-8 14">
+<path class="source-ground" d="M764 6 l-8 14">
 </path>
-<path class="source-ground" d="M780 6 l-8 14">
+<path class="source-ground" d="M774 6 l-8 14">
 </path>
-<path class="source-ground" d="M790 6 l-8 14">
+<path class="source-ground" d="M784 6 l-8 14">
 </path>
-<path class="source-ground" d="M800 6 l-8 14">
+<path class="source-ground" d="M794 6 l-8 14">
 </path>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="686" y="6" width="120" height="14">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-hatch" x="680" y="6" width="126" height="14">
 </rect>
-    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-probe" x="694" y="24" width="104" height="113">
+    <rect class="obstacle" fill="none" stroke="none" data-obstacle="ground-probe" x="688" y="24" width="110" height="113">
 </rect>
   </g>
   </g>
@@ -232,9 +232,9 @@ svg:
 </path>
 <path class="flow " data-flow="br_10_28" style="--flow-duration: 1.5s" d="M512 717 L662 717 L662 680 M662 666 L662 628">
 </path>
-<path class="pipe " data-segment="dg1_sup" style="stroke: color-mix(in srgb, #8ecae6 70%, #5fa8e0)" d="M137 238 L137 216 L191.5 216 L191.5 182">
+<path class="pipe " data-segment="dg1_sup" style="stroke: color-mix(in srgb, #8ecae6 70%, #5fa8e0)" d="M137 238 L137 210 L191.5 210 L191.5 182">
 </path>
-<path class="flow " data-flow="dg1_sup" style="--flow-duration: 2s" d="M137 238 L137 216 L191.5 216 L191.5 182">
+<path class="flow " data-flow="dg1_sup" style="--flow-duration: 2s" d="M137 238 L137 210 L191.5 210 L191.5 182">
 </path>
 <path class="pipe " data-segment="dg1_loop_in" style="stroke: color-mix(in srgb, #8ecae6 70%, #5fa8e0)" d="M191.5 182 L191.5 181 A7 7 0 0 0 184.5 174 L123.5 174 A7 7 0 0 1 116.5 167 L116.5 21 A7 7 0 0 1 123.5 14 L273.5 14 A7 7 0 0 1 280.5 21 L280.5 139 A7 7 0 0 1 273.5 146 L151.5 146 A7 7 0 0 1 144.5 139 L144.5 49 A7 7 0 0 1 151.5 42 L245.5 42 A7 7 0 0 1 252.5 49 L252.5 111 A7 7 0 0 1 245.5 118 L179.5 118 A7 7 0 0 1 172.5 111 L172.5 77 A7 7 0 0 1 179.5 70 L217.5 70 A7 7 0 0 1 224.5 77 L224.5 77">
 </path>
@@ -244,62 +244,60 @@ svg:
 </path>
 <path class="flow " data-flow="dg1_loop_out" style="--flow-duration: 2s" d="M224.5 77 L224.5 77 A7 7 0 0 1 217.5 84 L193.5 84 A7 7 0 0 0 186.5 91 L186.5 97 A7 7 0 0 0 193.5 104 L231.5 104 A7 7 0 0 0 238.5 97 L238.5 63 A7 7 0 0 0 231.5 56 L165.5 56 A7 7 0 0 0 158.5 63 L158.5 125 A7 7 0 0 0 165.5 132 L259.5 132 A7 7 0 0 0 266.5 125 L266.5 35 A7 7 0 0 0 259.5 28 L137.5 28 A7 7 0 0 0 130.5 35 L130.5 153 A7 7 0 0 0 137.5 160 L198.5 160 A7 7 0 0 1 205.5 167 L205.5 182">
 </path>
-<path class="pipe " data-segment="dg1_ret" style="stroke: color-mix(in srgb, #8ecae6 95%, #5fa8e0)" d="M205.5 182 L205.5 216 L260 216 L260 238">
+<path class="pipe " data-segment="dg1_ret" style="stroke: color-mix(in srgb, #8ecae6 95%, #5fa8e0)" d="M205.5 182 L205.5 210 L260 210 L260 238">
 </path>
-<path class="flow " data-flow="dg1_ret" style="--flow-duration: 2s" d="M205.5 182 L205.5 216 L260 216 L260 238">
+<path class="flow " data-flow="dg1_ret" style="--flow-duration: 2s" d="M205.5 182 L205.5 210 L260 210 L260 238">
 </path>
-<path class="pipe muted" data-segment="dhw_ext_in" d="M937 238 L937 210 L860 210 L860 96 L872 96">
+<path class="pipe muted" data-segment="dhw_ext_in" d="M937 238 L937 210 L860 210 L860 96 L948 96">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M937 238 L937 210 L860 210 L860 96 L872 96">
+<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M937 238 L937 210 L860 210 L860 96 L948 96">
 </path>
 <g class="helix muted" data-segment="dhw_ext_coil">
-    <path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M948 102.89 C948 93.7 872 100.59 872 109.78">
+    <path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M872 103.75 C872 93.42 948 101.17 948 111.5">
 </path>
-<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M948 116.67 C948 107.48 872 114.37 872 123.56">
+<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M872 119.25 C872 108.92 948 116.67 948 127">
 </path>
-<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M948 130.44 C948 121.26 872 128.15 872 137.33">
+<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M872 134.75 C872 124.42 948 132.17 948 142.5">
 </path>
-<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M948 144.22 C948 135.04 872 141.93 872 151.11">
+<path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M872 150.25 C872 139.92 948 147.67 948 158">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M872 96 C872 105.19 948 112.07 948 102.89">
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M948 96 C948 106.33 872 114.08 872 103.75">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M872 109.78 C872 118.96 948 125.85 948 116.67">
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M948 111.5 C948 121.83 872 129.58 872 119.25">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M872 123.56 C872 132.74 948 139.63 948 130.44">
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M948 127 C948 137.33 872 145.08 872 134.75">
 </path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M872 137.33 C872 146.52 948 153.41 948 144.22">
-</path>
-<path class="pipe muted" data-half="front" stroke-linecap="round" d="M872 151.11 C872 160.3 925.2 158 948 158">
+<path class="pipe muted" data-half="front" stroke-linecap="round" d="M948 142.5 C948 152.83 872 160.58 872 150.25">
 </path>
     
   </g>
-<path class="pipe muted" data-segment="dhw_ext_out" d="M948 158 L960 158 L960 210 L977 210 L977 238">
+<path class="pipe muted" data-segment="dhw_ext_out" d="M948 158 L948 210 L977 210 L977 238">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M948 158 L960 158 L960 210 L977 210 L977 238">
+<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M948 158 L948 210 L977 210 L977 238">
 </path>
-<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #8ecae6 40%, #5fa8e0)" d="M682 238 L682 216">
+<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #8ecae6 40%, #5fa8e0)" d="M682 238 L682 210">
 </path>
-<path class="flow " data-flow="src_out" style="--flow-duration: 1.5s" d="M682 238 L682 216">
+<path class="flow " data-flow="src_out" style="--flow-duration: 1.5s" d="M682 238 L682 210">
 </path>
-<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #8ecae6 20%, #5fa8e0)" d="M821 204 L821 238">
+<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #8ecae6 20%, #5fa8e0)" d="M821 210 L821 238">
 </path>
-<path class="flow " data-flow="src_in" style="--flow-duration: 1.5s" d="M821 204 L821 238">
+<path class="flow " data-flow="src_in" style="--flow-duration: 1.5s" d="M821 210 L821 238">
 </path>
-<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #8ecae6 40%, #5fa8e0)" d="M682 216 L695.5 216 L695.5 182">
+<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #8ecae6 40%, #5fa8e0)" d="M682 210 L689.5 210 L689.5 182">
 </path>
-<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.5s" d="M682 216 L695.5 216 L695.5 182">
+<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.5s" d="M682 210 L689.5 210 L689.5 182">
 </path>
-<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #8ecae6 40%, #5fa8e0)" stroke-linecap="round" d="M695.5 182 L695.5 38 A8 8 0 0 1 703.5 30 L707.5 30 A8 8 0 0 1 715.5 38 L715.5 126 A8 8 0 0 0 723.5 134 L723.5 134 A8 8 0 0 0 731.5 126 L731.5 38 A8 8 0 0 1 739.5 30 L746 30">
+<path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #8ecae6 40%, #5fa8e0)" stroke-linecap="round" d="M689.5 182 L689.5 38 A8 8 0 0 1 697.5 30 L701.5 30 A8 8 0 0 1 709.5 38 L709.5 126 A8 8 0 0 0 717.5 134 L717.5 134 A8 8 0 0 0 725.5 126 L725.5 38 A8 8 0 0 1 733.5 30 L743 30">
 </path>
-<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.5s" d="M695.5 182 L695.5 38 A8 8 0 0 1 703.5 30 L707.5 30 A8 8 0 0 1 715.5 38 L715.5 126 A8 8 0 0 0 723.5 134 L723.5 134 A8 8 0 0 0 731.5 126 L731.5 38 A8 8 0 0 1 739.5 30 L746 30">
+<path class="flow " data-flow="src_gnd_down" style="--flow-duration: 1.5s" d="M689.5 182 L689.5 38 A8 8 0 0 1 697.5 30 L701.5 30 A8 8 0 0 1 709.5 38 L709.5 126 A8 8 0 0 0 717.5 134 L717.5 134 A8 8 0 0 0 725.5 126 L725.5 38 A8 8 0 0 1 733.5 30 L743 30">
 </path>
-<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #8ecae6 20%, #5fa8e0)" d="M746 30 L752.5 30 A8 8 0 0 1 760.5 38 L760.5 126 A8 8 0 0 0 768.5 134 L768.5 134 A8 8 0 0 0 776.5 126 L776.5 38 A8 8 0 0 1 784.5 30 L788.5 30 A8 8 0 0 1 796.5 38 L796.5 182">
+<path class="pipe " data-segment="src_gnd_up" style="stroke: color-mix(in srgb, #8ecae6 20%, #5fa8e0)" d="M743 30 L752.5 30 A8 8 0 0 1 760.5 38 L760.5 126 A8 8 0 0 0 768.5 134 L768.5 134 A8 8 0 0 0 776.5 126 L776.5 38 A8 8 0 0 1 784.5 30 L788.5 30 A8 8 0 0 1 796.5 38 L796.5 182">
 </path>
-<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.5s" d="M746 30 L752.5 30 A8 8 0 0 1 760.5 38 L760.5 126 A8 8 0 0 0 768.5 134 L768.5 134 A8 8 0 0 0 776.5 126 L776.5 38 A8 8 0 0 1 784.5 30 L788.5 30 A8 8 0 0 1 796.5 38 L796.5 182">
+<path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.5s" d="M743 30 L752.5 30 A8 8 0 0 1 760.5 38 L760.5 126 A8 8 0 0 0 768.5 134 L768.5 134 A8 8 0 0 0 776.5 126 L776.5 38 A8 8 0 0 1 784.5 30 L788.5 30 A8 8 0 0 1 796.5 38 L796.5 182">
 </path>
-<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #8ecae6 20%, #5fa8e0)" d="M796.5 182 L796.5 204 L821 204">
+<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #8ecae6 20%, #5fa8e0)" d="M796.5 182 L796.5 210 L821 210">
 </path>
-<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.5s" d="M796.5 182 L796.5 204 L821 204">
+<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.5s" d="M796.5 182 L796.5 210 L821 210">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>
