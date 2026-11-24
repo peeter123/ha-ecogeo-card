@@ -3,7 +3,7 @@
 All notable changes to the ecoGEO heat pump card, newest first, in the style of Keep a Changelog. A release's heading
 is `## <version> - <YYYY-MM-DD>`; the heading has no date until the release is made, and the release adds it.
 
-## 1.1.0
+## 1.1.0 - 2026-11-24
 
 The band above the cabinet follows one style, and the air unit, the ground collector, the underfloor loop and the
 external tank are redrawn.
