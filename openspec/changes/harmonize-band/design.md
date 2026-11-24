@@ -260,14 +260,18 @@ keeps its button for the DHW temperature. Tank 50 keeps its temperature, centred
 
 - **Body:** the domed top, straight walls, and a flat bottom on the band's bottom edge with corners of the band
   radius. The rim (the top dome's lower arc) stays.
-- **Coil:** `HelixShape` gains `flip: true`. The helix starts at the top right and winds down in four whole turns, so
-  its end lies at the bottom right, on the same side; whole turns put both ends there. `flip` makes the last half
-  arrive with a vertical tangent, as the others do, instead of flattening into a pipe that leaves sideways, so the
-  return drops straight down (worded 2026-11-24 at the group 6 review to match the code).
-- **Supply:** rises in the inlet column left of the coil (`inX`) to the coil's top and runs straight along the top to
-  the helix's start. That top line is the straight pipe the user asked to have on top.
+- **Coil:** `HelixShape` gains `flip: true`. The helix starts at the top left and winds down in four and a half
+  turns, so its end lies at the bottom right. `flip` makes the last half arrive with a vertical tangent, as the others
+  do, instead of flattening into a pipe that leaves sideways, so the return drops straight down.
+- **Supply:** rises in the inlet column at the coil's left side (`cx - rx`) and joins the helix's start directly, with
+  no straight pipe along the coil's top or bottom.
 - **Return:** drops straight down from the helix's end at `cx + rx`, through the tank's bottom, to the jog level and
   on to port 6.
+
+Amended 2026-11-24 after group 6 (decided by the user): group 6 first drew four whole turns starting at the top
+right, with the supply running straight along the coil's top from the inlet column to the start. That line lay just
+above the first turn and read as a doubled stroke. The helix now takes half a turn more and starts where the supply
+rises (task 6.7).
 
 The supply still enters at the top and the return leaves at the bottom (counterflow, as in a real tank). The front
 and back halves keep `helixDrawOrder`. Coil 51 does not take `flip` (out of scope).

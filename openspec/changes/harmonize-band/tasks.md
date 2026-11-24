@@ -210,6 +210,14 @@ the user allows it.
   outline. Nothing else against the review criteria: no label on a pipe, part or outline, values inside their bodies,
   band order emitter, source, tank, text legible. Not looked at: the captures without a tank and the dark ones.
 
+- [ ] 6.7 Start the external coil on its left (added 2026-11-24 after the group 6 commit, decided by the user; design
+  D8 and dhw-storage "External tank above connections 5/6", amended). The helix starts at the top left where the
+  supply rises, winds down in four and a half turns and ends at the bottom right; the straight pipe along the coil's
+  top goes. The return is unchanged. Verify: the "Helical coil" and "Tank geometry" scenarios are unit tests, the coil
+  51 snapshot is unchanged, the arrangement snapshots are recorded again, the band tests (jog levels, `MOVED`) pass,
+  `npm run check` passes with the browser project in WebKit, and a subagent inspects the external tank in the
+  horizontal and vertical captures (pass when the supply runs straight into the helix and no line doubles a turn).
+
 ## 7. Visual references
 
 - [ ] 7.1 With the user's go for a push, record the visual references again through the `update_references` input of
