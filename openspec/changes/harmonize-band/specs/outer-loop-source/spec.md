@@ -1,5 +1,19 @@
 ## MODIFIED Requirements
 
+### Requirement: Outer loop active with the brine circuit
+The outer-loop pipes and the source SHALL be coloured and animated when the brine circuit is active (see
+operating-mode), and muted otherwise. "The source" includes its symbols (the air unit's case, coil panel and fins,
+the ground collector's hatching and U-loops), which take the muted style with the pipes; the fan keeps following its
+own speed. This includes `defrost`, in which exchanger 10 warms the brine that runs to the air unit.
+
+#### Scenario: Standby
+- **WHEN** the mode is `standby`
+- **THEN** the outer-loop pipes are muted, and the fan rotates only if its own speed is above 0 %
+
+#### Scenario: Defrost
+- **WHEN** the mode is `defrost`, the source is `air` and the brine pump runs
+- **THEN** the outer-loop pipes are coloured by the brine probes and animated towards the air unit
+
 ### Requirement: Air unit with its value inside
 With `source: air`, the card SHALL draw an air unit as the front view of an outdoor unit: a case on two feet, a
 guarded fan right of centre, and a finned coil panel on the left holding the brine serpentine, entered and left on the

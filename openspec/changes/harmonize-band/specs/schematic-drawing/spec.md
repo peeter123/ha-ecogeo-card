@@ -47,8 +47,8 @@ the air unit on its two feet, with its case ending above the edge (decided by th
 ### Requirement: One jog level
 The horizontal sections of the pipes between the cabinet's top edge and the band's bodies SHALL lie at one height above
 the cabinet's top edge. A pipe MAY use a higher level only in an arrangement where every assignment with fewer lifted
-pipes makes two band pipes cross. The arrangements that lift a pipe SHALL be a fixed, tested list (decided by the user
-2026-11-23, amended 2026-11-24).
+pipes makes two band pipes cross; the external tank's supply and return move as one pair and count as two pipes. The
+arrangements that lift a pipe SHALL be a fixed, tested list (decided by the user 2026-11-23, amended 2026-11-24).
 
 #### Scenario: One level where it fits
 - **WHEN** the card renders the horizontal layout with `source: ground`, any emitter and any DHW storage
@@ -59,3 +59,11 @@ pipes makes two band pipes cross. The arrangements that lift a pipe SHALL be a f
 - **WHEN** the card renders either layout with any source, any emitter and any DHW storage
 - **THEN** no two pipes outside the cabinet cross, every pipe that does not lie on the lowest level is in the tested
   list of lifted pipes for that arrangement, and no assignment that lifts fewer pipes avoids the crossings
+
+### Requirement: Jog levels clear of the band
+The highest jog level SHALL lie below the band's bottom edge by more than one pipe width plus the outline width, at
+every card width from 320 px, so that no pipe runs along a body's bottom outline (decided by the user 2026-11-24).
+
+#### Scenario: Supply under the tank
+- **WHEN** the card renders the vertical layout at 320 px with `dhw: external`
+- **THEN** the tank's supply on the highest level and the tank's bottom outline are drawn apart, with a visible gap

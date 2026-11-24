@@ -25,9 +25,11 @@ The user reviewed the released card on 2026-11-23 and asked for:
   - They have no divider lines and no captions.
   - Every body stands flat on the band's bottom edge.
   - Every value inside a body has the same size and regular weight, and sits next to the part or pipe it measures.
-- **One jog level.** The horizontal sections of every pipe between the cabinet's top edge and the band lie at one
-  height above the cabinet. The external tank keeps a level of its own only where one level cannot avoid a crossing;
-  the design names that case.
+- **The lowest jog levels.** The horizontal sections of the pipes between the cabinet's top edge and the band lie at
+  one height above the cabinet (24 units) wherever that avoids a crossing. Where it does not, the fewest pipes
+  possible move up to a second (34) or third (44) level, which leaves a gap under the bodies. The design (D3) lists
+  the band keys and pipes that leave the first level, and a test keeps that list fixed (amended by the user
+  2026-11-24).
 - **Demand captions removed.** The "Demand" text is no longer drawn anywhere: not in the emitter, not beside the
   connection 1/2 stubs, not in the external tank and not in tank 50. The demand stays visible through the circuit's
   colouring and animation; the emitter still opens the DG1 demand's more-info and DHW valve 26 the DHW demand's.
@@ -79,7 +81,8 @@ None.
   - the air unit's drawing and its three values;
   - the fan speed shown as a value;
   - the borehole collector with its Out at the outlet;
-  - the hybrid's air unit values.
+  - the hybrid's air unit values;
+  - the source's parts named after the new drawings in the active-circuit requirement.
 - `heating-emitter`:
   - the spiral underfloor loop and its colouring by run;
   - the DG1 demand caption removed.
@@ -90,7 +93,8 @@ None.
 - `schematic-drawing`:
   - the open compressor symbol;
   - one band style;
-  - one jog level.
+  - the lowest jog levels (fewest lifted pipes);
+  - the highest jog level clear of the band's bottom edge.
 - `live-values`:
   - the values on the drawing (no demands; fan speed and outside temperature at the air unit);
   - the footer's outside temperature only without an air unit.

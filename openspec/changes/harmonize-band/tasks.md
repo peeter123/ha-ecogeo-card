@@ -37,12 +37,6 @@ the user allows it.
   demands on. Pass when the compressor is open, there is no "Demand" anywhere, and the tank value is regular weight.
   Record the verdict here.
 
-  Verdict (2026-11-23): pass. The captures scenario-heating (horizontal), vertical-light-heating (320 px) and
-  phone-heating (360 px) show a three-turn spiral. Adjacent turns alternate between the supply and the return colour
-  and stay clearly apart, no turn crosses another, and the dashes run in along the outer supply turns and back out
-  along the return turns between them. The supply and return pipes meet the spiral side by side on the bottom face
-  and cross nothing.
-
   Verdict (2026-11-23): `npm run capture` (316 captures). Inspected labels-air-1000-heating (model B, external tank, DG1
   demand on), labels-air-1000-dhw (DHW demand on) and labels-modelC-1000-heating. Pass: compressor 11 is open (circle
   and two converging lines, no fill); no "Demand" text anywhere (emitter, stubs, external tank, tank 50); the tank
@@ -55,10 +49,10 @@ the user allows it.
   Remove the air unit's divider and the emitter's floor line, with their obstacles. Verify: a unit test asserts that
   every band body's outline uses the band radius, and that the arrangement has no `air-divider` or `emitter-divider`
   obstacle.
-- [x] 2.2 Set the widths: emitter 180, air unit 190, collector 120, tank 160 (design D2). Keep the current inner
-  parts, scaled into the new widths, until groups 3-5 redraw them. Verify: the band test asserts that the widest key
-  (hybrid, tank, emitter) fits the vertical layout's 720 units with gaps of at least 24, and the arrangement snapshots
-  are recorded again.
+- [x] 2.2 Set the widths: emitter 180, air unit 190, collector 120 (126 since task 6.5), tank 160 (design D2).
+  Keep the current inner parts, scaled into the new widths, until groups 3-5 redraw them. Verify: the band test
+  asserts that the widest key (hybrid, tank, emitter) fits the vertical layout's 720 units with gaps of at least 24,
+  and the arrangement snapshots are recorded again.
 - [x] 2.3 Give the external tank a flat bottom on the band's bottom edge, with the band radius at its corners. Keep the
   domed top and the rim (design D8; dhw-storage "External tank above connections 5/6"). Verify: a unit test asserts
   that the tank's outline reaches the band's bottom at both walls; the schematic-drawing "One band style" scenario is
@@ -93,6 +87,12 @@ the user allows it.
   passes.
 - [x] 3.4 Emulator check: a subagent inspects the underfloor captures in heating, in both layouts and at 320 px. Pass
   when the turns alternate warm and cool, stay apart, and the flow runs in and back out. Record the verdict here.
+
+  Verdict (2026-11-23): pass. The captures scenario-heating (horizontal), vertical-light-heating (320 px) and
+  phone-heating (360 px) show a three-turn spiral. Adjacent turns alternate between the supply and the return colour
+  and stay clearly apart, no turn crosses another, and the dashes run in along the outer supply turns and back out
+  along the return turns between them. The supply and return pipes meet the spiral side by side on the bottom face
+  and cross nothing.
 
 ## 4. The air unit
 
@@ -174,7 +174,8 @@ the user allows it.
   - the return straight down from the helix's end.
 
   Coil 51 is unchanged. Verify: the dhw-storage scenarios "Helical coil" and "Tank geometry" are unit tests, and the
-  coil 51 snapshot is unchanged.
+  coil 51 snapshot is unchanged. (Superseded by 6.7: `fromLeft` and `startX`, four and a half turns, no straight
+  top pipe.)
 - [x] 6.2 Replace `BAND_JOGS` with the levels `jog`, `second` and `third` and add `jogSpans` with its planarity check
   (design D3, amended 2026-11-24). `bandSegments` takes the cheapest level assignment the check accepts, all on `jog`
   first. Verify:
@@ -193,8 +194,8 @@ the user allows it.
   gives the vertical threshold 320 px again and the horizontal one unchanged; the place search's report for the
   collector Out is understood and recorded; `npm test` passes in WebKit.
 - [x] 6.6 Emulator check: a subagent inspects the captures of every source with the external tank, in both layouts.
-  Pass when the horizontal pipe sections line up, the coil's straight pipe runs on top, and no pipe crosses. Record
-  the verdict here, with the band keys and pipes that leave the lowest jog level.
+  Pass when the horizontal pipe sections line up, the coil's straight pipe runs on top (superseded by 6.7), and no
+  pipe crosses. Record the verdict here, with the band keys and pipes that leave the lowest jog level.
 
   Verdict (2026-11-24): pass. `npm run capture` (316 captures). Inspected band-{air,ground,hybrid}-external-light-1000,
   vertical-band-{air,ground,hybrid}-external-light-559, vertical-band-{ground,hybrid}-external-light-320 and
@@ -240,8 +241,8 @@ the user allows it.
   Verdict (2026-11-24): run 45415431971 recorded the references; after a pixel diff against the previous set they
   were committed in 805806c. Its push run 45437371729 passes `npm run check` and compares the visual references 16
   of 16; only `verify-dist` fails, as expected before the release.
-- [x] 7.2 Run the Chromium checks of the Workflow follow-up, with font smoothing on. Verify: the browser project
-  passes in Chromium, and the place search and `measure-layout` agree with WebKit.
+- [x] 7.2 Run the browser project, the place search and `measure-layout` in Chromium, with font smoothing on.
+  Verify: the browser project passes in Chromium, and the place search and `measure-layout` agree with WebKit.
   Verdict (2026-11-24, font smoothing on): the browser project passes in Chromium (12 of 12 files, 2317 passed, 2
   expected failures). `measure-layout` in Chromium gives the WebKit thresholds: vertical 320 px (clean from 320 to
   800 px), horizontal 540 px (130 overlaps in 130 cases at 500 and 520 px, clean from 540 px; `VERTICAL_BELOW` stays
@@ -284,11 +285,33 @@ the user allows it.
   with the bundle attached (byte-identical to `dist/ecogeo-card.js`); the Check runs on the release commit and the
   dated changelog commit are green.
 
+## 10. Whole-change review fixes
+
+- [ ] 10.1 Fix the findings of the whole-change review (2026-11-24; the user chose the spec amendment for the tank's
+  pipe pair and a fix of the third level now):
+  - the jog levels 24, 34 and 44 with a unit test that the highest level clears the band's bottom edge by more than a
+    pipe width plus the outline (schematic-drawing "Jog levels clear of the band");
+  - the tank's pipe pair in the comments;
+  - a strict tie order in `bandSegments`;
+  - the air unit's fan at 100 % and 900 rpm in the browser test, with the 1450 rpm expected failure narrowed;
+  - the case outline in the overlap check and the place search, `EXACT_LABELS` derived from `BODY_LABELS` and the
+    margin kept for a non-exact label;
+  - the fan speed's decimals;
+  - the compressor's no-fill assertion;
+  - the outer-loop-source "Outer loop active with the brine circuit" text named after the new drawings;
+  - the stale comments, and the docs and README.
+
+  Verify:
+  - `npm run check` passes;
+  - `measure-layout` still gives 320 px vertical and 540 px horizontal;
+  - the place search reports no NO PLACE, and its vertical paste equals `VERTICAL_PLACES`;
+  - the arrangement snapshots differ only in the band joins' heights;
+  - a subagent inspects the band captures with the tank in both layouts and at 320 px: the supply on the highest level
+    runs clearly apart from the tank's bottom outline, and no pipe crosses.
+- [ ] 10.2 With the user's go for each step: record the visual references again on CI, release the patch version
+  1.1.1, and deploy it as in 9.1.
+
 ## Workflow follow-up
 
-- `dev/overlaps.ts`: its `outline:` test uses the air unit's group box, which includes the feet, so a label in the
-  gap under the case would pass there. The browser test checks the three air unit values against the case outline.
-  Give the overlap check a separate case-outline box when the file is next changed (recorded 2026-11-23, group 4).
-- One fresh review of the whole change before archiving.
 - At archive, update the Purpose of outer-loop-source (the air unit's values, the borehole) and heating-emitter (no
   DG1 demand caption), and name the change in AGENTS.md.

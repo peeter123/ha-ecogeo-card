@@ -37,7 +37,8 @@ See proposal.md for the motivation. The current state that shapes the approach:
 **Goals:**
 
 - Write the band's common style once (radius, margin, outline, baseline) and use it in every body.
-- Use one jog level, with the planarity condition written down and tested, not tuned per configuration.
+- Use the lowest jog levels (one level wherever it avoids a crossing), with the planarity condition written down
+  and tested, not tuned per configuration.
 - Keep every body a pure shape function of its slot, so that the arrangement snapshots and the integrity tests keep
   working as they do.
 
@@ -93,7 +94,7 @@ port, and the leg above it, into the body.
 A pure helper, `jogSpans(arrangement)`, lists the spans. A unit test asserts the condition for every band key in both
 layouts. In the horizontal layout every configuration meets it:
 
-- port 3 at about x 682 and port 4 at about 827;
+- port 3 at about x 682 and port 4 at about 821;
 - the source's feed and exit columns lie outside the other pipes' spans;
 - the tank's spans lie right of port 4.
 
@@ -117,23 +118,31 @@ check reports conflicts that the analysis above missed:
   682), so the two source pipes overlap.
 - **Hybrid, both layouts:** port 3's pipe to the air unit's feed passes under the link's start.
 
-The rule is therefore the lowest level per arrangement. The levels are `jog` (28 above the cabinet's top edge),
-`second` (40) and `third` (52). `bandSegments` groups the band pipes: port 1's, port 2's, port 3's, port 4's, the
-hybrid's link, and the tank's two pipes as one group. It tries the level assignments ordered by the number of lifted
-pipes first (the tank's group counts as two) and by a fixed weight per group second, all on `jog` first, and takes the
-first one for which `jogSpans` reports no conflict (settled 2026-11-24 at the group 6 review, to match the spec's
-"fewer lifted pipes"). If no assignment is conflict-free, it keeps all on `jog` and draws the crossing rather than
-fail the card's render; the unit test over every band key rules that case out. Nothing is set per band key. The unit
-test asserts no conflicts for every band key in both layouts, and it lists the keys and pipes that leave `jog` as an
-explicit expected list, so a new lift cannot appear silently. On 2026-11-24 they are: horizontal air with the tank
-(port 4's pipe on `second`), horizontal hybrid with or without the tank (the link on `second`), vertical air with the
-tank (port 4's on `second`, the tank's on `third`), vertical air without the tank (port 4's on `second`), vertical
-ground with the tank (port 4's on `second`, the tank's on `third`), vertical hybrid with the tank (the link and port
-4's on `second`, the tank's on `third`), and vertical hybrid without the tank (the link on `second`). The emitter does
-not change the assignment. `jogSpans` counts only the sections below the band's bottom edge. The tank's supply rises
-12 units left of the coil (D8), so in the vertical layout its span covers port 4's riser; a supply at the coil's
-left side would avoid the lift, but it runs through the helix's left turning points (tried in task 6.7 and rejected
-by the user).
+The rule is therefore the lowest level per arrangement. The levels are `jog` (24 above the cabinet's top edge), `second`
+(34) and `third` (44; 28, 40 and 52 until the whole-change review, see below). `bandSegments` groups the band pipes:
+port 1's, port 2's, port 3's, port 4's, the hybrid's link, and the tank's two pipes as one group. It tries the level
+assignments ordered by the number of lifted pipes first (the tank's group counts as two), by the highest level used
+second and by a fixed weight per group third (ties keep the generation order), all on `jog` first, and takes the first
+one for which `jogSpans` reports no conflict (settled 2026-11-24 at the group 6 review, to match the spec's "fewer
+lifted pipes"). If no assignment is conflict-free, it keeps all on `jog` and draws the crossing rather than fail the
+card's render; the unit test over every band key rules that case out. Nothing is set per band key. The unit test asserts
+no conflicts for every band key in both layouts, and it lists the keys and pipes that leave `jog` as an explicit
+expected list, so a new lift cannot appear silently. On 2026-11-24 they are: horizontal air with the tank (port 4's pipe
+on `second`), horizontal hybrid with or without the tank (the link on `second`), vertical air with the tank (port 4's on
+`second`, the tank's on `third`), vertical air without the tank (port 4's on `second`), vertical ground with the tank
+(port 4's on `second`, the tank's on `third`), vertical hybrid with the tank (the link and port 4's on `second`, the
+tank's on `third`), and vertical hybrid without the tank (the link on `second`). The emitter does not change the
+assignment. `jogSpans` counts only the sections below the band's bottom edge. The tank's supply rises 12 units left of
+the coil (D8), so in the vertical layout its span covers port 4's riser; a supply at the coil's left side would avoid
+the lift, but it runs through the helix's left turning points (tried in task 6.7 and rejected by the user).
+
+Amended 2026-11-24 at the whole-change review (decided by the user): the tank's two pipes stay one group. In the
+vertical layout lifting only the supply would also be free of conflicts, but the pair keeps the tank's two pipes
+parallel on one level, and the spec now says the pair moves as one and counts as two. The levels moved down to 24, 34
+and 44: at 52 the supply on `third` ran 4 units under the tank's flat bottom (0.2 units clear at 320 px), so pipe and
+outline read as one doubled stroke. The highest level now leaves 12 units under the band's bottom edge (the join lane is
+56), more than a pipe width plus the outline width from 320 px up, and a unit test asserts it. The order of the levels,
+and so the list of lifted pipes, is unchanged.
 
 Alternatives considered at the amendment: moving the air unit's exit column right and routing the hybrid's link
 through the gap between its bodies, to cut the lifts; and the old fixed level per pipe. The user chose the plain
@@ -160,8 +169,9 @@ The values, all bare and at the regular size (D7):
 - the Out, at the case's bottom right of the coil panel, beside the exit pass where the brine leaves the unit.
 
 Each value sits in an obstacle-free box from the shape, so the overlap check and the place search treat them like
-today's strip. There are no captions: the tooltips name the values, and the positions tell the two temperatures apart
-(outside at the air intake on top, Out at the outlet pipe).
+today's strip. There are no captions: the value labels carry no tooltip, so the positions tell the two
+temperatures apart (outside at the air intake on top, Out at the outlet pipe); the case's and the fan's tooltips name
+the parts.
 
 The fan speed takes the role's unit. A percentage shows whole percent, as the pump speeds do (rework-layouts), and
 rpm shows the rpm value. In the hybrid the air unit shows the outside temperature and the fan speed, but no Out: the
@@ -255,7 +265,7 @@ Every value inside a band body is regular weight at the label size, and bare:
 The editor's role names ("Demand" in its role list) are a different string and stay.
 
 The emitter keeps its button for the DG1 demand's more-info (component-info "Tap the emitter"), and the external tank
-keeps its button for the DHW temperature. Tank 50 keeps its temperature, centred above coil 51.
+keeps its button for the DHW temperature. Tank 50 keeps its temperature above coil 51.
 
 ### D8 The external tank and its coil
 
@@ -297,7 +307,8 @@ footer items.
 
 ### D10 The compressor
 
-`COMPRESSOR_FILLS` and its paths go, and so do the browser test of the fill and its scenario. Compressor 11 is drawn
+`COMPRESSOR_FILLS` and its paths go, and so does the browser test of the fill; its scenario now asserts that no part
+is filled. Compressor 11 is drawn
 with the circle and the two converging lines again, as before rework-layouts group 4.
 
 ## Risks / Trade-offs
@@ -307,10 +318,10 @@ with the circle and the two converging lines again, as before rework-layouts gro
   beside the fan rather than below it. Either is a geometry change, without a spec change.
 - [The spiral reads as noise at phone width.] → At least 12 units of pitch and at most three inward turns. A subagent
   checks the emulator screenshot at 320 px in group 3.
-- [Two bare temperatures in the air unit are confused.] → They sit at opposite ends (top and outlet), and the
-  tooltips name them. If the user finds them confusing at review, a caption is a later decision.
-- [The second jog level for the tank returns in the vertical layout.] → It is limited to the band keys `jogSpans`
-  reports, and the test lists them, so it cannot spread silently.
+- [Two bare temperatures in the air unit are confused.] → They sit at opposite ends (top and outlet); the value
+  labels have no tooltip of their own. If the user finds them confusing at review, a caption is a later decision.
+- [Pipes leave the first jog level.] → Only where `jogSpans` reports a conflict on it, with the fewest lifted pipes;
+  the unit test lists the band keys and pipes, so a new lift cannot appear silently.
 - [The visual references can only be recorded on CI Linux.] → The release group records them through the CI workflow,
   as in rework-layouts.
 
