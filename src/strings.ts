@@ -90,7 +90,7 @@ export const DHW_LABELS = {
 /** The tooltip and accessible name of the emitter (not a manual item: it is outside the unit, on connections 1/2). */
 export const EMITTER_NAMES = { underfloor: 'Underfloor heating', radiator: 'Radiator' } as const;
 
-/** The small captions in front of a value label where its position alone would not say what it is (the values inside a body have none: the body and its tooltip name them). */
+/** The small captions in front of a value label where its position alone would not say what it is (the values inside a body have none: the body's tooltip names the body, the values have none). */
 export const VALUE_CAPTIONS = {
   /** Out and In: where the water or brine leaves or enters the part (the probes of the production and brine circuits, the source). */
   portIn: 'In',

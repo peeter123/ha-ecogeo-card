@@ -158,10 +158,9 @@ describe('arrangementFor: the simplified arrangement', () => {
     // at the threshold every label's default place is free (the search's paste output is empty), so the table has no entry; an
     // entry, when the drawing needs one again, is checked here: it has a reason and the arrangement uses its place
     expect(Object.keys(HORIZONTAL_PLACES)).toEqual([]);
-    const bare = arrangementFor('horizontal', { ...simplified.key, emitter: 'none' });
     for (const [id, place] of Object.entries(HORIZONTAL_PLACES)) {
       expect(place.reason.length, id).toBeGreaterThan(20);
-      const spec = [simplified, bare].flatMap((own) => own.labels.specs).find((label) => label.id === id);
+      const spec = simplified.labels.specs.find((label) => label.id === id);
       expect(spec, id).toBeDefined();
       expect({ x: spec?.x, y: spec?.y, align: spec?.align }, id).toEqual(
         place.at(simplified, (x, y) => [mapAxis(HORIZONTAL_MAP_X, x), mapAxis(HORIZONTAL_MAP_Y, y)]),

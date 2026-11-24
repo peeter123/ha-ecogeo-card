@@ -253,33 +253,33 @@ svg:
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M382 759 L532 759 L532 725.9666666666667 M532 704.0333333333333 L532 670">
 </path>
-<path class="pipe muted" data-segment="dg1_sup" d="M75 238 L75 210 L106.5 210 L106.5 182">
+<path class="pipe muted" data-segment="dg1_sup" d="M75 238 L75 214 L106.5 214 L106.5 182">
 </path>
 <path class="pipe muted" data-segment="dg1_loop_in" d="M106.5 182 L106.5 181 A7 7 0 0 0 99.5 174 L38.5 174 A7 7 0 0 1 31.5 167 L31.5 21 A7 7 0 0 1 38.5 14 L188.5 14 A7 7 0 0 1 195.5 21 L195.5 139 A7 7 0 0 1 188.5 146 L66.5 146 A7 7 0 0 1 59.5 139 L59.5 49 A7 7 0 0 1 66.5 42 L160.5 42 A7 7 0 0 1 167.5 49 L167.5 111 A7 7 0 0 1 160.5 118 L94.5 118 A7 7 0 0 1 87.5 111 L87.5 77 A7 7 0 0 1 94.5 70 L132.5 70 A7 7 0 0 1 139.5 77 L139.5 77">
 </path>
 <path class="pipe muted" data-segment="dg1_loop_out" d="M139.5 77 L139.5 77 A7 7 0 0 1 132.5 84 L108.5 84 A7 7 0 0 0 101.5 91 L101.5 97 A7 7 0 0 0 108.5 104 L146.5 104 A7 7 0 0 0 153.5 97 L153.5 63 A7 7 0 0 0 146.5 56 L80.5 56 A7 7 0 0 0 73.5 63 L73.5 125 A7 7 0 0 0 80.5 132 L174.5 132 A7 7 0 0 0 181.5 125 L181.5 35 A7 7 0 0 0 174.5 28 L52.5 28 A7 7 0 0 0 45.5 35 L45.5 153 A7 7 0 0 0 52.5 160 L113.5 160 A7 7 0 0 1 120.5 167 L120.5 182">
 </path>
-<path class="pipe muted" data-segment="dg1_ret" d="M120.5 182 L120.5 210 L152 210 L152 238">
+<path class="pipe muted" data-segment="dg1_ret" d="M120.5 182 L120.5 214 L152 214 L152 238">
 </path>
-<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 238 L552 210">
+<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 238 L552 214">
 </path>
-<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M552 238 L552 210">
+<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M552 238 L552 214">
 </path>
-<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M607 210 L607 238">
+<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M607 214 L607 238">
 </path>
-<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 210 L607 238">
+<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 214 L607 238">
 </path>
-<path class="pipe " data-segment="src_hyb_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 210 L420 210 L420 162">
+<path class="pipe " data-segment="src_hyb_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 214 L420 214 L420 162">
 </path>
-<path class="flow " data-flow="src_hyb_feed" style="--flow-duration: 1.2s" d="M552 210 L420 210 L420 162">
+<path class="flow " data-flow="src_hyb_feed" style="--flow-duration: 1.2s" d="M552 214 L420 214 L420 162">
 </path>
 <path class="pipe " data-segment="src_hyb_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M420 162 L420 63 A7 7 0 0 1 427 56 L427 56 A7 7 0 0 1 434 63 L434 135 A7 7 0 0 0 441 142 L441 142 A7 7 0 0 0 448 135 L448 63 A7 7 0 0 1 455 56 L455 56 A7 7 0 0 1 462 63 L462 162">
 </path>
 <path class="flow " data-flow="src_hyb_coil" style="--flow-duration: 1.2s" d="M420 162 L420 63 A7 7 0 0 1 427 56 L427 56 A7 7 0 0 1 434 63 L434 135 A7 7 0 0 0 441 142 L441 142 A7 7 0 0 0 448 135 L448 63 A7 7 0 0 1 455 56 L455 56 A7 7 0 0 1 462 63 L462 162">
 </path>
-<path class="pipe " data-segment="src_hyb_link" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M462 162 L462 198 L613.5 198 L613.5 182">
+<path class="pipe " data-segment="src_hyb_link" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M462 162 L462 204 L613.5 204 L613.5 182">
 </path>
-<path class="flow " data-flow="src_hyb_link" style="--flow-duration: 1.2s" d="M462 162 L462 198 L613.5 198 L613.5 182">
+<path class="flow " data-flow="src_hyb_link" style="--flow-duration: 1.2s" d="M462 162 L462 204 L613.5 204 L613.5 182">
 </path>
 <path class="pipe " data-segment="src_hyb_down" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" stroke-linecap="round" d="M613.5 182 L613.5 38 A8 8 0 0 1 621.5 30 L625.5 30 A8 8 0 0 1 633.5 38 L633.5 126 A8 8 0 0 0 641.5 134 L641.5 134 A8 8 0 0 0 649.5 126 L649.5 38 A8 8 0 0 1 657.5 30 L667 30">
 </path>
@@ -289,9 +289,9 @@ svg:
 </path>
 <path class="flow " data-flow="src_hyb_up" style="--flow-duration: 1.2s" d="M667 30 L676.5 30 A8 8 0 0 1 684.5 38 L684.5 126 A8 8 0 0 0 692.5 134 L692.5 134 A8 8 0 0 0 700.5 126 L700.5 38 A8 8 0 0 1 708.5 30 L712.5 30 A8 8 0 0 1 720.5 38 L720.5 182">
 </path>
-<path class="pipe " data-segment="src_hyb_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M720.5 182 L720.5 210 L607 210">
+<path class="pipe " data-segment="src_hyb_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M720.5 182 L720.5 214 L607 214">
 </path>
-<path class="flow " data-flow="src_hyb_exit" style="--flow-duration: 1.2s" d="M720.5 182 L720.5 210 L607 210">
+<path class="flow " data-flow="src_hyb_exit" style="--flow-duration: 1.2s" d="M720.5 182 L720.5 214 L607 214">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

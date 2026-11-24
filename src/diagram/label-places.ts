@@ -5,7 +5,7 @@
 // room, and on no pipe (found with `npm run search-places`, checked by the overlap browser tests), every cabinet value in a lane
 // of the cabinet frame beside its part (in the horizontal layout the probes' and pumps' values in the column lanes; in the vertical layout the
 // rotated values and the pump 15 value in the gaps between vertical pipes beside their part), the pair blocks, the compressor's speed
-// and the opening in the row lane under its row. The values of the band's bodies (the source's Out, the DHW temperature) inside their bodies, and, for
+// and the opening in the row lane under its row. The values of the band's bodies (the source's Out, the outside temperature, the fan speed, the DHW temperature) inside their bodies, and, for
 // model C, inside tank 50 above its coil. The bodies' labels are functions of the zones: they follow their body.
 import type { RolePath } from '../config/roles';
 import { MIN_DRAWING_WIDTH, VERTICAL_BELOW } from '../lib/layout';
@@ -51,14 +51,14 @@ export interface LabelSpec extends Pick<Visibility, 'dhw' | 'source'> {
   /** A unique id, also the `data-label` of the element. */
   id: string;
   role: RolePath;
-  /** The manual item the value belongs to; 1 stands for connections 1/2. */
+  /** The manual item the value belongs to. */
   item?: number;
   x: number;
   y: number;
   align: Align;
   /** A small text in front of the value, where its position alone would not say what it is. */
   caption?: string;
-  /** No background plate: the label sits on a tinted body (the external tank's values, the values inside tank 50). */
+  /** No background plate: a value inside a band body or tank 50. */
   bare?: true;
   /** Turned by -90 degrees about its place, so it reads from bottom to top (the vertical layout's values along vertical pipes). */
   rotate?: -90;
@@ -203,7 +203,7 @@ const centre = (rect: { x: number; y: number; width: number; height: number }): 
 
 /**
  * The row of the external tank's temperature: 44 units under its top edge, centred on it. The rim of the top cap reaches 28
- * units under the top edge, the coil starts 90 under it.
+ * units under the top edge, the coil starts 94 under it.
  */
 const TANK_TEMPERATURE_DY = 44;
 
@@ -266,7 +266,7 @@ function bodySpecs(z: Partial<BandZones>): LabelSpec[] {
  * components go through it, the ones placed from the zones (the band's bodies, tank 50) do not.
  * The values of live-values "Values on the drawing": production out and in, brine out and in, the two pressures, the
  * two pumps, the discharge and suction pairs, the compressor speed, the expansion valve opening, the
- * source's Out and the DHW temperature.
+ * source's Out, the outside temperature and the fan speed, and the DHW temperature.
  */
 export function labelPlacesFor(
   z: CabinetZones & Partial<BandZones>,
@@ -323,7 +323,7 @@ export function labelPlacesFor(
     row(1, 'suction_pressure', 'compressor.suction_pressure', 401, 167, 'start', { item: 35 }),
     row(2, 'compressor_speed', 'compressor.speed', 360, 167, 'middle', { item: 11 }),
     cab('expansion_valve', 'refrigerant.expansion_valve', 412, 426, 'middle', { item: 12 }),
-    // the band's bodies: the source's Out and the external tank's values (bodySpecs)
+    // the band's bodies: the source's values and the external tank's temperature (bodySpecs)
     ...bodySpecs(z),
     // model C: the DHW temperature inside tank 50 in the strip above coil 51, with no background plate
     spec(

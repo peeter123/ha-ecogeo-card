@@ -50,7 +50,7 @@ export interface Rect {
  * stands on the left, with the horizontal fins and the brine serpentine of vertical passes, which enters and leaves on the
  * panel's bottom face (`passes.x0` and the last pass), so that both pipes arrive from the join lane below. The fan is right of
  * it, behind a static guard; the three values (the outside temperature above the fan, the fan speed below it, the Out beside
- * the exit pass) sit in the obstacle-free boxes of `values`.
+ * the exit pass) sit in the boxes of `values` (the speed box overlaps the coil panel's right part, see there).
  */
 export interface AirUnitShape extends Rect {
   readonly fan: { readonly cx: number; readonly cy: number; readonly radius: number };
@@ -75,7 +75,10 @@ export interface AirUnitShape extends Rect {
     readonly top: number;
     readonly bottom: number;
   };
-  /** The free boxes of the three values: the outside temperature above the fan, the fan speed below it, the Out beside the exit pass. */
+  /**
+   * The boxes of the three values: the outside temperature above the fan, the fan speed below it, the Out beside the exit pass.
+   * The outside and Out boxes are obstacle-free; the speed box overlaps the coil panel's right part by 18 x 24 units, so a long rpm text can touch it (a known limitation).
+   */
   readonly values: { readonly outside: Rect; readonly speed: Rect; readonly out: Rect };
 }
 
@@ -131,7 +134,7 @@ export interface EmitterShape extends Rect {
 export type TankShape = Rect & { readonly dome: number };
 
 /**
- * The external coil: its centre line is the tank's, and it sits in the tank's lower part (the upper part holds the values).
+ * The external coil: its centre line is the tank's, and it sits in the tank's lower part (the upper part holds the one value).
  * `inX` is the column of the supply pipe that rises beside the coil, left of it, into the helix's start (the first half arcs over from there); the return drops from the helix's end on the coil's right.
  */
 export interface ExternalCoil {
@@ -218,19 +221,21 @@ export const BAND = {
   /** The gap between the air unit and the collector of the hybrid. */
   hybridGap: 12,
   tank: { width: 160, height: 176, dome: 14 },
-  /** The emitter's body: both kinds share the slot's width; the bottom pipes rise 34 units inside each side. */
+  /** The emitter's body: both kinds share the slot's width; the radiator's bottom pipes rise 34 units inside each side, the underfloor's at the centre, one pitch apart. */
   emitter: { width: 180, height: 176 },
 } as const;
 
 /**
- * The join lane's jog levels, as distances above the cabinet's top edge. Every band pipe runs its horizontal section on the
- * first, `jog` (harmonize-band D3), so the sections line up; it lies above the stubs of connections 47-49 (12) and the others
- * stay below the bodies' bottom edge (56). `jogSpans` checks the planarity condition; a pipe whose section would break it on
- * the first level moves to `second`, or `third` (see `bandSegments`), so the pipes do not cross.
+ * The join lane's jog levels, as distances above the cabinet's top edge (the same in both layouts). Every band pipe runs its
+ * horizontal section on the first, `jog` (harmonize-band D3), so the sections line up; it lies above the stubs of connections
+ * 47-49 (they end 12 above the edge). The other two stay below the bodies' bottom edge (56): the highest, 44, leaves 12 units,
+ * more than a pipe and an outline width from a card width of 320 px (`MIN_DRAWING_WIDTH`). `jogSpans` checks the planarity condition; a pipe whose section
+ * would break it on the first level moves to `second`, or `third` (see `bandSegments`), so the pipes do not cross.
  */
+const JOG_LEVELS = { jog: 24, second: 34, third: 44 } as const;
 export const BAND_JOGS: Readonly<Record<ShownLayout, { jog: number; second: number; third: number }>> = {
-  horizontal: { jog: 28, second: 40, third: 52 },
-  vertical: { jog: 28, second: 40, third: 52 },
+  horizontal: JOG_LEVELS,
+  vertical: JOG_LEVELS,
 };
 
 /** The width of the source's body (the air unit, the collector, or both side by side). */
@@ -310,7 +315,7 @@ const round2 = (value: number): number => Math.round(value * 100) / 100;
 /** The height of the air unit's feet, which is also the gap between its case and the band's bottom edge. */
 const AIR_FOOT_HEIGHT = 8;
 
-/** The air fan's ring radius (harmonize-band D4: about 40; the first fallback is 34). */
+/** The air fan's ring radius (harmonize-band D4: about 40; no fallback was needed). */
 const AIR_FAN_RADIUS = 40;
 
 /** The air unit placed with its left edge at `x0` and its bottom edge at `bottom`. */
@@ -732,7 +737,7 @@ export interface Segment extends Visibility {
   shape?: HelixShape;
   /** The radius of the rounded corners of the pipe (the air coil's U-bends and the ground collector's loops: bends at their top and bottom). */
   bend?: number;
-  /** The base stroke ends in a round cap: it closes the seam where the ground collector's half circle is split in two segments. */
+  /** The base stroke ends in a round cap: the down pipes of the ground and hybrid collectors end in the collector's round bend, which the cap rounds off. */
   roundEnd?: true;
   /** A dead end (the DG1 and HTR stubs, the model C tap-water stubs): coloured, never animated. */
   stub?: boolean;
@@ -1305,23 +1310,24 @@ const route = (...points: Point[]): Point[] =>
 /**
  * The pipes of the band (rework-layouts D3, harmonize-band D3): the emitter's, the external tank's and the source's, each rising
  * from its port in the join lane, with one horizontal section on the jog level, into its part. Any group may move to the
- * second or third level. The assignments are tried with the fewest lifted pipes first (the tank's group counts as two), then by
- * the weights in `JOG_COST`, and the first one for which `jogSpans` reports no conflict wins. If none is conflict-free, all
+ * second or third level. The assignments are tried with the fewest lifted pipes first (the tank's group counts as two; its supply
+ * and return move as one pair), then the lowest highest level, then by the weights in `JOG_COST`, and the first one for which `jogSpans` reports no conflict wins. If none is conflict-free, all
  * stay on the jog level and the crossing is drawn.
  */
 function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
   const groups = bandGroupsOf(z.key);
   const levels = [0, 1, 2];
   // every assignment of the groups to the levels: all on the first level first, then the fewest lifted pipes (the tank's group
-  // counts as two), then the lowest weighted sum; the sort is stable, so equal assignments keep their generated order
+  // counts as two: its supply and return move as one pair), then the lowest highest level, then the lowest weighted sum; the sort is stable, so equal assignments keep their generated order
   const combos = groups
     .reduce<number[][]>((all) => all.flatMap((chosen) => levels.map((level) => [...chosen, level])), [[]])
     .map((chosen) => ({
       chosen,
       lifted: chosen.reduce((sum, level, index) => sum + (level > 0 ? (groups[index] === 'tank' ? 2 : 1) : 0), 0),
+      top: Math.max(...chosen),
       cost: chosen.reduce((sum, level, index) => sum + level * (JOG_COST[groups[index] ?? ''] ?? 0), 0),
     }))
-    .sort((one, two) => one.lifted - two.lifted || one.cost - two.cost);
+    .sort((one, two) => one.lifted - two.lifted || one.top - two.top || one.cost - two.cost);
   const build = (chosen: readonly number[]): readonly Segment[] =>
     bandPipes(z, layout, Object.fromEntries(groups.map((group, index) => [group, chosen[index] ?? 0])));
   for (const { chosen } of combos) {
@@ -1332,7 +1338,7 @@ function bandSegments(z: Zones, layout: ShownLayout): readonly Segment[] {
   return build(groups.map(() => 0));
 }
 
-/** The pipe groups of a band key that can sit on their own jog level (the tank's two pipes are one group). */
+/** The pipe groups of a band key that can sit on their own jog level (the tank's supply and return are one group: they move as a pair and count as two pipes). */
 export const bandGroupsOf = (key: BandKey): string[] =>
   JOG_GROUPS.filter(
     (group) =>
@@ -1749,11 +1755,11 @@ export interface JogConflict {
 
 /**
  * The pipes that can move to another level as a group, dearest to move first (the emitter's two, port 3's, port 4's, the
- * hybrid's link, then the external tank's), as `JOG_COST` weighs them.
+ * hybrid's link, then the external tank's pair, which counts as two pipes), as `JOG_COST` weighs them.
  */
 const JOG_GROUPS: readonly string[] = ['dg1_sup', 'dg1_ret', 'src_out', 'src_in', 'src_hyb_link', 'tank'];
 
-/** What moving a group one level costs (the order of `JOG_GROUPS`, dearest first, in powers of two). */
+/** What moving a group one level costs (the order of `JOG_GROUPS`, dearest first, in powers of two). A tie in the weighted sum (level times weight, for example `dg1_sup` on `second` against `dg1_ret` on `second`, 16 each) falls to the generated order, after the lifted count and the highest level. */
 const JOG_COST: Readonly<Record<string, number>> = {
   dg1_sup: 16,
   dg1_ret: 16,

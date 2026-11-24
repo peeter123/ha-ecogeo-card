@@ -105,6 +105,14 @@ describe('cabinet drawing', () => {
       // the symbol is open: the circle and the two lines, with no filled path (schematic-drawing "Refrigerant components
       // after the manual figure")
       expect(symbol?.querySelectorAll('.compressor-fill')).toHaveLength(0);
+      // "Compressor fill in the dark theme": no part is filled (the group sets fill none) and everything takes the outline
+      // colour (the group sets the stroke to currentColor)
+      expect(symbol?.getAttribute('fill')).toBe('none');
+      expect(symbol?.getAttribute('stroke')).toBe('currentColor');
+      for (const element of symbol?.querySelectorAll('*') ?? []) {
+        expect(element.hasAttribute('fill') && element.getAttribute('fill') !== 'none', element.outerHTML).toBe(false);
+        expect(element.hasAttribute('style'), element.outerHTML).toBe(false);
+      }
       for (const shape of symbol?.querySelectorAll('path, circle') ?? []) {
         const fill = shape.getAttribute('fill');
         expect(fill === null || fill === 'none', shape.outerHTML).toBe(true);

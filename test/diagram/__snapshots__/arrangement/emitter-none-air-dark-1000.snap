@@ -282,9 +282,9 @@ svg:
 </path>
 <path class="pipe " data-segment="p2_stub" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M260 226 L260 238">
 </path>
-<path class="pipe muted" data-segment="dhw_ext_in" d="M937 238 L937 210 L860 210 L860 104">
+<path class="pipe muted" data-segment="dhw_ext_in" d="M937 238 L937 214 L860 214 L860 104">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M937 238 L937 210 L860 210 L860 104">
+<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M937 238 L937 214 L860 214 L860 104">
 </path>
 <g class="helix muted" data-segment="dhw_ext_coil">
     <path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M860 104 C860 96 948 102 948 110">
@@ -307,29 +307,29 @@ svg:
 </path>
     
   </g>
-<path class="pipe muted" data-segment="dhw_ext_out" d="M948 158 L948 210 L977 210 L977 238">
+<path class="pipe muted" data-segment="dhw_ext_out" d="M948 158 L948 214 L977 214 L977 238">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M948 158 L948 210 L977 210 L977 238">
+<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M948 158 L948 214 L977 214 L977 238">
 </path>
-<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 238 L682 210">
+<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 238 L682 214">
 </path>
-<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M682 238 L682 210">
+<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M682 238 L682 214">
 </path>
-<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M821 198 L821 238">
+<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M821 204 L821 238">
 </path>
-<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M821 198 L821 238">
+<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M821 204 L821 238">
 </path>
-<path class="pipe " data-segment="src_air_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 210 L634 210 L634 162">
+<path class="pipe " data-segment="src_air_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 214 L634 214 L634 162">
 </path>
-<path class="flow " data-flow="src_air_feed" style="--flow-duration: 1.2s" d="M682 210 L634 210 L634 162">
+<path class="flow " data-flow="src_air_feed" style="--flow-duration: 1.2s" d="M682 214 L634 214 L634 162">
 </path>
 <path class="pipe " data-segment="src_air_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M634 162 L634 63 A7 7 0 0 1 641 56 L641 56 A7 7 0 0 1 648 63 L648 135 A7 7 0 0 0 655 142 L655 142 A7 7 0 0 0 662 135 L662 63 A7 7 0 0 1 669 56 L669 56 A7 7 0 0 1 676 63 L676 162">
 </path>
 <path class="flow " data-flow="src_air_coil" style="--flow-duration: 1.2s" d="M634 162 L634 63 A7 7 0 0 1 641 56 L641 56 A7 7 0 0 1 648 63 L648 135 A7 7 0 0 0 655 142 L655 142 A7 7 0 0 0 662 135 L662 63 A7 7 0 0 1 669 56 L669 56 A7 7 0 0 1 676 63 L676 162">
 </path>
-<path class="pipe " data-segment="src_air_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M676 162 L676 198 L821 198">
+<path class="pipe " data-segment="src_air_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M676 162 L676 204 L821 204">
 </path>
-<path class="flow " data-flow="src_air_exit" style="--flow-duration: 1.2s" d="M676 162 L676 198 L821 198">
+<path class="flow " data-flow="src_air_exit" style="--flow-duration: 1.2s" d="M676 162 L676 204 L821 204">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

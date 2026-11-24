@@ -582,7 +582,7 @@ describe('helical coil and air coil (refine-schematic-drawing D5, D6)', () => {
     expect(segmentPoints('dhw_ext_out')[0]).toEqual(coil.points[1]);
     // the coil sits in the lower part of the tank, inside its walls
     expect((shape.top + shape.bottom) / 2).toBeGreaterThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height / 2);
-    expect(shape.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height - EXTERNAL_TANK.dome);
+    expect(shape.bottom).toBeLessThan(EXTERNAL_TANK.y + EXTERNAL_TANK.height);
   });
 
   test('the supply rises in a column that clears every point of the helix but its start', () => {

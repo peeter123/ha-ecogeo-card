@@ -287,7 +287,7 @@ the user allows it.
 
 ## 10. Whole-change review fixes
 
-- [ ] 10.1 Fix the findings of the whole-change review (2026-11-24; the user chose the spec amendment for the tank's
+- [x] 10.1 Fix the findings of the whole-change review (2026-11-24; the user chose the spec amendment for the tank's
   pipe pair and a fix of the third level now):
   - the jog levels 24, 34 and 44 with a unit test that the highest level clears the band's bottom edge by more than a
     pipe width plus the outline (schematic-drawing "Jog levels clear of the band");
@@ -308,6 +308,17 @@ the user allows it.
   - the arrangement snapshots differ only in the band joins' heights;
   - a subagent inspects the band captures with the tank in both layouts and at 320 px: the supply on the highest level
     runs clearly apart from the tank's bottom outline, and no pipe crosses.
+
+  Verdict (2026-11-24): three Opus review rounds; round 2 found the grid search keeping the air unit's group as an
+  obstacle for its own values (fixed: the group is dropped when the case is the body), round 3 is clean. `npm run
+  check` passes (87 of 87 files, 13716 passed, 4 expected failures, Chromium and WebKit) before the round 2 fixes, and
+  after them the unit project (9054 passed), typecheck, lint and lint:ha. `measure-layout` gives 320 px vertical and
+  540 px horizontal. The place search reports no NO PLACE and no BLOCKED in either layout; the horizontal paste is
+  empty and the vertical paste equals `VERTICAL_PLACES`. The 316 arrangement snapshots change only in the join heights
+  (210 to 214, 198 to 204, 186 to 194 with the cabinet top at 238); `MOVED` is unchanged. A subagent inspected nine
+  band captures with the tank (horizontal 1000, vertical 559 and 320 px, every source): all pass; under the tank the
+  supply is 3 CSS px clear of the outline at 320 px (0.1 px before) and 6.5 px at 559 px, and no pipe crosses. The
+  air unit's fan at 100 % and 900 rpm fits at 320 px; only 1450 rpm touches the coil panel there.
 - [ ] 10.2 With the user's go for each step: record the visual references again on CI, release the patch version
   1.1.1, and deploy it as in 9.1.
 

@@ -129,6 +129,9 @@ export function measureCard(root: ParentNode, options: { pipes?: boolean } = {})
     item: element.getAttribute('data-item'),
     ...box(element),
   }));
+  // the air unit's case alone (its group also holds the feet, which lie below the case): the body of the air unit's values
+  const airCase = root.querySelector('g.air-unit > rect.band-outline');
+  if (airCase !== null) parts.push({ id: CASE_PART, item: null, ...box(airCase) });
   for (const element of root.querySelectorAll('[data-obstacle]')) {
     parts.push({ id: `obstacle:${element.getAttribute('data-obstacle') ?? ''}`, item: null, ...box(element) });
   }
@@ -144,6 +147,11 @@ export function measureCard(root: ParentNode, options: { pipes?: boolean } = {})
     ...(svg === null ? {} : { drawing: box(svg) }),
   };
 }
+
+/** The part id of the air unit's case (its outline rectangle, without the feet). */
+export const CASE_PART = 'air-case:air';
+/** The air unit's group, which holds the case and the feet. */
+export const CASE_GROUP = 'air-unit:air';
 
 const overlaps = (a: Box, b: Box): boolean =>
   Math.min(a.right, b.right) - Math.max(a.left, b.left) > TOLERANCE &&
@@ -202,7 +210,9 @@ export function overlapPairs({ labels, parts, pipes = [], drawing, cabinet }: Me
     }
     const body = bodyOf(label);
     for (const part of parts) {
-      if (part === body) continue;
+      // the case part only stands in as a body: as an obstacle, the air unit's group (case and feet) already counts, and
+      // for the air unit's own values the case (their body) replaces that group
+      if (part === body || part.id === CASE_PART || (body?.id === CASE_PART && part.id === CASE_GROUP)) continue;
       if (overlaps(label, part)) pairs.push(`label ${label.id} x ${part.id}`);
     }
     if (
@@ -225,12 +235,20 @@ export function overlapPairs({ labels, parts, pipes = [], drawing, cabinet }: Me
 export const BODY_LABELS: Readonly<Record<string, string>> = {
   tank_internal_temperature: 'symbol-group:50',
   tank_external_temperature: 'dhw-storage:external',
-  air_unit_out: 'air-unit:air',
-  outside_temperature: 'air-unit:air',
-  fan_speed: 'air-unit:air',
+  air_unit_out: CASE_PART,
+  outside_temperature: CASE_PART,
+  fan_speed: CASE_PART,
   ground_out: 'ground-collector:ground',
   hybrid_ground_out: 'ground-collector:ground',
 };
+
+/**
+ * The labels the bodies place by their shape boxes (harmonize-band D8a): the values of the air unit and of the ground
+ * collector, derived from `BODY_LABELS`; read by scripts/search-places.mjs.
+ */
+export const EXACT_LABELS: readonly string[] = Object.entries(BODY_LABELS)
+  .filter(([, body]) => body === CASE_PART || body.startsWith('ground-collector:'))
+  .map(([id]) => id);
 
 /**
  * The rotated values of the vertical layout that read as one row, left to right (rework-layouts D7): Out, In and the pressure of

@@ -19,7 +19,8 @@ for the explanation of what the card shows and where each part comes from.
   with lanes between them, where the values sit, 720 units wide, with compressor 11 and exchanger 10 on its centre line;
   the horizontal layout widens the column lanes, equally on both sides of that line, to a cabinet 980 units wide, and
   the vertical layout heightens the row lanes. The emitter, the source and the external tank stand in a band above it,
-  all of one height. Compressor 11 is the manual's open symbol: a circle with two converging lines, with no fill.
+  all of one height and one style. Compressor 11 is the manual's open symbol: a circle with two converging lines, with
+  no fill.
 - Pipes coloured by temperature on an absolute scale (blue at -10 °C, light blue at 10 °C, pale blue at 20 °C, amber at
   30 °C, orange at 50 °C, red at 70 °C; `colors` changes the stops). Each pipe takes the probe that defines it; a pipe
   with no probe value is muted. The plate exchangers are filled on each side with a gradient from the colour of the pipe
@@ -261,7 +262,7 @@ keeps its label with a dash. `none` alone is still an entity setting, so the car
 | `dhw.power` | `sensor.<prefix>_heating_power_dhw` | W, 0 dec. | 26 |
 | `htr.active` | `binary_sensor.<prefix>_htr_active` | on/off | 9 |
 | `htr.power` | `sensor.<prefix>_heating_power_htr` | W, 0 dec. | 9 |
-| `source.fan_speed` | `sensor.<prefix>_aerothermal_fan_speed` | %, 1 dec. | air unit |
+| `source.fan_speed` | `sensor.<prefix>_aerothermal_fan_speed` | %, 0 dec. | air unit |
 | `source.air_unit_outlet_temperature` | `sensor.<prefix>_brine_temperature_air_unit_outlet` | °C, 1 dec. | air unit |
 | `source.outside_temperature` | `sensor.<prefix>_outside_temperature` | °C, 1 dec. | air unit, footer |
 | `unit.on_off` | `sensor.<prefix>_heatpump_on_off` | text | mode (not shown) |

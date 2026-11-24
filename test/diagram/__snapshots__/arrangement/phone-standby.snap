@@ -202,17 +202,17 @@ svg:
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M382 759 L532 759 L532 724.8 M532 705.2 L532 670">
 </path>
-<path class="pipe muted" data-segment="dg1_sup" d="M75 238 L75 210 L106.5 210 L106.5 182">
+<path class="pipe muted" data-segment="dg1_sup" d="M75 238 L75 214 L106.5 214 L106.5 182">
 </path>
 <path class="pipe muted" data-segment="dg1_loop_in" d="M106.5 182 L106.5 181 A7 7 0 0 0 99.5 174 L38.5 174 A7 7 0 0 1 31.5 167 L31.5 21 A7 7 0 0 1 38.5 14 L188.5 14 A7 7 0 0 1 195.5 21 L195.5 139 A7 7 0 0 1 188.5 146 L66.5 146 A7 7 0 0 1 59.5 139 L59.5 49 A7 7 0 0 1 66.5 42 L160.5 42 A7 7 0 0 1 167.5 49 L167.5 111 A7 7 0 0 1 160.5 118 L94.5 118 A7 7 0 0 1 87.5 111 L87.5 77 A7 7 0 0 1 94.5 70 L132.5 70 A7 7 0 0 1 139.5 77 L139.5 77">
 </path>
 <path class="pipe muted" data-segment="dg1_loop_out" d="M139.5 77 L139.5 77 A7 7 0 0 1 132.5 84 L108.5 84 A7 7 0 0 0 101.5 91 L101.5 97 A7 7 0 0 0 108.5 104 L146.5 104 A7 7 0 0 0 153.5 97 L153.5 63 A7 7 0 0 0 146.5 56 L80.5 56 A7 7 0 0 0 73.5 63 L73.5 125 A7 7 0 0 0 80.5 132 L174.5 132 A7 7 0 0 0 181.5 125 L181.5 35 A7 7 0 0 0 174.5 28 L52.5 28 A7 7 0 0 0 45.5 35 L45.5 153 A7 7 0 0 0 52.5 160 L113.5 160 A7 7 0 0 1 120.5 167 L120.5 182">
 </path>
-<path class="pipe muted" data-segment="dg1_ret" d="M120.5 182 L120.5 210 L152 210 L152 238">
+<path class="pipe muted" data-segment="dg1_ret" d="M120.5 182 L120.5 214 L152 214 L152 238">
 </path>
-<path class="pipe muted" data-segment="dhw_ext_in" d="M677 238 L677 186 L600 186 L600 104">
+<path class="pipe muted" data-segment="dhw_ext_in" d="M677 238 L677 194 L600 194 L600 104">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M677 238 L677 186 L600 186 L600 104">
+<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M677 238 L677 194 L600 194 L600 104">
 </path>
 <g class="helix muted" data-segment="dhw_ext_coil">
     <path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M600 104 C600 96 688 102 688 110">
@@ -235,21 +235,21 @@ svg:
 </path>
     
   </g>
-<path class="pipe muted" data-segment="dhw_ext_out" d="M688 158 L688 186 L717 186 L717 238">
+<path class="pipe muted" data-segment="dhw_ext_out" d="M688 158 L688 194 L717 194 L717 238">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M688 158 L688 186 L717 186 L717 238">
+<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M688 158 L688 194 L717 194 L717 238">
 </path>
-<path class="pipe muted" data-segment="src_out" d="M552 238 L552 210">
+<path class="pipe muted" data-segment="src_out" d="M552 238 L552 214">
 </path>
-<path class="pipe muted" data-segment="src_in" d="M607 198 L607 238">
+<path class="pipe muted" data-segment="src_in" d="M607 204 L607 238">
 </path>
-<path class="pipe muted" data-segment="src_gnd_feed" d="M552 210 L429.5 210 L429.5 182">
+<path class="pipe muted" data-segment="src_gnd_feed" d="M552 214 L429.5 214 L429.5 182">
 </path>
 <path class="pipe muted" data-segment="src_gnd_down" stroke-linecap="round" d="M429.5 182 L429.5 38 A8 8 0 0 1 437.5 30 L441.5 30 A8 8 0 0 1 449.5 38 L449.5 126 A8 8 0 0 0 457.5 134 L457.5 134 A8 8 0 0 0 465.5 126 L465.5 38 A8 8 0 0 1 473.5 30 L483 30">
 </path>
 <path class="pipe muted" data-segment="src_gnd_up" d="M483 30 L492.5 30 A8 8 0 0 1 500.5 38 L500.5 126 A8 8 0 0 0 508.5 134 L508.5 134 A8 8 0 0 0 516.5 126 L516.5 38 A8 8 0 0 1 524.5 30 L528.5 30 A8 8 0 0 1 536.5 38 L536.5 182">
 </path>
-<path class="pipe muted" data-segment="src_gnd_exit" d="M536.5 182 L536.5 198 L607 198">
+<path class="pipe muted" data-segment="src_gnd_exit" d="M536.5 182 L536.5 204 L607 204">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

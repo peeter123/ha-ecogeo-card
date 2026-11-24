@@ -327,17 +327,17 @@ svg:
 </path>
 <path class="pipe muted" data-segment="br_10_28" d="M512 717 L662 717 L662 681.4 M662 664.6 L662 628">
 </path>
-<path class="pipe muted" data-segment="dg1_sup" d="M137 238 L137 210 L191.5 210 L191.5 182">
+<path class="pipe muted" data-segment="dg1_sup" d="M137 238 L137 214 L191.5 214 L191.5 182">
 </path>
 <path class="pipe muted" data-segment="dg1_loop_in" d="M191.5 182 L191.5 181 A7 7 0 0 0 184.5 174 L123.5 174 A7 7 0 0 1 116.5 167 L116.5 21 A7 7 0 0 1 123.5 14 L273.5 14 A7 7 0 0 1 280.5 21 L280.5 139 A7 7 0 0 1 273.5 146 L151.5 146 A7 7 0 0 1 144.5 139 L144.5 49 A7 7 0 0 1 151.5 42 L245.5 42 A7 7 0 0 1 252.5 49 L252.5 111 A7 7 0 0 1 245.5 118 L179.5 118 A7 7 0 0 1 172.5 111 L172.5 77 A7 7 0 0 1 179.5 70 L217.5 70 A7 7 0 0 1 224.5 77 L224.5 77">
 </path>
 <path class="pipe muted" data-segment="dg1_loop_out" d="M224.5 77 L224.5 77 A7 7 0 0 1 217.5 84 L193.5 84 A7 7 0 0 0 186.5 91 L186.5 97 A7 7 0 0 0 193.5 104 L231.5 104 A7 7 0 0 0 238.5 97 L238.5 63 A7 7 0 0 0 231.5 56 L165.5 56 A7 7 0 0 0 158.5 63 L158.5 125 A7 7 0 0 0 165.5 132 L259.5 132 A7 7 0 0 0 266.5 125 L266.5 35 A7 7 0 0 0 259.5 28 L137.5 28 A7 7 0 0 0 130.5 35 L130.5 153 A7 7 0 0 0 137.5 160 L198.5 160 A7 7 0 0 1 205.5 167 L205.5 182">
 </path>
-<path class="pipe muted" data-segment="dg1_ret" d="M205.5 182 L205.5 210 L260 210 L260 238">
+<path class="pipe muted" data-segment="dg1_ret" d="M205.5 182 L205.5 214 L260 214 L260 238">
 </path>
-<path class="pipe " data-segment="dhw_ext_in" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" d="M937 238 L937 210 L860 210 L860 104">
+<path class="pipe " data-segment="dhw_ext_in" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" d="M937 238 L937 214 L860 214 L860 104">
 </path>
-<path class="flow " data-flow="dhw_ext_in" style="--flow-duration: 1.2012012012012012s" d="M937 238 L937 210 L860 210 L860 104">
+<path class="flow " data-flow="dhw_ext_in" style="--flow-duration: 1.2012012012012012s" d="M937 238 L937 214 L860 214 L860 104">
 </path>
 <g class="helix " data-segment="dhw_ext_coil" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)">
     <path class="pipe " data-half="back" style="stroke: color-mix(in srgb, #d7263d 30%, #f2711c)" stroke-linecap="butt" opacity="0.35" d="M860 104 C860 96 948 102 948 110">
@@ -361,29 +361,29 @@ svg:
     <path class="flow " data-flow="dhw_ext_coil" style="--flow-duration: 1.2012012012012012s" d="M948 110 C948 118 872 124 872 116 M948 122 C948 130 872 136 872 128 M948 134 C948 142 872 148 872 140 M948 146 C948 154 872 160 872 152">
 </path>
   </g>
-<path class="pipe " data-segment="dhw_ext_out" style="stroke: color-mix(in srgb, #f2711c 95%, #e8a317)" d="M948 158 L948 210 L977 210 L977 238">
+<path class="pipe " data-segment="dhw_ext_out" style="stroke: color-mix(in srgb, #f2711c 95%, #e8a317)" d="M948 158 L948 214 L977 214 L977 238">
 </path>
-<path class="flow " data-flow="dhw_ext_out" style="--flow-duration: 1.2012012012012012s" d="M948 158 L948 210 L977 210 L977 238">
+<path class="flow " data-flow="dhw_ext_out" style="--flow-duration: 1.2012012012012012s" d="M948 158 L948 214 L977 214 L977 238">
 </path>
-<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 238 L682 210">
+<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 238 L682 214">
 </path>
-<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M682 238 L682 210">
+<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M682 238 L682 214">
 </path>
-<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M821 210 L821 238">
+<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M821 214 L821 238">
 </path>
-<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M821 210 L821 238">
+<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M821 214 L821 238">
 </path>
-<path class="pipe " data-segment="src_hyb_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 210 L496 210 L496 162">
+<path class="pipe " data-segment="src_hyb_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M682 214 L496 214 L496 162">
 </path>
-<path class="flow " data-flow="src_hyb_feed" style="--flow-duration: 1.2s" d="M682 210 L496 210 L496 162">
+<path class="flow " data-flow="src_hyb_feed" style="--flow-duration: 1.2s" d="M682 214 L496 214 L496 162">
 </path>
 <path class="pipe " data-segment="src_hyb_coil" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M496 162 L496 63 A7 7 0 0 1 503 56 L503 56 A7 7 0 0 1 510 63 L510 135 A7 7 0 0 0 517 142 L517 142 A7 7 0 0 0 524 135 L524 63 A7 7 0 0 1 531 56 L531 56 A7 7 0 0 1 538 63 L538 162">
 </path>
 <path class="flow " data-flow="src_hyb_coil" style="--flow-duration: 1.2s" d="M496 162 L496 63 A7 7 0 0 1 503 56 L503 56 A7 7 0 0 1 510 63 L510 135 A7 7 0 0 0 517 142 L517 142 A7 7 0 0 0 524 135 L524 63 A7 7 0 0 1 531 56 L531 56 A7 7 0 0 1 538 63 L538 162">
 </path>
-<path class="pipe " data-segment="src_hyb_link" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M538 162 L538 198 L689.5 198 L689.5 182">
+<path class="pipe " data-segment="src_hyb_link" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M538 162 L538 204 L689.5 204 L689.5 182">
 </path>
-<path class="flow " data-flow="src_hyb_link" style="--flow-duration: 1.2s" d="M538 162 L538 198 L689.5 198 L689.5 182">
+<path class="flow " data-flow="src_hyb_link" style="--flow-duration: 1.2s" d="M538 162 L538 204 L689.5 204 L689.5 182">
 </path>
 <path class="pipe " data-segment="src_hyb_down" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" stroke-linecap="round" d="M689.5 182 L689.5 38 A8 8 0 0 1 697.5 30 L701.5 30 A8 8 0 0 1 709.5 38 L709.5 126 A8 8 0 0 0 717.5 134 L717.5 134 A8 8 0 0 0 725.5 126 L725.5 38 A8 8 0 0 1 733.5 30 L743 30">
 </path>
@@ -393,9 +393,9 @@ svg:
 </path>
 <path class="flow " data-flow="src_hyb_up" style="--flow-duration: 1.2s" d="M743 30 L752.5 30 A8 8 0 0 1 760.5 38 L760.5 126 A8 8 0 0 0 768.5 134 L768.5 134 A8 8 0 0 0 776.5 126 L776.5 38 A8 8 0 0 1 784.5 30 L788.5 30 A8 8 0 0 1 796.5 38 L796.5 182">
 </path>
-<path class="pipe " data-segment="src_hyb_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M796.5 182 L796.5 210 L821 210">
+<path class="pipe " data-segment="src_hyb_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M796.5 182 L796.5 214 L821 214">
 </path>
-<path class="flow " data-flow="src_hyb_exit" style="--flow-duration: 1.2s" d="M796.5 182 L796.5 210 L821 210">
+<path class="flow " data-flow="src_hyb_exit" style="--flow-duration: 1.2s" d="M796.5 182 L796.5 214 L821 214">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

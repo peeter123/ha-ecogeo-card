@@ -6,8 +6,10 @@ import { describe, expect, test } from 'vitest';
 import '../../src/index';
 import type { EcogeoCard } from '../../src/card/ecogeo-card';
 import { EMITTERS, SOURCES } from '../../src/config/options';
+import { MIN_DRAWING_WIDTH, strokeWidths } from '../../src/lib/layout';
 import {
   BAND,
+  BAND_JOGS,
   arrangementFor,
   bandJogs,
   bandAssignment,
@@ -329,6 +331,27 @@ describe.each(LAYOUTS)('one jog level: lowest levels, %s', (layout) => {
           `${name(layout, key)} ${JSON.stringify(assigned)}`,
         ).toBeGreaterThan(0);
       }
+    }
+  });
+});
+
+// scenario "Jog levels clear of the band": the highest level, used or not, lies below the band's bottom edge by more than
+// the widest pipe and the band outline (the vertical layout at 320 px: 4.7 and 2.9; the horizontal one at its widest pipe,
+// at 320 px, the narrowest drawing: a card forced to `layout: horizontal` has no other floor).
+describe.each(LAYOUTS)('jog levels clear of the band, %s', (layout) => {
+  const widest = layout === 'vertical' ? strokeWidths(MIN_DRAWING_WIDTH, 740) : strokeWidths(MIN_DRAWING_WIDTH, 1000);
+  const outline = Math.max(2.5, widest.outline);
+  test('the highest level used by any band key, and the third level, clear the band outline and pipe width', () => {
+    const third = BAND_JOGS[layout].third;
+    for (const key of KEYS) {
+      const arrangement = arrangementFor(layout, key);
+      // y of the highest level: the third level, and every level a section of this key sits on
+      const highestY = Math.min(
+        bandJogs(arrangement.cabinet.y, layout).third,
+        ...jogSpans(arrangement).spans.map((span) => span.level),
+      );
+      expect(highestY, name(layout, key)).toBe(arrangement.cabinet.y - third);
+      expect(highestY - arrangement.band.bottom, name(layout, key)).toBeGreaterThan(widest.pipe + outline);
     }
   });
 });

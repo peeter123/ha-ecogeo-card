@@ -241,9 +241,9 @@ svg:
 </path>
 <path class="pipe " data-segment="p2_stub" style="stroke: color-mix(in srgb, #e8a317 20%, #8ecae6)" d="M152 226 L152 238">
 </path>
-<path class="pipe muted" data-segment="dhw_ext_in" d="M677 238 L677 186 L600 186 L600 104">
+<path class="pipe muted" data-segment="dhw_ext_in" d="M677 238 L677 194 L600 194 L600 104">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M677 238 L677 186 L600 186 L600 104">
+<path class="pipe-inside" data-inside="dhw_ext_in" clip-path="url(#ecogeoN-tank-clip)" d="M677 238 L677 194 L600 194 L600 104">
 </path>
 <g class="helix muted" data-segment="dhw_ext_coil">
     <path class="pipe muted" data-half="back" stroke-linecap="butt" opacity="0.35" d="M600 104 C600 96 688 102 688 110">
@@ -266,21 +266,21 @@ svg:
 </path>
     
   </g>
-<path class="pipe muted" data-segment="dhw_ext_out" d="M688 158 L688 186 L717 186 L717 238">
+<path class="pipe muted" data-segment="dhw_ext_out" d="M688 158 L688 194 L717 194 L717 238">
 </path>
-<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M688 158 L688 186 L717 186 L717 238">
+<path class="pipe-inside" data-inside="dhw_ext_out" clip-path="url(#ecogeoN-tank-clip)" d="M688 158 L688 194 L717 194 L717 238">
 </path>
-<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 238 L552 210">
+<path class="pipe " data-segment="src_out" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 238 L552 214">
 </path>
-<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M552 238 L552 210">
+<path class="flow " data-flow="src_out" style="--flow-duration: 1.2s" d="M552 238 L552 214">
 </path>
-<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M607 198 L607 238">
+<path class="pipe " data-segment="src_in" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M607 204 L607 238">
 </path>
-<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 198 L607 238">
+<path class="flow " data-flow="src_in" style="--flow-duration: 1.2s" d="M607 204 L607 238">
 </path>
-<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 210 L429.5 210 L429.5 182">
+<path class="pipe " data-segment="src_gnd_feed" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" d="M552 214 L429.5 214 L429.5 182">
 </path>
-<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M552 210 L429.5 210 L429.5 182">
+<path class="flow " data-flow="src_gnd_feed" style="--flow-duration: 1.2s" d="M552 214 L429.5 214 L429.5 182">
 </path>
 <path class="pipe " data-segment="src_gnd_down" style="stroke: color-mix(in srgb, #5fa8e0 36%, #1e5aa8)" stroke-linecap="round" d="M429.5 182 L429.5 38 A8 8 0 0 1 437.5 30 L441.5 30 A8 8 0 0 1 449.5 38 L449.5 126 A8 8 0 0 0 457.5 134 L457.5 134 A8 8 0 0 0 465.5 126 L465.5 38 A8 8 0 0 1 473.5 30 L483 30">
 </path>
@@ -290,9 +290,9 @@ svg:
 </path>
 <path class="flow " data-flow="src_gnd_up" style="--flow-duration: 1.2s" d="M483 30 L492.5 30 A8 8 0 0 1 500.5 38 L500.5 126 A8 8 0 0 0 508.5 134 L508.5 134 A8 8 0 0 0 516.5 126 L516.5 38 A8 8 0 0 1 524.5 30 L528.5 30 A8 8 0 0 1 536.5 38 L536.5 182">
 </path>
-<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M536.5 182 L536.5 198 L607 198">
+<path class="pipe " data-segment="src_gnd_exit" style="stroke: color-mix(in srgb, #5fa8e0 52.5%, #1e5aa8)" d="M536.5 182 L536.5 204 L607 204">
 </path>
-<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M536.5 182 L536.5 198 L607 198">
+<path class="flow " data-flow="src_gnd_exit" style="--flow-duration: 1.2s" d="M536.5 182 L536.5 204 L607 204">
 </path>
     <g class="symbol-group normal" data-item="1" data-kind="port" aria-label="Production outlet (1)">
     <title>Production outlet (1)</title>

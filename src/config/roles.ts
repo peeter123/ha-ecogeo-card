@@ -78,7 +78,7 @@ export const ROLES = [
   { path: 'dhw.power', domain: 'sensor', suffix: 'heating_power_dhw', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '26', optional: true, accepts: ACCEPTS_NUMBER },
   { path: 'htr.active', domain: 'binary_sensor', suffix: 'htr_active', kind: 'binary', item: '9', optional: true, accepts: ACCEPTS_BINARY },
   { path: 'htr.power', domain: 'sensor', suffix: 'heating_power_htr', kind: 'number', quantity: 'power', unit: UNITS.watt, decimals: 0, item: '9', optional: true, accepts: ACCEPTS_NUMBER },
-  { path: 'source.fan_speed', domain: 'sensor', suffix: 'aerothermal_fan_speed', kind: 'number', unit: UNITS.percent, decimals: 1, item: 'air unit', accepts: ACCEPTS_NUMBER },
+  { path: 'source.fan_speed', domain: 'sensor', suffix: 'aerothermal_fan_speed', kind: 'number', unit: UNITS.percent, decimals: 0, item: 'air unit', accepts: ACCEPTS_NUMBER },
   { path: 'source.air_unit_outlet_temperature', domain: 'sensor', suffix: 'brine_temperature_air_unit_outlet', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'air unit', accepts: ACCEPTS_NUMBER },
   { path: 'source.outside_temperature', domain: 'sensor', suffix: 'outside_temperature', kind: 'number', quantity: 'temperature', unit: t, decimals: 1, item: 'air unit, footer', accepts: ACCEPTS_NUMBER },
   { path: 'unit.on_off', domain: 'sensor', suffix: 'heatpump_on_off', kind: 'text', item: 'mode (not shown)', onOff: true, accepts: ACCEPTS_TEXT },
