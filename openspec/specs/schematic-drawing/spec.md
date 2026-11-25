@@ -5,7 +5,8 @@
 What the card draws for the heat pump cabinet itself: its top connections and its internal hydraulic and
 refrigerant components, following the topology of the service manual's figures in one cabinet layout with value
 lanes from which both layouts' arrangements are derived, the band above the cabinet that holds the emitter, the
-source and the tank at one body height, and which parts are drawn for each model, variant and feature state.
+source and the tank at one body height and in one style, joined by pipes on the lowest jog levels, and which parts are
+drawn for each model, variant and feature state.
 
 ## Requirements
 
@@ -55,19 +56,17 @@ The cabinet SHALL contain the refrigerant circuit in the topology of the manual'
 
 Mini-pressure switches 39/40 and service outlets 41 SHALL NOT be drawn: they have no live value. No component SHALL
 show its item number. Compressor 11 SHALL use the standard compressor symbol: a circle with two straight lines
-converging from its suction side towards its discharge side. The two parts of the circle outside the lines (the
-triangles between each line and the circle) SHALL be filled solid in the outline colour, so they read black on a
-light theme and stay visible on a dark one; the part between the lines stays unfilled.
+converging from its suction side towards its discharge side, drawn as outlines without a fill (decided by the user
+2026-11-23).
 
 #### Scenario: Compressor symbol
 - **WHEN** the card renders any configuration
 - **THEN** compressor 11 is a circle with two straight converging lines, wide at the suction pipe and narrow at the
-  discharge pipe, and the two parts of the circle outside the lines are filled solid in the outline colour
+  discharge pipe, and no part of the circle is filled
 
 #### Scenario: Compressor fill in the dark theme
 - **WHEN** Home Assistant uses a dark theme
-- **THEN** the compressor's two filled parts take the dark theme's outline colour and contrast with the card
-  background
+- **THEN** the compressor's circle and lines take the dark theme's outline colour and no part of the circle is filled
 
 #### Scenario: Refrigerant items
 - **WHEN** the card renders variant 4 with every feature `true`
@@ -270,3 +269,41 @@ inlet line next to probe 32, each directly on its line, with no stub pipe leadin
 #### Scenario: Transducer 37
 - **WHEN** the card renders any configuration
 - **THEN** transducer 37 sits on the same pipe as probe 32, with no part between them, and no stub pipe leads to it
+
+### Requirement: One band style
+The band's bodies (the emitter, the air unit, the ground collector and the external tank) SHALL share one corner
+radius, one outline weight and one inner margin, SHALL draw no divider line across the body, and SHALL stand on the
+band's bottom edge (decided by the user 2026-11-23): the emitter, the collector and the tank flat along their width,
+the air unit on its two feet, with its case ending above the edge (decided by the user 2026-11-23, during apply).
+
+#### Scenario: Shared style
+- **WHEN** the card renders model B with `dhw: external`, `source: hybrid` and `emitter: underfloor`, in either layout
+- **THEN** the emitter, the air unit, the collector and the tank have the same corner radius and share one outline
+  class (so one outline width), no divider line crosses any of them from wall to wall (a pipe, the collector's
+  surface line and the tank's rim are not dividers), the lowest edge of the emitter's, the collector's and the tank's
+  outline lies on the band's bottom edge along the body's width, and the air unit's case ends above that edge while
+  the bottoms of its two feet lie on it
+
+### Requirement: One jog level
+The horizontal sections of the pipes between the cabinet's top edge and the band's bodies SHALL lie at one height above
+the cabinet's top edge. A pipe MAY use a higher level only in an arrangement where every assignment with fewer lifted
+pipes makes two band pipes cross; the external tank's supply and return move as one pair and count as two pipes. The
+arrangements that lift a pipe SHALL be a fixed, tested list (decided by the user 2026-11-23, amended 2026-11-24).
+
+#### Scenario: One level where it fits
+- **WHEN** the card renders the horizontal layout with `source: ground`, any emitter and any DHW storage
+- **THEN** every horizontal pipe section between the cabinet and the band lies at the same height, and no two pipes
+  outside the cabinet cross
+
+#### Scenario: Lowest levels
+- **WHEN** the card renders either layout with any source, any emitter and any DHW storage
+- **THEN** no two pipes outside the cabinet cross, every pipe that does not lie on the lowest level is in the tested
+  list of lifted pipes for that arrangement, and no assignment that lifts fewer pipes avoids the crossings
+
+### Requirement: Jog levels clear of the band
+The highest jog level SHALL lie below the band's bottom edge by more than one pipe width plus the outline width, at
+every card width from 320 px, so that no pipe runs along a body's bottom outline (decided by the user 2026-11-24).
+
+#### Scenario: Supply under the tank
+- **WHEN** the card renders the vertical layout at 320 px with `dhw: external`
+- **THEN** the tank's supply on the highest level and the tank's bottom outline are drawn apart, with a visible gap

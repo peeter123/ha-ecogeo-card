@@ -48,7 +48,11 @@ checks, the GitHub workflows and the published 1.0.0), is archived in
 `openspec/changes/archive/2026-11-19-add-hacs-release/`. The ninth, `rework-layouts` (horizontal and vertical layouts
 from one cabinet layout with value lanes, the band with the `emitter` option, the source and the tank, 18 values with
 rotated values in the vertical layout, one footer, the browser preflight and the visual references on CI Linux, and
-1.0.0 released again), is archived in `openspec/changes/archive/2026-11-20-rework-layouts/`.
+1.0.0 released again), is archived in `openspec/changes/archive/2026-11-20-rework-layouts/`. The tenth, `harmonize-band`
+(one band style without dividers or demand captions, the lowest jog levels, the air unit as an outdoor unit with the
+outside temperature and the fan speed, the borehole collector, the spiral underfloor loop, the flat-bottomed tank with
+its coil fed from the left, the open compressor, and the published 1.1.0 and 1.1.1), is archived in
+`openspec/changes/archive/2026-11-25-harmonize-band/`.
 
 ## Rules in short
 

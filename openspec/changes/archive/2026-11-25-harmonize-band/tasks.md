@@ -319,8 +319,16 @@ the user allows it.
   band captures with the tank (horizontal 1000, vertical 559 and 320 px, every source): all pass; under the tank the
   supply is 3 CSS px clear of the outline at 320 px (0.1 px before) and 6.5 px at 559 px, and no pipe crosses. The
   air unit's fan at 100 % and 900 rpm fits at 320 px; only 1450 rpm touches the coil panel there.
-- [ ] 10.2 With the user's go for each step: record the visual references again on CI, release the patch version
+- [x] 10.2 With the user's go for each step: record the visual references again on CI, release the patch version
   1.1.1, and deploy it as in 9.1.
+
+  Verdict (2026-11-25, with the user's go): run 45676907019 recorded the references; against the previous set every
+  image keeps its size and differs only between the cabinet and the band (committed in f8fa34e). `npm run release`
+  (87 of 87 files, 13716 passed, 4 expected failures) and `npm run verify-dist` pass at 1.1.1; the Check run on the
+  release commit is green with the visual project 16 of 16. Tag `v1.1.1` and the GitHub release 1.1.1 carry the
+  bundle, byte-identical to `dist/ecogeo-card.js`. Deployed with the resource bumped by one; a subagent's light
+  screenshots at phone width and at 1280 x 800 both pass, with the tank's supply about 4.4 CSS px clear of the tank's
+  bottom on the phone, no crossing and no overlapping label. The system log has no entry from the card.
 
 ## Workflow follow-up
 
