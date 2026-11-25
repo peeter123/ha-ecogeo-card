@@ -3,6 +3,17 @@
 All notable changes to the ecoGEO heat pump card, newest first, in the style of Keep a Changelog. A release's heading
 is `## <version> - <YYYY-MM-DD>`; the heading has no date until the release is made, and the release adds it.
 
+## 1.1.1 - 2026-11-25
+
+The pipes between the cabinet and the band run lower, so the vertical layout no longer shows a doubled tank bottom.
+
+### Fixed
+
+- The pipes between the cabinet and the band run at lower heights (24, 34 and 44 units above the cabinet instead of 28,
+  40 and 52). In the vertical layout the DHW tank's supply no longer runs right along the tank's flat bottom, where it
+  read as a doubled bottom line, most visibly at phone width.
+- The README's role table gives the fan speed 0 decimals instead of 1, as the card already shows it.
+
 ## 1.1.0 - 2026-11-24
 
 The band above the cabinet follows one style, and the air unit, the ground collector, the underfloor loop and the
