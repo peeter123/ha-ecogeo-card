@@ -2,14 +2,19 @@
 
 ## 1. Calculations
 
-- [ ] 1.1 Bring `circuitsFor` (`src/calc/circuits.ts`) and `formatReading` (`src/calc/display.ts`) to complexity 15 or
+- [x] 1.1 Bring `circuitsFor` (`src/calc/circuits.ts`) and `formatReading` (`src/calc/display.ts`) to complexity 15 or
   lower, as design D2 describes, with every helper they split into at 15 or lower too. Verify: D1's command over
   `src/calc` and `src/lib` reports nothing, the operating-mode and live-values unit tests pass unchanged, and
   `test/diagram/__snapshots__/` has no diff.
-- [ ] 1.2 Point the comment in `src/calc/display.ts` that cites live-values "Locale and precision" for whole-percent
+  Verdict (2026-11-26): `circuitsFor` 25 to 9 and `formatReading` 23 to 13 (new helpers `htrRecovering` 6,
+  `circuitsOfMode` 11, `precisionFor` 4, `decimalsFor` 8); D1's command over `src/calc` and `src/lib` reports
+  nothing, no diff in `test/`, `npm run check` passes (87 test files, 13716 tests passed, 4 expected fail).
+- [x] 1.2 Point the comment in `src/calc/display.ts` that cites live-values "Locale and precision" for whole-percent
   pump speeds to "Pump speed precision". Verify: a grep finds no other `src/calc` comment citing a requirement whose
   rule moved in `tidy-specs` (see `openspec/changes/archive/2026-11-26-tidy-specs/proposal.md`), and `npm run check`
   passes.
+  Verdict (2026-11-26): the comment cites "Pump speed precision" now; no other `src/calc` comment cites a split
+  requirement; `npm run check` passes (87 test files, 13716 tests passed, 4 expected fail).
 
 ## 2. Drawing
 

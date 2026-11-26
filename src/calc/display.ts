@@ -27,7 +27,7 @@ export function displayPrecision(entry: unknown): number | undefined {
     : undefined;
 }
 
-/** The pump speeds and the fan speed show whole percentages whatever their entity's display precision (live-values "Locale and precision", design D14). */
+/** The pump speeds and the fan speed show whole percentages whatever their entity's display precision (live-values "Pump speed precision", outer-loop-source "Fan follows its speed", rework-layouts design D14). */
 const WHOLE_PERCENT_ROLES: ReadonlySet<RolePath> = new Set<RolePath>([
   'production.pump',
   'brine.pump',
@@ -63,6 +63,30 @@ function entityUnitOf(entityId: string | undefined, context: DisplayContext): st
   return typeof unit === 'string' && unit.trim() !== '' ? unit.trim() : undefined;
 }
 
+/** The entity's display precision, only when the shown number is in a unit it fits (the role's own or a passed-through one). */
+function precisionFor(entityId: string | undefined, fits: boolean, context: DisplayContext): number | undefined {
+  return entityId === undefined || !fits ? undefined : displayPrecision(context.entities?.[entityId]);
+}
+
+/**
+ * The decimals of a shown number: none for the whole-percent roles (unless the entity's own unit is passed through), the
+ * decimals the state reports for a passed-through number without a display precision, else the display precision, or the role's default (`decimalsOf`).
+ */
+function decimalsFor(
+  path: RolePath,
+  role: RoleSpec,
+  passThrough: boolean,
+  precision: number | undefined,
+  entityId: string | undefined,
+  context: DisplayContext,
+): number {
+  if (WHOLE_PERCENT_ROLES.has(path) && !passThrough) return 0;
+  if (passThrough && precision === undefined) {
+    return decimalsInState(entityId === undefined ? undefined : context.states?.[entityId]?.state);
+  }
+  return decimalsOf(role, precision);
+}
+
 /**
  * A reading as text. A number is the locale's number with the role's unit after a no-break space (the COP has no
  * unit); when the entity reports a unit the card cannot convert to the role's (Hz on the compressor speed, rpm on a
@@ -83,15 +107,8 @@ export function formatReading(
   const converts = role.quantity !== undefined && canConvert(role.quantity, entityUnit);
   // The entity's own unit is shown when it is neither the role's unit nor convertible to it; the role's unit and the entity's then fit the number.
   const passThrough = role.unit !== undefined && entityUnit !== undefined && !own && !converts;
-  const precision =
-    entityId === undefined || !(own || passThrough) ? undefined : displayPrecision(context.entities?.[entityId]);
-  // A passed-through number keeps the decimals its state reports when the entity has no display precision.
-  const decimals =
-    WHOLE_PERCENT_ROLES.has(path) && !passThrough
-      ? 0
-      : passThrough && precision === undefined
-        ? decimalsInState(entityId === undefined ? undefined : context.states?.[entityId]?.state)
-        : decimalsOf(role, precision);
+  const precision = precisionFor(entityId, own || passThrough, context);
+  const decimals = decimalsFor(path, role, passThrough, precision, entityId, context);
   const number = formatNumber(value, context.locale, decimals, false);
   const unit = passThrough ? entityUnit : role.unit;
   return unit === undefined ? number : `${number}${NBSP}${unit}`;

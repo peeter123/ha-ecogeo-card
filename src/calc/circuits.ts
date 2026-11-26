@@ -32,6 +32,39 @@ export interface Circuits {
 export type CircuitInputs = Pick<Readings, 'brine.pump' | 'heating.capacity' | 'htr.active'>;
 
 /**
+ * Whether HTR recovery runs: HTR is `true`, there is DHW storage in use and `htr.active` is on, or, when that role has
+ * no entity, the condensation capacity is above 0 W in active_cooling (used in heating and active_cooling only).
+ */
+function htrRecovering(
+  mode: Mode,
+  htr: Features['htr'],
+  hasDhw: boolean,
+  readings: CircuitInputs,
+  htrActivePresent: boolean,
+): boolean {
+  if (htr !== true || !hasDhw) return false;
+  if (htrActivePresent) return readings['htr.active'] === true;
+  return mode === 'active_cooling' && (readings['heating.capacity'] ?? 0) > 0;
+}
+
+/** The circuits a mode activates before the brine pump limit, in this order, which the active set keeps (it is visible in the markup). */
+function circuitsOfMode(mode: Mode, hasDhw: boolean, htrRuns: boolean, exchanger10: boolean): CircuitId[] {
+  switch (mode) {
+    case 'heating':
+    case 'active_cooling':
+      return ['refrigerant', 'brine', 'production_dg1', ...(htrRuns ? (['htr', 'dhw_coil'] as const) : [])];
+    case 'dhw':
+      return ['refrigerant', 'brine', ...(hasDhw ? (['production_dhw', 'dhw_coil'] as const) : [])];
+    case 'passive_cooling':
+    case 'defrost':
+      return ['brine', 'production_dg1', ...(exchanger10 ? (['exchanger_10'] as const) : [])];
+    case 'off':
+    case 'standby':
+      return [];
+  }
+}
+
+/**
  * Valve positions and active circuits for a mode. Inputs: the mode, `htr`, `passive_cooling` (exchanger 10 with
  * valves 27/28), the DHW storage, `brine.pump`, `htr.active` (item 9) with whether that role has an entity, and
  * `heating.capacity` (the condensation capacity, only for the fallback).
@@ -57,37 +90,10 @@ export function circuitsFor(
   /** False when the `htr.active` role has no entity (an optional role, see `absentOptionalRoles`): the fallback rule applies. */
   htrActivePresent: boolean,
 ): Circuits {
-  const active = new Set<CircuitId>();
   const exchanger10 = features.passive_cooling !== false;
   const hasDhw = dhw === 'external' || dhw === 'internal';
-  const htrRuns =
-    features.htr === true &&
-    hasDhw &&
-    (htrActivePresent
-      ? readings['htr.active'] === true
-      : mode === 'active_cooling' && (readings['heating.capacity'] ?? 0) > 0);
-  switch (mode) {
-    case 'heating':
-      active.add('refrigerant').add('brine').add('production_dg1');
-      if (htrRuns) active.add('htr').add('dhw_coil');
-      break;
-    case 'dhw':
-      active.add('refrigerant').add('brine');
-      if (hasDhw) active.add('production_dhw').add('dhw_coil');
-      break;
-    case 'active_cooling':
-      active.add('refrigerant').add('brine').add('production_dg1');
-      if (htrRuns) active.add('htr').add('dhw_coil');
-      break;
-    case 'passive_cooling':
-    case 'defrost':
-      active.add('brine').add('production_dg1');
-      if (exchanger10) active.add('exchanger_10');
-      break;
-    case 'off':
-    case 'standby':
-      break;
-  }
+  const htrRuns = htrRecovering(mode, features.htr, hasDhw, readings, htrActivePresent);
+  const active = new Set<CircuitId>(circuitsOfMode(mode, hasDhw, htrRuns, exchanger10));
   if (brinePumpPresent && !runs(readings['brine.pump'])) active.delete('brine');
   const viaExchanger = (mode === 'passive_cooling' || mode === 'defrost') && exchanger10;
   return {
