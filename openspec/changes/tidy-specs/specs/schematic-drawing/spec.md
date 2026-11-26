@@ -99,7 +99,7 @@ layout heightens row lanes.
 
 #### Scenario: Same order in both layouts
 - **WHEN** the card renders the same configuration in the horizontal and in the vertical layout
-- **THEN** the parts have the same row and column order in both, and only the lanes differ in size
+- **THEN** the cabinet's parts have the same row and column order in both, and only the lanes differ in size
 
 ### Requirement: Values in the lanes
 Every value in the cabinet SHALL sit in a lane beside its part, except as "Gap places in the vertical layout"

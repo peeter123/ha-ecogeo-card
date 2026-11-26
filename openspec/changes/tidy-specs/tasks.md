@@ -25,7 +25,7 @@
   Verdict (2026-11-26): responsive-layout: 2 split, nothing dropped (the measurement conditions moved out of "Vertical
     threshold"), scenarios unchanged, longest 353 characters.
   Verdict (2026-11-26): schematic-drawing: 3 split, nothing dropped, scenarios unchanged, longest description 446
-    characters.
+    characters; "Values in the lanes" adds the body-value exception as a correction (design D3a).
   Verdict (2026-11-26): temperature-coloring: 2 split, nothing dropped, scenarios unchanged, longest description 373
     characters.
 - [x] 1.3 Point the test comments that cite a requirement whose rule moved to the requirement that now holds it:

@@ -28,8 +28,12 @@ before the HACS default-list submission.
   `rework-layouts` that is not true for exchangers 7 and 8, and it never was for DHW valve 26. Evaporator 7 opens the
   evaporating temperature, condenser 8 the condensing temperature and valve 26 the DHW demand (derived:
   `COMPONENT_ROLES` in `src/diagram/component-info.ts`). No value label shows these three; 7 and 8 colour the
-  refrigerant pipes (`src/diagram/geometry.ts`). The requirement is reworded
-  to state this. The behaviour stays as it is.
+  refrigerant pipes (`src/diagram/geometry.ts`). The requirement is reworded to state this. The behaviour stays as
+  it is.
+- **Values in the lanes corrected.** schematic-drawing "Cabinet layout with value lanes" puts every cabinet value in
+  a lane, but on model C the DHW temperature sits inside tank 50, as dhw-storage "DHW values inside the tank"
+  requires (`BODY_LABELS` in `dev/overlaps.ts`; `test/diagram/lanes.test.ts` leaves body values out). The split-off
+  "Values in the lanes" names that exception. The behaviour stays as it is.
 - **README status.** The Status section still names `add-browser-tests` as the planned follow-up, but the browser
   tests already exist (`npm run test:browser`, the browser project in `test/`). The sentence is removed, and the
   status names what is next instead: the HACS default list.
@@ -43,7 +47,8 @@ before the HACS default-list submission.
 - Requirements of 500 characters or fewer, even long ones; and requirements in the four specs that pass.
 - Rewording that does not shorten a requirement or correct it.
 - Comments in `src/` that cite a requirement whose rule moved (`src/calc/display.ts`, the `COMPONENT_ROLES` doc
-  comment): the code change that follows, `limit-complexity`, touches `src/` and updates them.
+  comment), and the lanes section of `docs/ecogeo-card.md`, which cites "Cabinet layout with value lanes" for where
+  the values sit: the code change that follows, `limit-complexity`, touches `src/` and updates them.
 
 ## Capabilities
 
@@ -67,5 +72,5 @@ None.
 
 - Specs: the nine delta specs above; after archive, `openspec validate --specs --strict` passes for all 13 specs.
 - Docs: `README.md` (Status section) and `AGENTS.md` (the archived change, at archive).
-- Code and `dist/`: none. Tests: four comments that cite a split requirement.
+- Code and `dist/`: none. Tests: five comments that cite a split requirement.
 - Live installation: none. No deploy, no resource bump, no dashboard change.

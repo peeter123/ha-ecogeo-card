@@ -12,8 +12,8 @@ by name. The component-info and README facts are in the proposal.
 **Goals:**
 
 - All 13 accepted specs pass `openspec validate --specs --strict` after archive.
-- No requirement changes meaning, except "Tap a component" for exchangers 7 and 8, which is corrected to match the
-  card.
+- No requirement changes meaning, except two corrections to match the card: "Tap a component" for exchangers 7 and
+  8 and DHW valve 26 (D3), and the body-value exception in "Values in the lanes" (D3a).
 
 **Non-Goals:**
 
@@ -58,6 +58,13 @@ temperature, condenser 8 the condensing temperature and DHW valve 26 the DHW dem
 (7 and 8 colour the refrigerant pipes). The compressor 11 fallback (speed, then percentage, then power) and "no
 entity, not tappable" stay as they are. Source: `COMPONENT_ROLES` and `componentRole` in
 `src/diagram/component-info.ts` (derived).
+
+### D3a. Values inside a body
+
+The ADDED "Values in the lanes" excepts a value inside its body from the lanes: on model C the DHW temperature sits
+inside tank 50, as dhw-storage "DHW values inside the tank" requires. The old description did not say so, which made
+it contradict dhw-storage. Source: `BODY_LABELS` in `dev/overlaps.ts`; `test/diagram/lanes.test.ts` already leaves
+body values out (decided 2026-11-26, whole-change review).
 
 ### D4. Verification
 
