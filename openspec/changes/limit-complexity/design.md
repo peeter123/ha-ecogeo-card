@@ -86,6 +86,13 @@ point for the user.
   - for an unused export, nothing imports it, including the tests and `dev/`;
   - for a copied block, both copies do the same thing for the same reason.
 - `strings.ts` entries that nothing uses are dead code too.
+- Settled in the group 5 review (2026-11-26):
+  - `CIRCUIT_IDS` stays an exported const, because only its type is used and a module-local const fails
+    `no-unused-vars`. Turning `CircuitId` into a literal union is a change of its own.
+  - The `RolePath` re-export in the hrv-ventilation copy `src/lib/config.ts` goes, and the copy header names the
+    deviation.
+  - Duplicates below jscpd's default threshold stay, because the pass fixes what the tools report. Merging the three
+    plain-object guards would need a shared module, which is a file reorganisation.
 - A finding that is kept, for example a test-only export or a deliberate copy from hrv-ventilation, goes in the group's
   commit body with its reason.
 

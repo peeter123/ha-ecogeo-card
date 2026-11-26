@@ -25,7 +25,7 @@ export interface PipeView {
 }
 
 /** The seconds one dash period takes at a pump or compressor speed of 100 %. */
-export const FLOW_SECONDS_AT_FULL = 1.2;
+const FLOW_SECONDS_AT_FULL = 1.2;
 /** The fastest and the slowest dash period, whatever the speed. */
 export const FLOW_SECONDS_MIN = 0.6;
 export const FLOW_SECONDS_MAX = 8;
@@ -39,7 +39,7 @@ export const TAP_WATER_SEGMENT_IDS: readonly string[] = ['tap_47', 'tap_48', 'ta
  * The production legs from valve 27 to condenser 8: the pipe from valve 27 through pump 15 to the condenser. In passive cooling and defrost the compressor is
  * stopped, so the condenser does not change the water temperature and the legs take the outlet temperature (add-schematic-card D7).
  */
-export const PRODUCTION_LEGS_27_TO_8: readonly string[] = ['prod_27_15', 'prod_15_8'];
+const PRODUCTION_LEGS_27_TO_8: readonly string[] = ['prod_27_15', 'prod_15_8'];
 
 /** The dash period for a speed in %; undefined (still) at 0 % or without a value. */
 export function flowDuration(speed: number | undefined): number | undefined {
@@ -56,11 +56,11 @@ const SWAPPED: Readonly<Partial<Record<RolePath, RolePath>>> = {
 };
 
 /** True when the segment carries HTR water on the DHW lines: HTR is active and the production DHW circuit is not (add-schematic-card D7). */
-export const carriesHtrWater = (segment: Pick<Segment, 'id'>, circuits: Circuits): boolean =>
+const carriesHtrWater = (segment: Pick<Segment, 'id'>, circuits: Circuits): boolean =>
   HTR_WATER_SEGMENT_IDS.includes(segment.id) && htrWaterActive(circuits);
 
 /** HTR recovery: HTR is active and the production DHW circuit is not, so the DHW lines and coil carry HTR water. */
-export const htrWaterActive = (circuits: Circuits): boolean =>
+const htrWaterActive = (circuits: Circuits): boolean =>
   circuits.active.has('htr') && !circuits.active.has('production_dhw');
 
 /**

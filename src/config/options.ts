@@ -80,7 +80,7 @@ export const TOP_LEVEL_OPTIONS: readonly string[] = [
 export const defaultDhw = (model: Model): DhwStorage => (model === 'C' ? 'internal' : 'external');
 
 /** A key written without a value in YAML is null; it counts as left out. */
-export const isLeftOut = (value: unknown): value is undefined | null => value === undefined || value === null;
+const isLeftOut = (value: unknown): value is undefined | null => value === undefined || value === null;
 
 /** A prefix is blank (left out) when it is a string of whitespace only; the editor removes the key instead of writing one. */
 const isBlank = (value: unknown): boolean => isLeftOut(value) || (typeof value === 'string' && value.trim() === '');
@@ -91,7 +91,7 @@ const isGroup = (value: unknown): value is CardConfig =>
 const PREFIX = /^[a-z0-9_]+$/;
 
 /** The value of an `entities` role that means the role is not present: no entity, no default, no label (add-entity-discovery D1). */
-export const NONE = 'none';
+const NONE = 'none';
 
 /** True for the `none` value of an `entities` role: exactly `none` after trimming, lower case. */
 export const isNone = (value: unknown): boolean => typeof value === 'string' && value.trim() === NONE;
@@ -133,7 +133,7 @@ export const exchangerFillOf = (config: CardConfig): ExchangerFill =>
 export const layoutOf = (config: CardConfig): Layout => optionValue(config, LAYOUT_OPTION) as Layout;
 
 /** The keys of the `states` option. */
-export const STATES_KEYS = ['off', 'defrost'] as const;
+const STATES_KEYS = ['off', 'defrost'] as const;
 
 /** A list of one or more non-empty texts. */
 const isTextList = (value: unknown): value is string[] =>

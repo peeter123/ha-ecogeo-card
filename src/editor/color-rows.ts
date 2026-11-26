@@ -58,7 +58,7 @@ export interface DraftRow {
 const emptyRow = (): DraftRow => ({ color: NEUTRAL_RGB });
 
 /** Exactly one trailing row without a temperature: added after a filled last row, collapsed when there are two. */
-export function withTrailingEmptyRow(rows: readonly DraftRow[]): DraftRow[] {
+function withTrailingEmptyRow(rows: readonly DraftRow[]): DraftRow[] {
   const kept = [...rows];
   while (
     kept.length >= 2 &&

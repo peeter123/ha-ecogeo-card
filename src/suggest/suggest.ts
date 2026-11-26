@@ -10,7 +10,7 @@ import type { HassDevice, HassEntityRegistryEntry, HassEntityState } from '../li
 import { canConvert } from '../lib/units';
 
 /** The scores of D8. */
-export const SCORE = {
+const SCORE = {
   /** The firmware's entity id under the inferred prefix. */
   exact: 100,
   /** An object id ending in `_<suffix>`. */
@@ -32,7 +32,7 @@ export interface SuggestInput {
   config: CardConfig;
 }
 
-export interface SuggestReport {
+interface SuggestReport {
   /** The roles this suggestion bound. */
   filled: RolePath[];
   /** The roles that took part and stayed empty (no match, a weak match or a tie). */
@@ -57,8 +57,7 @@ export interface Candidate {
 }
 
 /** Lower case, accents removed (`ß` as `ss`). */
-export const fold = (text: string): string =>
-  text.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replaceAll('ß', 'ss');
+const fold = (text: string): string => text.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replaceAll('ß', 'ss');
 
 /** The words of a text: folded, split on anything that is not a letter (digits are dropped). */
 export const tokens = (text: string): string[] =>
@@ -193,7 +192,7 @@ export function unitFits(role: RoleSpec, candidate: Kind): boolean {
 }
 
 /** Step 3: does the candidate fit the role by domain, unit and device class? */
-export function fits(role: RoleSpec, candidate: Kind): boolean {
+function fits(role: RoleSpec, candidate: Kind): boolean {
   return role.accepts.includes(candidate.domain) && unitFits(role, candidate);
 }
 
@@ -221,7 +220,7 @@ function directionScore(role: RoleSpec, found: readonly string[]): number | unde
 }
 
 /** Step 4: the score of a candidate for a role; 0 when it does not match or is excluded. */
-export function score(role: RoleSpec, candidate: Candidate, prefix: string): number {
+function score(role: RoleSpec, candidate: Candidate, prefix: string): number {
   const byName = nameScore(role, candidate, prefix);
   if (byName > 0) return byName;
   const found = [

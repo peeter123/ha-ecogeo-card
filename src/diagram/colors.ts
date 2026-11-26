@@ -27,8 +27,8 @@ export const DEFAULT_STOPS: readonly ColorStop[] = [
   { temperature: 70, color: '#d7263d' },
 ];
 
-export const MIN_STOPS = 2;
-export const MAX_STOPS = 8;
+const MIN_STOPS = 2;
+const MAX_STOPS = 8;
 
 /** The colour of a pipe or tank without a temperature, or of an inactive circuit. */
 export const MUTED_COLOR = 'var(--disabled-text-color)';

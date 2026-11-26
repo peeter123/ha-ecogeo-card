@@ -21,7 +21,7 @@ import { FOOTER_LABELS, NO_VALUE } from '../strings';
 import { arrangementOf, partState, type DrawContext } from './geometry';
 import { labelFontSize, type Align, type LabelSpec, type Placement } from './label-places';
 
-export type { LabelSpec, Placement };
+export type { LabelSpec };
 
 export const labelStyles = css`
   .diagram {

@@ -80,12 +80,35 @@
 
 ## 5. Review pass for dead code and duplication
 
-- [ ] 5.1 Run `npx knip@6.45.1` (with a scratchpad config naming the entry points if it needs one) and
+- [x] 5.1 Run `npx knip@6.45.1` (with a scratchpad config naming the entry points if it needs one) and
   `npx jscpd@5.4.3 src` once, and save both reports to the scratchpad (design D5). Confirm each finding in the code:
   a removed export or string is used nowhere, including `test/` and `dev/`, and a merged copy does the same thing
   for the same reason. Then fix the confirmed findings, with every touched function at complexity 15 or lower.
   Verify: the findings list, fixed or kept with a reason, is recorded under this task; `test/diagram/__snapshots__/`
   has no diff; and `npm run check` passes.
+  Verdict (2026-11-26): knip 6.45.1 reported 39 findings (28 unused exports, 11 unused exported types) and one
+    unlisted binary; jscpd 5.4.3 reported 0 clones (43 files, 8755 lines). Of the 39, fixed 34 and kept 5; no unused
+    file, string or dependency.
+  - knip, 32 exports that only their own file uses: fixed by dropping the `export` keyword (`compressorRuns`,
+    `RUNNING_POWER`, `isLeftOut`, `NONE`, `STATES_KEYS`, `MIN_STOPS`, `MAX_STOPS`, `COMPRESSOR_ROLES`, `airUnitShape`,
+    `collectorShape`, `emitterShape`, `STUB_LENGTH`, `VERTICAL_MAP_X`, `VERTICAL_MAP_Y_TANK50`, `effectiveFeature`,
+    `LABEL_LINE_PX`, `VIEWBOX_WIDTH`, `FLOW_SECONDS_AT_FULL`, `PRODUCTION_LEGS_27_TO_8`, `carriesHtrWater`,
+    `htrWaterActive`, `withTrailingEmptyRow`, `SCORE`, `fold`, `fits`, `score`, `Reading`, `RoleKind`, `TankShape`,
+    `ExternalCoil`, `Crossing`, `SuggestReport`); none is dead code, no file in `src/`, `test/`, `dev/` or `scripts/`
+    imports them, and the markup is unchanged.
+  - knip, `CIRCUIT_IDS`: kept exported; it is only used as a type in its own file, so a plain `const` would fail
+    the lint (`no-unused-vars`).
+  - knip, `defaultLabelPlaces`: kept; `scripts/search-places.mjs` calls it by name through `geometry[...]`.
+  - knip, `Placement` (labels.ts): fixed; nothing imports it from `labels.ts`, so it leaves the re-export.
+  - knip, `RolePath` (lib/config.ts): fixed; the re-export is not copied text and no copied function uses it, so it
+    goes, and the copy header names the deviation from hrv-ventilation.
+  - knip, `ColorOption`, `BooleanOption`, `ListOption` (lib/options.ts): kept; hrv-ventilation's `src/lib/options.ts`
+    exports and uses them, so the copy keeps the source's text, and an export creates no dependency between the repos.
+  - knip, unlisted binary `uvx` in `scripts/lint-ha.mjs`: kept; uv is an external prerequisite of `npm run lint:ha`.
+  - jscpd: 0 clones, nothing to merge. Smaller duplicates below its default threshold (a plain-object guard in
+    `config/options.ts`, `diagram/colors.ts` and `editor/schema.ts`) are left (design D5).
+  - `src/strings.ts`: every key and export is referenced; no dynamic lookup.
+  - Reports: `scratchpad/review-pass/knip.txt` and `jscpd.txt` (knip config `knip.json` there, not committed).
 
 ## 6. The limit in the lint
 

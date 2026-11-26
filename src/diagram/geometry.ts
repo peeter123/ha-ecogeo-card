@@ -131,13 +131,13 @@ export interface EmitterShape extends Rect {
 }
 
 /** The external tank's cylinder: a domed top, straight walls and a flat bottom. */
-export type TankShape = Rect & { readonly dome: number };
+type TankShape = Rect & { readonly dome: number };
 
 /**
  * The external coil: its centre line is the tank's, and it sits in the tank's lower part (the upper part holds the one value).
  * `inX` is the column of the supply pipe that rises beside the coil, left of it, into the helix's start (the first half arcs over from there); the return drops from the helix's end on the coil's right.
  */
-export interface ExternalCoil {
+interface ExternalCoil {
   readonly cx: number;
   readonly top: number;
   readonly bottom: number;
@@ -319,7 +319,7 @@ const AIR_FOOT_HEIGHT = 8;
 const AIR_FAN_RADIUS = 40;
 
 /** The air unit placed with its left edge at `x0` and its bottom edge at `bottom`. */
-export function airUnitShape(x0: number, bottom: number): AirUnitShape {
+function airUnitShape(x0: number, bottom: number): AirUnitShape {
   const { width, height } = BAND.air;
   const y = bottom - height;
   const m = BAND.margin;
@@ -362,7 +362,7 @@ const COLLECTOR_RUN = 20;
  * (`COLLECTOR_LOOP` between their legs); the run from each riser to its loop is `COLLECTOR_RUN`, and the rest of the width is
  * the link between the loops, so the header, the link and the run to the return riser read as straight pieces.
  */
-export function collectorShape(x0: number, bottom: number): CollectorShape {
+function collectorShape(x0: number, bottom: number): CollectorShape {
   const { width, height } = BAND.collector;
   const y = bottom - height;
   const inset = BAND.margin + DEFAULT_STROKES.pipe / 2;
@@ -398,7 +398,7 @@ export function collectorShape(x0: number, bottom: number): CollectorShape {
 }
 
 /** The stub length of connections 1/2 without an emitter. */
-export const STUB_LENGTH = 12;
+const STUB_LENGTH = 12;
 
 /** The spiral's pitch (heating-emitter: at least 12 units, so the turns stay apart at 320 px) and its number of inward turns. */
 const UNDERFLOOR = { pitch: 14, turns: 3 } as const;
@@ -450,7 +450,7 @@ function underfloorLoop(x0: number, y: number): { loopIn: Point[]; loopOut: Poin
 }
 
 /** The emitter placed with its left edge at `x0` and its bottom edge at `bottom`. */
-export function emitterShape(kind: EmitterShape['kind'], x0: number, bottom: number): EmitterShape {
+function emitterShape(kind: EmitterShape['kind'], x0: number, bottom: number): EmitterShape {
   const { width, height } = BAND.emitter;
   const y = bottom - height;
   const base = { kind, x: x0, y, width, height } as const;
@@ -746,7 +746,7 @@ export interface Segment extends Visibility {
 }
 
 /** A place where two segments cross inside the cabinet, drawn as a hop: a small gap in `under`. */
-export interface Crossing {
+interface Crossing {
   over: string;
   under: string;
   at: Point;
@@ -1659,7 +1659,7 @@ export const HORIZONTAL_MAP_Y: AxisMap = laneMap(
  * x stretch. Its viewBox is 740 wide (the cabinet and a margin of 10 at each side), not the horizontal layout's 1000: every
  * unit renders `width / 740` px, which `strokeWidths` and the label fonts (`LABEL_FONT_K`) take into account.
  */
-export const VERTICAL_MAP_X: AxisMap = laneMap(COLUMN_LANES, {}, 10, FRAME_CABINET.width);
+const VERTICAL_MAP_X: AxisMap = laneMap(COLUMN_LANES, {}, 10, FRAME_CABINET.width);
 
 /**
  * The vertical layout's y changes: what each row lane gains so that the cabinet's values get rows of their own at 320 px, where
@@ -1696,7 +1696,7 @@ export const VERTICAL_MAP_Y: AxisMap = laneMap(
 export const VERTICAL_TANK_HEAD = { from: 10, to: 24, extra: 28 } as const;
 
 /** The vertical y map where tank 50 is drawn: `VERTICAL_MAP_Y` with the head stretched. */
-export const VERTICAL_MAP_Y_TANK50: AxisMap = laneMap(
+const VERTICAL_MAP_Y_TANK50: AxisMap = laneMap(
   [
     { id: 'tank-head', axis: 'row', from: VERTICAL_TANK_HEAD.from, to: VERTICAL_TANK_HEAD.to, holds: 'tank 50 head' },
     ...ROW_LANES,
@@ -2070,7 +2070,7 @@ export const arrangementOf = (
 export type PartState = 'normal' | 'muted' | 'hidden';
 
 /** A feature's state as the drawing sees it: HTR needs DHW storage, so it counts as false without it. */
-export const effectiveFeature = (context: DrawContext, key: FeatureKey): Features[FeatureKey] =>
+const effectiveFeature = (context: DrawContext, key: FeatureKey): Features[FeatureKey] =>
   key === 'htr' && context.dhw === 'none' ? false : context.features[key];
 
 /** The storage the drawing shows: the configured one, or for `unused` the model's own tank. */

@@ -36,7 +36,7 @@ export const COMPONENT_ROLES: Readonly<Record<number, RolePath>> = {
 };
 
 /** The roles compressor 11 can open, in order: the first one with an entity (the speed role may be `none`). */
-export const COMPRESSOR_ROLES: readonly RolePath[] = ['compressor.speed', 'compressor.percentage', 'compressor.power'];
+const COMPRESSOR_ROLES: readonly RolePath[] = ['compressor.speed', 'compressor.percentage', 'compressor.power'];
 
 /** The role a component opens: the table's, and for compressor 11 the first of its roles that has an entity. */
 export function componentRole(item: number, taps: Taps | undefined): RolePath | undefined {

@@ -24,7 +24,7 @@ export type ModeInputs = Pick<
 >;
 
 /** The compressor power above which it counts as running: below it is the standby draw of the electronics and a crankcase heater (derived). */
-export const RUNNING_POWER = 100;
+const RUNNING_POWER = 100;
 
 const matches = (value: string | boolean | undefined, list: readonly string[]): boolean =>
   typeof value === 'string' && list.some((text) => text.trim().toLowerCase() === value.trim().toLowerCase());
@@ -37,7 +37,7 @@ export const runs = (speed: number | boolean | undefined): boolean =>
  * Whether the compressor runs, from the first of these that has a value: the speed (above 0, or on), the percentage
  * (above 0), the power (above 100 W). Undefined when none has a value (add-entity-discovery D5).
  */
-export function compressorRuns(
+function compressorRuns(
   readings: Pick<ModeInputs, 'compressor.speed' | 'compressor.percentage' | 'compressor.power'>,
 ): boolean | undefined {
   const speed = readings['compressor.speed'];

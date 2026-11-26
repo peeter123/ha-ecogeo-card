@@ -28,10 +28,10 @@ export const LABEL_FONT_K: Readonly<Record<ShownLayout, number>> = { horizontal:
 export const labelFontSize = (layout: ShownLayout): string => `max(10px, ${String(LABEL_FONT_K[layout])}cqw)`;
 
 /** The height of a label's box at the 10 px font floor (line height 1.2), in px. */
-export const LABEL_LINE_PX = 12;
+const LABEL_LINE_PX = 12;
 
 /** The viewBox width of each layout's arrangement, in units (geometry.ts: the horizontal x map spans 990 plus the margin, the vertical one 720 plus 20). */
-export const VIEWBOX_WIDTH: Readonly<Record<ShownLayout, number>> = { horizontal: 1000, vertical: 740 };
+const VIEWBOX_WIDTH: Readonly<Record<ShownLayout, number>> = { horizontal: 1000, vertical: 740 };
 
 /**
  * The row pitch of a two-row block (a probe pair's temperature over its pressure), in viewBox units, per layout: the label height

@@ -6,7 +6,7 @@ import type { Quantity } from '../lib/units';
 import { UNITS } from '../strings';
 
 /** How a role's state is read: a number, a text (such as the compressor operation mode) or an on/off state. */
-export type RoleKind = 'number' | 'text' | 'binary';
+type RoleKind = 'number' | 'text' | 'binary';
 
 export interface RoleSpec {
   /** The config path, `group.name`: `entities: { group: { name: <entity id> } }`. */

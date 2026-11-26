@@ -22,7 +22,7 @@ type ValueOfKind<K> = K extends 'number' ? number : K extends 'text' ? string : 
  * The value of a role by its kind: a number, a text or an on/off state; undefined when it has no value. A role that
  * accepts an on/off entity (`onOff` in the role table) gives a boolean when it is bound to one (add-entity-discovery D3).
  */
-export type Reading<P extends RolePath> =
+type Reading<P extends RolePath> =
   ValueOfKind<KindOf<P>> | (RoleOf<P> extends { onOff: true } ? boolean : never) | undefined;
 
 /** Every role's value. */

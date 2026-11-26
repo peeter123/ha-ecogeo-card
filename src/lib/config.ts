@@ -1,12 +1,10 @@
 // Copied from hrv-ventilation src/lib/config.ts: valueAt, asEntityId and entityAt only (the humidity and stream
-// helpers are dropped).
+// helpers are dropped). Deviation: hrv defines its own `RolePath` union there; this copy leaves it out and the card
+// uses `RolePath` from config/roles.
 // Config reading shared by the card: roles are config paths such as "production.outlet_temperature".
 
 /** A card config as it comes from YAML or the editor: nested objects with entity IDs as strings. */
 export type CardConfig = Readonly<Record<string, unknown>>;
-
-/** Every entity role of the card, as a config path (the role table, add-schematic-card D2). */
-export type { RolePath } from '../config/roles';
 
 // The shape of a Home Assistant entity ID: a domain starting with a letter, a dot, an object ID (lowercase letters,
 // digits, underscores). The leading letter keeps numbers written as strings ("1.2") out.
