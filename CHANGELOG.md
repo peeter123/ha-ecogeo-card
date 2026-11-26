@@ -3,6 +3,15 @@
 All notable changes to the ecoGEO heat pump card, newest first, in the style of Keep a Changelog. A release's heading
 is `## <version> - <YYYY-MM-DD>`; the heading has no date until the release is made, and the release adds it.
 
+## 1.1.2
+
+The code is held to a complexity limit; the card looks and behaves as before.
+
+### Changed
+
+- The code is held to a cyclomatic complexity limit of 15 by ESLint, outside the tests, and the functions over it are
+  simplified. There is no visible change to the card.
+
 ## 1.1.1 - 2026-11-25
 
 The pipes between the cabinet and the band run lower, so the vertical layout no longer shows a doubled tank bottom.

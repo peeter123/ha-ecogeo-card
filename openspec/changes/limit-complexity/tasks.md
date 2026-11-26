@@ -134,10 +134,14 @@
 
 ## 7. Release
 
-- [ ] 7.1 Bump the patch version with `npm version patch --no-git-tag-version`. Add the 1.1.2 section to `CHANGELOG.md`
+- [x] 7.1 Bump the patch version with `npm version patch --no-git-tag-version`. Add the 1.1.2 section to `CHANGELOG.md`
   (Changed: the code is held to a complexity limit and simplified, with no visible change). Run `npm run release`.
   Verify: `npm run release` and `npm run verify-dist` pass, and the version is 1.1.2 in `package.json` and both lock
   entries.
+  Verdict (2026-11-26): version 1.1.2 in `package.json` and both `package-lock.json` entries; `CHANGELOG.md` has a
+    `## 1.1.2` section (Changed, no date until the GitHub release); `npm run release` passes (88 files, 13719 tests
+    passed, 4 expected fail; "version 1.1.2, copied build/ to dist/"); `npm run verify-dist` passes
+    ("dist/ecogeo-card.js is current").
 
 ## 8. Live installation (each step needs the user's explicit go)
 
