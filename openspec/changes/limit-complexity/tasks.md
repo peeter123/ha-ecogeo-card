@@ -35,13 +35,19 @@
 
 ## 3. Editor, suggestions and card
 
-- [ ] 3.1 Bring `_configChanged` and `willUpdate` (`src/editor/ecogeo-card-editor.ts`), `score` and
+- [x] 3.1 Bring `_configChanged` and `willUpdate` (`src/editor/ecogeo-card-editor.ts`), `score` and
   `suggestEntities` (`src/suggest/suggest.ts`) and the card's `render` (`src/card/ecogeo-card.ts`) to complexity 15 or
   lower (design D2). Verify:
   - D1's command over `src/` reports nothing;
   - the editor, suggestion and card unit tests pass unchanged;
   - `test/diagram/__snapshots__/` has no diff;
   - `npm run check` passes.
+  Verdict (2026-11-26): `_configChanged` 19 to 14 (`pickedDevice` 3, `isEmptyStateList` 3, `decodeNotPresent` 4,
+    `emptiedAfter` 1), `willUpdate` 16 to 6 (`_syncSchema` 7, `_shownData` 5), `score` 18 to 9 (`nameScore` 7,
+    `directionScore` 6), `suggestEntities` 18 to 1 (`openRoles` 5, `rankedPairs` 1, `takePairs` 9, `entitiesWith`
+    6), the card's `render` 16 to 12 (`statesFor` 4, `tapFor` 2; `readings` 4 to 1); D1's command over `src/`
+    reports nothing, `test/` and `test/diagram/__snapshots__/` have no diff, and `npm run check` passes: Test Files
+    87 passed, Tests 13716 passed and 4 expected fail, Chromium and WebKit included.
 
 ## 4. Emulator and scripts
 

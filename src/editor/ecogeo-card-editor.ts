@@ -111,6 +111,49 @@ function withNotPresent(config: CardConfig, wanted: ReadonlySet<string>, current
   return next;
 }
 
+/** The device the form reports, or undefined when none is picked. */
+function pickedDevice(device: unknown): string | undefined {
+  return typeof device === 'string' && device !== '' ? device : undefined;
+}
+
+/** True for a `states.*` list the user emptied to [] (it stays blank until a value is added). */
+function isEmptyStateList(reported: CardConfig, path: string): boolean {
+  const list = valueAt(reported, path);
+  return path.startsWith('states.') && Array.isArray(list) && list.length === 0;
+}
+
+/**
+ * The decoded form with the "not present" field applied, when the form reported one (a list, or the key itself).
+ * `formData` is the form's full reported data, the not-present key included.
+ */
+function decodeNotPresent(decodedForm: CardConfig, formData: CardConfig, current: CardConfig): CardConfig {
+  const notPresent = formData[NOT_PRESENT_FIELD];
+  if (!Array.isArray(notPresent) && !Object.hasOwn(formData, NOT_PRESENT_FIELD)) return decodedForm;
+  const wanted = new Set(Array.isArray(notPresent) ? notPresent.filter((p): p is string => typeof p === 'string') : []);
+  return withNotPresent(decodedForm, wanted, current);
+}
+
+/** The emptied paths after an edit: the ones the user cleared are added, the ones that have a value again dropped. */
+function emptiedAfter(
+  schema: EditorSchema,
+  emptied: ReadonlySet<string>,
+  reported: CardConfig,
+  shownRest: CardConfig,
+): Set<string> {
+  // A state list emptied to [] stays blank, like a cleared field: its default does not reappear until a value is added.
+  const cleared = [
+    ...clearedPaths(schema, shownRest, reported),
+    ...fieldsWithPaths(schema)
+      .map(({ path }) => path)
+      .filter((path) => isEmptyStateList(reported, path) && valueAt(shownRest, path) !== undefined),
+  ].filter((path) => !VIRTUAL_FIELDS.includes(path));
+  return new Set(
+    [...emptied, ...cleared].filter(
+      (path) => valueAt(reported, path) === undefined || isEmptyStateList(reported, path),
+    ),
+  );
+}
+
 export class EcogeoCardEditor extends LitElement {
   static override styles = css`
     .hint {
@@ -232,6 +275,16 @@ export class EcogeoCardEditor extends LitElement {
   }
 
   protected override willUpdate(changed: PropertyValues): void {
+    this._syncSchema(changed);
+    if (changed.has('_switch')) this._formSchema = visibleSchema(this._schema, this._switch.advanced);
+    // Rebuilt only when the config or the schema changes, so ha-form is not handed new data on every hass update.
+    if (this._config && (changed.has('_config') || changed.has('schemaFor') || changed.has('_device'))) {
+      this._shown = this._shownData(this._config);
+    }
+  }
+
+  /** Refreshes the schema when the builder changed, or when the states changed the options of a state list. */
+  private _syncSchema(changed: PropertyValues): void {
     if (changed.has('schemaFor') && this._config) this._refreshSchema(this._config);
     else if (
       changed.has('hass') &&
@@ -239,16 +292,16 @@ export class EcogeoCardEditor extends LitElement {
       JSON.stringify(stateOptions(this._config, this.hass?.states)) !== this._optionsKey
     )
       this._refreshSchema(this._config);
-    if (changed.has('_switch')) this._formSchema = visibleSchema(this._schema, this._switch.advanced);
-    // Rebuilt only when the config or the schema changes, so ha-form is not handed new data on every hass update.
-    if (this._config && (changed.has('_config') || changed.has('schemaFor') || changed.has('_device'))) {
-      this._shown = {
-        ...toFormData(this._schema, withShownDefaults(this._schema, this._config, this._emptied)),
-        ...(this._hasColorRows ? colorRowData(this._draft) : {}),
-        ...(this._has(DEVICE_FIELD) && this._device !== undefined ? { [DEVICE_FIELD]: this._device } : {}),
-        ...(this._has(NOT_PRESENT_FIELD) ? { [NOT_PRESENT_FIELD]: [...notPresentRoles(this._config)] } : {}),
-      };
-    }
+  }
+
+  /** The data ha-form shows: the config as form data, the colour rows, the device and the not-present roles. */
+  private _shownData(config: CardConfig): Record<string, unknown> {
+    return {
+      ...toFormData(this._schema, withShownDefaults(this._schema, config, this._emptied)),
+      ...(this._hasColorRows ? colorRowData(this._draft) : {}),
+      ...(this._has(DEVICE_FIELD) && this._device !== undefined ? { [DEVICE_FIELD]: this._device } : {}),
+      ...(this._has(NOT_PRESENT_FIELD) ? { [NOT_PRESENT_FIELD]: [...notPresentRoles(config)] } : {}),
+    };
   }
 
   /** True when the schema has the field (a schema of another builder may not). */
@@ -272,7 +325,7 @@ export class EcogeoCardEditor extends LitElement {
     // The device is editor state: picking one changes no config. "Not present" is a view of the `none` roles.
     const { [DEVICE_FIELD]: device, [NOT_PRESENT_FIELD]: notPresent, ...formValue } = event.detail.value;
     const hasDevice = this._has(DEVICE_FIELD);
-    const picked = typeof device === 'string' && device !== '' ? device : undefined;
+    const picked = pickedDevice(device);
     if (hasDevice && picked !== this._device) {
       this._device = picked;
       this._report = undefined;
@@ -288,29 +341,9 @@ export class EcogeoCardEditor extends LitElement {
     const split = hasRows ? splitColorRows(value) : undefined;
     const reported = withoutUndefined(withoutEmptyTexts(this._schema, split?.rest ?? value));
     const shownRest = hasRows ? splitColorRows(this._shown).rest : this._shown;
-    // A state list emptied to [] stays blank, like a cleared field: its default does not reappear until a value is added.
-    const emptyList = (path: string): boolean => {
-      const list = valueAt(reported, path);
-      return path.startsWith('states.') && Array.isArray(list) && list.length === 0;
-    };
-    const cleared = [
-      ...clearedPaths(this._schema, shownRest, reported),
-      ...fieldsWithPaths(this._schema)
-        .map(({ path }) => path)
-        .filter((path) => emptyList(path) && valueAt(shownRest, path) !== undefined),
-    ].filter((path) => !VIRTUAL_FIELDS.includes(path));
-    this._emptied = new Set(
-      [...this._emptied, ...cleared].filter((path) => valueAt(reported, path) === undefined || emptyList(path)),
-    );
+    this._emptied = emptiedAfter(this._schema, this._emptied, reported, shownRest);
     const decodedForm = fromFormData(this._schema, reported, current);
-    const decoded =
-      hasNotPresent && (Array.isArray(notPresent) || Object.hasOwn(event.detail.value, NOT_PRESENT_FIELD))
-        ? withNotPresent(
-            decodedForm,
-            new Set(Array.isArray(notPresent) ? notPresent.filter((p): p is string => typeof p === 'string') : []),
-            current,
-          )
-        : decodedForm;
+    const decoded = hasNotPresent ? decodeNotPresent(decodedForm, event.detail.value, current) : decodedForm;
     // Values the editor cannot represent (`prefix: ''`, `features:` without a value, an invalid value) are normalised
     // on the first edit; the card's error is shown above the form until then (design D2).
     const pruned = withoutEmptyGroups(

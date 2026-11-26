@@ -256,14 +256,28 @@ export class EcogeoCard extends LitElement {
     return width < this.width ? width : 0;
   }
 
-  /** The readings of every role: the sample states in sample mode, `hass.states` otherwise. */
+  /** The states the card reads: the sample states in sample mode, `hass.states` otherwise. */
+  private statesFor(resolved: ResolvedConfig): HassLike['states'] {
+    return resolved.sample ? SAMPLE_STATES : (this.hass?.states ?? {});
+  }
+
+  /** The tap handler that opens more-info of an entity; none in sample mode, where the entities do not exist. */
+  private tapFor(resolved: ResolvedConfig): ((entityId: string) => void) | undefined {
+    return resolved.sample
+      ? undefined
+      : (entityId: string): void => {
+          fireMoreInfo(this, entityId);
+        };
+  }
+
+  /** The readings of every role. */
   private readings(resolved: ResolvedConfig): {
     readings: Readings;
     /** The optional roles without an entity, for the fallbacks of the drawing and the footer (add-htr-state D3). */
     absent: ReadonlySet<RolePath>;
     offline: boolean;
   } {
-    const states = resolved.sample ? SAMPLE_STATES : (this.hass?.states ?? {});
+    const states = this.statesFor(resolved);
     return {
       readings: readRoles(states, resolved.entities),
       absent: absentOptionalRoles(states, resolved.entities, resolved.defaulted),
@@ -297,16 +311,11 @@ export class EcogeoCard extends LitElement {
       !resolved.notPresent.has('brine.pump'),
       !absent.has('htr.active'),
     );
-    const states = resolved.sample ? SAMPLE_STATES : (this.hass?.states ?? {});
+    const states = this.statesFor(resolved);
     const moving = animationReadings(readings, resolved.entities, states);
     const view: PipeView = { mode, circuits, readings: moving, stops: resolved.colors };
     const display = { locale: localeFromHass(this.hass), entities: this.hass?.entities, states };
-    // Taps open more-info of the role's entity; the sample's entities do not exist, so they do nothing there.
-    const onTap = resolved.sample
-      ? undefined
-      : (entityId: string): void => {
-          fireMoreInfo(this, entityId);
-        };
+    const onTap = this.tapFor(resolved);
     const taps: Taps = { entities: resolved.entities, onTap };
     return html`<ha-card data-layout=${layout}>
       <div class="diagram" style=${fitted > 0 ? `max-width: ${String(fitted)}px; margin: 0 auto` : nothing}>

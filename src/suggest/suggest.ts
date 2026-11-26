@@ -201,13 +201,29 @@ export function fits(role: RoleSpec, candidate: Kind): boolean {
 const hits = (words: readonly string[], found: readonly string[]): boolean =>
   words.some((word) => found.some((token) => (word.length >= 4 ? token.includes(word) : token === word)));
 
-/** Step 4: the score of a candidate for a role; 0 when it does not match or is excluded. */
-export function score(role: RoleSpec, candidate: Candidate, prefix: string): number {
+/** The score of an exact entity id or a suffix match; 0 when the candidate has neither. */
+function nameScore(role: RoleSpec, candidate: Candidate, prefix: string): number {
   const exact = candidate.entityId === defaultEntityId(role, prefix.replace(/_$/, ''));
   if (exact && prefix !== '') return SCORE.exact;
   const suffixDomain = role.kind !== 'binary' || ON_OFF_DOMAINS.includes(candidate.domain);
   if (suffixDomain && (candidate.objectId === role.suffix || candidate.objectId.endsWith(`_${role.suffix}`)))
     return SCORE.suffix;
+  return 0;
+}
+
+/** The direction part of the score; undefined when a paired role has no direction word of its own. */
+function directionScore(role: RoleSpec, found: readonly string[]): number | undefined {
+  if (role.direction === undefined) return 0;
+  // A paired role needs a direction word of its own; a candidate with only the opposite one has none.
+  const weakOut = role.direction === 'out' && hits(WEAK_OUT_WORDS, found) && !hits(DIRECTION_WORDS.in, found);
+  if (!weakOut && !hits(DIRECTION_WORDS[role.direction], found)) return undefined;
+  return SCORE.direction;
+}
+
+/** Step 4: the score of a candidate for a role; 0 when it does not match or is excluded. */
+export function score(role: RoleSpec, candidate: Candidate, prefix: string): number {
+  const byName = nameScore(role, candidate, prefix);
+  if (byName > 0) return byName;
   const found = [
     ...tokens(candidate.objectId.startsWith(prefix) ? candidate.objectId.slice(prefix.length) : candidate.objectId),
     ...candidate.names.flatMap(tokens),
@@ -219,13 +235,8 @@ export function score(role: RoleSpec, candidate: Candidate, prefix: string): num
   let total = 0;
   if (hits(keywords.subject, found)) total += SCORE.subject;
   if (hits(keywords.role, found)) total += SCORE.role;
-  if (role.direction !== undefined) {
-    // A paired role needs a direction word of its own; a candidate with only the opposite one has none.
-    const weakOut = role.direction === 'out' && hits(WEAK_OUT_WORDS, found) && !hits(DIRECTION_WORDS.in, found);
-    if (!weakOut && !hits(DIRECTION_WORDS[role.direction], found)) return 0;
-    total += SCORE.direction;
-  }
-  return total;
+  const direction = directionScore(role, found);
+  return direction === undefined ? 0 : total + direction;
 }
 
 /** The entities map as a nested copy, so the result never shares objects with the config. */
@@ -239,13 +250,8 @@ function cloneGroup(value: unknown): Record<string, unknown> {
   );
 }
 
-/** Binds the device's entities to the open roles (D8 steps 1 to 6). */
-export function suggestEntities(input: SuggestInput): Suggestion {
-  const { states, config } = input;
-  const candidates = deviceCandidates(states, input.entities, input.devices, input.deviceId);
-  const prefix = votePrefix(candidates);
-
-  // Step 6: only empty roles and roles bound to an unknown entity take part; kept bindings use their entity.
+/** Step 6: the roles that are open (empty, or bound to an unknown entity) and the entities the kept bindings use. */
+function openRoles(config: CardConfig, states: SuggestInput['states']): { open: RoleSpec[]; used: Set<string> } {
   const resolved = resolveEntities(config, prefixOf(config));
   const used = new Set<string>();
   const open: RoleSpec[] = [];
@@ -256,8 +262,25 @@ export function suggestEntities(input: SuggestInput): Suggestion {
     if (bound !== undefined && states[bound] !== undefined) used.add(bound);
     else open.push(role);
   }
+  return { open, used };
+}
 
-  const pairs = open
+/** A candidate scored for an open role; `order` is the role's place among the open roles. */
+interface ScoredPair {
+  role: RoleSpec;
+  order: number;
+  candidate: Candidate;
+  score: number;
+}
+
+/** The scored (role, candidate) pairs of the open roles, strongest first, then by role order and entity id. */
+function rankedPairs(
+  open: readonly RoleSpec[],
+  candidates: readonly Candidate[],
+  used: ReadonlySet<string>,
+  prefix: string,
+): ScoredPair[] {
+  return open
     .flatMap((role, order) =>
       candidates
         .filter((candidate) => !used.has(candidate.entityId) && fits(role, candidate))
@@ -265,8 +288,10 @@ export function suggestEntities(input: SuggestInput): Suggestion {
     )
     .filter((pair) => pair.score > 0)
     .sort((a, b) => b.score - a.score || a.order - b.order || (a.candidate.entityId < b.candidate.entityId ? -1 : 1));
+}
 
-  // Step 5: strongest pair first; a role whose two best unused candidates are close stays empty.
+/** Step 5: strongest pair first; a role whose two best unused candidates are close stays empty. Adds to `used`. */
+function takePairs(pairs: readonly ScoredPair[], used: Set<string>): Map<RolePath, string> {
   const taken = new Map<RolePath, string>();
   const closed = new Set<RolePath>();
   for (const pair of pairs) {
@@ -281,7 +306,11 @@ export function suggestEntities(input: SuggestInput): Suggestion {
     taken.set(path, pair.candidate.entityId);
     used.add(pair.candidate.entityId);
   }
+  return taken;
+}
 
+/** The config's entities map, copied, with the taken entity ids written in. */
+function entitiesWith(config: CardConfig, taken: ReadonlyMap<RolePath, string>): Record<string, unknown> {
   const entities = cloneGroup(valueAt(config, 'entities'));
   for (const [path, entityId] of taken) {
     const [group = '', name = ''] = path.split('.');
@@ -290,6 +319,17 @@ export function suggestEntities(input: SuggestInput): Suggestion {
     target[name] = entityId;
     entities[group] = target;
   }
+  return entities;
+}
+
+/** Binds the device's entities to the open roles (D8 steps 1 to 6). */
+export function suggestEntities(input: SuggestInput): Suggestion {
+  const { states, config } = input;
+  const candidates = deviceCandidates(states, input.entities, input.devices, input.deviceId);
+  const prefix = votePrefix(candidates);
+  const { open, used } = openRoles(config, states);
+  const taken = takePairs(rankedPairs(open, candidates, used, prefix), used);
+  const entities = entitiesWith(config, taken);
   const filled = open.map((role) => role.path as RolePath).filter((path) => taken.has(path));
   return {
     entities,
