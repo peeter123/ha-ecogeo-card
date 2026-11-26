@@ -81,8 +81,8 @@ const stem = (length: number, from: number): SVGTemplateResult => svg`<path d="M
 const arm = (points: string, filled: boolean): SVGTemplateResult =>
   svg`<path d="${points}" fill=${filled ? 'currentColor' : 'none'} />`;
 
-/** The arrangement a symbol is drawn in; the kinds that size themselves from it throw without one. */
-function arrangementOf(kind: ComponentKind, options: SymbolOptions): Arrangement {
+/** The arrangement a symbol is drawn in; throws for a kind that sizes itself from it when there is none. */
+function requireArrangement(kind: ComponentKind, options: SymbolOptions): Arrangement {
   if (options.arrangement === undefined) throw new Error(`the ${kind} symbol needs the arrangement it is drawn in`);
   return options.arrangement;
 }
@@ -111,7 +111,7 @@ function exchangerBody(options: SymbolOptions): SVGTemplateResult {
 
 /** The integrated tank (50): its body takes the DHW temperature colour through --dhw-tank-color. */
 function tankBody(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
-  const { width, height } = arrangementOf(kind, options).internalTank;
+  const { width, height } = requireArrangement(kind, options).internalTank;
   return svg`<rect class="tank-body" data-dhw-tank="internal" x=${-width / 2} y=${-height / 2} width=${width} height=${height} rx="14" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />`;
 }
 
@@ -139,7 +139,7 @@ const SYMBOL_BODIES: Record<
   port: () => svg`<rect x="-5" y="-6" width="10" height="6" />`,
   tank: tankBody,
   // the coil (51): a helix on its side with both ports at its left end
-  coil: (kind, options) => helixCoil(arrangementOf(kind, options)),
+  coil: (kind, options) => helixCoil(requireArrangement(kind, options)),
 };
 
 function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {

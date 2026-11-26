@@ -2135,6 +2135,7 @@ export const isSegmentActive = (segment: Pick<Segment, 'circuit' | 'onlyWhen'>, 
 /** The hop of a crossing: the gap in the `under` segment is this many units on each side of the crossing. */
 export const HOP = 7;
 
+/** How far the stem of each sensor symbol reaches along +y from its centre: where its one port is. */
 const STEM = {
   probe_t: 16,
   transducer_p: 16,
@@ -2147,7 +2148,7 @@ const pair = (half: number): Point[] => [
   [half, 0],
 ];
 
-/** The connectable ports of each kind, before the rotation. */
+/** The connectable ports of each kind, relative to the symbol's centre, before the rotation. */
 const LOCAL_PORTS: Record<ComponentKind, (component: Component) => readonly Point[]> = {
   port: () => [[0, 0]],
   pump: () => pair(12),
@@ -2186,6 +2187,7 @@ const LOCAL_PORTS: Record<ComponentKind, (component: Component) => readonly Poin
   coil: () => COIL_LOCAL_PORTS,
 };
 
+/** The ports of a component relative to its centre, before the rotation. */
 const localPorts = (component: Component): readonly Point[] => LOCAL_PORTS[component.kind](component);
 
 const rotate = ([x, y]: Point, rotation: Rotation): Point => {

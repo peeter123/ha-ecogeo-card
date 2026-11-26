@@ -31,6 +31,13 @@ describe('complexity limit', () => {
     expect(result.messages).toEqual([]);
   });
 
+  test('16 under src/ is reported', async () => {
+    const result = await lint(withComplexity('tooBranchy', 16), 'src/fixture.mjs');
+    const messages = result.messages.filter((m) => m.ruleId === 'complexity');
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.message).toContain('tooBranchy');
+  });
+
   test('16 under test/ is not reported', async () => {
     const result = await lint(withComplexity('tooBranchy', 16), 'test/fixture.mjs');
     expect(result.fatalErrorCount).toBe(0);

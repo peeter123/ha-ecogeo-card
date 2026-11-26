@@ -5,10 +5,11 @@
 ### Requirement: Complexity limit
 The project check SHALL fail when a function in the card's sources, the emulator, the scripts or the root config
 files has a cyclomatic complexity above 15, counted as ESLint's `complexity` rule counts it (classic variant). The
-failure SHALL name the file and the function. Test files SHALL NOT be held to the limit.
+failure SHALL name the file and the function's position, and its name where ESLint gives one: for a function
+declaration, not for an arrow function in a `const` or a callback. Test files SHALL NOT be held to the limit.
 
 #### Scenario: Function over the limit
-- **WHEN** a function in a file under `scripts/` has a cyclomatic complexity of 16
+- **WHEN** a function declaration in a file under `scripts/` has a cyclomatic complexity of 16
 - **THEN** the lint fails and names that file and that function
 
 #### Scenario: Function at the limit

@@ -145,10 +145,14 @@
 
 ## 8. Live installation (each step needs the user's explicit go)
 
-- [ ] 8.1 Deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource's `?v=` (id and value in
+- [x] 8.1 Deploy `dist/ecogeo-card.js` explicitly, bump the dashboard resource's `?v=` (id and value in
   `private/installation.md`) and record the deploy there. Verify: the resource version went up by one. A subagent's
   light screenshots at phone width and at desktop width of the schematic view show the card unchanged, with 1.1.2 in
   the console's load message.
+  Verdict (2026-11-26): deployed with the user's go (UPLOAD, no conflict); the resource went from `?v=19` to `?v=20`;
+    both light screenshots pass (phone width and desktop width, the unit in Standby), and nothing from the card is in
+    the system log. The console line was not read in a browser, for lack of a browser tool; the deployed file is the
+    `dist/ecogeo-card.js` whose load message `npm run verify-dist` checked as 1.1.2.
 
 ## Workflow follow-up
 
