@@ -157,74 +157,83 @@ const overlaps = (a: Box, b: Box): boolean =>
   Math.min(a.right, b.right) - Math.max(a.left, b.left) > TOLERANCE &&
   Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > TOLERANCE;
 
-/** The overlapping pairs of a measurement, as texts. */
-export function overlapPairs({ labels, parts, pipes = [], drawing, cabinet }: Measurement): string[] {
-  const pairs: string[] = [];
+/** Whether a box lies wholly inside another. */
+const inside = (square: Box, outer: Box): boolean =>
+  square.left >= outer.left && square.right <= outer.right && square.top >= outer.top && square.bottom <= outer.bottom;
+
+/** `label <id> x <pipe>` for every pipe sample a label's box overlaps (the labels inside tank 50 ignore the samples in tank 50). */
+function pipePairs({ labels, parts, pipes = [] }: Measurement): string[] {
   const tank50 = parts.find((part) => part.id === 'symbol-group:50');
-  const bodyOf = (label: LabelBox): PartBox | undefined => {
-    const id = BODY_LABELS[label.id];
-    return id === undefined ? undefined : parts.find((part) => part.id === id);
-  };
-  const inside = (square: Box, outer: Box): boolean =>
-    square.left >= outer.left &&
-    square.right <= outer.right &&
-    square.top >= outer.top &&
-    square.bottom <= outer.bottom;
-  const add = (pair: string): void => {
-    if (!pairs.includes(pair)) pairs.push(pair);
-  };
+  const pairs: string[] = [];
   for (const label of labels) {
+    const ignored = BODY_LABELS[label.id] === 'symbol-group:50' ? tank50 : undefined;
     for (const pipe of pipes) {
-      const ignored = BODY_LABELS[label.id] === 'symbol-group:50' && tank50 !== undefined ? tank50 : undefined;
       if (pipe.squares.some((s) => overlaps(s, label) && !(ignored !== undefined && inside(s, ignored)))) {
-        add(`label ${label.id} x ${pipe.id}`);
+        pairs.push(`label ${label.id} x ${pipe.id}`);
       }
     }
   }
-  // a label whose box leaves the drawing (the card's own edge) by more than the tolerance
-  if (drawing !== undefined) {
-    for (const label of labels) {
-      if (
+  return pairs;
+}
+
+/** `label <id> x edge` for a label whose box leaves the drawing (the card's own edge) by more than the tolerance. */
+function edgePairs(labels: LabelBox[], drawing: Box | undefined): string[] {
+  if (drawing === undefined) return [];
+  return labels
+    .filter(
+      (label) =>
         drawing.left - label.left > TOLERANCE ||
         label.right - drawing.right > TOLERANCE ||
         drawing.top - label.top > TOLERANCE ||
-        label.bottom - drawing.bottom > TOLERANCE
-      )
-        add(`label ${label.id} x edge`);
-    }
-  }
-  // a label that crosses the cabinet's outline: partly inside it and partly outside (refine-simplified-layout D11)
-  if (cabinet !== undefined) {
-    for (const label of labels) {
+        label.bottom - drawing.bottom > TOLERANCE,
+    )
+    .map((label) => `label ${label.id} x edge`);
+}
+
+/** `label <id> x cabinet` for a label that crosses the cabinet's outline: partly inside it and partly outside (refine-simplified-layout D11). */
+function cabinetPairs(labels: LabelBox[], cabinet: Box | undefined): string[] {
+  if (cabinet === undefined) return [];
+  return labels
+    .filter((label) => {
       const within =
         label.left >= cabinet.left - TOLERANCE &&
         label.right <= cabinet.right + TOLERANCE &&
         label.top >= cabinet.top - TOLERANCE &&
         label.bottom <= cabinet.bottom + TOLERANCE;
-      if (overlaps(label, cabinet) && !within) add(`label ${label.id} x cabinet`);
-    }
+      return overlaps(label, cabinet) && !within;
+    })
+    .map((label) => `label ${label.id} x cabinet`);
+}
+
+/** The pairs of one label with the labels after it, the parts (but its own body) and the outline of its body. */
+function labelPairs(label: LabelBox, others: LabelBox[], parts: PartBox[]): string[] {
+  const pairs = others
+    .filter((other) => overlaps(label, other))
+    .map((other) => `label ${label.id} x label ${other.id}`);
+  const bodyId = BODY_LABELS[label.id];
+  const body = bodyId === undefined ? undefined : parts.find((part) => part.id === bodyId);
+  for (const part of parts) {
+    // the case part only stands in as a body: as an obstacle, the air unit's group (case and feet) already counts, and
+    // for the air unit's own values the case (their body) replaces that group
+    if (part === body || part.id === CASE_PART || (body?.id === CASE_PART && part.id === CASE_GROUP)) continue;
+    if (overlaps(label, part)) pairs.push(`label ${label.id} x ${part.id}`);
   }
-  labels.forEach((label, index) => {
-    for (const other of labels.slice(index + 1)) {
-      if (overlaps(label, other)) pairs.push(`label ${label.id} x label ${other.id}`);
-    }
-    const body = bodyOf(label);
-    for (const part of parts) {
-      // the case part only stands in as a body: as an obstacle, the air unit's group (case and feet) already counts, and
-      // for the air unit's own values the case (their body) replaces that group
-      if (part === body || part.id === CASE_PART || (body?.id === CASE_PART && part.id === CASE_GROUP)) continue;
-      if (overlaps(label, part)) pairs.push(`label ${label.id} x ${part.id}`);
-    }
-    if (
-      body !== undefined &&
-      (label.left < body.left - TOLERANCE ||
-        label.right > body.right + TOLERANCE ||
-        label.top < body.top - TOLERANCE ||
-        label.bottom > body.bottom + TOLERANCE)
-    )
-      pairs.push(`label ${label.id} x outline:${body.id}`);
-  });
+  if (
+    body !== undefined &&
+    (label.left < body.left - TOLERANCE ||
+      label.right > body.right + TOLERANCE ||
+      label.top < body.top - TOLERANCE ||
+      label.bottom > body.bottom + TOLERANCE)
+  )
+    pairs.push(`label ${label.id} x outline:${body.id}`);
   return pairs;
+}
+
+/** The overlapping pairs of a measurement, as texts. */
+export function overlapPairs(measurement: Measurement): string[] {
+  const { labels, parts, drawing, cabinet } = measurement;
+  const first = [...pipePairs(measurement), ...edgePairs(labels, drawing), ...cabinetPairs(labels, cabinet)];
+  return [...new Set(first), ...labels.flatMap((label, index) => labelPairs(label, labels.slice(index + 1), parts))];
 }
 
 /**

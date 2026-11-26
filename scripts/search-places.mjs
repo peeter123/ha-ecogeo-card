@@ -99,6 +99,7 @@ async function searchInPage({
   rows,
   headShift,
 }) {
+  // page.evaluate serialises only this function: every helper is defined inside it
   const [casePart, caseGroup] = caseParts;
   const path = '/dev/overlaps.ts';
   const shared = await import(path);
@@ -154,12 +155,17 @@ async function searchInPage({
   };
   const pipeBoxes = (m.pipes ?? []).flatMap((/** @type {{ squares: object[] }} */ pipe) => pipe.squares);
   const hits = obstacles([...m.parts, ...pipeBoxes]);
-  const cab = {
-    left: cabinet.left - drawing.left,
-    right: cabinet.right - drawing.left,
-    top: cabinet.top - drawing.top,
-    bottom: cabinet.bottom - drawing.top,
-  };
+  /**
+   * A box in px relative to the drawing's top left corner.
+   * @param {{ left: number; right: number; top: number; bottom: number }} b
+   */
+  const rebased = (b) => ({
+    left: b.left - drawing.left,
+    right: b.right - drawing.left,
+    top: b.top - drawing.top,
+    bottom: b.bottom - drawing.top,
+  });
+  const cab = rebased(cabinet);
   const nx = Math.floor(vb.width / step) + 1;
   // the same number of rows in every case, so that the packed bits line up
   const ny = rows;
@@ -170,117 +176,185 @@ async function searchInPage({
   const shiftOf = (id) =>
     bodies[id] !== undefined || (homes[id] !== undefined && homes[id].y * scale < cab.top) ? 0 : shift;
   const aligns = ['start', 'middle', 'end'];
-  const results = [];
+  /**
+   * The left edge of a box of width `w` placed at `x` with an alignment.
+   * @param {string} align
+   * @param {number} x
+   * @param {number} w
+   */
+  const leftOf = (align, x, w) => (align === 'start' ? x : align === 'end' ? x - w : x - w / 2);
+  /**
+   * Whether the box l, r, t, b lies within `outer`, widened by `slack` on every side.
+   * @param {{ left: number; right: number; top: number; bottom: number }} outer
+   * @param {number} l
+   * @param {number} r
+   * @param {number} t
+   * @param {number} b
+   * @param {number} slack
+   */
+  const within = (outer, l, r, t, b, slack) =>
+    l >= outer.left - slack && r <= outer.right + slack && t >= outer.top - slack && b <= outer.bottom + slack;
+  /**
+   * Whether the box l, r, t, b crosses the cabinet's outline: partly inside it and partly outside.
+   * @param {number} l
+   * @param {number} r
+   * @param {number} t
+   * @param {number} b
+   */
+  const crossesCabinet = (l, r, t, b) =>
+    Math.min(r, cab.right) - Math.max(l, cab.left) > tol &&
+    Math.min(b, cab.bottom) - Math.max(t, cab.top) > tol &&
+    !within(cab, l, r, t, b, tol);
   // why each label's default place (its home, before the recorded places) fails: what its box, with the margin, overlaps
   /** @param {{ left: number; right: number; top: number; bottom: number }} a @param {{ left: number; right: number; top: number; bottom: number }} b */
   const meets = (a, b) =>
     Math.min(a.right, b.right) - Math.max(a.left, b.left) > tol &&
     Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > tol;
-  const homeBoxes = m.labels.map(
-    (/** @type {{ id: string; left: number; right: number; top: number; bottom: number }} */ label) => {
-      const home = homes[label.id];
-      const w = label.right - label.left;
-      const h = label.bottom - label.top;
-      // a body's label is placed from its zones (it follows its body): its home is where it renders
-      // (harmonize-band D8a: the labels of EXACT_LABELS are checked on their rendered box, without the margin)
-      if (bodies[label.id] !== undefined) {
-        const mx = exact.includes(label.id) ? 0 : marginX;
-        const my = exact.includes(label.id) ? 0 : marginY;
-        return {
-          id: label.id,
-          box: {
-            left: label.left - drawing.left - mx,
-            right: label.right - drawing.left + mx,
-            top: label.top - drawing.top - my,
-            bottom: label.bottom - drawing.top + my,
-          },
-          raw: {
-            left: label.left - drawing.left,
-            right: label.right - drawing.left,
-            top: label.top - drawing.top,
-            bottom: label.bottom - drawing.top,
-          },
-        };
-      }
-      if (home === undefined) return { id: label.id, box: undefined };
-      const x = home.x * scale + 0;
-      const left = home.align === 'start' ? x : home.align === 'end' ? x - w : x - w / 2;
-      const y = (home.y + shiftOf(label.id)) * scale;
+  /**
+   * The default place of a label: its box with the margin, and the raw box of a label a body places.
+   * @param {{ id: string; left: number; right: number; top: number; bottom: number }} label
+   */
+  const homeBoxOf = (label) => {
+    const home = homes[label.id];
+    // a body's label is placed from its zones (it follows its body): its home is where it renders
+    // (harmonize-band D8a: the labels of EXACT_LABELS are checked on their rendered box, without the margin)
+    if (bodies[label.id] !== undefined) {
+      const mx = exact.includes(label.id) ? 0 : marginX;
+      const my = exact.includes(label.id) ? 0 : marginY;
+      const raw = rebased(label);
       return {
         id: label.id,
-        box: { left: left - marginX, right: left + w + marginX, top: y - h / 2 - marginY, bottom: y + h / 2 + marginY },
+        box: { left: raw.left - mx, right: raw.right + mx, top: raw.top - my, bottom: raw.bottom + my },
+        raw,
       };
-    },
-  );
-  /** @param {string} id */
-  const homeHits = (id) => {
-    const own = homeBoxes.find((/** @type {{ id: string }} */ entry) => entry.id === id);
-    const mine = own?.box;
-    if (mine === undefined) return [];
+    }
+    if (home === undefined) return { id: label.id, box: undefined };
+    const w = label.right - label.left;
+    const h = label.bottom - label.top;
+    const left = leftOf(home.align, home.x * scale + 0, w);
+    const y = (home.y + shiftOf(label.id)) * scale;
+    return {
+      id: label.id,
+      box: { left: left - marginX, right: left + w + marginX, top: y - h / 2 - marginY, bottom: y + h / 2 + marginY },
+    };
+  };
+  const homeBoxes = m.labels.map(homeBoxOf);
+  /**
+   * The parts a default place meets.
+   * @param {string} id
+   * @param {{ left: number; right: number; top: number; bottom: number }} mine
+   */
+  const partHits = (id, mine) => {
+    // as overlapPairs: the case is no obstacle to any label (its own values are inside it, the others are checked
+    // against the group), and the group (case and feet) is none to the values inside the case
+    const body = bodies[id];
+    return m.parts
+      .filter(
+        (/** @type {{ id: string; left: number; right: number; top: number; bottom: number }} */ part) =>
+          !(part.id === casePart || (body === casePart && part.id === caseGroup)) &&
+          meets(mine, rebased(part)) &&
+          body !== part.id,
+      )
+      .map((/** @type {{ id: string }} */ part) => part.id);
+  };
+  /**
+   * The pipes a default place meets.
+   * @param {{ left: number; right: number; top: number; bottom: number }} mine
+   */
+  const pipeHits = (mine) =>
+    (m.pipes ?? [])
+      .filter((/** @type {{ squares: { left: number; right: number; top: number; bottom: number }[] }} */ pipe) =>
+        pipe.squares.some((q) => meets(mine, rebased(q))),
+      )
+      .map((/** @type {{ id: string }} */ pipe) => pipe.id);
+  /**
+   * The other labels' default places a default place meets.
+   * @param {string} id
+   * @param {{ raw?: { left: number; right: number; top: number; bottom: number } }} own
+   * @param {{ left: number; right: number; top: number; bottom: number }} mine
+   */
+  const labelHits = (id, own, mine) => {
     const isExact = exact.includes(id);
     /** @type {string[]} */
     const hit = [];
-    for (const part of m.parts) {
-      const rel = {
-        left: part.left - drawing.left,
-        right: part.right - drawing.left,
-        top: part.top - drawing.top,
-        bottom: part.bottom - drawing.top,
-      };
-      // as overlapPairs: the case is no obstacle to any label (its own values are inside it, the others are checked
-      // against the group), and the group (case and feet) is none to the values inside the case
-      const body = bodies[id];
-      if (part.id === casePart || (body === casePart && part.id === caseGroup)) continue;
-      if (meets(mine, rel) && body !== part.id) hit.push(part.id);
-    }
-    for (const pipe of m.pipes ?? []) {
-      if (
-        pipe.squares.some((/** @type {{ left: number; right: number; top: number; bottom: number }} */ q) =>
-          meets(mine, {
-            left: q.left - drawing.left,
-            right: q.right - drawing.left,
-            top: q.top - drawing.top,
-            bottom: q.bottom - drawing.top,
-          }),
-        )
-      )
-        hit.push(pipe.id);
-    }
-    for (const other of homeBoxes)
+    for (const other of homeBoxes) {
       // the two rows of a block keep their fixed pitch: a row's margin does not count against its partner
-      if (other.id !== id && partners[id] !== other.id && other.box !== undefined) {
-        // the margin goes only for the body-placed labels themselves (D8a): a non-exact label keeps its own margin
-        // against an exact one, whose box is raw
-        const a = isExact && own?.raw !== undefined ? own.raw : mine;
-        const b = exact.includes(other.id) ? (other.raw ?? other.box) : other.box;
-        if (meets(a, b)) hit.push(`label:${other.id}`);
-      }
+      if (other.id === id || partners[id] === other.id || other.box === undefined) continue;
+      // the margin goes only for the body-placed labels themselves (D8a): a non-exact label keeps its own margin
+      // against an exact one, whose box is raw
+      const a = isExact && own.raw !== undefined ? own.raw : mine;
+      const b = exact.includes(other.id) ? (other.raw ?? other.box) : other.box;
+      if (meets(a, b)) hit.push(`label:${other.id}`);
+    }
+    return hit;
+  };
+  /**
+   * The edge, the cabinet and the body a default place leaves.
+   * @param {string} id
+   * @param {{ left: number; right: number; top: number; bottom: number }} mine
+   */
+  const boundsHits = (id, mine) => {
+    /** @type {string[]} */
+    const hit = [];
     if (mine.left < 0 || mine.top < 0 || mine.right > dw || mine.bottom > dh) hit.push('edge');
-    const overlapsCabinet = meets(mine, cab);
-    const withinCabinet =
-      mine.left >= cab.left - tol &&
-      mine.right <= cab.right + tol &&
-      mine.top >= cab.top - tol &&
-      mine.bottom <= cab.bottom + tol;
-    if (overlapsCabinet && !withinCabinet) hit.push('cabinet');
+    if (crossesCabinet(mine.left, mine.right, mine.top, mine.bottom)) hit.push('cabinet');
     // a value inside a body stays inside that body's box
     const bodyOf =
       bodies[id] === undefined
         ? undefined
         : m.parts.find((/** @type {{ id: string }} */ part) => part.id === bodies[id]);
-    if (
-      bodyOf !== undefined &&
-      !(
-        mine.left >= bodyOf.left - drawing.left &&
-        mine.right <= bodyOf.right - drawing.left &&
-        mine.top >= bodyOf.top - drawing.top &&
-        mine.bottom <= bodyOf.bottom - drawing.top
-      )
-    )
+    if (bodyOf !== undefined && !within(rebased(bodyOf), mine.left, mine.right, mine.top, mine.bottom, 0))
       hit.push(`outside:${bodyOf.id}`);
     return hit;
   };
-  for (const label of m.labels) {
+  /** @param {string} id */
+  const homeHits = (id) => {
+    const own = homeBoxes.find((/** @type {{ id: string }} */ entry) => entry.id === id);
+    const mine = own?.box;
+    if (own === undefined || mine === undefined) return [];
+    return [...partHits(id, mine), ...pipeHits(mine), ...labelHits(id, own, mine), ...boundsHits(id, mine)];
+  };
+  /**
+   * Whether a candidate box (with its margin) is a place: inside the drawing and the label's body, clear of the
+   * cabinet's outline and of the obstacles.
+   * @param {{ l: number; r: number; t: number; b: number }} box
+   * @param {{ left: number; right: number; top: number; bottom: number } | undefined} rel the label's body, when it has one
+   * @param {(l: number, r: number, t: number, b: number) => boolean} hitsOwn
+   */
+  const isPlace = ({ l, r, t, b }, rel, hitsOwn) =>
+    !(l < 0 || t < 0 || r > dw || b > dh) &&
+    (rel === undefined || within(rel, l, r, t, b, 0)) &&
+    !crossesCabinet(l, r, t, b) &&
+    !hitsOwn(l, r, t, b);
+  /**
+   * The candidate places of a label that are free, as packed bits.
+   * @param {{ id: string; rotated?: boolean }} label
+   * @param {number} w
+   * @param {number} h
+   * @param {{ left: number; right: number; top: number; bottom: number } | undefined} rel
+   * @param {(l: number, r: number, t: number, b: number) => boolean} hitsOwn
+   */
+  const freeBits = (label, w, h, rel, hitsOwn) => {
+    const bits = new Uint8Array(Math.ceil((aligns.length * ny * nx) / 8));
+    let at = 0;
+    for (const align of aligns) {
+      for (let iy = 0; iy < ny; iy += 1) {
+        for (let ix = 0; ix < nx; ix += 1, at += 1) {
+          // a turned (rotated) label is centred on its place: only the middle alignment is a candidate
+          if (label.rotated === true && align !== 'middle') continue;
+          const x = ix * step * scale;
+          const y = (iy * step + shiftOf(label.id)) * scale;
+          const left = leftOf(align, x, w);
+          // the box with its margin
+          const box = { l: left - marginX, r: left + w + marginX, t: y - h / 2 - marginY, b: y + h / 2 + marginY };
+          if (isPlace(box, rel, hitsOwn)) bits[at >> 3] = (bits[at >> 3] ?? 0) | (1 << (at & 7));
+        }
+      }
+    }
+    return bits;
+  };
+  /** @param {{ id: string; left: number; right: number; top: number; bottom: number; rotated?: boolean }} label */
+  const searchLabel = (label) => {
     // a label inside a body (tank 50, the external tank, the air unit, the ground collector) stays inside that body's box and
     // ignores the body as an obstacle; the obstacles the body registers (coil panel, fan, hatching, probe) still count
     const bodyId = bodies[label.id];
@@ -295,47 +369,9 @@ async function searchInPage({
             ),
             ...pipeBoxes,
           ]);
-    const rel =
-      body === undefined
-        ? undefined
-        : {
-            left: body.left - drawing.left,
-            right: body.right - drawing.left,
-            top: body.top - drawing.top,
-            bottom: body.bottom - drawing.top,
-          };
-    const vMargin = marginY;
     const w = label.right - label.left;
     const h = label.bottom - label.top;
-    const bits = new Uint8Array(Math.ceil((aligns.length * ny * nx) / 8));
-    let at = 0;
-    for (const align of aligns) {
-      for (let iy = 0; iy < ny; iy += 1) {
-        for (let ix = 0; ix < nx; ix += 1, at += 1) {
-          // a turned (rotated) label is centred on its place: only the middle alignment is a candidate
-          if (label.rotated === true && align !== 'middle') continue;
-          const x = ix * step * scale;
-          const y = (iy * step + shiftOf(label.id)) * scale;
-          const left = align === 'start' ? x : align === 'end' ? x - w : x - w / 2;
-          // the box with its margin
-          const l = left - marginX;
-          const r = left + w + marginX;
-          const t = y - h / 2 - vMargin;
-          const b = y + h / 2 + vMargin;
-          if (l < 0 || t < 0 || r > dw || b > dh) continue;
-          if (rel !== undefined && !(l >= rel.left && r <= rel.right && t >= rel.top && b <= rel.bottom)) continue;
-          // a label never crosses the cabinet's outline: wholly inside it or wholly outside it
-          const overlapsCabinet =
-            Math.min(r, cab.right) - Math.max(l, cab.left) > tol &&
-            Math.min(b, cab.bottom) - Math.max(t, cab.top) > tol;
-          const withinCabinet =
-            l >= cab.left - tol && r <= cab.right + tol && t >= cab.top - tol && b <= cab.bottom + tol;
-          if (overlapsCabinet && !withinCabinet) continue;
-          if (hitsOwn(l, r, t, b)) continue;
-          bits[at >> 3] = (bits[at >> 3] ?? 0) | (1 << (at & 7));
-        }
-      }
-    }
+    const bits = freeBits(label, w, h, body === undefined ? undefined : rebased(body), hitsOwn);
     let text = '';
     for (const byte of bits) text += String.fromCharCode(byte);
     // the default place itself is a candidate too, when it is free: the 4-unit grid cannot hit a place that is only a few
@@ -343,7 +379,7 @@ async function searchInPage({
     // raster: such a block is free by a fraction of a pixel)
     // (a value inside a body is placed from the body's zone: its home is where it renders, and it is free when nothing meets it there)
     const homeFree = (homes[label.id] !== undefined || bodyId !== undefined) && homeHits(label.id).length === 0;
-    results.push({
+    return {
       id: label.id,
       w: w / scale,
       h: h / scale,
@@ -351,9 +387,9 @@ async function searchInPage({
       homeHits: homeHits(label.id),
       homeFree,
       rotated: label.rotated === true,
-    });
-  }
-  return { vb: { width: vb.width, height: vb.height }, labels: results };
+    };
+  };
+  return { vb: { width: vb.width, height: vb.height }, labels: m.labels.map(searchLabel) };
 }
 
 const server = await createServer({

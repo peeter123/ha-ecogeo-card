@@ -51,17 +51,32 @@
 
 ## 4. Emulator and scripts
 
-- [ ] 4.1 Before changing `scripts/search-places.mjs`, save the reports of `npm run search-places --
+- [x] 4.1 Before changing `scripts/search-places.mjs`, save the reports of `npm run search-places --
   --layout=horizontal --width=560` and `npm run search-places -- --layout=vertical --width=320` to the scratchpad.
   Then bring `searchInPage` and its page callback to complexity 15 or lower (design D2). Verify: D1's command over
   `scripts/search-places.mjs` reports nothing, and both reports are identical to the saved ones.
-- [ ] 4.2 Bring `main` (`scripts/check-on-edit.mjs`), `overlapPairs` (`dev/overlaps.ts`) and `foreignValue`
+  Verdict (2026-11-26): `searchInPage` 39 to 8 and its page callback (`homeHits`) 37 to 4; the helpers, all nested in
+    `searchInPage` because `page.evaluate` serialises only that function: `rebased` 1, `leftOf` 3, `within` 4,
+    `crossesCabinet` 3, `meets` 2, `homeBoxOf` 5, `partHits` 1 (its filter 5), `pipeHits` 2, `labelHits` 10,
+    `boundsHits` 9, `isPlace` 8, `freeBits` 8, `searchLabel` 7 (`obstacles` 8 and `shiftOf` 4 were already
+    separate). D1's command over `scripts/search-places.mjs` reports nothing. Both reports are byte-identical to
+    the saved ones (no timings or timestamps in them): `--layout=horizontal --width=560` and
+    `--layout=vertical --width=320`.
+- [x] 4.2 Bring `main` (`scripts/check-on-edit.mjs`), `overlapPairs` (`dev/overlaps.ts`) and `foreignValue`
   (`dev/foreign.ts`) to complexity 15 or lower (design D2). Verify:
   - D1's command over `dev/` and `scripts/` reports nothing;
   - the tests in `test/scripts/` and `test/dev/` pass unchanged;
   - an edit of a TypeScript file under `src/` and of a tracked Markdown file each gets the hook's checks, and a
     deliberate format error in the Markdown file is reported;
   - `npm run check` passes.
+  Verdict (2026-11-26): `main` 26 to 11 (`readPayload` 4, `checkNonCode` 11, `checkTypeScript` 5), `overlapPairs` 20 to
+    1 (`pipePairs` 6, `edgePairs` 2 and `cabinetPairs` 2 with filters at 4 and 5, `labelPairs` 14), `foreignValue` 17
+    to 8 (`whenNumeric` 3,
+    `foreignOnOff` 3, `foreignMode` 5). D1's command over `dev/` and `scripts/` reports nothing, and `test/scripts` and
+    `test/dev` pass unchanged (6 files, 85 tests). The hook, run by hand: a TypeScript file under `src/` gets Prettier,
+    ESLint, tsc and Vitest (a deliberate type error and an unused variable were reported, exit 2), a tracked Markdown
+    file gets the format check (a deliberate error was reported, exit 2), a clean file exits 0, a bad payload exits 1,
+    and the test edits are undone. `npm run check` passes (87 test files, 13716 tests passed, 4 expected fail).
 
 ## 5. Review pass for dead code and duplication
 

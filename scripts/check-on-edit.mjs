@@ -54,42 +54,47 @@ function run(label, script, args) {
   return runCommand(label, process.execPath, [join(root, 'node_modules', script), ...args]);
 }
 
-/** @returns {Promise<number>} the exit code */
-async function main() {
-  let input;
+/**
+ * Reads the hook payload from stdin.
+ * @returns {{ path: unknown } | { code: number }} the edited file's path, or the exit code of an unreadable payload
+ */
+function readPayload() {
   try {
-    input = JSON.parse(readFileSync(0, 'utf8'));
+    return { path: JSON.parse(readFileSync(0, 'utf8'))?.tool_input?.file_path };
   } catch (error) {
     process.stderr.write(`check-on-edit: could not read the hook payload, file not checked: ${String(error)}\n`);
-    return 1;
+    return { code: 1 };
   }
-  const path = input?.tool_input?.file_path;
-  if (typeof path !== 'string' || !path) return 0;
+}
 
-  const absolute = isAbsolute(path) ? path : join(root, path);
-  const rel = relative(root, absolute);
-  const topDir = normalise(rel.split(sep)[0] ?? '');
-
-  // Non-code files: the Markdown format check and yamllint, on the edited file only.
+/**
+ * Non-code files: the Markdown format check and yamllint, on the edited file only.
+ * @param {string} rel the path relative to the repository root
+ * @param {string} absolute
+ * @returns {Promise<number | undefined>} the exit code, or undefined when the file is not a Markdown or YAML file in the repository (or no longer on disk)
+ */
+async function checkNonCode(rel, absolute) {
   const isMarkdown = /\.md$/i.test(rel);
   const isYaml = /\.ya?ml$/i.test(rel);
-  if ((isMarkdown || isYaml) && !rel.startsWith('..') && !isAbsolute(rel) && existsSync(absolute)) {
-    if (isMarkdown && !inScope(rel)) return 0;
-    // Git-ignored files (private/) are not part of the checks; exit 0 of `git check-ignore -q` means ignored.
-    if (!(await runCommand('git check-ignore', 'git', ['check-ignore', '-q', '--', rel]))) return 0;
-    const failure = isMarkdown
-      ? await runCommand('Markdown format', process.execPath, [join(root, 'scripts', 'md-format.mjs'), rel])
-      : await runCommand('yamllint', 'uvx', [`yamllint@${YAMLLINT_VERSION}`, '--strict', rel], UV_HINT);
-    if (!failure) return 0;
-    process.stderr.write(`check-on-edit: ${rel}\n\n${failure}\n`);
-    return 2;
-  }
+  if (!((isMarkdown || isYaml) && !rel.startsWith('..') && !isAbsolute(rel) && existsSync(absolute))) return undefined;
+  if (isMarkdown && !inScope(rel)) return 0;
+  // Git-ignored files (private/) are not part of the checks; exit 0 of `git check-ignore -q` means ignored.
+  if (!(await runCommand('git check-ignore', 'git', ['check-ignore', '-q', '--', rel]))) return 0;
+  const failure = isMarkdown
+    ? await runCommand('Markdown format', process.execPath, [join(root, 'scripts', 'md-format.mjs'), rel])
+    : await runCommand('yamllint', 'uvx', [`yamllint@${YAMLLINT_VERSION}`, '--strict', rel], UV_HINT);
+  if (!failure) return 0;
+  process.stderr.write(`check-on-edit: ${rel}\n\n${failure}\n`);
+  return 2;
+}
 
-  if (!CHECKED_EXTENSIONS.test(rel) || rel.startsWith('..') || !CHECKED_DIRS.includes(topDir)) return 0;
-
-  // A file removed after the edit (rename, checkout) has nothing left to check.
-  if (!existsSync(absolute)) return 0;
-
+/**
+ * Runs Prettier, then ESLint, tsc and the related unit tests on a TypeScript file.
+ * @param {string} rel the path relative to the repository root
+ * @param {string} absolute
+ * @returns {Promise<number>} the exit code
+ */
+async function checkTypeScript(rel, absolute) {
   // Prettier first, so the other checks see the formatted file; the rest run in parallel.
   const before = readFileSync(absolute, 'utf8');
   const formatFailure = await run('Prettier', 'prettier/bin/prettier.cjs', ['--write', '--log-level', 'warn', rel]);
@@ -121,6 +126,28 @@ async function main() {
     );
   }
   return 0;
+}
+
+/** @returns {Promise<number>} the exit code */
+async function main() {
+  const payload = readPayload();
+  if ('code' in payload) return payload.code;
+  const path = payload.path;
+  if (typeof path !== 'string' || !path) return 0;
+
+  const absolute = isAbsolute(path) ? path : join(root, path);
+  const rel = relative(root, absolute);
+  const topDir = normalise(rel.split(sep)[0] ?? '');
+
+  const nonCode = await checkNonCode(rel, absolute);
+  if (nonCode !== undefined) return nonCode;
+
+  if (!CHECKED_EXTENSIONS.test(rel) || rel.startsWith('..') || !CHECKED_DIRS.includes(topDir)) return 0;
+
+  // A file removed after the edit (rename, checkout) has nothing left to check.
+  if (!existsSync(absolute)) return 0;
+
+  return checkTypeScript(rel, absolute);
 }
 
 process.exitCode = await main();

@@ -169,27 +169,43 @@ export function foreignEntitiesConfig(): Record<string, Record<string, string>> 
 /** A number as the state text, without float noise. */
 const text = (value: number, decimals: number): string => String(Math.round(value * 10 ** decimals) / 10 ** decimals);
 
+/** The converted number as text, or the value itself when it is not a number. */
+function whenNumeric(value: string, convert: (number: number) => string): string {
+  const number = Number(value);
+  return value.trim() !== '' && Number.isFinite(number) ? convert(number) : value;
+}
+
+/** The on/off text of the foreign switch: on and off in any case, anything else as it is. */
+function foreignOnOff(value: string): string {
+  const lower = value.trim().toLowerCase();
+  return lower === 'off' || lower === 'on' ? lower : value;
+}
+
+/**
+ * The foreign naming's compressor mode text. The enum has the four values of D11 and no cooling value: active cooling
+ * maps to Verwarmen (the card does not show the mode text).
+ */
+function foreignMode(value: string, states: StateMap): string {
+  if (['unavailable', 'unknown'].includes(value.trim().toLowerCase())) return value.trim().toLowerCase();
+  if (value === 'Defrost') return 'Ontdooien';
+  if (value === 'None') return 'Uit';
+  return states['dhw.demand'] === 'on' ? 'Tapwater' : 'Verwarmen';
+}
+
 /** Converts a scenario's value (firmware units and texts) to the foreign entity's. */
 function foreignValue(path: RolePath, value: string, states: StateMap): string {
-  const number = Number(value);
-  const numeric = value.trim() !== '' && Number.isFinite(number);
   switch (path) {
     case 'production.pressure':
     case 'brine.pressure':
     case 'compressor.suction_pressure':
     case 'compressor.discharge_pressure':
-      return numeric ? text(number * 100, 0) : value; // bar to kPa
+      return whenNumeric(value, (number) => text(number * 100, 0)); // bar to kPa
     case 'compressor.speed':
-      return numeric ? text(number / 60, 1) : value; // rpm to Hz
+      return whenNumeric(value, (number) => text(number / 60, 1)); // rpm to Hz
     case 'unit.on_off':
-      return value.trim().toLowerCase() === 'off' ? 'off' : value.trim().toLowerCase() === 'on' ? 'on' : value;
+      return foreignOnOff(value);
     case 'compressor.mode':
-      // The enum has the four values of D11 and no cooling value: active cooling maps to Verwarmen (the card does
-      // not show the mode text).
-      if (['unavailable', 'unknown'].includes(value.trim().toLowerCase())) return value.trim().toLowerCase();
-      if (value === 'Defrost') return 'Ontdooien';
-      if (value === 'None') return 'Uit';
-      return states['dhw.demand'] === 'on' ? 'Tapwater' : 'Verwarmen';
+      return foreignMode(value, states);
     default:
       return value;
   }
