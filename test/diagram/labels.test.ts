@@ -871,7 +871,7 @@ describe('units from another source', () => {
     card.remove();
   });
 
-  // live-values "Locale and precision": the pump speeds in % are whole percentages, whatever the entity's display precision
+  // live-values "Pump speed precision": the pump speeds in % are whole percentages, whatever the entity's display precision
   test.each([
     ['production_pump', 'production.pump', '99.9', '100'],
     ['brine_pump', 'brine.pump', '42.4', '42'],

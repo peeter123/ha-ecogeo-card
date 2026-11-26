@@ -1,5 +1,5 @@
 // No overlaps in a layout's verified range (add-compact-layout D6, D7; refine-simplified-layout D4, D6; rework-layouts D7; responsive-layout
-// "Vertical threshold", "Labels clear of everything"): every emulator scenario in every installation of the measurement script has no
+// "Vertical threshold", "Threshold measurement conditions", "Labels clear of everything"): every emulator scenario in every installation of the measurement script has no
 // two labels that overlap, no label that overlaps a component, a pipe, the drawing's edge or an outline (a rotated label by its
 // rotated box). The horizontal layout is measured at the vertical threshold, 800 and 1000 px, the vertical layout at 320, 360,
 // 412 px and 1 px under the threshold. The boxes are the script's (dev/overlaps.ts).

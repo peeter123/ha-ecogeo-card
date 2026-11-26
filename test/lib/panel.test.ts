@@ -1,4 +1,4 @@
-// The drawing's width in a panel view (refine-simplified-layout D9, responsive-layout "Panel view fits the screen").
+// The drawing's width in a panel view (refine-simplified-layout D9, responsive-layout "Panel view fits the screen", "Narrowest drawing in a panel view").
 import { describe, expect, test } from 'vitest';
 import {
   DEFAULT_HEADER_HEIGHT,

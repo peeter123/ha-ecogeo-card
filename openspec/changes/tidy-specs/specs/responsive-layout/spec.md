@@ -19,7 +19,7 @@ card's width.
 ### Requirement: Vertical threshold
 The vertical threshold SHALL be the narrowest card width, on a grid of 20 px steps from 320 to 800 px, at which the
 horizontal layout shows no overlap (see "Labels clear of everything") in any emulator scenario, and no wider width on
-that grid falls short of it.
+that grid falls short of it. It SHALL be measured as in "Threshold measurement conditions".
 
 #### Scenario: No overlaps above the threshold
 - **WHEN** the emulator captures every scenario in the horizontal layout at the threshold width, at 800 px and at

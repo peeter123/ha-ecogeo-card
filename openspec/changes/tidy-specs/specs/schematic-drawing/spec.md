@@ -103,8 +103,9 @@ layout heightens row lanes.
 
 ### Requirement: Values in the lanes
 Every value in the cabinet SHALL sit in a lane beside its part, except as "Gap places in the vertical layout"
-allows.
+allows and except a value inside its body (dhw-storage "DHW values inside the tank").
 
 #### Scenario: Values beside their part
 - **WHEN** the card renders any configuration in the horizontal layout
-- **THEN** every value in the cabinet lies in a row lane or a column lane, beside its part
+- **THEN** every value in the cabinet that is not inside a body lies in a row lane or a column lane, beside its part,
+  and a value inside a body (the DHW temperature in tank 50 on model C) lies inside its body

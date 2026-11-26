@@ -65,10 +65,11 @@ emitter) SHALL carry its name alone, the emitter as "Underfloor heating" or "Rad
   item number
 
 ### Requirement: A component's own entity
-The component's own entity SHALL be the one its value label shows, except for evaporator 7, whose own entity is the
-evaporating temperature (role `refrigerant.evaporation_temperature`), and condenser 8, whose own entity is the
-condensing temperature (role `refrigerant.condensation_temperature`). No value label shows these two entities; they
-colour the refrigerant pipes (derived: `COMPONENT_ROLES` in `src/diagram/component-info.ts`).
+The component's own entity SHALL be the one its value label shows, except for evaporator 7 (the evaporating
+temperature, role `refrigerant.evaporation_temperature`), condenser 8 (the condensing temperature, role
+`refrigerant.condensation_temperature`) and DHW valve 26 (the DHW demand, role `dhw.demand`). No value label shows
+these entities; those of 7 and 8 colour the refrigerant pipes (derived: `COMPONENT_ROLES` in
+`src/diagram/component-info.ts`).
 
 #### Scenario: Pump 15
 - **WHEN** the user taps pump 15
@@ -90,8 +91,12 @@ colour the refrigerant pipes (derived: `COMPONENT_ROLES` in `src/diagram/compone
 - **WHEN** the user taps condenser 8
 - **THEN** the more-info dialog of the condensing temperature entity opens
 
+#### Scenario: Valve 26
+- **WHEN** the user taps DHW valve 26
+- **THEN** the more-info dialog of the DHW demand entity opens
+
 ### Requirement: Compressor entity fallback
-When the compressor speed role has no entity (for example `none`, card-config), compressor 11's own entity SHALL be
+When the compressor speed role has no entity (`none` or unbound, card-config), compressor 11's own entity SHALL be
 the compressor percentage, else the compressor power, whichever is first present.
 
 #### Scenario: Power as the last fallback

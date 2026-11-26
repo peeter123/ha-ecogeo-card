@@ -47,6 +47,7 @@ describe('foreign naming mock', () => {
     expect(new Set(Object.values(FOREIGN_BINDING)).size).toBe(Object.keys(FOREIGN_BINDING).length);
   });
 
+  // dev-emulator "Foreign naming leaves optional roles unbound" (the rule moved out of "Foreign naming")
   test('add-htr-state "Foreign naming": no optional role is bound or written, and unit.cop is bound', () => {
     for (const path of OPTIONAL_ROLE_PATHS) {
       expect(FOREIGN_BINDING[path], path).toBeUndefined();

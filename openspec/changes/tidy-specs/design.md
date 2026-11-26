@@ -42,6 +42,10 @@ The OpenSpec rule for splitting an existing requirement is followed:
   statement in the old description is in exactly one of the resulting requirements, either in a description or in a
   scenario.
 - Every resulting description is 500 characters or fewer; aim for about 400 so later edits have room.
+- Original scenarios stay under their MODIFIED header even where they now test a rule that moved to an ADDED
+  requirement (for example "Unknown option" testing "Unknown options rejected"). Moving them would break the
+  unchanged-scenarios rule above; the ADDED requirement gets scenarios of its own instead (decided 2026-11-26, group 1
+  review).
 
 Alternative considered: shorten the descriptions by rewording alone, with no new requirements. Rejected: most of these
 descriptions state two or three behaviours, and squeezing them would drop meaning.
@@ -50,9 +54,10 @@ descriptions state two or three behaviours, and squeezing them would drop meanin
 
 The MODIFIED "Tap a component" description states that a component opens the entity of its own role. A new ADDED
 requirement names that role per component where it is not a value label's: evaporator 7 opens the evaporating
-temperature and condenser 8 the condensing temperature, entities no value label shows (they colour the refrigerant
-pipes). The compressor 11 fallback (speed, then percentage, then power) and "no entity, not tappable" stay as they
-are. Source: `COMPONENT_ROLES` and `componentRole` in `src/diagram/component-info.ts` (derived).
+temperature, condenser 8 the condensing temperature and DHW valve 26 the DHW demand, entities no value label shows
+(7 and 8 colour the refrigerant pipes). The compressor 11 fallback (speed, then percentage, then power) and "no
+entity, not tappable" stay as they are. Source: `COMPONENT_ROLES` and `componentRole` in
+`src/diagram/component-info.ts` (derived).
 
 ### D4. Verification
 

@@ -48,7 +48,7 @@ for the explanation of what the card shows and where each part comes from.
 
 Released and in use. The card validates its configuration, resolves its entities (or shows built-in sample values),
 reads them, derives the operating mode and draws the schematic with coloured, flowing pipes and live values. The visual
-editor is built (see Visual editor below). The planned follow-up change is `add-browser-tests`. Extra
+editor is built (see Visual editor below). The next step is submitting the card to the HACS default list. Extra
 circuits (DG2, DG3, the pool) are a long-term idea only: they are external to the unit and need their own valves, so the
 card does not draw them.
 

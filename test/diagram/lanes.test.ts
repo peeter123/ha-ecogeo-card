@@ -174,7 +174,7 @@ describe.each(LAYOUTS)('Lanes free of parts: the %s arrangement', (layout) => {
   });
 });
 
-// design D1 "every value in the cabinet sits in a lane": each cabinet label lies in a row lane or a column lane (in the vertical layout the
+// schematic-drawing "Values in the lanes" (design D1 "every value in the cabinet sits in a lane"): each cabinet label lies in a row lane or a column lane (in the vertical layout the
 // rotated values and the pump 15 value are checked as gap places below instead). A label counts as a
 // cabinet label when it is not a body label (BODY_LABELS of dev/overlaps.ts: the values inside the emitter, the air unit, the
 // collector, the external tank and tank 50, which sit in their bodies) and its anchor is inside the cabinet's outline (the DG1

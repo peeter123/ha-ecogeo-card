@@ -25,9 +25,10 @@ before the HACS default-list submission.
   - The exact list is whatever `openspec validate --specs --strict` reports when the change starts; the design (D1)
     says how the requirements are matched to its output.
 - **Tap a component corrected.** component-info says that a component opens the entity its value label shows. Since
-  `rework-layouts` that is not true for exchangers 7 and 8. Evaporator 7 opens the evaporating temperature and
-  condenser 8 the condensing temperature (derived: `COMPONENT_ROLES` in `src/diagram/component-info.ts`). No value
-  label shows these two; they colour the refrigerant pipes (`src/diagram/geometry.ts`). The requirement is reworded
+  `rework-layouts` that is not true for exchangers 7 and 8, and it never was for DHW valve 26. Evaporator 7 opens the
+  evaporating temperature, condenser 8 the condensing temperature and valve 26 the DHW demand (derived:
+  `COMPONENT_ROLES` in `src/diagram/component-info.ts`). No value label shows these three; 7 and 8 colour the
+  refrigerant pipes (`src/diagram/geometry.ts`). The requirement is reworded
   to state this. The behaviour stays as it is.
 - **README status.** The Status section still names `add-browser-tests` as the planned follow-up, but the browser
   tests already exist (`npm run test:browser`, the browser project in `test/`). The sentence is removed, and the
@@ -41,6 +42,8 @@ before the HACS default-list submission.
 - Submitting the card to the HACS default list: the later change named in `add-hacs-release`.
 - Requirements of 500 characters or fewer, even long ones; and requirements in the four specs that pass.
 - Rewording that does not shorten a requirement or correct it.
+- Comments in `src/` that cite a requirement whose rule moved (`src/calc/display.ts`, the `COMPONENT_ROLES` doc
+  comment): the code change that follows, `limit-complexity`, touches `src/` and updates them.
 
 ## Capabilities
 
@@ -52,7 +55,7 @@ None.
 
 - `card-config`: two long requirements split.
 - `card-editor`: one long requirement split.
-- `component-info`: two long requirements split; "Tap a component" corrected for exchangers 7 and 8.
+- `component-info`: two long requirements split; "Tap a component" corrected for exchangers 7 and 8 and valve 26.
 - `dev-emulator`: two long requirements split.
 - `live-values`: one long requirement split.
 - `operating-mode`: one long requirement split.

@@ -83,7 +83,8 @@ During HTR recovery (HTR active, no DHW production), the DHW lines outside the a
 pipes carry HTR water and SHALL take the DHW temperature.
 
 #### Scenario: HTR recovery lines
-- **WHEN** HTR is active, the mode is not `dhw` and the DHW temperature reads 45.0 °C
+- **WHEN** the mode is `heating`, `dhw` is `external`, the HTR circuit is active and the DHW temperature reads
+  45.0 °C
 - **THEN** the DHW lines outside the arm of valve 26 and the external tank pipes have the 45.0 °C colour
 
 ### Requirement: Still segments
