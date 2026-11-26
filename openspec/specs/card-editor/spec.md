@@ -39,9 +39,7 @@ show the sample preview.
 The editor SHALL show, in this order: the unit (model, variant, source, DHW storage, emitter), the entities (a device
 picker and the entity prefix), the four features (each `true`, `false`, `unused` or empty for the variant default),
 and the appearance (exchanger fill, layout and colour stops). Below the form it SHALL show the "Suggest entities"
-button, the suggestion report and the binding check warnings. Each field SHALL show the option's current value from
-the config, or its default when the config leaves it out. The picked device SHALL be editor state only and SHALL
-never be written to the config.
+button, the suggestion report and the binding check warnings.
 
 #### Scenario: Existing config opens
 - **WHEN** the editor opens a config with `model: B`, `variant: 4`, `source: air`, `dhw: external`,
@@ -257,3 +255,18 @@ device's entities by their names, like every other role. A candidate named as el
 - **WHEN** a device's entities are named "Heating Power DG1", "Heating Power DHW", "Heating Power HTR", "COP" and
   "System COP", with ids that follow no firmware suffix
 - **THEN** the suggestions fill the DG1, DHW and HTR power, the COP and the system COP each with its own entity
+
+### Requirement: Editor field values
+Each editor field SHALL show the option's current value from the config, or its default when the config leaves it
+out.
+
+#### Scenario: Defaults shown
+- **WHEN** the editor opens a config with only `type` and `prefix`
+- **THEN** the model field shows `B`, the variant field 4, the source field `ground` and the layout field `auto`
+
+### Requirement: Picked device is editor state
+The picked device SHALL be editor state only and SHALL never be written to the config.
+
+#### Scenario: Device never in the config
+- **WHEN** the user picks a device and then changes any other field
+- **THEN** the emitted config has no key that holds the device

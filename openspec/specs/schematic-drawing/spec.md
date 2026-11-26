@@ -54,10 +54,7 @@ The cabinet SHALL contain the refrigerant circuit in the topology of the manual'
 - expansion valve 12, filter dryer 13, inversion valve 14
 - temperature probes 29/30, pressure transducers 35/36 (see "Refrigerant probe pairs")
 
-Mini-pressure switches 39/40 and service outlets 41 SHALL NOT be drawn: they have no live value. No component SHALL
-show its item number. Compressor 11 SHALL use the standard compressor symbol: a circle with two straight lines
-converging from its suction side towards its discharge side, drawn as outlines without a fill (decided by the user
-2026-11-23).
+No component SHALL show its item number.
 
 #### Scenario: Compressor symbol
 - **WHEN** the card renders any configuration
@@ -82,10 +79,7 @@ The cabinet SHALL contain the hydraulic circuits in the topology of the manual's
 - **Brine:** pump 16, probes 31/32, transducer 37, exchanger 10 with valves 27/28.
 - **HTR:** exchanger 9, pump 17, valve 22.
 
-No component SHALL show its item number. Vessels 18/19, safety valves 20/21, drain valves 23/24 and the HTR system
-discharge valve 25 (decided by the user 2026-11-20), and the stub pipes that lead only to them, SHALL NOT be drawn;
-nor SHALL items 42 and 43 (cooling outlet and inlet of the inverter) and 46 (electrical panel). None of them carries a
-live value.
+No component SHALL show its item number.
 
 #### Scenario: Hydraulic items
 - **WHEN** the card renders variant 4 with every feature `true`
@@ -215,10 +209,7 @@ one, the added height lying above coil 51, so that its values stack there (decid
 The cabinet's parts SHALL follow the topology of the manual figures (the port order, the order of the parts along
 every pipe, the probe and HTR placements and the crossings) but not their coordinates. They SHALL be laid out once, in
 rows and columns with lanes between them, where a row lane is a horizontal strip across the whole cabinet that no
-part enters and only vertical pipes cross, and a column lane is the same in the vertical direction. Both layouts SHALL
-be derived from this one layout: the horizontal layout widens column lanes and the vertical layout heightens row
-lanes, and every value in the cabinet sits in a lane beside its part, except as "Gap places in the vertical layout"
-allows.
+part enters and only vertical pipes cross, and a column lane is the same in the vertical direction.
 
 #### Scenario: Lanes free of parts
 - **WHEN** the card renders any configuration, in either layout
@@ -307,3 +298,46 @@ every card width from 320 px, so that no pipe runs along a body's bottom outline
 #### Scenario: Supply under the tank
 - **WHEN** the card renders the vertical layout at 320 px with `dhw: external`
 - **THEN** the tank's supply on the highest level and the tank's bottom outline are drawn apart, with a visible gap
+
+### Requirement: Refrigerant parts left undrawn
+Mini-pressure switches 39/40 and service outlets 41 SHALL NOT be drawn: they have no live value.
+
+#### Scenario: Items 39, 40 and 41
+- **WHEN** the card renders variant 4 with every feature `true`
+- **THEN** none of the items 39, 40 and 41 is drawn
+
+### Requirement: Compressor symbol
+Compressor 11 SHALL use the standard compressor symbol: a circle with two straight lines converging from its suction
+side towards its discharge side, drawn as outlines without a fill (decided by the user 2026-11-23).
+
+#### Scenario: Outline symbol
+- **WHEN** the card renders any configuration
+- **THEN** compressor 11 is drawn as outlines only, a circle and two straight lines converging from the suction side
+  towards the discharge side, with no fill
+
+### Requirement: Hydraulic parts left undrawn
+Vessels 18/19, safety valves 20/21, drain valves 23/24 and the HTR system discharge valve 25 (decided by the user
+2026-11-20), and the stub pipes that lead only to them, SHALL NOT be drawn; nor SHALL items 42 and 43 (cooling outlet
+and inlet of the inverter) and 46 (electrical panel). None of them carries a live value.
+
+#### Scenario: Items without a live value
+- **WHEN** the card renders variant 4 with every feature `true`
+- **THEN** none of the items 18-21, 23-25, 42, 43 and 46 is drawn, and neither are the stub pipes that lead only to
+  items 18-21, 23, 24 and 25
+
+### Requirement: Layouts derived from the cabinet layout
+Both layouts SHALL be derived from the one cabinet layout: the horizontal layout widens column lanes and the vertical
+layout heightens row lanes.
+
+#### Scenario: Same order in both layouts
+- **WHEN** the card renders the same configuration in the horizontal and in the vertical layout
+- **THEN** the cabinet's parts have the same row and column order in both, and only the lanes differ in size
+
+### Requirement: Values in the lanes
+Every value in the cabinet SHALL sit in a lane beside its part, except as "Gap places in the vertical layout"
+allows and except a value inside its body (dhw-storage "DHW values inside the tank").
+
+#### Scenario: Values beside their part
+- **WHEN** the card renders any configuration in the horizontal layout
+- **THEN** every value in the cabinet that is not inside a body lies in a row lane or a column lane, beside its part,
+  and a value inside a body (the DHW temperature in tank 50 on model C) lies inside its body

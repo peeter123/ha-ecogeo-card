@@ -52,7 +52,9 @@ rotated values in the vertical layout, one footer, the browser preflight and the
 (one band style without dividers or demand captions, the lowest jog levels, the air unit as an outdoor unit with the
 outside temperature and the fan speed, the borehole collector, the spiral underfloor loop, the flat-bottomed tank with
 its coil fed from the left, the open compressor, and the published 1.1.0 and 1.1.1), is archived in
-`openspec/changes/archive/2026-11-25-harmonize-band/`.
+`openspec/changes/archive/2026-11-25-harmonize-band/`. The eleventh, `tidy-specs` (the long requirements split into one
+behaviour each, the own entities of exchangers 7 and 8 and valve 26, the values inside a body, and the README status),
+is archived in `openspec/changes/archive/2026-11-26-tidy-specs/`.
 
 ## Rules in short
 
