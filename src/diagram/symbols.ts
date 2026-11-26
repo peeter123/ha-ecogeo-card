@@ -81,58 +81,69 @@ const stem = (length: number, from: number): SVGTemplateResult => svg`<path d="M
 const arm = (points: string, filled: boolean): SVGTemplateResult =>
   svg`<path d="${points}" fill=${filled ? 'currentColor' : 'none'} />`;
 
+/** The arrangement a symbol is drawn in; the kinds that size themselves from it throw without one. */
+function arrangementOf(kind: ComponentKind, options: SymbolOptions): Arrangement {
+  if (options.arrangement === undefined) throw new Error(`the ${kind} symbol needs the arrangement it is drawn in`);
+  return options.arrangement;
+}
+
+/** The three-way valve: a triangle per arm, filled when the arm is open, and the actuator on top. */
+function valve3Body(options: SymbolOptions): SVGTemplateResult {
+  const open = options.open ?? ['l', 'r'];
+  return svg`${arm('M-12 -6 V6 L0 0 Z', open.includes('l'))}${arm('M12 -6 V6 L0 0 Z', open.includes('r'))}${arm('M-6 12 H6 L0 0 Z', open.includes('d'))}<rect x="-4" y="-21" width="8" height="8" /><path d="M0 -13 V-8" />`;
+}
+
+/** The four-way inversion valve: the body and the connections, with the crossed or straight internal paths. */
+function inversionValveBody(options: SymbolOptions): SVGTemplateResult {
+  return svg`<rect x="-10" y="-14" width="20" height="28" rx="3" /><path d="M-14 0 H-10 M10 -10 H14 M10 0 H14 M10 10 H14" />${
+    options.reversed === true
+      ? svg`<path d="M-14 0 H14 M14 10 H5 V-10 H14" />`
+      : svg`<path d="M-14 0 H-5 V10 H14 M14 0 H5 V-10 H14" />`
+  }`;
+}
+
+/** The plate exchanger: the fills of its two sides when given, the outline, the two channels and the four ports. */
+function exchangerBody(options: SymbolOptions): SVGTemplateResult {
+  const span = options.size ?? 34;
+  const fills = options.fills;
+  return svg`${fills === undefined ? nothing : svg`${exchangerHalf('left', span, fills.left)}${exchangerHalf('right', span, fills.right)}`}<rect x="-20" y="${-span - 9}" width="40" height="${2 * span + 18}" rx="4" /><path d="M-12 ${-span} V${span} M12 ${-span} V${span}" /><circle cx="-12" cy="${-span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${-span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="-12" cy="${span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${span}" r="3.5" fill="var(--card-background-color, transparent)" />`;
+}
+
+/** The integrated tank (50): its body takes the DHW temperature colour through --dhw-tank-color. */
+function tankBody(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
+  const { width, height } = arrangementOf(kind, options).internalTank;
+  return svg`<rect class="tank-body" data-dhw-tank="internal" x=${-width / 2} y=${-height / 2} width=${width} height=${height} rx="14" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />`;
+}
+
+/** The symbol body per component kind; `rotation` is the symbol's turn, which the letters of the sensors undo. */
+const SYMBOL_BODIES: Record<
+  ComponentKind,
+  (kind: ComponentKind, options: SymbolOptions, rotation: Rotation) => SVGTemplateResult
+> = {
+  pump: () => svg`<circle r="12" /><path d="M-5 -7 V7 L8 0 Z" fill="currentColor" />`,
+  valve3: (_kind, options) => valve3Body(options),
+  inversion_valve: (_kind, options) => inversionValveBody(options),
+  probe_t: (_kind, _options, rotation) => svg`<circle r="9" />${stem(16, 9)}${letter('T', rotation)}`,
+  transducer_p: (_kind, _options, rotation) => svg`<circle r="9" />${stem(16, 9)}${letter('P', rotation)}`,
+  thermostat: (_kind, _options, rotation) =>
+    svg`<rect x="-7" y="-7" width="14" height="14" />${stem(16, 7)}${letter('T', rotation)}`,
+  exchanger: (_kind, options) => exchangerBody(options),
+  // the standard compressor symbol: a circle and two straight lines that start on it at the suction side and
+  // converge towards the discharge side. Drawn with the suction at +x and the discharge at -x, turned by the rotation.
+  // Open, with no fill, as in the manual's figure.
+  compressor: () => svg`<circle r="14" /><path class="compressor-lines" d="${COMPRESSOR_LINES}" />`,
+  valve: () => svg`<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z" />`,
+  resistor: () => svg`<rect x="-28" y="-6" width="56" height="12" rx="2" /><path d="M-18 -6 V6 M18 -6 V6" />`,
+  filter_dryer: () => svg`<rect x="-14" y="-5" width="28" height="10" rx="5" />`,
+  expansion_valve: () => svg`<path d="M-12 -6 V6 L0 0 L12 -6 V6 L0 0 Z" />`,
+  port: () => svg`<rect x="-5" y="-6" width="10" height="6" />`,
+  tank: tankBody,
+  // the coil (51): a helix on its side with both ports at its left end
+  coil: (kind, options) => helixCoil(arrangementOf(kind, options)),
+};
+
 function body(kind: ComponentKind, options: SymbolOptions): SVGTemplateResult {
-  const rotation = options.rotation ?? 0;
-  const arrangement = (): Arrangement => {
-    if (options.arrangement === undefined) throw new Error(`the ${kind} symbol needs the arrangement it is drawn in`);
-    return options.arrangement;
-  };
-  switch (kind) {
-    case 'pump':
-      return svg`<circle r="12" /><path d="M-5 -7 V7 L8 0 Z" fill="currentColor" />`;
-    case 'valve3': {
-      const open = options.open ?? ['l', 'r'];
-      return svg`${arm('M-12 -6 V6 L0 0 Z', open.includes('l'))}${arm('M12 -6 V6 L0 0 Z', open.includes('r'))}${arm('M-6 12 H6 L0 0 Z', open.includes('d'))}<rect x="-4" y="-21" width="8" height="8" /><path d="M0 -13 V-8" />`;
-    }
-    case 'inversion_valve':
-      return svg`<rect x="-10" y="-14" width="20" height="28" rx="3" /><path d="M-14 0 H-10 M10 -10 H14 M10 0 H14 M10 10 H14" />${
-        options.reversed === true
-          ? svg`<path d="M-14 0 H14 M14 10 H5 V-10 H14" />`
-          : svg`<path d="M-14 0 H-5 V10 H14 M14 0 H5 V-10 H14" />`
-      }`;
-    case 'probe_t':
-      return svg`<circle r="9" />${stem(16, 9)}${letter('T', rotation)}`;
-    case 'transducer_p':
-      return svg`<circle r="9" />${stem(16, 9)}${letter('P', rotation)}`;
-    case 'thermostat':
-      return svg`<rect x="-7" y="-7" width="14" height="14" />${stem(16, 7)}${letter('T', rotation)}`;
-    case 'exchanger': {
-      const span = options.size ?? 34;
-      const fills = options.fills;
-      return svg`${fills === undefined ? nothing : svg`${exchangerHalf('left', span, fills.left)}${exchangerHalf('right', span, fills.right)}`}<rect x="-20" y="${-span - 9}" width="40" height="${2 * span + 18}" rx="4" /><path d="M-12 ${-span} V${span} M12 ${-span} V${span}" /><circle cx="-12" cy="${-span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${-span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="-12" cy="${span}" r="3.5" fill="var(--card-background-color, transparent)" /><circle cx="12" cy="${span}" r="3.5" fill="var(--card-background-color, transparent)" />`;
-    }
-    case 'compressor':
-      // the standard compressor symbol: a circle and two straight lines that start on it at the suction side and
-      // converge towards the discharge side. Drawn with the suction at +x and the discharge at -x, turned by the rotation.
-      // Open, with no fill, as in the manual's figure.
-      return svg`<circle r="14" /><path class="compressor-lines" d="${COMPRESSOR_LINES}" />`;
-    case 'valve':
-      return svg`<path d="M-6 -9 H6 L0 0 Z M-6 9 H6 L0 0 Z" />`;
-    case 'resistor':
-      return svg`<rect x="-28" y="-6" width="56" height="12" rx="2" /><path d="M-18 -6 V6 M18 -6 V6" />`;
-    case 'filter_dryer':
-      return svg`<rect x="-14" y="-5" width="28" height="10" rx="5" />`;
-    case 'expansion_valve':
-      return svg`<path d="M-12 -6 V6 L0 0 L12 -6 V6 L0 0 Z" />`;
-    case 'port':
-      return svg`<rect x="-5" y="-6" width="10" height="6" />`;
-    case 'tank':
-      // the integrated tank (50): its body takes the DHW temperature colour through --dhw-tank-color
-      return svg`<rect class="tank-body" data-dhw-tank="internal" x=${-arrangement().internalTank.width / 2} y=${-arrangement().internalTank.height / 2} width=${arrangement().internalTank.width} height=${arrangement().internalTank.height} rx="14" fill="var(--dhw-tank-color, none)" fill-opacity="0.25" />`;
-    case 'coil':
-      // the coil (51): a helix on its side with both ports at its left end
-      return helixCoil(arrangement());
-  }
+  return SYMBOL_BODIES[kind](kind, options, options.rotation ?? 0);
 }
 
 /** The symbol of a component kind as an SVG group, centred on (0, 0) and turned by `rotation`. */

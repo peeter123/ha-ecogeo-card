@@ -6,8 +6,10 @@ import { css, nothing } from 'lit';
 import type { RolePath } from '../config/roles';
 
 /**
- * The role whose entity a component opens: the one its value label shows. Filled from the role table's `item` field
- * where one role belongs to the item, chosen by hand where several do (11, 12, 8, 7). A component that is not in this
+ * The role whose entity a component opens. Most components open the role their value label shows, filled from the role
+ * table's `item` field where one role belongs to the item, chosen by hand where several do (11, 12). Evaporator 7,
+ * condenser 8 and DHW valve 26 open an entity no label shows (the evaporating and condensing temperatures, which colour
+ * the refrigerant pipes, and the DHW demand). A component that is not in this
  * table has no entity of its own and is neither tappable nor focusable: 1-6 and 47-49 (connections), 9, 10, 13, 14,
  * 17, 22, 27, 28, 44, 45 and coil 51.
  */

@@ -1885,19 +1885,60 @@ const zonesFor = (layout: ShownLayout, key: BandKey): CabinetZones => {
   return zones;
 };
 
-/** The band's parts placed for a key: the slots from the ports (rework-layouts D3), the bodies in them. */
-function bandZonesFor(layout: ShownLayout, key: BandKey, cabinet: CabinetZones): BandZones {
-  const { mapX } = mapperOf(layout, key.internal === true);
-  const top = cabinet.cabinet.y;
-  const bottom = top - BAND.joinLane;
-  const ports = {
+/** The band's six ports, at the columns of the cabinet's risers and ports. */
+function bandPorts(mapX: (x: number) => number): BandZones['ports'] {
+  return {
     1: mapX(COL.riser1),
     2: mapX(COL.riser2),
     3: mapX(COL.riser3),
     4: mapX(COL.riser4),
     5: mapX(COL.port5),
     6: mapX(COL.port6),
-  } as const;
+  };
+}
+
+/** The source's parts in its slot: the air unit (not on ground) and the collector (not on air, beside the air unit on hybrid). */
+function sourcePartsFor(
+  source: Slot | undefined,
+  kind: BandKey['source'],
+  bottom: number,
+): { air: AirUnitShape | undefined; collector: CollectorShape | undefined } {
+  const air = kind === 'ground' || source === undefined ? undefined : airUnitShape(source.x0, bottom);
+  const collectorX =
+    source === undefined ? 0 : kind === 'hybrid' ? source.x0 + BAND.air.width + BAND.hybridGap : source.x0;
+  const collector = kind === 'air' || source === undefined ? undefined : collectorShape(collectorX, bottom);
+  return { air, collector };
+}
+
+/** The external tank in its slot, and the coil inside it. */
+function tankPartsFor(
+  tankSlot: Slot | undefined,
+  bottom: number,
+): { tankShape: TankShape | undefined; coil: ExternalCoil | undefined } {
+  if (tankSlot === undefined) return { tankShape: undefined, coil: undefined };
+  const tankShape: TankShape = {
+    x: tankSlot.x0,
+    y: bottom - BAND.tank.height,
+    width: BAND.tank.width,
+    height: BAND.tank.height,
+    dome: BAND.tank.dome,
+  };
+  const coil: ExternalCoil = {
+    cx: tankShape.x + tankShape.width / 2,
+    top: tankShape.y + 94,
+    bottom: tankShape.y + 152,
+    rx: 38,
+    inX: tankShape.x + tankShape.width / 2 - 38 - 12,
+  };
+  return { tankShape, coil };
+}
+
+/** The band's parts placed for a key: the slots from the ports (rework-layouts D3), the bodies in them. */
+function bandZonesFor(layout: ShownLayout, key: BandKey, cabinet: CabinetZones): BandZones {
+  const { mapX } = mapperOf(layout, key.internal === true);
+  const top = cabinet.cabinet.y;
+  const bottom = top - BAND.joinLane;
+  const ports = bandPorts(mapX);
   const slots = planBand(
     [
       { name: 'emitter', centre: (ports[1] + ports[2]) / 2, width: key.emitter === 'none' ? 0 : BAND.emitter.width },
@@ -1907,35 +1948,11 @@ function bandZonesFor(layout: ShownLayout, key: BandKey, cabinet: CabinetZones):
     { min: cabinet.cabinet.x, max: cabinet.cabinet.x + cabinet.cabinet.width },
     BAND.gap,
   );
-  const source = slots.source;
   const emitterSlot = slots.emitter;
   const emitter =
     key.emitter === 'none' || emitterSlot === undefined ? undefined : emitterShape(key.emitter, emitterSlot.x0, bottom);
-  const air = key.source === 'ground' || source === undefined ? undefined : airUnitShape(source.x0, bottom);
-  const collectorX =
-    source === undefined ? 0 : key.source === 'hybrid' ? source.x0 + BAND.air.width + BAND.hybridGap : source.x0;
-  const collector = key.source === 'air' || source === undefined ? undefined : collectorShape(collectorX, bottom);
-  const tankSlot = slots.tank;
-  const tankShape: TankShape | undefined =
-    tankSlot === undefined
-      ? undefined
-      : {
-          x: tankSlot.x0,
-          y: bottom - BAND.tank.height,
-          width: BAND.tank.width,
-          height: BAND.tank.height,
-          dome: BAND.tank.dome,
-        };
-  const coil: ExternalCoil | undefined =
-    tankShape === undefined
-      ? undefined
-      : {
-          cx: tankShape.x + tankShape.width / 2,
-          top: tankShape.y + 94,
-          bottom: tankShape.y + 152,
-          rx: 38,
-          inX: tankShape.x + tankShape.width / 2 - 38 - 12,
-        };
+  const { air, collector } = sourcePartsFor(slots.source, key.source, bottom);
+  const { tankShape, coil } = tankPartsFor(slots.tank, bottom);
   return {
     key,
     band: { top: bottom - BAND.height, bottom },
@@ -2065,17 +2082,27 @@ const dhwFits = (rule: NonNullable<Visibility['dhw']>, context: Pick<DrawContext
   return rule === 'any' ? storage !== 'none' : rule === storage;
 };
 
+/** Whether the installation (the source kind, the DHW storage, or the bypass and through features) keeps the part from being drawn. */
+function hiddenByInstallation(part: Visibility, context: DrawContext): boolean {
+  if (part.source !== undefined && !part.source.includes(context.source)) return true;
+  if (part.dhw !== undefined && !dhwFits(part.dhw, context)) return true;
+  if (part.bypass !== undefined && effectiveFeature(context, part.bypass) !== false) return true;
+  return part.through !== undefined && effectiveFeature(context, part.through) === false;
+}
+
+/** The part's own feature: it is `hidden` when the feature is off and `muted` when unused, otherwise nothing is said. */
+function featureState(part: Visibility, context: DrawContext): PartState | undefined {
+  if (part.feature === undefined) return undefined;
+  const state = effectiveFeature(context, part.feature);
+  if (state === false) return 'hidden';
+  return state === 'unused' ? 'muted' : undefined;
+}
+
 /** Whether a part is drawn normally, drawn muted (feature `unused`) or not drawn (see Visibility). */
 export function partState(part: Visibility, context: DrawContext): PartState {
-  if (part.source !== undefined && !part.source.includes(context.source)) return 'hidden';
-  if (part.dhw !== undefined && !dhwFits(part.dhw, context)) return 'hidden';
-  if (part.bypass !== undefined && effectiveFeature(context, part.bypass) !== false) return 'hidden';
-  if (part.through !== undefined && effectiveFeature(context, part.through) === false) return 'hidden';
-  if (part.feature !== undefined) {
-    const state = effectiveFeature(context, part.feature);
-    if (state === false) return 'hidden';
-    if (state === 'unused') return 'muted';
-  }
+  if (hiddenByInstallation(part, context)) return 'hidden';
+  const feature = featureState(part, context);
+  if (feature !== undefined) return feature;
   // An unused tank (dhw-storage spec): the tank's own parts are muted, whatever the features say.
   if (context.dhw === 'unused' && part.dhw !== undefined && (part.dhw !== 'any' || part.unusedMuted === true)) {
     return 'muted';
@@ -2108,71 +2135,58 @@ export const isSegmentActive = (segment: Pick<Segment, 'circuit' | 'onlyWhen'>, 
 /** The hop of a crossing: the gap in the `under` segment is this many units on each side of the crossing. */
 export const HOP = 7;
 
-// Where the connectable ports of each symbol are, relative to its centre, before the rotation.
 const STEM = {
   probe_t: 16,
   transducer_p: 16,
   thermostat: 16,
 };
 
-function localPorts(component: Component): readonly Point[] {
-  switch (component.kind) {
-    case 'port':
-      return [[0, 0]];
-    case 'pump':
-    case 'expansion_valve':
-      return [
-        [-12, 0],
-        [12, 0],
-      ];
-    case 'valve3':
-      return [
-        [-12, 0],
-        [12, 0],
-        [0, 12],
-      ];
-    case 'inversion_valve':
-      return [
-        [-14, 0],
-        [14, -10],
-        [14, 0],
-        [14, 10],
-      ];
-    case 'probe_t':
-    case 'transducer_p':
-    case 'thermostat':
-      return [[0, STEM[component.kind]]];
-    case 'exchanger': {
-      const span = component.size ?? 34;
-      return [
-        [-12, -span],
-        [12, -span],
-        [-12, span],
-        [12, span],
-      ];
-    }
-    case 'compressor':
-    case 'filter_dryer':
-      return [
-        [-14, 0],
-        [14, 0],
-      ];
-    case 'valve':
-      return [
-        [0, -9],
-        [0, 9],
-      ];
-    case 'resistor':
-      return [
-        [-28, 0],
-        [28, 0],
-      ];
-    case 'tank':
-      return [];
-    case 'coil':
-      return COIL_LOCAL_PORTS;
-  }
-}
+/** The two ports of a symbol, `half` either side of its centre on the x axis. */
+const pair = (half: number): Point[] => [
+  [-half, 0],
+  [half, 0],
+];
+
+/** The connectable ports of each kind, before the rotation. */
+const LOCAL_PORTS: Record<ComponentKind, (component: Component) => readonly Point[]> = {
+  port: () => [[0, 0]],
+  pump: () => pair(12),
+  expansion_valve: () => pair(12),
+  valve3: () => [
+    [-12, 0],
+    [12, 0],
+    [0, 12],
+  ],
+  inversion_valve: () => [
+    [-14, 0],
+    [14, -10],
+    [14, 0],
+    [14, 10],
+  ],
+  probe_t: () => [[0, STEM.probe_t]],
+  transducer_p: () => [[0, STEM.transducer_p]],
+  thermostat: () => [[0, STEM.thermostat]],
+  exchanger: (component) => {
+    const span = component.size ?? 34;
+    return [
+      [-12, -span],
+      [12, -span],
+      [-12, span],
+      [12, span],
+    ];
+  },
+  compressor: () => pair(14),
+  filter_dryer: () => pair(14),
+  valve: () => [
+    [0, -9],
+    [0, 9],
+  ],
+  resistor: () => pair(28),
+  tank: () => [],
+  coil: () => COIL_LOCAL_PORTS,
+};
+
+const localPorts = (component: Component): readonly Point[] => LOCAL_PORTS[component.kind](component);
 
 const rotate = ([x, y]: Point, rotation: Rotation): Point => {
   switch (rotation) {

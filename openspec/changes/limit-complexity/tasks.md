@@ -18,13 +18,20 @@
 
 ## 2. Drawing
 
-- [ ] 2.1 Bring the compressor's `body` (`src/diagram/symbols.ts`), the emitter's `body` (`src/diagram/emitter.ts`),
+- [x] 2.1 Bring the compressor's `body` (`src/diagram/symbols.ts`), the emitter's `body` (`src/diagram/emitter.ts`),
   and `bandZonesFor`, `localPorts` and `partState` (`src/diagram/geometry.ts`) to complexity 15 or lower (design D2).
   Verify: D1's command over `src/diagram` reports nothing, and `test/diagram/__snapshots__/` has no diff.
-- [ ] 2.2 Reword the doc comment of `COMPONENT_ROLES` (`src/diagram/component-info.ts`). It says a component's role is
+  Verdict (2026-11-26): symbols `body` 21 to 2 (lookup table `SYMBOL_BODIES`, helpers `arrangementOf`,
+    `valve3Body`, `inversionValveBody`, `exchangerBody`, `tankBody`), emitter `body` 16 to 4 (`columnsBox` 3),
+    `bandZonesFor` 18 to 10 (`bandPorts`, `sourcePartsFor` 7, `tankPartsFor`), `localPorts` 17 to 1 (lookup table
+    `LOCAL_PORTS`, `pair`), `partState` 16 to 7 (`hiddenByInstallation` 8, `featureState` 4); D1 command over
+    `src/diagram` reports nothing, `test/diagram/__snapshots__/` has no diff.
+- [x] 2.2 Reword the doc comment of `COMPONENT_ROLES` (`src/diagram/component-info.ts`). It says a component's role is
   "the one its value label shows". It should match component-info "A component's own entity": for most components
   the role its value label shows; for evaporator 7, condenser 8 and DHW valve 26 an entity no label shows. Verify:
   `npm run check` passes, the browser tests in Chromium and WebKit included.
+  Verdict (2026-11-26): comment only, now matches component-info "A component's own entity"; `npm run check`
+    passes: Test Files 87 passed, Tests 13716 passed and 4 expected fail, Chromium and WebKit included.
 
 ## 3. Editor, suggestions and card
 

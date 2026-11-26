@@ -55,6 +55,14 @@ export const emitterStyles = css`
 /** The opacity of the radiator's fill: low enough that the columns stay readable (as the exchangers' fills). */
 const RADIATOR_FILL_OPACITY = 0.5;
 
+/** The box around all of a radiator's columns (a zero-size box at the shape's corner for none): the radiator's obstacle for the overlap check. */
+function columnsBox(shape: EmitterShape): { x: number; y: number; width: number; height: number } {
+  const first = shape.columns[0];
+  const last = shape.columns.at(-1);
+  if (first === undefined || last === undefined) return { x: shape.x, y: shape.y, width: 0, height: 0 };
+  return { x: first.x, y: first.y, width: last.x + last.width - first.x, height: first.height };
+}
+
 /** The body of the emitter: its outline (with the gradient fill of a radiator) and the radiator's columns. */
 function body(shape: EmitterShape, gradient: string, fillRadiator: boolean): SVGTemplateResult {
   const { x, y, width, height } = shape;
@@ -62,15 +70,7 @@ function body(shape: EmitterShape, gradient: string, fillRadiator: boolean): SVG
   return svg`<rect class="emitter-outline band-outline" x=${x} y=${y} width=${width} height=${height} rx=${BAND.radius} fill=${radiator && fillRadiator ? `url(#${gradient})` : 'none'} fill-opacity=${RADIATOR_FILL_OPACITY} />
     ${
       radiator
-        ? svg`${shape.columns.map((column) => svg`<rect class="emitter-column" x=${column.x} y=${column.y} width=${column.width} height=${column.height} rx="4" />`)}${obstacle(
-            'radiator-columns',
-            {
-              x: shape.columns[0]?.x ?? x,
-              y: shape.columns[0]?.y ?? y,
-              width: (shape.columns.at(-1)?.x ?? x) + (shape.columns.at(-1)?.width ?? 0) - (shape.columns[0]?.x ?? x),
-              height: shape.columns[0]?.height ?? 0,
-            },
-          )}`
+        ? svg`${shape.columns.map((column) => svg`<rect class="emitter-column" x=${column.x} y=${column.y} width=${column.width} height=${column.height} rx="4" />`)}${obstacle('radiator-columns', columnsBox(shape))}`
         : nothing
     }`;
 }
