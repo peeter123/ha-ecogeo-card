@@ -54,7 +54,10 @@ outside temperature and the fan speed, the borehole collector, the spiral underf
 its coil fed from the left, the open compressor, and the published 1.1.0 and 1.1.1), is archived in
 `openspec/changes/archive/2026-11-25-harmonize-band/`. The eleventh, `tidy-specs` (the long requirements split into one
 behaviour each, the own entities of exchangers 7 and 8 and valve 26, the values inside a body, and the README status),
-is archived in `openspec/changes/archive/2026-11-26-tidy-specs/`.
+is archived in `openspec/changes/archive/2026-11-26-tidy-specs/`. The twelfth, `limit-complexity` (ESLint's
+`complexity` rule at 15 outside `test/`, the functions over it split with no change in behaviour, the exports only
+their own module used, and release 1.1.2), is archived in
+`openspec/changes/archive/2026-11-26-limit-complexity/`.
 
 ## Rules in short
 
