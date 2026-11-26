@@ -70,11 +70,11 @@ point for the user.
 - A unit test, `test/scripts/complexity.test.ts`, lints three fixture texts through ESLint's Node API (`lintText`,
   `filePath` set so the config's file blocks apply). Each fixture has a function of known complexity:
   - 16 under a `scripts/` path: reported;
-  - 15 under a `scripts/` path: not reported;
+  - 15 under a `src/` path: not reported;
   - 16 under a `test/` path: not reported.
 
-  The fixtures use `.mjs` paths so no type information is needed. The `src/` side shares the same config block, and
-  "The repository passes" covers it.
+  The fixtures use `.mjs` paths so no type information is needed; the shared config block applies to them as to the
+  TypeScript files (settled in the group 6 review, 2026-11-26).
 
 ### D5. The review pass
 

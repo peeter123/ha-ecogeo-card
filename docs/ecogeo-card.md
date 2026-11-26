@@ -366,7 +366,8 @@ still cites its item number in the code. It does not keep the figure's coordinat
 to 760, y 130 to 605) every symbol keeps its size and the union of the symbols' port spans covers y 214 to 428 without a
 gap, so no map of it could open a row for a value, and in a first attempt at the phone-width layout the cabinet's values
 landed 100 to 166 units from their parts. The frame is therefore re-authored with lanes (schematic-drawing "Cabinet
-layout with value lanes"): the parts sit in rows and columns, and between them lie lanes, where the values sit.
+layout with value lanes"): the parts sit in rows and columns, and between them lie lanes, where the values sit
+(schematic-drawing "Values in the lanes").
 
 A **row lane** is a horizontal strip across the whole cabinet that no part's box enters and only vertical pipes cross; a
 **column lane** is the same in the vertical direction, crossed only by horizontal pipes. `ROW_LANES` and `COLUMN_LANES`
@@ -1344,6 +1345,10 @@ checks (`npm run lint:ha`) and the tests (unit and browser). `npm run release` r
 the repository's text and YAML to the standard of Home Assistant core, so they need [uv](https://docs.astral.sh/uv/)
 on the `PATH`: `uvx` fetches each tool at an exact version, with no installation. Without uv, `npm run lint:ha` stops
 with a message that names it.
+
+ESLint holds every function in `src/`, `dev/`, `scripts/` and the root config files to a cyclomatic complexity of 15
+(its built-in `complexity` rule, classic variant), and `npm run lint` fails on a function above it. `test/` is exempt.
+Each `?.`, `??`, `||=` and default value counts as a path, so a chain of them adds up.
 
 `npm run lint:ha` (`scripts/lint-ha.mjs`) runs, and fails on any finding:
 

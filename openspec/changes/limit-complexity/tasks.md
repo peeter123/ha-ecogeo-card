@@ -112,17 +112,25 @@
 
 ## 6. The limit in the lint
 
-- [ ] 6.1 Add `complexity: ['error', { max: 15 }]` to `eslint.config.js` in one block for `src/`, `dev/`, `scripts/`
+- [x] 6.1 Add `complexity: ['error', { max: 15 }]` to `eslint.config.js` in one block for `src/`, `dev/`, `scripts/`
   and the root config files, not `test/` (design D4). Verify: `npm run lint` passes on the repository
   (release-packaging "The repository passes").
-- [ ] 6.2 Add `test/scripts/complexity.test.ts`. It lints three fixtures through ESLint's Node API: complexity 16 under
-  `scripts/` is reported and names the function, 15 under `scripts/` is not reported, and 16 under `test/` is not
+  Verdict (2026-11-26): one block in `eslint.config.js` (src, dev, scripts and root config files, not test) before
+    `prettier`; `npm run lint` passes with no complexity finding.
+- [x] 6.2 Add `test/scripts/complexity.test.ts`. It lints three fixtures through ESLint's Node API: complexity 16 under
+  `scripts/` is reported and names the function, 15 under `src/` is not reported, and 16 under `test/` is not
   reported (design D4). Verify: it passes, and it fails when the rule is removed from `eslint.config.js` (checked
   once, then restored).
-- [ ] 6.3 Document the limit in the Development section of `docs/ecogeo-card.md`. Say what ESLint holds to 15, that
+  Verdict (2026-11-26): `test/scripts/complexity.test.ts` (3 tests: 16 under `scripts/` reported with file and
+    function, 15 under `src/` and 16 under `test/` with a clean result) passes; with the rule removed the "16 under
+    scripts/" test fails; the rule is restored.
+- [x] 6.3 Document the limit in the Development section of `docs/ecogeo-card.md`. Say what ESLint holds to 15, that
   `test/` is exempt, and that `?.` and `??` count in the classic variant. Point the lanes section's citation of
   "Cabinet layout with value lanes" to schematic-drawing "Values in the lanes" where it is about where the values sit.
   Verify: `npm run check` passes, the docs tests included.
+  Verdict (2026-11-26): the Development section states the limit, the test/ exemption and what counts a path; the lanes
+    section also cites "Values in the lanes"; `npm run check` passes (88 test files, 13719 tests passed,
+    4 expected fail).
 
 ## 7. Release
 

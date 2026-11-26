@@ -35,5 +35,13 @@ export default defineConfig(
   },
   { files: ['**/*.js', '**/*.mjs', '**/*.cjs'], ...tseslint.configs.disableTypeChecked },
   { files: ['**/*.js', '**/*.mjs', '**/*.cjs'], languageOptions: { globals: globals.node } },
+  {
+    // Cyclomatic complexity 15 at most, as ESLint's classic `complexity` rule counts it (`?.`, `??`, `||=` and
+    // default values each count a path). test/ is exempt (user decision 2026-11-26):
+    // test bodies branch per case and guard optional lookups with `?.` and `??`, and that count says little about
+    // the code's quality.
+    files: ['{src,dev,scripts}/**/*.{ts,mts,cts,tsx,js,mjs,cjs}', '*.{ts,mts,cts,js,mjs,cjs}'],
+    rules: { complexity: ['error', { max: 15 }] },
+  },
   prettier,
 );
