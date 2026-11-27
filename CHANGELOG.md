@@ -3,7 +3,7 @@
 All notable changes to the ecoGEO heat pump card, newest first, in the style of Keep a Changelog. A release's heading
 is `## <version> - <YYYY-MM-DD>`; the heading has no date until the release is made, and the release adds it.
 
-## 1.1.2
+## 1.1.2 - 2026-11-27
 
 The code is held to a complexity limit; the card looks and behaves as before.
 
